@@ -84,7 +84,7 @@ export function RevenueSummaryWidget() {
     `widget_period.${config?.period ?? "fiscal_year"}` as "widget_period.fiscal_ytd",
   );
 
-  const revenueTypeLabel = config?.revenueType === "gross" ? "Gross" : "Net";
+  const revenueTypeLabel = config?.revenueType === "gross" ? t("revenue_type.gross") : t("revenue_type.net");
 
   return (
     <ConfigurableWidget
@@ -100,7 +100,7 @@ export function RevenueSummaryWidget() {
       }
     >
       <BaseWidget
-        title="Revenue Summary"
+        title={t("widget_titles.revenue_summary")}
         icon={<Icons.TrendingUp className="size-4" />}
         description={
           <div className="flex flex-col gap-1">
@@ -109,7 +109,7 @@ export function RevenueSummaryWidget() {
             </p>
           </div>
         }
-        actions="View revenue trends"
+        actions={t("widget_actions.view_revenue_trends")}
         onClick={handleViewTrends}
         onConfigure={() => setIsConfiguring(true)}
       >

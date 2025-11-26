@@ -111,16 +111,16 @@ export function CashFlowWidget() {
       }
     >
       <BaseWidget
-        title="Cash Flow"
+        title={t("widget_titles.cash_flow")}
         icon={<Icons.Accounts className="size-4" />}
         description={
           <div className="flex flex-col gap-1">
             <p className="text-sm text-[#666666]">
-              Net cash position · {periodLabel}
+              {t("widget_descriptions.net_cash_position")} · {periodLabel}
             </p>
           </div>
         }
-        actions="View cash flow analysis"
+        actions={t("widget_actions.view_cash_flow")}
         onClick={handleViewAnalysis}
         onConfigure={() => setIsConfiguring(true)}
       >

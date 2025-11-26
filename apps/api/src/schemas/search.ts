@@ -82,10 +82,10 @@ export const searchAttachmentsSchema = z
       description: "Search query string to filter attachments by text.",
       example: "invoice",
     }),
-    transactionId: z.string().uuid().nullable().optional().openapi({
+    transactionId: z.string().nullable().optional().openapi({
       description:
         "Transaction ID for smart suggestions based on transaction details.",
-      example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      example: "3I907Hmj-WIGbpXmiZ9Ov",
     }),
     limit: z.coerce.number().min(1).max(100).default(30).openapi({
       description: "Maximum number of results to return.",

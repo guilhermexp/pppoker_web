@@ -112,19 +112,7 @@ export function CreateTeamForm({
           errorContext,
         );
 
-        // Capture error in Sentry for debugging
-        if (error instanceof Error && process.env.NODE_ENV === "production") {
-          import("@sentry/nextjs").then((Sentry) => {
-            Sentry.captureException(error, {
-              extra: {
-                ...errorContext,
-                errorId,
-                component: "CreateTeamForm",
-                action: "team_creation_mutation",
-              },
-            });
-          });
-        }
+        
 
         setIsLoading(false);
         isSubmittedRef.current = false; // Reset on error to allow retry

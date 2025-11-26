@@ -119,6 +119,62 @@ export function translations(locale: string, params?: TranslationParams) {
         "invoice.reminder.subject": `Påminnelse: Betalning för ${params?.invoiceNumber}`,
       };
 
+    case "pt":
+      return {
+        "notifications.match": `Associamos a transacao "${params?.transactionName}" com "${params?.fileName}"`,
+        "notifications.transactions":
+          params?.numberOfTransactions &&
+          typeof params?.numberOfTransactions === "number" &&
+          params?.numberOfTransactions > 1
+            ? `Voce tem ${params?.numberOfTransactions} novas transacoes`
+            : `Voce tem uma nova transacao de ${params?.amount} de ${params?.name}`,
+        "notifications.invoicePaid": `Fatura ${params?.invoiceNumber} foi paga`,
+        "notifications.invoiceOverdue": `Fatura ${params?.invoiceNumber} esta vencida`,
+        "transactions.subject": "Novas transacoes",
+        "transactions.preview": `${params?.firstName ? `Oi ${params?.firstName}, ` : ""}Voce tem ${
+          params?.numberOfTransactions
+        } ${
+          params?.numberOfTransactions > 1
+            ? "novas transacoes"
+            : "nova transacao"
+        }`,
+        "transactions.title1": "Voce tem ",
+        "transactions.title2": `${params?.numberOfTransactions} ${
+          params?.numberOfTransactions > 1
+            ? "novas transacoes"
+            : "nova transacao"
+        }`,
+        "transactions.description1": `${params?.firstName ? `Oi ${params?.firstName}` : "Ola"}`,
+        "transactions.description2": "Encontramos",
+        "transactions.description3": `${params?.numberOfTransactions} ${
+          params?.numberOfTransactions > 1
+            ? "novas transacoes"
+            : "nova transacao"
+        }`,
+        "transactions.description4": `${params?.teamName ? `para sua equipe ${params?.teamName}` : "para sua conta"}. Vamos associa-las automaticamente com os recibos na sua caixa de entrada, ou voce pode simplesmente responder a este email com os recibos.`,
+        "transactions.button": "Ver transacoes",
+        "transactions.settings": "Preferencias de notificacao",
+        "transactions.amount": "Valor",
+        "transactions.date": "Data",
+        "transactions.description": "Descricao",
+        "invite.subject": `${params?.invitedByName} convidou voce para a equipe ${params?.teamName} no Midday`,
+        "invite.preview": `Junte-se a ${params?.teamName} no Midday`,
+        "invite.title1": "Junte-se a",
+        "invite.title2": "no",
+        "invite.link1": "convidou voce para a equipe",
+        "invite.link2": "no",
+        "invite.join": "Entrar na equipe",
+        "invite.link3": "ou copie e cole esta URL no seu navegador",
+        "invite.footer1": "Este convite foi destinado a",
+        "invite.footer2": "Este convite foi enviado de",
+        "invite.footer4":
+          "Se voce nao esperava este convite, pode ignorar este email. Se estiver preocupado com a seguranca da sua conta, por favor responda a este email para entrar em contato conosco.",
+        "invoice.overdue.subject": `Fatura #${params?.invoiceNumber} esta vencida`,
+        "invoice.paid.subject": `Fatura #${params?.invoiceNumber} foi paga`,
+        "invoice.sent.subject": `${params?.teamName} enviou uma fatura para voce`,
+        "invoice.reminder.subject": `Lembrete: Pagamento da fatura ${params?.invoiceNumber}`,
+      };
+
     default:
       return;
   }

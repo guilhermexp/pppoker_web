@@ -92,7 +92,7 @@ export function GrowthRateWidget() {
     `widget_period.${config?.period ?? "current_quarter"}` as "widget_period.fiscal_ytd",
   );
 
-  const revenueTypeLabel = config?.revenueType === "gross" ? "Gross" : "Net";
+  const revenueTypeLabel = config?.revenueType === "gross" ? t("revenue_type.gross") : t("revenue_type.net");
 
   return (
     <ConfigurableWidget
@@ -108,16 +108,16 @@ export function GrowthRateWidget() {
       }
     >
       <BaseWidget
-        title="Growth Rate"
+        title={t("widget_titles.growth_rate")}
         icon={<Icons.ShowChart className="size-4" />}
         description={
           <div className="flex flex-col gap-1">
             <p className="text-sm text-[#666666]">
-              {revenueTypeLabel} revenue growth · {periodLabel}
+              {t("widget_descriptions.revenue_growth", { type: revenueTypeLabel })} · {periodLabel}
             </p>
           </div>
         }
-        actions="View growth analysis"
+        actions={t("widget_actions.view_growth_analysis")}
         onClick={handleViewAnalysis}
         onConfigure={() => setIsConfiguring(true)}
       >

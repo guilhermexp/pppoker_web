@@ -1,6 +1,4 @@
 import { Cookies } from "@/utils/constants";
-import { LogEvents } from "@midday/events/events";
-import { setupAnalytics } from "@midday/events/server";
 import { getSession } from "@midday/supabase/cached-queries";
 import { createClient } from "@midday/supabase/server";
 import { addYears } from "date-fns";
@@ -37,16 +35,6 @@ export async function GET(req: NextRequest) {
 
     if (session) {
       const userId = session.user.id;
-
-      const analytics = await setupAnalytics({
-        userId,
-        fullName: session.user.user_metadata?.full_name,
-      });
-
-      await analytics.track({
-        event: LogEvents.SignIn.name,
-        channel: LogEvents.SignIn.channel,
-      });
 
       // If user is redirected from an invite, redirect to teams page to accept/decline the invite
       if (returnTo?.startsWith("teams/invite/")) {

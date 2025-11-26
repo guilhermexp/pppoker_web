@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransactionParams } from "@/hooks/use-transaction-params";
+import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
 import {
   DropdownMenu,
@@ -12,9 +13,11 @@ import { Icons } from "@midday/ui/icons";
 import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
 
 export function AddTransactions() {
+  const t = useI18n();
   const [_, setParams] = useQueryStates({
     step: parseAsString,
     hide: parseAsBoolean,
+    createAccount: parseAsBoolean,
   });
 
   const { setParams: setTransactionParams } = useTransactionParams();
@@ -28,25 +31,25 @@ export function AddTransactions() {
       </DropdownMenuTrigger>
       <DropdownMenuContent sideOffset={10} align="end">
         <DropdownMenuItem
-          onClick={() => setParams({ step: "connect" })}
+          onClick={() => setParams({ createAccount: true })}
           className="space-x-2"
         >
           <Icons.Accounts size={18} />
-          <span>Connect account</span>
+          <span>{t("transactions.add_account")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setParams({ step: "import", hide: true })}
           className="space-x-2"
         >
           <Icons.Import size={18} />
-          <span>Import/backfill</span>
+          <span>{t("transactions.import_backfill")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTransactionParams({ createTransaction: true })}
           className="space-x-2"
         >
           <Icons.CreateTransaction size={18} />
-          <span>Create transaction</span>
+          <span>{t("transactions.create_transaction")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

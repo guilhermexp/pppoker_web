@@ -1,5 +1,6 @@
 import { FormatAmount } from "@/components/format-amount";
 import { useChatInterface } from "@/hooks/use-chat-interface";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { useChatActions, useChatId } from "@ai-sdk-tools/store";
 import { Icons } from "@midday/ui/icons";
@@ -12,6 +13,7 @@ export function AccountBalancesWidget() {
   const { sendMessage } = useChatActions();
   const chatId = useChatId();
   const { setChatId } = useChatInterface();
+  const t = useI18n();
 
   // Fetch combined account balances
   const { data } = useQuery({
@@ -54,23 +56,23 @@ export function AccountBalancesWidget() {
 
   const getDescription = () => {
     if (accountCount === 0) {
-      return "No accounts connected";
+      return t("widget_descriptions.no_accounts");
     }
 
     if (accountCount === 1) {
-      return "Combined balance from 1 account";
+      return t("widget_descriptions.combined_balance_one");
     }
 
-    return `Combined balance from ${accountCount} accounts`;
+    return t("widget_descriptions.combined_balance_other", { count: accountCount });
   };
 
   return (
     <BaseWidget
-      title="Account Balances"
+      title={t("widget_titles.account_balances")}
       icon={<Icons.Accounts className="size-4" />}
       description={getDescription()}
       onClick={handleOpenAccounts}
-      actions="View account balances"
+      actions={t("widget_actions.view_account_balances")}
     >
       {balanceData && (
         <div className="space-y-1">

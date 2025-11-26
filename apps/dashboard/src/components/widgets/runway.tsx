@@ -1,4 +1,5 @@
 import { useChatInterface } from "@/hooks/use-chat-interface";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { useChatActions, useChatId } from "@ai-sdk-tools/store";
 import { Icons } from "@midday/ui/icons";
@@ -12,6 +13,7 @@ export function RunwayWidget() {
   const { sendMessage } = useChatActions();
   const chatId = useChatId();
   const { setChatId } = useChatInterface();
+  const t = useI18n();
 
   const { data } = useQuery({
     ...trpc.widgets.getRunway.queryOptions({
@@ -44,9 +46,9 @@ export function RunwayWidget() {
 
   return (
     <BaseWidget
-      title="Cash Runway"
+      title={t("widget_titles.cash_runway")}
       icon={<Icons.Time className="size-4" />}
-      description="Your cash runway in months"
+      description={t("widget_descriptions.cash_runway_months")}
       onClick={() => {
         handleToolCall({
           toolName: "getRunway",
@@ -58,10 +60,10 @@ export function RunwayWidget() {
           text: "Show cash runway",
         });
       }}
-      actions="View runway"
+      actions={t("widget_actions.view_runway")}
     >
       <h2 className="text-2xl font-normal text-[24px] mb-2">
-        {data?.result} months
+        {data?.result} {t("widget_descriptions.months")}
       </h2>
     </BaseWidget>
   );

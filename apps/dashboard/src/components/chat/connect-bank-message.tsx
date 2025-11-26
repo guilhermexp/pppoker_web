@@ -1,16 +1,21 @@
 "use client";
 
-import { useConnectParams } from "@/hooks/use-connect-params";
+import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
+import { parseAsBoolean, useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 
 export function ConnectBankMessage() {
-  const { setParams } = useConnectParams();
+  const t = useI18n();
   const router = useRouter();
+  const [_, setCreateAccount] = useQueryState(
+    "createAccount",
+    parseAsBoolean.withDefault(false)
+  );
 
-  const handleConnect = () => {
-    setParams({ step: "connect" });
+  const handleCreateAccount = () => {
+    setCreateAccount(true);
   };
 
   const handleMaybeLater = () => {
@@ -24,21 +29,20 @@ export function ConnectBankMessage() {
           <Icons.Accounts size={15} />
         </div>
         <div className="flex-1 space-y-1">
-          <h3 className="text-foreground">Connect bank</h3>
+          <h3 className="text-foreground">{t("chat.create_account_title")}</h3>
           <p className="text-sm text-muted-foreground">
-            To answer financial questions, I need access to your bank
-            transactions and balances. Connect a bank to continue.
+            {t("chat.create_account_description")}
           </p>
         </div>
       </div>
       <div className="flex gap-2 ml-11">
-        <Button onClick={handleConnect}>Connect</Button>
+        <Button onClick={handleCreateAccount}>{t("chat.create_account_button")}</Button>
         <Button
           onClick={handleMaybeLater}
           variant="outline"
           className="text-primary"
         >
-          Maybe later
+          {t("chat.maybe_later")}
         </Button>
       </div>
     </div>

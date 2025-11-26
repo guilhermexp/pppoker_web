@@ -1,11 +1,13 @@
 "use client";
 
 import { useTransactionParams } from "@/hooks/use-transaction-params";
+import { useI18n } from "@/locales/client";
 import { ScrollArea } from "@midday/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@midday/ui/sheet";
 import { TransactionCreateForm } from "../forms/transaction-create-form";
 
 export function TransactionCreateSheet() {
+  const t = useI18n();
   const { createTransaction, setParams } = useTransactionParams();
 
   const isOpen = Boolean(createTransaction);
@@ -20,7 +22,7 @@ export function TransactionCreateSheet() {
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent>
         <SheetHeader className="mb-8">
-          <SheetTitle>Create Transaction</SheetTitle>
+          <SheetTitle>{t("transaction_create.title")}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="h-full p-0 pb-[100px]" hideScrollbar>

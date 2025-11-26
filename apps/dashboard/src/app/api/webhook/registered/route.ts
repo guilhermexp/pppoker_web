@@ -1,6 +1,4 @@
 import * as crypto from "node:crypto";
-import { LogEvents } from "@midday/events/events";
-import { setupAnalytics } from "@midday/events/server";
 import type { OnboardTeamPayload } from "@midday/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 import { headers } from "next/headers";
@@ -37,16 +35,6 @@ export async function POST(req: Request) {
 
   const userId = body.record.id;
   const fullName = body.record.full_name;
-
-  const analytics = await setupAnalytics({
-    userId,
-    fullName,
-  });
-
-  analytics.track({
-    event: LogEvents.Registered.name,
-    channel: LogEvents.Registered.channel,
-  });
 
   await tasks.trigger(
     "onboard-team",

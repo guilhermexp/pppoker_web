@@ -1,8 +1,6 @@
 import { logger } from "@/utils/logger";
 import { resend } from "@api/services/resend";
 import { getAllowedAttachments } from "@midday/documents";
-import { LogEvents } from "@midday/events/events";
-import { setupAnalytics } from "@midday/events/server";
 import { getInboxIdFromEmail, inboxWebhookPostSchema } from "@midday/inbox";
 import type { ProcessAttachmentPayload } from "@midday/jobs/schema";
 import { createClient } from "@midday/supabase/server";
@@ -83,12 +81,6 @@ export async function POST(req: Request) {
       .single()
       .throwOnError();
 
-    const analytics = await setupAnalytics();
-
-    analytics.track({
-      event: LogEvents.InboxInbound.name,
-      channel: LogEvents.InboxInbound.channel,
-    });
 
     const teamId = teamData?.id;
 

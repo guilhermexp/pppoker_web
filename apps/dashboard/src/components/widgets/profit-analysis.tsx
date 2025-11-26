@@ -122,7 +122,7 @@ export function ProfitAnalysisWidget() {
     `widget_period.${config?.period ?? "trailing_12"}` as "widget_period.fiscal_ytd",
   );
 
-  const revenueTypeLabel = config?.revenueType === "gross" ? "Gross" : "Net";
+  const revenueTypeLabel = config?.revenueType === "gross" ? t("revenue_type.gross") : t("revenue_type.net");
 
   return (
     <ConfigurableWidget
@@ -138,14 +138,14 @@ export function ProfitAnalysisWidget() {
       }
     >
       <BaseWidget
-        title="Profit & Loss"
+        title={t("widget_titles.profit_loss")}
         icon={<Icons.PieChart className="size-4" />}
         onConfigure={() => setIsConfiguring(true)}
         description={
           <div className="flex flex-col gap-2">
             {chartData.length > 0 && data?.summary ? (
               <p className="text-sm text-[#666666]">
-                Your average {revenueTypeLabel.toLowerCase()} profit ·{" "}
+                {t("widget_descriptions.average_profit", { type: revenueTypeLabel.toLowerCase() })} ·{" "}
                 {periodLabel}{" "}
                 <span className="font-medium text-foreground">
                   {formatCurrency(averageProfit)}
@@ -153,7 +153,7 @@ export function ProfitAnalysisWidget() {
               </p>
             ) : (
               <p className="text-sm text-[#666666]">
-                Your average {revenueTypeLabel.toLowerCase()} profit ·{" "}
+                {t("widget_descriptions.average_profit", { type: revenueTypeLabel.toLowerCase() })} ·{" "}
                 {periodLabel}
               </p>
             )}
@@ -188,12 +188,12 @@ export function ProfitAnalysisWidget() {
               </div>
             ) : (
               <div className="text-xs text-muted-foreground mt-2">
-                No data available
+                {t("widget_descriptions.no_data")}
               </div>
             )}
           </div>
         }
-        actions="See detailed analysis"
+        actions={t("widget_actions.see_detailed_analysis")}
         onClick={handleViewAnalysis}
       >
         <div />

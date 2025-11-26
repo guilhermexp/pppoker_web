@@ -1,11 +1,13 @@
 "use client";
 
+import { useI18n } from "@/locales/client";
 import { useSearchStore } from "@/store/search";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
 
 export function OpenSearchButton() {
   const { setOpen } = useSearchStore();
+  const t = useI18n();
 
   return (
     <Button
@@ -14,7 +16,7 @@ export function OpenSearchButton() {
       onClick={() => setOpen()}
     >
       <Icons.Search size={18} className="mr-2" />
-      <span>Find anything...</span>
+      <span>{t("search.find_anything")}</span>
       <kbd className="pointer-events-none absolute opacity-0 hover:opacity-100 right-1.5 top-1.5 hidden h-5 select-none items-center gap-1 border bg-accent px-1.5 text-[10px] font-medium sm:flex">
         <span className="text-xs">⌘</span>K
       </kbd>

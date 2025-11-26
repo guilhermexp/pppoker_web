@@ -1,6 +1,7 @@
 "use client";
 
 import { useUserQuery } from "@/hooks/use-user";
+import { useI18n } from "@/locales/client";
 import { getTrialDaysLeft, isTrialExpired } from "@/utils/trial";
 import { Button } from "@midday/ui/button";
 import Link from "next/link";
@@ -8,6 +9,7 @@ import { FeedbackForm } from "./feedback-form";
 
 export function Trial() {
   const { data: user } = useUserQuery();
+  const t = useI18n();
 
   const team = user?.team;
 
@@ -25,18 +27,6 @@ export function Trial() {
     return <FeedbackForm />;
   }
 
-  // Calculate days left for display
-  const daysLeft = getTrialDaysLeft(team.createdAt);
-
-  return (
-    <Button
-      asChild
-      variant="outline"
-      className="rounded-full font-normal h-[32px] p-0 px-3 text-xs text-[#878787]"
-    >
-      <Link href="/upgrade">
-        Pro trial - {daysLeft} {daysLeft === 1 ? "day" : "days"} left
-      </Link>
-    </Button>
-  );
+  // Trial badge removed - no longer displaying trial days remaining
+  return null;
 }

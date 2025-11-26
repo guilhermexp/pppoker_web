@@ -21,7 +21,6 @@ import {
   deleteTeamInvite,
   deleteTeamMember,
   getAvailablePlans,
-  getBankConnections,
   getInvitesByEmail,
   getTeamById,
   getTeamInvites,
@@ -160,20 +159,9 @@ export const teamRouter = createTRPCRouter({
         });
       }
 
-      const bankConnections = await getBankConnections(db, {
-        teamId: data.id,
-      });
-
-      if (bankConnections.length > 0) {
-        await tasks.trigger("delete-team", {
-          teamId: input.teamId!,
-          connections: bankConnections.map((connection) => ({
-            accessToken: connection.accessToken,
-            provider: connection.provider,
-            referenceId: connection.referenceId,
-          })),
-        } satisfies DeleteTeamPayload);
-      }
+      await tasks.trigger("delete-team", {
+        teamId: input.teamId!,
+      } satisfies DeleteTeamPayload);
     }),
 
   deleteMember: protectedProcedure

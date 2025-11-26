@@ -1,6 +1,7 @@
 "use client";
 
 import { useUserQuery } from "@/hooks/use-user";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { resumableUpload } from "@/utils/upload";
 import { createClient } from "@midday/supabase/client";
@@ -35,6 +36,7 @@ export function VaultUploadZone({ onUpload, children }: Props) {
   const [toastId, setToastId] = useState<string | null>(null);
   const uploadProgress = useRef<number[]>([]);
   const { toast, dismiss, update } = useToast();
+  const t = useI18n();
 
   const processDocumentMutation = useMutation(
     trpc.documents.processDocument.mutationOptions(),
@@ -43,10 +45,10 @@ export function VaultUploadZone({ onUpload, children }: Props) {
   useEffect(() => {
     if (!toastId && showProgress) {
       const { id } = toast({
-        title: `Uploading ${uploadProgress.current.length} files`,
+        title: t("vault.upload_title", { count: uploadProgress.current.length }),
         progress,
         variant: "progress",
-        description: "Please do not close browser until completed",
+        description: t("vault.upload_description"),
         duration: Number.POSITIVE_INFINITY,
       });
 
@@ -54,12 +56,12 @@ export function VaultUploadZone({ onUpload, children }: Props) {
     } else if (toastId) {
       update(toastId, {
         id: toastId,
-        title: `Uploading ${uploadProgress.current.length} files`,
+        title: t("vault.upload_title", { count: uploadProgress.current.length }),
         progress,
         variant: "progress",
       });
     }
-  }, [showProgress, progress, toastId]);
+  }, [showProgress, progress, toastId, t]);
 
   const onDrop = async (files: File[]) => {
     // NOTE: If onDropRejected
@@ -112,7 +114,7 @@ export function VaultUploadZone({ onUpload, children }: Props) {
 
       setProgress(0);
       toast({
-        title: "Upload successful.",
+        title: t("vault.upload_success"),
         variant: "success",
         duration: 2000,
       });
@@ -135,7 +137,7 @@ export function VaultUploadZone({ onUpload, children }: Props) {
       toast({
         duration: 2500,
         variant: "error",
-        title: "Something went wrong please try again.",
+        title: t("vault.upload_error"),
       });
     }
   };
@@ -147,7 +149,7 @@ export function VaultUploadZone({ onUpload, children }: Props) {
         toast({
           duration: 2500,
           variant: "error",
-          title: "File size to large.",
+          title: t("vault.file_too_large"),
         });
       }
 
@@ -155,7 +157,7 @@ export function VaultUploadZone({ onUpload, children }: Props) {
         toast({
           duration: 2500,
           variant: "error",
-          title: "File type not supported.",
+          title: t("vault.file_invalid_type"),
         });
       }
     },
@@ -201,11 +203,11 @@ export function VaultUploadZone({ onUpload, children }: Props) {
 
           <div className="flex flex-col items-center justify-center gap-2">
             <p className="text-xs">
-              Drop your documents and files here. <br />
-              Maximum of 25 files at a time.
+              {t("vault.drop_description")} <br />
+              {t("vault.drop_max_files")}
             </p>
 
-            <span className="text-xs text-[#878787]">Max file size 5MB</span>
+            <span className="text-xs text-[#878787]">{t("vault.drop_max_size")}</span>
           </div>
         </div>
       </div>

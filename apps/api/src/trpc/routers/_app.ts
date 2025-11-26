@@ -4,7 +4,6 @@ import { apiKeysRouter } from "./api-keys";
 import { appsRouter } from "./apps";
 import { bankAccountsRouter } from "./bank-accounts";
 import { bankConnectionsRouter } from "./bank-connections";
-import { billingRouter } from "./billing";
 import { chatsRouter } from "./chats";
 import { customersRouter } from "./customers";
 import { documentTagAssignmentsRouter } from "./document-tag-assignments";
@@ -13,7 +12,6 @@ import { documentsRouter } from "./documents";
 import { chatFeedbackRouter } from "./feedback";
 import { inboxRouter } from "./inbox";
 import { inboxAccountsRouter } from "./inbox-accounts";
-import { institutionsRouter } from "./institutions";
 import { invoiceRouter } from "./invoice";
 import { invoiceProductsRouter } from "./invoice-products";
 import { invoiceTemplateRouter } from "./invoice-template";
@@ -49,13 +47,11 @@ export const appRouter = createTRPCRouter({
   chatFeedback: chatFeedbackRouter,
   inbox: inboxRouter,
   inboxAccounts: inboxAccountsRouter,
-  institutions: institutionsRouter,
   invoice: invoiceRouter,
   invoiceProducts: invoiceProductsRouter,
   invoiceTemplate: invoiceTemplateRouter,
   reports: reportsRouter,
   oauthApplications: oauthApplicationsRouter,
-  billing: billingRouter,
   suggestedActions: suggestedActionsRouter,
   tags: tagsRouter,
   team: teamRouter,

@@ -1,6 +1,5 @@
 "use server";
 
-import { LogEvents } from "@midday/events/events";
 import { PlainClient, ThreadFieldSchemaType } from "@team-plain/typescript-sdk";
 import { z } from "zod";
 import { authActionClient } from "./safe-action";
@@ -34,13 +33,7 @@ export const sendSupportAction = authActionClient
       url: z.string().optional(),
     }),
   )
-  .metadata({
-    name: "send-support",
-    track: {
-      event: LogEvents.SupportTicket.name,
-      channel: LogEvents.SupportTicket.channel,
-    },
-  })
+  .metadata({ name: "send-support" })
   .action(async ({ parsedInput: data, ctx: { user } }) => {
     const customer = await client.upsertCustomer({
       identifier: {

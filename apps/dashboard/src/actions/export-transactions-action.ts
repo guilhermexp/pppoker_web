@@ -1,6 +1,5 @@
 "use server";
 
-import { LogEvents } from "@midday/events/events";
 import type { ExportTransactionsPayload } from "@midday/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 import { z } from "zod";
@@ -23,13 +22,7 @@ export const exportTransactionsAction = authActionClient
         .optional(),
     }),
   )
-  .metadata({
-    name: "export-transactions",
-    track: {
-      event: LogEvents.ExportTransactions.name,
-      channel: LogEvents.ExportTransactions.channel,
-    },
-  })
+  .metadata({ name: "export-transactions" })
   .action(
     async ({
       parsedInput: { transactionIds, dateFormat, locale, exportSettings },

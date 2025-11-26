@@ -1,13 +1,18 @@
 "use client";
 
+import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
-import { useQueryState } from "nuqs";
+import { parseAsBoolean, useQueryState } from "nuqs";
 
 export function AddAccountButton({ onClick }: { onClick?: () => void }) {
-  const [_, setStep] = useQueryState("step");
+  const t = useI18n();
+  const [_, setCreateAccount] = useQueryState(
+    "createAccount",
+    parseAsBoolean.withDefault(false)
+  );
 
   const handleClick = () => {
-    setStep("connect");
+    setCreateAccount(true);
     onClick?.();
   };
 
@@ -18,7 +23,7 @@ export function AddAccountButton({ onClick }: { onClick?: () => void }) {
       data-channel="bank"
       onClick={handleClick}
     >
-      Add account
+      {t("bank_account.add_account")}
     </Button>
   );
 }

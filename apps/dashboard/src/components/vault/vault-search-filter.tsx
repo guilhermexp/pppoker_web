@@ -8,6 +8,7 @@ import type { VaultFilterSchema } from "@/app/api/ai/filters/vault/schema";
 import { FilterList } from "@/components/filter-list";
 import { normalizeString, useAIFilter } from "@/hooks/use-ai-filter";
 import { useDocumentFilterParams } from "@/hooks/use-document-filter-params";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { Calendar } from "@midday/ui/calendar";
 import { cn } from "@midday/ui/cn";
@@ -35,6 +36,7 @@ export function VaultSearchFilter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const trpc = useTRPC();
+  const t = useI18n();
 
   const { filter, setFilter } = useDocumentFilterParams();
   const [input, setInput] = useState(filter.q ?? "");
@@ -127,7 +129,7 @@ export function VaultSearchFilter() {
           <Icons.Search className="absolute pointer-events-none left-3 top-[11px]" />
           <Input
             ref={inputRef}
-            placeholder="Search or type filter"
+            placeholder={t("vault.search_placeholder")}
             className="pl-9 w-full md:w-[350px] pr-8"
             value={input}
             onChange={handleSearch}
@@ -173,7 +175,7 @@ export function VaultSearchFilter() {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Icons.CalendarMonth className="mr-2 h-4 w-4" />
-              <span>Date</span>
+              <span>{t("vault.date_filter")}</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent
@@ -219,7 +221,7 @@ export function VaultSearchFilter() {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Icons.Status className="mr-2 h-4 w-4" />
-              <span>Tags</span>
+              <span>{t("vault.tags_filter")}</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent
@@ -243,7 +245,7 @@ export function VaultSearchFilter() {
                 ))}
 
                 {!tagsData?.length && (
-                  <DropdownMenuItem disabled>No tags found</DropdownMenuItem>
+                  <DropdownMenuItem disabled>{t("vault.no_tags")}</DropdownMenuItem>
                 )}
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

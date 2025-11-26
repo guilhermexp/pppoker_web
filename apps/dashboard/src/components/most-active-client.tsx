@@ -1,11 +1,13 @@
 "use client";
 
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 export function MostActiveClient() {
   const trpc = useTRPC();
+  const t = useI18n();
   const { data } = useSuspenseQuery(
     trpc.invoice.mostActiveClient.queryOptions(),
   );
@@ -15,15 +17,15 @@ export function MostActiveClient() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="font-medium text-2xl">
-            No Active Client
+            {t("customers.no_active_client")}
           </CardTitle>
         </CardHeader>
 
         <CardContent className="pb-[34px]">
           <div className="flex flex-col gap-2">
-            <div>Most Active Client</div>
+            <div>{t("customers.most_active_client")}</div>
             <div className="text-sm text-muted-foreground">
-              No client activity past 30 days
+              {t("customers.no_client_activity")}
             </div>
           </div>
         </CardContent>
@@ -49,20 +51,20 @@ export function MostActiveClient() {
 
       <CardContent className="pb-[34px]">
         <div className="flex flex-col gap-2">
-          <div>Most Active Client</div>
+          <div>{t("customers.most_active_client")}</div>
           <div className="text-sm text-muted-foreground">
             {data.totalTrackerTime > 0 && (
               <>
-                {timeDisplay} tracked
-                {data.invoiceCount > 0 && " and "}
+                {timeDisplay} {t("customers.tracked")}
+                {data.invoiceCount > 0 && ` ${t("customers.and")} `}
               </>
             )}
             {data.invoiceCount > 0 && (
               <>
-                {data.invoiceCount} invoice{data.invoiceCount !== 1 ? "s" : ""}
+                {data.invoiceCount} {t("customers.invoice", { count: data.invoiceCount })}
               </>
             )}
-            {" past 30 days"}
+            {` ${t("customers.past_30_days")}`}
           </div>
         </div>
       </CardContent>

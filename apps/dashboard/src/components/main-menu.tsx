@@ -1,6 +1,7 @@
 "use client";
 
 import { useChatInterface } from "@/hooks/use-chat-interface";
+import { useI18n } from "@/locales/client";
 import { cn } from "@midday/ui/cn";
 import { Icons } from "@midday/ui/icons";
 import Link from "next/link";
@@ -19,75 +20,79 @@ const icons = {
   "/inbox": () => <Icons.Inbox2 size={20} />,
 } as const;
 
-const items = [
+const getItems = (t: ReturnType<typeof useI18n>) => [
   {
     path: "/",
-    name: "Overview",
+    name: t("sidebar.overview"),
   },
   {
     path: "/transactions",
-    name: "Transactions",
+    name: t("sidebar.transactions"),
     children: [
       {
         path: "/transactions/categories",
-        name: "Categories",
+        name: t("sidebar.categories"),
       },
       {
         path: "/transactions?step=connect",
-        name: "Connect bank",
+        name: t("sidebar.connect_bank"),
       },
       {
         path: "/transactions?step=import&hide=true",
-        name: "Import",
+        name: t("sidebar.import"),
       },
-      { path: "/transactions?createTransaction=true", name: "Create new" },
+      {
+        path: "/transactions?createTransaction=true",
+        name: t("sidebar.create_new"),
+      },
     ],
   },
   {
     path: "/inbox",
-    name: "Inbox",
-    children: [{ path: "/inbox/settings", name: "Settings" }],
+    name: t("sidebar.inbox"),
+    children: [{ path: "/inbox/settings", name: t("sidebar.settings") }],
   },
   {
     path: "/invoices",
-    name: "Invoices",
+    name: t("sidebar.invoices"),
     children: [
-      { path: "/invoices/products", name: "Products" },
-      { path: "/invoices?type=create", name: "Create new" },
+      { path: "/invoices/products", name: t("sidebar.products") },
+      { path: "/invoices?type=create", name: t("sidebar.create_new") },
     ],
   },
   {
     path: "/tracker",
-    name: "Tracker",
-    children: [{ path: "/tracker?create=true", name: "Create new" }],
+    name: t("sidebar.tracker"),
+    children: [{ path: "/tracker?create=true", name: t("sidebar.create_new") }],
   },
   {
     path: "/customers",
-    name: "Customers",
-    children: [{ path: "/customers?createCustomer=true", name: "Create new" }],
+    name: t("sidebar.customers"),
+    children: [
+      { path: "/customers?createCustomer=true", name: t("sidebar.create_new") },
+    ],
   },
   {
     path: "/vault",
-    name: "Vault",
+    name: t("sidebar.vault"),
   },
   {
     path: "/apps",
-    name: "Apps",
+    name: t("sidebar.apps"),
     children: [
-      { path: "/apps", name: "All" },
-      { path: "/apps?tab=installed", name: "Installed" },
+      { path: "/apps", name: t("sidebar.all") },
+      { path: "/apps?tab=installed", name: t("sidebar.installed") },
     ],
   },
   {
     path: "/settings",
-    name: "Settings",
+    name: t("sidebar.settings"),
     children: [
-      { path: "/settings", name: "General" },
-      { path: "/settings/billing", name: "Billing" },
-      { path: "/settings/accounts", name: "Bank Connections" },
-      { path: "/settings/members", name: "Members" },
-      { path: "/settings/notifications", name: "Notifications" },
-      { path: "/settings/developer", name: "Developer" },
+      { path: "/settings", name: t("sidebar.general") },
+      { path: "/settings/accounts", name: t("sidebar.bank_connections") },
+      { path: "/settings/members", name: t("sidebar.members") },
+      { path: "/settings/notifications", name: t("sidebar.notifications") },
+      { path: "/settings/developer", name: t("sidebar.developer") },
     ],
   },
 ];
@@ -288,6 +293,8 @@ type Props = {
 export function MainMenu({ onSelect, isExpanded = false }: Props) {
   const pathname = usePathname();
   const { isChatPage } = useChatInterface();
+  const t = useI18n();
+  const items = getItems(t);
   const part = pathname?.split("/")[1];
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 

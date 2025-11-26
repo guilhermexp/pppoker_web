@@ -127,12 +127,12 @@ export function RevenueForecastWidget() {
       }
     >
       <BaseWidget
-        title="Forecast"
+        title={t("widget_titles.forecast")}
         icon={<Icons.TrendingUp className="size-4" />}
         onConfigure={() => setIsConfiguring(true)}
         description={
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-[#878787]">Revenue projection</p>
+            <p className="text-sm text-[#878787]">{t("widget_descriptions.revenue_projection")}</p>
 
             {/* Simple trend line chart */}
             {chartData.length > 0 ? (
@@ -156,14 +156,14 @@ export function RevenueForecastWidget() {
             ) : (
               <div className="h-12 w-full flex items-center">
                 <div className="text-xs text-muted-foreground">
-                  No data available
+                  {t("widget_descriptions.no_data")}
                 </div>
               </div>
             )}
 
             {data?.summary && (
               <p className="text-sm text-[#666666]">
-                Next month projection{" "}
+                {t("widget_descriptions.next_month_projection")}{" "}
                 <span className="font-medium text-foreground">
                   +
                   <FormatAmount
@@ -175,7 +175,7 @@ export function RevenueForecastWidget() {
             )}
           </div>
         }
-        actions="View forecast details"
+        actions={t("widget_actions.view_forecast_details")}
         onClick={handleViewDetails}
       >
         <div />

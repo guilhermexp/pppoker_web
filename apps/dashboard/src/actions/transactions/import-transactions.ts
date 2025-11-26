@@ -1,6 +1,5 @@
 "use server";
 
-import { LogEvents } from "@midday/events/events";
 import { formatAmountValue } from "@midday/import";
 import type { ImportTransactionsPayload } from "@midday/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
@@ -23,13 +22,7 @@ export const importTransactionsAction = authActionClient
       }),
     }),
   )
-  .metadata({
-    name: "import-transactions",
-    track: {
-      event: LogEvents.ImportTransactions.name,
-      channel: LogEvents.ImportTransactions.channel,
-    },
-  })
+  .metadata({ name: "import-transactions" })
   .action(
     async ({
       parsedInput: {

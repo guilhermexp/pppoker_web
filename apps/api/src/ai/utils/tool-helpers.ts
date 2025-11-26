@@ -5,8 +5,9 @@ export function checkBankAccountsRequired(appContext: AppContext): {
   shouldYield: boolean;
 } {
   const hasBankAccounts = appContext.hasBankAccounts ?? false;
+  // Allow manual workflows even when no bank integrations are connected.
   return {
     hasBankAccounts,
-    shouldYield: !hasBankAccounts,
+    shouldYield: false,
   };
 }

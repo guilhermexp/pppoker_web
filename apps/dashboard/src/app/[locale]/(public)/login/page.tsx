@@ -1,5 +1,6 @@
 import { AppleSignIn } from "@/components/apple-sign-in";
 import { ConsentBanner } from "@/components/consent-banner";
+import { EmailSignIn } from "@/components/email-sign-in";
 import { GithubSignIn } from "@/components/github-sign-in";
 import { GoogleSignIn } from "@/components/google-sign-in";
 import { LoginAccordion } from "@/components/login-accordion";
@@ -44,6 +45,7 @@ export default async function Page() {
         <>
           <GoogleSignIn />
           <GithubSignIn />
+          <EmailSignIn />
           <OTPSignIn className="border-t-[1px] border-border pt-8" />
         </>
       );
@@ -55,6 +57,7 @@ export default async function Page() {
         <>
           <GoogleSignIn />
           <AppleSignIn />
+          <EmailSignIn />
           <OTPSignIn className="border-t-[1px] border-border pt-8" />
         </>
       );
@@ -66,6 +69,7 @@ export default async function Page() {
         <>
           <AppleSignIn />
           <GithubSignIn />
+          <EmailSignIn />
           <OTPSignIn className="border-t-[1px] border-border pt-8" />
         </>
       );
@@ -78,6 +82,19 @@ export default async function Page() {
           <GoogleSignIn />
           <AppleSignIn />
           <GithubSignIn />
+          <EmailSignIn />
+        </>
+      );
+      break;
+
+    case "email":
+      preferredSignInOption = <EmailSignIn showLastUsed={true} />;
+      moreSignInOptions = (
+        <>
+          <GoogleSignIn />
+          <AppleSignIn />
+          <GithubSignIn />
+          <OTPSignIn className="border-t-[1px] border-border pt-8" />
         </>
       );
       break;
@@ -87,6 +104,7 @@ export default async function Page() {
         moreSignInOptions = (
           <>
             <GithubSignIn />
+            <EmailSignIn />
             <OTPSignIn className="border-t-[1px] border-border pt-8" />
           </>
         );
@@ -95,6 +113,7 @@ export default async function Page() {
           <>
             <AppleSignIn />
             <GithubSignIn />
+            <EmailSignIn />
             <OTPSignIn className="border-t-[1px] border-border pt-8" />
           </>
         );

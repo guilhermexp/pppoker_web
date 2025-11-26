@@ -4,6 +4,7 @@ import { generateCsvMapping } from "@/actions/ai/generate-csv-mapping";
 import { SelectAccount } from "@/components/select-account";
 import { SelectCurrency } from "@/components/select-currency";
 import { useUserQuery } from "@/hooks/use-user";
+import { useI18n } from "@/locales/client";
 import { formatAmount } from "@/utils/format";
 import { readStreamableValue } from "@ai-sdk/rsc";
 import { formatAmountValue, formatDate } from "@midday/import";
@@ -38,6 +39,7 @@ import { Controller, useWatch } from "react-hook-form";
 import { mappableFields, useCsvContext } from "./context";
 
 export function FieldMapping({ currencies }: { currencies: string[] }) {
+  const t = useI18n();
   const { fileColumns, firstRows, setValue, control, watch } = useCsvContext();
   const [isStreaming, setIsStreaming] = useState(false);
   const [showCurrency, setShowCurrency] = useState(false);
@@ -107,8 +109,8 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
   return (
     <div className="mt-6">
       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-        <div className="text-sm">CSV Data column</div>
-        <div className="text-sm">Midday data column</div>
+        <div className="text-sm">{t("import_modal.csv_data_column")}</div>
+        <div className="text-sm">{t("import_modal.midday_data_column")}</div>
         {(Object.keys(mappableFields) as (keyof typeof mappableFields)[]).map(
           (field) => (
             <FieldRow
@@ -128,7 +130,7 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
         className="w-full mt-6 border-t-[1px] border-border"
       >
         <AccordionItem value="settings">
-          <AccordionTrigger className="text-sm">Settings</AccordionTrigger>
+          <AccordionTrigger className="text-sm">{t("import_modal.settings")}</AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-col gap-4">
               <Controller
@@ -136,10 +138,9 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
                 name="inverted"
                 render={({ field: { onChange, value } }) => (
                   <div className="space-y-1">
-                    <Label htmlFor="inverted">Inverted amount</Label>
+                    <Label htmlFor="inverted">{t("import_modal.inverted_amount")}</Label>
                     <p className="text-sm text-[#606060]">
-                      If the transactions are from credit account, you can
-                      invert the amount.
+                      {t("import_modal.inverted_description")}
                     </p>
                     <div className="flex justify-end">
                       <Switch
@@ -157,14 +158,14 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
       </Accordion>
 
       <div className="mt-6">
-        <Label className="mb-2 block">Account</Label>
+        <Label className="mb-2 block">{t("import_modal.account")}</Label>
         <Controller
           control={control}
           name="bank_account_id"
           render={({ field: { value, onChange } }) => (
             <SelectAccount
               className="w-full"
-              placeholder="Select account"
+              placeholder={t("import_modal.select_account")}
               value={value}
               popoverProps={{
                 className: "z-[100]",
@@ -196,7 +197,7 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
 
       {showCurrency && (
         <>
-          <Label className="mb-2 mt-4 block">Currency</Label>
+          <Label className="mb-2 mt-4 block">{t("import_modal.currency")}</Label>
           <Controller
             control={control}
             name="currency"

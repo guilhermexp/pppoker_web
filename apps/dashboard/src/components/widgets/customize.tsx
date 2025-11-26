@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
 import { usePathname } from "next/navigation";
@@ -9,6 +10,7 @@ export function Customize() {
   const pathname = usePathname();
   const isCustomizing = useIsCustomizing();
   const { setIsCustomizing } = useWidgetActions();
+  const t = useI18n();
 
   const isOnRootPath = pathname === "/" || pathname === "";
 
@@ -22,7 +24,7 @@ export function Customize() {
       className="space-x-2 px-3"
       onClick={() => setIsCustomizing(!isCustomizing)}
     >
-      <span>{isCustomizing ? "Save" : "Customize"}</span>
+      <span>{isCustomizing ? t("dashboard.save") : t("dashboard.customize")}</span>
       {isCustomizing ? (
         <Icons.Check size={16} />
       ) : (

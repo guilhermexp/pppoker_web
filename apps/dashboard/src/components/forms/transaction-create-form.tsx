@@ -9,6 +9,7 @@ import { useTeamQuery } from "@/hooks/use-team";
 import { useTransactionParams } from "@/hooks/use-transaction-params";
 import { useUserQuery } from "@/hooks/use-user";
 import { useZodForm } from "@/hooks/use-zod-form";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { utc } from "@date-fns/utc";
 import { uniqueCurrencies } from "@midday/location/currencies";
@@ -70,6 +71,7 @@ const formSchema = z.object({
 });
 
 export function TransactionCreateForm() {
+  const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { setParams } = useTransactionParams();
@@ -176,7 +178,7 @@ export function TransactionCreateForm() {
                       }
                     }}
                   >
-                    Expense
+                    {t("transaction_create.expense")}
                   </Button>
                   <Button
                     type="button"
@@ -203,13 +205,12 @@ export function TransactionCreateForm() {
                       }
                     }}
                   >
-                    Income
+                    {t("transaction_create.income")}
                   </Button>
                 </div>
               </FormControl>
               <FormDescription>
-                Select whether this is money coming in (income) or going out
-                (expense)
+                {t("transaction_create.type_description")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -221,11 +222,11 @@ export function TransactionCreateForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{t("transaction_create.description_label")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="e.g., Office supplies, Invoice payment"
+                  placeholder={t("transaction_create.description_placeholder")}
                   autoComplete="off"
                   autoCapitalize="none"
                   autoCorrect="off"
@@ -233,7 +234,7 @@ export function TransactionCreateForm() {
                 />
               </FormControl>
               <FormDescription>
-                A brief description of what this transaction is for
+                {t("transaction_create.description_helper")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -246,11 +247,11 @@ export function TransactionCreateForm() {
             name="amount"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Amount</FormLabel>
+                <FormLabel>{t("transaction_create.amount_label")}</FormLabel>
                 <FormControl>
                   <CurrencyInput
                     value={field.value ? Math.abs(field.value) : undefined}
-                    placeholder="0.00"
+                    placeholder={t("transaction_create.amount_placeholder")}
                     allowNegative={false}
                     onValueChange={(values) => {
                       if (values.floatValue !== undefined) {
@@ -265,7 +266,7 @@ export function TransactionCreateForm() {
                     }}
                   />
                 </FormControl>
-                <FormDescription>Enter the transaction amount</FormDescription>
+                <FormDescription>{t("transaction_create.amount_helper")}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -276,7 +277,7 @@ export function TransactionCreateForm() {
             name="currency"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Currency</FormLabel>
+                <FormLabel>{t("transaction_create.currency_label")}</FormLabel>
 
                 <FormControl>
                   <SelectCurrency
@@ -287,7 +288,7 @@ export function TransactionCreateForm() {
                   />
                 </FormControl>
                 <FormDescription>
-                  The currency for this transaction
+                  {t("transaction_create.currency_helper")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -301,7 +302,7 @@ export function TransactionCreateForm() {
             name="bankAccountId"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Account</FormLabel>
+                <FormLabel>{t("transaction_create.account_label")}</FormLabel>
                 <FormControl>
                   <SelectAccount
                     onChange={(value) => {
@@ -312,11 +313,11 @@ export function TransactionCreateForm() {
                       }
                     }}
                     value={field.value}
-                    placeholder="Select account"
+                    placeholder={t("transaction_create.account_placeholder")}
                   />
                 </FormControl>
                 <FormDescription>
-                  The account this transaction belongs to
+                  {t("transaction_create.account_helper")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -328,7 +329,7 @@ export function TransactionCreateForm() {
             name="date"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Date</FormLabel>
+                <FormLabel>{t("transaction_create.date_label")}</FormLabel>
                 <Popover open={isOpen} onOpenChange={setIsOpen}>
                   <FormControl>
                     <PopoverTrigger asChild>
@@ -341,7 +342,7 @@ export function TransactionCreateForm() {
                         {field.value ? (
                           format(utc(field.value), user?.dateFormat ?? "PPP")
                         ) : (
-                          <span>Select date</span>
+                          <span>{t("transaction_create.date_placeholder")}</span>
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -365,7 +366,7 @@ export function TransactionCreateForm() {
                   </PopoverContent>
                 </Popover>
                 <FormDescription>
-                  When this transaction occurred
+                  {t("transaction_create.date_helper")}
                 </FormDescription>
               </FormItem>
             )}
@@ -378,7 +379,7 @@ export function TransactionCreateForm() {
             name="categorySlug"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Category</FormLabel>
+                <FormLabel>{t("transaction_create.category_label")}</FormLabel>
                 <FormControl>
                   <SelectCategory
                     onChange={(value) => {
@@ -405,7 +406,7 @@ export function TransactionCreateForm() {
                   />
                 </FormControl>
                 <FormDescription>
-                  Help organize and track your transactions
+                  {t("transaction_create.category_helper")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -417,7 +418,7 @@ export function TransactionCreateForm() {
             name="assignedId"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Assign</FormLabel>
+                <FormLabel>{t("transaction_create.assign_label")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -430,7 +431,7 @@ export function TransactionCreateForm() {
                   </FormControl>
                 </Select>
                 <FormDescription>
-                  Assign this transaction to a team member
+                  {t("transaction_create.assign_helper")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -440,12 +441,11 @@ export function TransactionCreateForm() {
 
         <Accordion type="multiple" defaultValue={["attachment"]}>
           <AccordionItem value="attachment">
-            <AccordionTrigger>Attachment</AccordionTrigger>
+            <AccordionTrigger>{t("transaction_create.attachment")}</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  Upload receipts, invoices, or other documents related to this
-                  transaction
+                  {t("transaction_create.attachment_description")}
                 </p>
                 <TransactionAttachments
                   // NOTE: For manual attachments, we need to generate a unique id
@@ -470,14 +470,12 @@ export function TransactionCreateForm() {
               htmlFor="settings"
               className="mb-2 block font-medium text-md"
             >
-              Exclude from analytics
+              {t("transaction_create.exclude_analytics")}
             </Label>
             <div className="flex flex-row items-center justify-between">
               <div className="space-y-0.5 pr-4">
                 <p className="text-xs text-muted-foreground">
-                  Exclude this transaction from analytics like profit, expense
-                  and revenue. This is useful for internal transfers between
-                  accounts to avoid double-counting.
+                  {t("transaction_create.exclude_analytics_description")}
                 </p>
               </div>
 
@@ -497,14 +495,14 @@ export function TransactionCreateForm() {
           </div>
 
           <AccordionItem value="note">
-            <AccordionTrigger>Note</AccordionTrigger>
+            <AccordionTrigger>{t("transaction_create.note")}</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  Add any additional details or context about this transaction
+                  {t("transaction_create.note_description")}
                 </p>
                 <Textarea
-                  placeholder="Note"
+                  placeholder={t("transaction_create.note_placeholder")}
                   className="min-h-[100px] resize-none"
                   onChange={(e) => {
                     form.setValue("note", e.target.value);
@@ -521,7 +519,7 @@ export function TransactionCreateForm() {
             className="w-full"
             disabled={!form.formState.isDirty}
           >
-            Create
+            {t("transaction_create.create_button")}
           </SubmitButton>
         </div>
       </form>

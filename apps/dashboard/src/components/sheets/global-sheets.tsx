@@ -1,8 +1,7 @@
 "use client";
 
-import { ConnectTransactionsModal } from "@/components/modals/connect-transactions-modal";
+import { CreateBankAccountModal } from "@/components/modals/create-bank-account-modal";
 import { ImportModal } from "@/components/modals/import-modal";
-import { SelectBankAccountsModal } from "@/components/modals/select-bank-accounts";
 import { SearchModal } from "@/components/search/search-modal";
 import { CategoryCreateSheet } from "@/components/sheets/category-create-sheet";
 import { CategoryEditSheet } from "@/components/sheets/category-edit-sheet";
@@ -41,15 +40,13 @@ export function GlobalSheets() {
       <TransactionCreateSheet />
       <TransactionEditSheet />
 
-      <SelectBankAccountsModal />
-
       <SearchModal />
 
       <DocumentSheet />
       <InboxDetailsSheet />
 
       <ImportModal />
-      <ConnectTransactionsModal />
+      <CreateBankAccountModal />
 
       <InvoiceDetailsSheet />
       <InvoiceSheet />

@@ -2,6 +2,7 @@
 
 import { useTeamQuery } from "@/hooks/use-team";
 import { useUserQuery } from "@/hooks/use-user";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ export function TopRevenueClient() {
   const trpc = useTRPC();
   const { data: team } = useTeamQuery();
   const { data: user } = useUserQuery();
+  const t = useI18n();
   const { data } = useSuspenseQuery(
     trpc.invoice.topRevenueClient.queryOptions(),
   );
@@ -20,15 +22,15 @@ export function TopRevenueClient() {
       <Card className="hidden sm:block">
         <CardHeader className="pb-3">
           <CardTitle className="font-medium text-2xl">
-            No Revenue Client
+            {t("customers.no_revenue_client")}
           </CardTitle>
         </CardHeader>
 
         <CardContent className="pb-[34px]">
           <div className="flex flex-col gap-2">
-            <div>Top Revenue Client</div>
+            <div>{t("customers.top_revenue_client")}</div>
             <div className="text-sm text-muted-foreground">
-              No revenue generated past 30 days
+              {t("customers.no_revenue_generated")}
             </div>
           </div>
         </CardContent>
@@ -46,15 +48,15 @@ export function TopRevenueClient() {
 
       <CardContent className="pb-[34px]">
         <div className="flex flex-col gap-2">
-          <div>Top Revenue Client</div>
+          <div>{t("customers.top_revenue_client")}</div>
           <div className="text-sm text-muted-foreground">
             <FormatAmount
               amount={data.totalRevenue}
               currency={data.currency || team?.baseCurrency || "USD"}
               locale={user?.locale ?? undefined}
             />{" "}
-            from {data.invoiceCount} invoice{data.invoiceCount !== 1 ? "s" : ""}{" "}
-            past 30 days
+            {t("customers.from")} {data.invoiceCount} {t("customers.invoice", { count: data.invoiceCount })}{" "}
+            {t("customers.past_30_days")}
           </div>
         </div>
       </CardContent>

@@ -9,13 +9,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
 }) {
   useEffect(() => {
-    // Only capture exceptions in production
-    if (process.env.NODE_ENV === "production") {
-      // Dynamically import Sentry only in production
-      import("@sentry/nextjs").then((Sentry) => {
-        Sentry.captureException(error);
-      });
-    }
+    
   }, [error]);
 
   return (

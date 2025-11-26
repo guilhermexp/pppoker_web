@@ -28,16 +28,5 @@ export function shouldShowUpgradeContent(
   createdAt: string | null | undefined,
   pathname: string,
 ): boolean {
-  // Only show upgrade content for trial plans
-  if (plan !== "trial" || !createdAt) {
-    return false;
-  }
-
-  // Check if trial has expired
-  if (!isTrialExpired(createdAt)) {
-    return false;
-  }
-
-  // Don't show upgrade content on excluded paths
-  return !EXCLUDED_PATHS.some((path) => pathname.includes(path));
+  return false;
 }

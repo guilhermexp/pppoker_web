@@ -1,8 +1,6 @@
 import { useTRPC } from "@/trpc/client";
 import { getScopeDescription } from "@/utils/scopes";
 import type { UnifiedApp } from "@midday/app-store/types";
-import { openUrl } from "@midday/desktop-client/core";
-import { isDesktopApp } from "@midday/desktop-client/platform";
 import {
   Accordion,
   AccordionContent,
@@ -132,12 +130,7 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
       if (app.type === "official" && app.onInitialize) {
         await app.onInitialize();
       } else if (app.type === "external" && app.installUrl) {
-        // Open the install URL for the OAuth application
-        if (isDesktopApp()) {
-          openUrl(app.installUrl);
-        } else {
-          window.open(app.installUrl, "_blank");
-        }
+        window.open(app.installUrl, "_blank");
       }
     } finally {
       setLoading(false);

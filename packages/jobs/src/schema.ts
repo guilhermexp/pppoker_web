@@ -32,21 +32,6 @@ export const generateInvoiceSchema = z.object({
 
 export type GenerateInvoicePayload = z.infer<typeof generateInvoiceSchema>;
 
-export const deleteConnectionSchema = z.object({
-  referenceId: z.string().optional().nullable(),
-  provider: z.enum(["gocardless", "teller", "plaid", "enablebanking"]),
-  accessToken: z.string().optional().nullable(),
-});
-
-export type DeleteConnectionPayload = z.infer<typeof deleteConnectionSchema>;
-
-export const initialBankSetupSchema = z.object({
-  teamId: z.string().uuid(),
-  connectionId: z.string().uuid(),
-});
-
-export type InitialBankSetupPayload = z.infer<typeof initialBankSetupSchema>;
-
 export const processDocumentSchema = z.object({
   mimetype: z.string(),
   filePath: z.array(z.string()),
@@ -69,13 +54,6 @@ export type ProcessAttachmentPayload = z.infer<typeof processAttachmentSchema>;
 
 export const deleteTeamSchema = z.object({
   teamId: z.string().uuid(),
-  connections: z.array(
-    z.object({
-      provider: z.string(),
-      referenceId: z.string().nullable(),
-      accessToken: z.string().nullable(),
-    }),
-  ),
 });
 
 export type DeleteTeamPayload = z.infer<typeof deleteTeamSchema>;
@@ -142,23 +120,6 @@ export const importTransactionsSchema = z.object({
 
 export type ImportTransactionsPayload = z.infer<
   typeof importTransactionsSchema
->;
-
-export const syncConnectionSchema = z.object({
-  connectionId: z.string().uuid(),
-  manualSync: z.boolean().optional(),
-});
-
-export type SyncConnectionPayload = z.infer<typeof syncConnectionSchema>;
-
-export const reconnectConnectionSchema = z.object({
-  teamId: z.string().uuid(),
-  connectionId: z.string().uuid(),
-  provider: z.string(),
-});
-
-export type ReconnectConnectionPayload = z.infer<
-  typeof reconnectConnectionSchema
 >;
 
 export const initialInboxSetupSchema = z.object({

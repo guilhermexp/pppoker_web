@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
 import NumberFlow from "@number-flow/react";
@@ -7,6 +8,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 export function NewCustomersThisMonth() {
   const trpc = useTRPC();
+  const t = useI18n();
   const { data } = useSuspenseQuery(
     trpc.invoice.newCustomersCount.queryOptions(),
   );
@@ -21,9 +23,9 @@ export function NewCustomersThisMonth() {
 
       <CardContent className="pb-[34px]">
         <div className="flex flex-col gap-2">
-          <div>New Customers</div>
+          <div>{t("customers.new_customers")}</div>
           <div className="text-sm text-muted-foreground">
-            Added past 30 days
+            {t("customers.added_past_30_days")}
           </div>
         </div>
       </CardContent>

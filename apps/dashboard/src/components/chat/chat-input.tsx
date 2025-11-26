@@ -6,6 +6,7 @@ import { SuggestedPrompts } from "@/components/chat/suggested-prompts";
 import { SuggestedActionsButton } from "@/components/suggested-actions-button";
 import { WebSearchButton } from "@/components/web-search-button";
 import { useChatInterface } from "@/hooks/use-chat-interface";
+import { useI18n } from "@/locales/client";
 import { useChatStore } from "@/store/chat";
 import { useArtifacts } from "@ai-sdk-tools/artifacts/client";
 import {
@@ -39,6 +40,7 @@ export interface ChatInputMessage extends PromptInputMessage {
 
 export function ChatInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const t = useI18n();
 
   const status = useChatStatus();
   const { sendMessage, stop } = useChatActions();
@@ -185,7 +187,7 @@ export function ChatInput() {
                   handleKeyDown(e);
                 }}
                 value={input}
-                placeholder={isWebSearch ? "Search the web" : "Ask anything"}
+                placeholder={isWebSearch ? t("chat.search_web") : t("chat.ask_anything")}
               />
             </PromptInputBody>
             <PromptInputToolbar>
