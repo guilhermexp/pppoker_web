@@ -5,6 +5,7 @@ import {
   formatContextForLLM,
 } from "@api/ai/agents/config/shared";
 import { getInvoicesTool } from "@api/ai/tools/get-invoices";
+import { updateInvoiceTool } from "@api/ai/tools/update-invoice";
 
 export const invoicesAgent = createAgent({
   name: "invoices",
@@ -18,9 +19,16 @@ export const invoicesAgent = createAgent({
 ${formatContextForLLM(ctx)}
 </background-data>
 
-${COMMON_AGENT_RULES}`,
+${COMMON_AGENT_RULES}
+
+<agent-specific-rules>
+- When marking an invoice as paid, always include the payment date
+- Provide clear confirmation after updating invoice status
+- Alert users about overdue invoices when relevant
+</agent-specific-rules>`,
   tools: {
     getInvoices: getInvoicesTool,
+    updateInvoice: updateInvoiceTool,
   },
   maxTurns: 5,
 });

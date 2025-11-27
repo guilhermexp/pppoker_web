@@ -4,6 +4,7 @@ import {
   createAgent,
   formatContextForLLM,
 } from "@api/ai/agents/config/shared";
+import { createCustomerTool } from "@api/ai/tools/create-customer";
 import { getCustomersTool } from "@api/ai/tools/get-customers";
 
 export const customersAgent = createAgent({
@@ -22,9 +23,12 @@ ${COMMON_AGENT_RULES}
 
 <agent-specific-rules>
 - Lead with key information
+- When creating customers, always require name and email
+- Suggest adding address and VAT number for invoicing purposes
 </agent-specific-rules>`,
   tools: {
     getCustomers: getCustomersTool,
+    createCustomer: createCustomerTool,
   },
   maxTurns: 5,
 });

@@ -4,8 +4,10 @@ import {
   createAgent,
   formatContextForLLM,
 } from "@api/ai/agents/config/shared";
+import { createBankAccountTool } from "@api/ai/tools/create-bank-account";
 import { getAccountBalancesTool } from "@api/ai/tools/get-account-balances";
 import { getBankAccountsTool } from "@api/ai/tools/get-bank-accounts";
+import { getCategoriesTool } from "@api/ai/tools/get-categories";
 import { getCustomersTool } from "@api/ai/tools/get-customers";
 import { getDocumentsTool } from "@api/ai/tools/get-documents";
 import { getInboxTool } from "@api/ai/tools/get-inbox";
@@ -18,7 +20,7 @@ export const operationsAgent = createAgent({
   temperature: 0.3,
   instructions: (
     ctx,
-  ) => `You are an operations specialist for ${ctx.companyName}. Provide account balances, documents, transactions, and invoices with specific data.
+  ) => `You are an operations specialist for ${ctx.companyName}. Provide account balances, documents, transactions, invoices, and manage bank accounts.
 
 <background-data>
 ${formatContextForLLM(ctx)}
@@ -28,10 +30,14 @@ ${COMMON_AGENT_RULES}
 
 <guidelines>
 - For direct queries: lead with results, add context
+- When creating bank accounts, suggest appropriate currency based on team settings
+- Use getCategories to show available categories before creating transactions
 </guidelines>`,
   tools: {
     getAccountBalances: getAccountBalancesTool,
     getBankAccounts: getBankAccountsTool,
+    createBankAccount: createBankAccountTool,
+    getCategories: getCategoriesTool,
     getTransactions: getTransactionsTool,
     getInvoices: getInvoicesTool,
     getCustomers: getCustomersTool,
