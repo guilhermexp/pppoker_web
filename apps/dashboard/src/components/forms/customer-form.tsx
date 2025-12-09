@@ -3,6 +3,7 @@
 import { useCustomerParams } from "@/hooks/use-customer-params";
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
 import { useZodForm } from "@/hooks/use-zod-form";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import {
@@ -98,6 +99,7 @@ type Props = {
 };
 
 export function CustomerForm({ data }: Props) {
+  const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const isEdit = !!data;
@@ -222,7 +224,7 @@ export function CustomerForm({ data }: Props) {
               className="space-y-6"
             >
               <AccordionItem value="general">
-                <AccordionTrigger>General</AccordionTrigger>
+                <AccordionTrigger>{t("forms.sections.general")}</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4">
                     <FormField
@@ -231,7 +233,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Name
+                            {t("forms.labels.name")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -253,7 +255,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Email
+                            {t("forms.labels.email")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -276,7 +278,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Billing Email
+                            {t("forms.labels.billing_email")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -295,8 +297,7 @@ export function CustomerForm({ data }: Props) {
                             />
                           </FormControl>
                           <FormDescription>
-                            This is an additional email that will be used to
-                            send invoices to.
+                            {t("forms.descriptions.billing_email")}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -309,7 +310,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Phone
+                            {t("forms.labels.phone")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -331,7 +332,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Website
+                            {t("forms.labels.website")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -352,7 +353,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Contact person
+                            {t("forms.labels.contact_person")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -371,13 +372,13 @@ export function CustomerForm({ data }: Props) {
               </AccordionItem>
 
               <AccordionItem value="details">
-                <AccordionTrigger>Details</AccordionTrigger>
+                <AccordionTrigger>{t("forms.sections.details")}</AccordionTrigger>
 
                 <AccordionContent>
                   <div className="space-y-4">
                     <SearchAddressInput
                       onSelect={onSelectAddress}
-                      placeholder="Search for an address"
+                      placeholder={t("forms.placeholders.search_address")}
                     />
 
                     <FormField
@@ -386,7 +387,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Address Line 1
+                            {t("forms.labels.address_line_1")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -407,7 +408,7 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Address Line 2
+                            {t("forms.labels.address_line_2")}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -429,7 +430,7 @@ export function CustomerForm({ data }: Props) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs text-[#878787] font-normal">
-                              Country
+                              {t("forms.labels.country")}
                             </FormLabel>
                             <FormControl>
                               <CountrySelector
@@ -451,7 +452,7 @@ export function CustomerForm({ data }: Props) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs text-[#878787] font-normal">
-                              City
+                              {t("forms.labels.city")}
                             </FormLabel>
                             <FormControl>
                               <Input
@@ -474,7 +475,7 @@ export function CustomerForm({ data }: Props) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs text-[#878787] font-normal">
-                              State / Province
+                              {t("forms.labels.state")}
                             </FormLabel>
                             <FormControl>
                               <Input
@@ -495,7 +496,7 @@ export function CustomerForm({ data }: Props) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs text-[#878787] font-normal">
-                              ZIP Code / Postal Code
+                              {t("forms.labels.zip")}
                             </FormLabel>
                             <FormControl>
                               <Input
@@ -516,7 +517,7 @@ export function CustomerForm({ data }: Props) {
                         htmlFor="tags"
                         className="mb-2 text-xs text-[#878787] font-normal block"
                       >
-                        Expense Tags
+                        {t("forms.labels.expense_tags")}
                       </Label>
 
                       <SelectTags
@@ -556,7 +557,7 @@ export function CustomerForm({ data }: Props) {
                       />
 
                       <FormDescription className="mt-2">
-                        Tags help categorize and track customer expenses.
+                        {t("forms.descriptions.expense_tags")}
                       </FormDescription>
                     </div>
 
@@ -567,7 +568,7 @@ export function CustomerForm({ data }: Props) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs text-[#878787] font-normal">
-                              Tax ID / VAT Number
+                              {t("forms.labels.vat_number")}
                             </FormLabel>
                             <FormControl>
                               <VatNumberInput
@@ -587,14 +588,14 @@ export function CustomerForm({ data }: Props) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs text-[#878787] font-normal">
-                            Note
+                            {t("forms.labels.note")}
                           </FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
                               value={field.value ?? ""}
                               className="flex min-h-[80px] resize-none"
-                              placeholder="Additional information..."
+                              placeholder={t("forms.placeholders.note")}
                               autoComplete="off"
                             />
                           </FormControl>
@@ -616,7 +617,7 @@ export function CustomerForm({ data }: Props) {
               onClick={() => setCustomerParams(null)}
               type="button"
             >
-              Cancel
+              {t("forms.buttons.cancel")}
             </Button>
 
             <SubmitButton
@@ -625,7 +626,7 @@ export function CustomerForm({ data }: Props) {
                 upsertCustomerMutation.isPending || !form.formState.isDirty
               }
             >
-              {isEdit ? "Update" : "Create"}
+              {isEdit ? t("forms.buttons.update") : t("forms.buttons.create")}
             </SubmitButton>
           </div>
         </div>

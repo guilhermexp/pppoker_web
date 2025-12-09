@@ -48,8 +48,58 @@ function CategoryTooltip({ category }: { category: any }) {
     );
   } catch {
     // Fallback if translation not found
-    return <span>Category description not available</span>;
+    return <span>{t("forms.descriptions.category_not_available")}</span>;
   }
+}
+
+// Component for System badge
+function SystemBadge() {
+  const t = useI18n();
+  return (
+    <span className="border border-border rounded-full py-1 px-2 text-[10px] text-[#878787] font-mono">
+      {t("table.columns.system")}
+    </span>
+  );
+}
+
+// Component for category actions
+function CategoryActions({
+  row,
+  meta,
+}: {
+  row: any;
+  meta: CategoriesTableMeta;
+}) {
+  const t = useI18n();
+
+  return (
+    <div className="text-right">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DotsHorizontalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuItem onClick={() => meta?.onEdit?.(row.original.id)}>
+            {t("table.actions.edit")}
+          </DropdownMenuItem>
+
+          {!row.original.system && (
+            <DropdownMenuItem
+              onClick={() => meta?.deleteCategory?.(row.original.id)}
+            >
+              {t("table.actions.remove")}
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 }
 
 // Flatten categories to include both parents and children with hierarchy info
@@ -163,9 +213,7 @@ export const columns: ColumnDef<any>[] = [
 
           {row.original.system && (
             <div className="pl-2">
-              <span className="border border-border rounded-full py-1 px-2 text-[10px] text-[#878787] font-mono">
-                System
-              </span>
+              <SystemBadge />
             </div>
           )}
         </div>
@@ -193,38 +241,7 @@ export const columns: ColumnDef<any>[] = [
     id: "actions",
     cell: ({ row, table }) => {
       const meta = table.options.meta as CategoriesTableMeta;
-
-      return (
-        <div className="text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <DotsHorizontalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DropdownMenuItem onClick={() => meta?.onEdit?.(row.original.id)}>
-                Edit
-              </DropdownMenuItem>
-
-              {!row.original.system && (
-                <DropdownMenuItem
-                  onClick={() => meta?.deleteCategory?.(row.original.id)}
-                >
-                  Remove
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
+      return <CategoryActions row={row} meta={meta} />;
     },
   },
 ];

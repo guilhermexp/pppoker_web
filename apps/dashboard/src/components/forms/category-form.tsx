@@ -7,6 +7,7 @@ import { TaxRateInput } from "@/components/tax-rate-input";
 import { useCategoryParams } from "@/hooks/use-category-params";
 import { useUserQuery } from "@/hooks/use-user";
 import { useZodForm } from "@/hooks/use-zod-form";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import {
@@ -43,6 +44,7 @@ type Props = {
 };
 
 export function CategoryForm({ data }: Props) {
+  const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { setParams } = useCategoryParams();
@@ -98,7 +100,7 @@ export function CategoryForm({ data }: Props) {
               render={({ field }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-xs text-[#878787] font-normal">
-                    Name
+                    {t("forms.labels.name")}
                   </FormLabel>
                   <FormControl>
                     <InputColor
@@ -123,7 +125,7 @@ export function CategoryForm({ data }: Props) {
               render={({ field }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-xs text-[#878787] font-normal">
-                    Parent Category (Optional)
+                    {t("forms.labels.parent_category")}
                   </FormLabel>
                   <FormControl>
                     <SelectParentCategory
@@ -144,7 +146,7 @@ export function CategoryForm({ data }: Props) {
               render={({ field }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-xs text-[#878787] font-normal">
-                    Description
+                    {t("forms.labels.description")}
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -163,7 +165,7 @@ export function CategoryForm({ data }: Props) {
               render={({ field }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-xs text-[#878787] font-normal">
-                    Report Code
+                    {t("forms.labels.report_code")}
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -185,7 +187,7 @@ export function CategoryForm({ data }: Props) {
                 render={({ field }) => (
                   <FormItem className="w-[300px] space-y-1">
                     <FormLabel className="text-xs text-[#878787] font-normal">
-                      Tax Type
+                      {t("forms.labels.tax_type")}
                     </FormLabel>
                     <FormControl>
                       <SelectTaxType
@@ -205,7 +207,7 @@ export function CategoryForm({ data }: Props) {
                 render={({ field }) => (
                   <FormItem className="flex-1 space-y-1">
                     <FormLabel className="text-xs text-[#878787] font-normal">
-                      Tax Rate
+                      {t("forms.labels.tax_rate")}
                     </FormLabel>
                     <FormControl>
                       <TaxRateInput
@@ -247,11 +249,10 @@ export function CategoryForm({ data }: Props) {
                   <div className="flex items-center justify-between space-x-2">
                     <div className="space-y-0.5">
                       <FormLabel className="text-xs text-[#878787] font-normal">
-                        Exclude from Reports
+                        {t("forms.labels.exclude_reports")}
                       </FormLabel>
                       <div className="text-xs text-muted-foreground">
-                        Transactions in this category won't appear in financial
-                        reports
+                        {t("forms.descriptions.exclude_reports")}
                       </div>
                     </div>
                     <FormControl>
@@ -273,7 +274,7 @@ export function CategoryForm({ data }: Props) {
             isSubmitting={categoriesMutation.isPending}
             className="w-full"
           >
-            Create
+            {t("forms.buttons.create")}
           </SubmitButton>
         </div>
       </form>

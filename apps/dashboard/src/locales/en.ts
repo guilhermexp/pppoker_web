@@ -764,6 +764,208 @@ export default {
     find_anything: "Find anything...",
   },
 
+  // Table column headers
+  table: {
+    columns: {
+      name: "Name",
+      contact_person: "Contact person",
+      email: "Email",
+      invoices: "Invoices",
+      projects: "Projects",
+      tags: "Tags",
+      actions: "Actions",
+      date: "Date",
+      description: "Description",
+      amount: "Amount",
+      category: "Category",
+      account: "Account",
+      status: "Status",
+    },
+  },
+
+  // Common actions
+  actions: {
+    edit: "Edit",
+    delete: "Delete",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    save: "Save",
+    yes: "Yes",
+    no: "No",
+    submit: "Submit",
+    update: "Update",
+    add: "Add",
+    close: "Close",
+    open: "Open",
+    copy: "Copy",
+    export: "Export",
+    deselect_all: "Deselect all",
+  },
+
+  // Dialog and confirmation messages
+  dialogs: {
+    are_you_sure: "Are you absolutely sure?",
+    delete_confirmation:
+      "This action cannot be undone. This will permanently delete and remove the data from our servers.",
+    delete_customer_confirmation:
+      "This action cannot be undone. This will permanently delete this customer and remove their data from our servers.",
+    delete_project_confirmation:
+      "This action cannot be undone. This will permanently delete this project and remove its data from our servers.",
+    delete_product_confirmation:
+      "This action cannot be undone. This will permanently delete this product and remove its data from our servers.",
+    delete_category_confirmation:
+      "This action cannot be undone. This will permanently delete this category and remove its data from our servers.",
+    edit_customer: "Edit Customer",
+    edit_project: "Edit Project",
+    edit_product: "Edit Product",
+    edit_category: "Edit Category",
+    edit_oauth_application: "Edit OAuth Application",
+    submitting: "Submitting...",
+    submit_for_review: "Submit for review",
+    cancelling_review: "Cancelling review...",
+    cancel_review: "Cancel review",
+  },
+
+  // Navigation menu labels
+  navigation: {
+    settings: {
+      general: "General",
+      bank_connections: "Bank Connections",
+      members: "Members",
+      notifications: "Notifications",
+      developer: "Developer",
+    },
+    account: {
+      general: "General",
+      date_locale: "Date & Locale",
+      security: "Security",
+      teams: "Teams",
+      support: "Support",
+    },
+  },
+
+  // Toast and notification messages
+  toast: {
+    copied_clipboard: "Copied to clipboard.",
+    link_copied: "Copied link to clipboard.",
+    transaction_updated: "Transaction updated",
+    transaction_url_copied: "Transaction URL copied to clipboard",
+    transaction_url_copy_failed: "Failed to copy transaction URL to clipboard",
+    sync_success: "Sync completed successfully",
+    sync_failed: "Sync failed, please try again.",
+    syncing: "Syncing...",
+    upload_success: "Upload successful.",
+    upload_failed: "Something went wrong please try again.",
+    file_too_large: "File size too large.",
+    file_type_invalid: "File type not supported.",
+    something_wrong: "Something went wrong please try again.",
+    do_not_close_browser: "Please do not close browser until completed",
+    submitted_for_review: "Submitted for review",
+    application_moved_draft: "Application moved to draft",
+    client_id_copied: "Client ID copied to clipboard",
+    error: "Error",
+  },
+
+  // Form validation messages
+  validation: {
+    name_required: "Name is required",
+    name_min_2: "Name must be at least 2 characters.",
+    name_min_1: "Name must be at least 1 character.",
+    email_invalid: "Email is not valid.",
+  },
+
+  // OAuth error messages
+  oauth: {
+    invalid_request: "Invalid OAuth Request",
+    inactive_app: "OAuth Application Inactive",
+    auth_required: "Authentication Required",
+    code_expired: "Authorization Code Expired",
+    code_used: "Authorization Code Already Used",
+    refresh_expired: "Refresh Token Expired",
+    refresh_revoked: "Refresh Token Revoked",
+    invalid_refresh: "Invalid Refresh Token",
+    unsupported_grant: "Grant Type Not Supported",
+    server_error: "Server Error",
+    invalid_code: "Invalid Authorization Code",
+    invalid_url: "Invalid URL Format",
+    invalid_redirect: "Invalid URL Format",
+    unauthorized: "Unauthorized Access",
+    no_scopes:
+      "No scopes provided. Please specify the required scopes for the user to authorize this application.",
+    request_timed_out:
+      "This authorization request has expired. Please return to the application and start a new authorization flow.",
+    rate_limited:
+      "Too many authorization attempts. Please wait a few minutes before trying again.",
+  },
+
+  // Empty states and error messages
+  empty_states: {
+    not_found: "Not Found",
+    invoice_not_found: "Invoice Not Found",
+    no_chats: "No chats found",
+    no_chat_history: "No chat history",
+    no_invites: "No invites sent",
+    no_tracked_time: "No tracked time",
+    no_tracked_hours:
+      "No billable hours found for this project in the selected date range. Please track some time first.",
+    no_notifications: "No new notifications",
+    nothing_archived: "Nothing in the archive",
+    no_expenses: "No expenses recorded this month",
+    no_documents: "No documents yet",
+    no_recurring: "No recurring expenses",
+    no_results: "No results found.",
+    no_attachments: "No attachments",
+    no_new_attachments: "No new attachments found.",
+    none: "None",
+  },
+
+  // Invoice settings
+  invoice: {
+    add_sales_tax: "Add sales tax",
+    add_vat: "Add VAT",
+    add_discount: "Add discount",
+    add_units: "Add units",
+    add_qr_code: "Add QR code",
+    canceled: "Canceled",
+  },
+
+  // Placeholders
+  placeholders: {
+    note: "Note",
+    email: "Email",
+    name: "Name",
+    additional_info: "Additional information...",
+    search_or_filter: "Search or filter",
+  },
+
+  // Artifact and chat UI
+  artifact: {
+    close: "Close artifact",
+    open: "Open artifact",
+  },
+
+  // Chat history
+  chat_history: {
+    delete_chat: "Delete chat",
+    new_chat: "New chat",
+  },
+
+  // Inbox
+  inbox: {
+    upload_zone_description: "Uploading {count} files",
+    settings: "Settings",
+  },
+
+  // Tracker
+  tracker: {
+    create_invoice: "Create invoice",
+  },
+
+  // Selected items
+  selected: {
+    count: "{count} selected",
+  },
+
   transaction_create: {
     title: "Create Transaction",
     expense: "Expense",
@@ -799,5 +1001,117 @@ export default {
       "Add any additional details or context about this transaction",
     note_placeholder: "Note",
     create_button: "Create",
+  },
+
+  // Form labels and common fields
+  forms: {
+    // Sections
+    sections: {
+      general: "General",
+      details: "Details",
+    },
+
+    // Common labels
+    labels: {
+      name: "Name",
+      email: "Email",
+      billing_email: "Billing Email",
+      phone: "Phone",
+      website: "Website",
+      contact_person: "Contact person",
+      address_line_1: "Address Line 1",
+      address_line_2: "Address Line 2",
+      country: "Country",
+      city: "City",
+      state: "State / Province",
+      zip: "ZIP Code / Postal Code",
+      expense_tags: "Expense Tags",
+      vat_number: "Tax ID / VAT Number",
+      note: "Note",
+      description: "Description",
+      parent_category: "Parent Category (Optional)",
+      report_code: "Report Code",
+      tax_type: "Tax Type",
+      tax_rate: "Tax Rate",
+      exclude_reports: "Exclude from Reports",
+      price: "Price",
+      unit: "Unit",
+      status: "Status",
+      usage: "Usage",
+      last_used: "Last Used",
+    },
+
+    // Placeholders
+    placeholders: {
+      name: "Acme Inc",
+      email: "acme@example.com",
+      billing_email: "finance@example.com",
+      phone: "+1 (555) 123-4567",
+      website: "acme.com",
+      contact_person: "John Doe",
+      address_line_1: "123 Main St",
+      address_line_2: "Suite 100",
+      city: "New York",
+      state: "NY",
+      zip: "10001",
+      note: "Additional information...",
+      search_address: "Search for an address",
+      description: "Description",
+      report_code: "Report Code",
+    },
+
+    // Descriptions
+    descriptions: {
+      billing_email:
+        "This is an additional email that will be used to send invoices to.",
+      expense_tags: "Tags help categorize and track customer expenses.",
+      exclude_reports:
+        "Transactions in this category won't appear in financial reports",
+      category_not_available: "Category description not available",
+    },
+
+    // Buttons
+    buttons: {
+      cancel: "Cancel",
+      create: "Create",
+      update: "Update",
+      save: "Save",
+    },
+
+    // Status
+    status: {
+      active: "Active",
+      inactive: "Inactive",
+    },
+  },
+
+  // Table headers
+  table: {
+    columns: {
+      name: "Name",
+      contact_person: "Contact person",
+      email: "Email",
+      invoices: "Invoices",
+      projects: "Projects",
+      tags: "Tags",
+      actions: "Actions",
+      price: "Price",
+      unit: "Unit",
+      usage: "Usage",
+      last_used: "Last Used",
+      status: "Status",
+      tax_type: "Tax Type",
+      tax_rate: "Tax Rate",
+      report_code: "Report Code",
+      system: "System",
+    },
+    actions: {
+      edit: "Edit",
+      edit_customer: "Edit customer",
+      edit_product: "Edit product",
+      edit_category: "Edit category",
+      delete: "Delete",
+      remove: "Remove",
+    },
   },
 } as const;

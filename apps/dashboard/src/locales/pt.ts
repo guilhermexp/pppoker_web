@@ -781,6 +781,209 @@ export default {
     find_anything: "Buscar qualquer coisa...",
   },
 
+  // Table column headers
+  table: {
+    columns: {
+      name: "Nome",
+      contact_person: "Pessoa de contato",
+      email: "Email",
+      invoices: "Faturas",
+      projects: "Projetos",
+      tags: "Tags",
+      actions: "Acoes",
+      date: "Data",
+      description: "Descricao",
+      amount: "Valor",
+      category: "Categoria",
+      account: "Conta",
+      status: "Status",
+    },
+  },
+
+  // Common actions
+  actions: {
+    edit: "Editar",
+    delete: "Excluir",
+    cancel: "Cancelar",
+    confirm: "Confirmar",
+    save: "Salvar",
+    yes: "Sim",
+    no: "Nao",
+    submit: "Enviar",
+    update: "Atualizar",
+    add: "Adicionar",
+    close: "Fechar",
+    open: "Abrir",
+    copy: "Copiar",
+    export: "Exportar",
+    deselect_all: "Desmarcar todos",
+  },
+
+  // Dialog and confirmation messages
+  dialogs: {
+    are_you_sure: "Tem certeza absoluta?",
+    delete_confirmation:
+      "Esta acao nao pode ser desfeita. Isso excluira permanentemente e removera os dados de nossos servidores.",
+    delete_customer_confirmation:
+      "Esta acao nao pode ser desfeita. Isso excluira permanentemente este cliente e removera seus dados de nossos servidores.",
+    delete_project_confirmation:
+      "Esta acao nao pode ser desfeita. Isso excluira permanentemente este projeto e removera seus dados de nossos servidores.",
+    delete_product_confirmation:
+      "Esta acao nao pode ser desfeita. Isso excluira permanentemente este produto e removera seus dados de nossos servidores.",
+    delete_category_confirmation:
+      "Esta acao nao pode ser desfeita. Isso excluira permanentemente esta categoria e removera seus dados de nossos servidores.",
+    edit_customer: "Editar Cliente",
+    edit_project: "Editar Projeto",
+    edit_product: "Editar Produto",
+    edit_category: "Editar Categoria",
+    edit_oauth_application: "Editar Aplicativo OAuth",
+    submitting: "Enviando...",
+    submit_for_review: "Enviar para revisao",
+    cancelling_review: "Cancelando revisao...",
+    cancel_review: "Cancelar revisao",
+  },
+
+  // Navigation menu labels
+  navigation: {
+    settings: {
+      general: "Geral",
+      bank_connections: "Conexoes Bancarias",
+      members: "Membros",
+      notifications: "Notificacoes",
+      developer: "Desenvolvedor",
+    },
+    account: {
+      general: "Geral",
+      date_locale: "Data e Localidade",
+      security: "Seguranca",
+      teams: "Equipes",
+      support: "Suporte",
+    },
+  },
+
+  // Toast and notification messages
+  toast: {
+    copied_clipboard: "Copiado para a area de transferencia.",
+    link_copied: "Link copiado para a area de transferencia.",
+    transaction_updated: "Transacao atualizada",
+    transaction_url_copied: "URL da transacao copiada para a area de transferencia",
+    transaction_url_copy_failed:
+      "Falha ao copiar URL da transacao para a area de transferencia",
+    sync_success: "Sincronizacao concluida com sucesso",
+    sync_failed: "Sincronizacao falhou, tente novamente.",
+    syncing: "Sincronizando...",
+    upload_success: "Upload concluido com sucesso.",
+    upload_failed: "Algo deu errado, tente novamente.",
+    file_too_large: "Arquivo muito grande.",
+    file_type_invalid: "Tipo de arquivo nao suportado.",
+    something_wrong: "Algo deu errado, tente novamente.",
+    do_not_close_browser: "Por favor, nao feche o navegador ate concluir",
+    submitted_for_review: "Enviado para revisao",
+    application_moved_draft: "Aplicativo movido para rascunho",
+    client_id_copied: "ID do cliente copiado para a area de transferencia",
+    error: "Erro",
+  },
+
+  // Form validation messages
+  validation: {
+    name_required: "Nome e obrigatorio",
+    name_min_2: "O nome deve ter pelo menos 2 caracteres.",
+    name_min_1: "O nome deve ter pelo menos 1 caractere.",
+    email_invalid: "Email nao e valido.",
+  },
+
+  // OAuth error messages
+  oauth: {
+    invalid_request: "Requisicao OAuth invalida",
+    inactive_app: "Aplicativo OAuth inativo",
+    auth_required: "Autenticacao necessaria",
+    code_expired: "Codigo de autorizacao expirado",
+    code_used: "Codigo de autorizacao ja foi usado",
+    refresh_expired: "Token de atualizacao expirado",
+    refresh_revoked: "Token de atualizacao revogado",
+    invalid_refresh: "Token de atualizacao invalido",
+    unsupported_grant: "Tipo de concessao nao suportado",
+    server_error: "Erro do servidor",
+    invalid_code: "Codigo de autorizacao invalido",
+    invalid_url: "Formato de URL invalido",
+    invalid_redirect: "Formato de URL invalido",
+    unauthorized: "Acesso nao autorizado",
+    no_scopes:
+      "Nenhum escopo fornecido. Por favor, especifique os escopos necessarios para que o usuario possa autorizar este aplicativo.",
+    request_timed_out:
+      "Esta solicitacao de autorizacao expirou. Por favor, retorne ao aplicativo e inicie um novo processo de autorizacao.",
+    rate_limited:
+      "Muitas tentativas de autorizacao. Por favor, aguarde alguns minutos antes de tentar novamente.",
+  },
+
+  // Empty states and error messages
+  empty_states: {
+    not_found: "Nao encontrado",
+    invoice_not_found: "Fatura nao encontrada",
+    no_chats: "Nenhum chat encontrado",
+    no_chat_history: "Sem historico de chat",
+    no_invites: "Nenhum convite enviado",
+    no_tracked_time: "Sem tempo rastreado",
+    no_tracked_hours:
+      "Nenhuma hora faturavel encontrada para este projeto no intervalo de datas selecionado. Por favor, rastreie algum tempo primeiro.",
+    no_notifications: "Sem notificacoes novas",
+    nothing_archived: "Nada no arquivo",
+    no_expenses: "Nenhuma despesa registrada este mes",
+    no_documents: "Nenhum documento ainda",
+    no_recurring: "Nenhuma despesa recorrente",
+    no_results: "Nenhum resultado encontrado.",
+    no_attachments: "Sem anexos",
+    no_new_attachments: "Nenhum anexo novo encontrado.",
+    none: "Nenhum",
+  },
+
+  // Invoice settings
+  invoice: {
+    add_sales_tax: "Adicionar imposto sobre vendas",
+    add_vat: "Adicionar IVA",
+    add_discount: "Adicionar desconto",
+    add_units: "Adicionar unidades",
+    add_qr_code: "Adicionar codigo QR",
+    canceled: "Cancelada",
+  },
+
+  // Placeholders
+  placeholders: {
+    note: "Nota",
+    email: "Email",
+    name: "Nome",
+    additional_info: "Informacoes adicionais...",
+    search_or_filter: "Buscar ou filtrar",
+  },
+
+  // Artifact and chat UI
+  artifact: {
+    close: "Fechar artefato",
+    open: "Abrir artefato",
+  },
+
+  // Chat history
+  chat_history: {
+    delete_chat: "Excluir chat",
+    new_chat: "Novo chat",
+  },
+
+  // Inbox
+  inbox: {
+    upload_zone_description: "Carregando {count} arquivos",
+    settings: "Configuracoes",
+  },
+
+  // Tracker
+  tracker: {
+    create_invoice: "Criar fatura",
+  },
+
+  // Selected items
+  selected: {
+    count: "{count} selecionado(s)",
+  },
+
   transaction_create: {
     title: "Criar Transacao",
     expense: "Despesa",
@@ -816,5 +1019,118 @@ export default {
       "Adicione detalhes ou contexto adicional sobre esta transacao",
     note_placeholder: "Nota",
     create_button: "Criar",
+  },
+
+  // Form labels and common fields
+  forms: {
+    // Sections
+    sections: {
+      general: "Geral",
+      details: "Detalhes",
+    },
+
+    // Common labels
+    labels: {
+      name: "Nome",
+      email: "Email",
+      billing_email: "Email de Cobranca",
+      phone: "Telefone",
+      website: "Site",
+      contact_person: "Pessoa de contato",
+      address_line_1: "Endereco Linha 1",
+      address_line_2: "Endereco Linha 2",
+      country: "Pais",
+      city: "Cidade",
+      state: "Estado / Provincia",
+      zip: "CEP / Codigo Postal",
+      expense_tags: "Tags de Despesa",
+      vat_number: "CNPJ / CPF / VAT",
+      note: "Nota",
+      description: "Descricao",
+      parent_category: "Categoria Pai (Opcional)",
+      report_code: "Codigo de Relatorio",
+      tax_type: "Tipo de Imposto",
+      tax_rate: "Aliquota de Imposto",
+      exclude_reports: "Excluir dos Relatorios",
+      price: "Preco",
+      unit: "Unidade",
+      status: "Status",
+      usage: "Uso",
+      last_used: "Ultimo Uso",
+    },
+
+    // Placeholders
+    placeholders: {
+      name: "Acme Inc",
+      email: "acme@example.com",
+      billing_email: "financeiro@exemplo.com",
+      phone: "+55 (11) 99999-9999",
+      website: "acme.com",
+      contact_person: "Joao Silva",
+      address_line_1: "Rua Principal, 123",
+      address_line_2: "Sala 100",
+      city: "Sao Paulo",
+      state: "SP",
+      zip: "01310-100",
+      note: "Informacoes adicionais...",
+      search_address: "Buscar endereco",
+      description: "Descricao",
+      report_code: "Codigo de Relatorio",
+    },
+
+    // Descriptions
+    descriptions: {
+      billing_email:
+        "Este e um email adicional que sera usado para enviar faturas.",
+      expense_tags:
+        "Tags ajudam a categorizar e rastrear despesas do cliente.",
+      exclude_reports:
+        "Transacoes nesta categoria nao aparecerao em relatorios financeiros",
+      category_not_available: "Descricao da categoria nao disponivel",
+    },
+
+    // Buttons
+    buttons: {
+      cancel: "Cancelar",
+      create: "Criar",
+      update: "Atualizar",
+      save: "Salvar",
+    },
+
+    // Status
+    status: {
+      active: "Ativo",
+      inactive: "Inativo",
+    },
+  },
+
+  // Table headers
+  table: {
+    columns: {
+      name: "Nome",
+      contact_person: "Pessoa de contato",
+      email: "Email",
+      invoices: "Faturas",
+      projects: "Projetos",
+      tags: "Tags",
+      actions: "Acoes",
+      price: "Preco",
+      unit: "Unidade",
+      usage: "Uso",
+      last_used: "Ultimo Uso",
+      status: "Status",
+      tax_type: "Tipo de Imposto",
+      tax_rate: "Aliquota de Imposto",
+      report_code: "Codigo de Relatorio",
+      system: "Sistema",
+    },
+    actions: {
+      edit: "Editar",
+      edit_customer: "Editar cliente",
+      edit_product: "Editar produto",
+      edit_category: "Editar categoria",
+      delete: "Excluir",
+      remove: "Remover",
+    },
   },
 } as const;

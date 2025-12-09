@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomerParams } from "@/hooks/use-customer-params";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import {
   AlertDialog,
@@ -25,6 +26,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CustomerForm } from "../forms/customer-form";
 
 export function CustomerEditSheet() {
+  const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { setParams, customerId } = useCustomerParams();
@@ -65,7 +67,7 @@ export function CustomerEditSheet() {
     <Sheet open={isOpen} onOpenChange={() => setParams(null)}>
       <SheetContent stack>
         <SheetHeader className="mb-6 flex justify-between items-center flex-row">
-          <h2 className="text-xl">Edit Customer</h2>
+          <h2 className="text-xl">{t("dialogs.edit_customer")}</h2>
 
           {customerId && (
             <DropdownMenu>
@@ -81,28 +83,26 @@ export function CustomerEditSheet() {
                       className="text-destructive"
                       onSelect={(e) => e.preventDefault()}
                     >
-                      Delete
+                      {t("actions.delete")}
                     </DropdownMenuItem>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>
-                        Are you absolutely sure?
+                        {t("dialogs.are_you_sure")}
                       </AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete the customer and remove their data from our
-                        servers.
+                        {t("dialogs.delete_customer_confirmation")}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() =>
                           deleteCustomerMutation.mutate({ id: customerId })
                         }
                       >
-                        Delete
+                        {t("actions.delete")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

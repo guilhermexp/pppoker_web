@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomerParams } from "@/hooks/use-customer-params";
+import { useI18n } from "@/locales/client";
 import { getWebsiteLogo } from "@/utils/logos";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import { Avatar, AvatarFallback, AvatarImageNext } from "@midday/ui/avatar";
@@ -19,6 +20,51 @@ import Link from "next/link";
 import * as React from "react";
 
 export type Customer = RouterOutputs["customers"]["get"]["data"][number];
+
+// Component for customer actions
+function CustomerActions({
+  row,
+  table,
+}: {
+  row: any;
+  table: any;
+}) {
+  const t = useI18n();
+  const { setParams } = useCustomerParams();
+
+  return (
+    <div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild className="relative">
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <DotsHorizontalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() =>
+              setParams({
+                customerId: row.original.id,
+              })
+            }
+          >
+            {t("table.actions.edit_customer")}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() =>
+              table.options.meta?.deleteCustomer?.(row.original.id)
+            }
+            className="text-[#FF3638]"
+          >
+            {t("table.actions.delete")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 export const columns: ColumnDef<Customer>[] = [
   {
@@ -128,40 +174,7 @@ export const columns: ColumnDef<Customer>[] = [
         "text-right sticky right-0 bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-30 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:left-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-r after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
     },
     cell: ({ row, table }) => {
-      const { setParams } = useCustomerParams();
-
-      return (
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild className="relative">
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <DotsHorizontalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() =>
-                  setParams({
-                    customerId: row.original.id,
-                  })
-                }
-              >
-                Edit customer
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onClick={() =>
-                  table.options.meta?.deleteCustomer?.(row.original.id)
-                }
-                className="text-[#FF3638]"
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
+      return <CustomerActions row={row} table={table} />;
     },
   },
 ];

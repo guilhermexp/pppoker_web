@@ -1,8 +1,8 @@
 # AI Quickstart: Midday (Self-Hosted)
 
-**Last Analysis Date:** 2025-11-25 19:30:00 UTC
+**Last Analysis Date:** 2025-11-27 22:00:00 UTC
 **Git Branch:** main
-**Git Status:** dirty - 150+ files modified (major simplification in progress)
+**Git Status:** dirty - 150+ files modified (major simplification + AI agent tools)
 **Self-Hosted Fork:** Yes - simplified version removing external dependencies
 
 ## Project Overview
@@ -292,6 +292,113 @@ User Query -> OpenAI API -> Tool calls (get transactions, create invoice, etc.)
           -> Stream response via AI SDK
 ```
 
+## Multi-Agent AI System
+
+The AI assistant uses a **multi-agent architecture** with specialized agents for different domains:
+
+### Architecture
+```
++------------------+
+|   User Query     |
++--------+---------+
+         |
+         v
++------------------+
+|  Triage Agent    |  <-- Routes to appropriate specialist
+|  (GPT-4o-mini)   |
++--------+---------+
+         |
+    +----+----+--------------------+
+    |         |                    |
+    v         v                    v
++--------+ +--------+      +-------------+
+|Trans.  | |Invoice |      | Other       |
+|Agent   | |Agent   |      | Agents...   |
++--------+ +--------+      +-------------+
+```
+
+### Agent Definitions
+
+Located in `apps/api/src/ai/agents/`:
+
+| Agent | File | Description |
+|-------|------|-------------|
+| **Triage** | `triage.ts` | Routes queries to specialized agents |
+| **Transactions** | `transactions.ts` | Financial operations (CRUD transactions, categories, customers, bank accounts) |
+| **Invoices** | `invoices.ts` | Invoice operations (CRUD invoices) |
+
+### AI Tools
+
+Located in `apps/api/src/ai/tools/`:
+
+#### Transaction Tools
+| Tool | File | Description |
+|------|------|-------------|
+| `getTransactions` | `get-transactions.ts` | Search and filter transactions |
+| `createTransaction` | `create-transaction.ts` | Create new transaction (expense/income) |
+| `updateTransaction` | `update-transaction.ts` | Update existing transaction |
+| `deleteTransaction` | `delete-transaction.ts` | Delete transaction |
+
+#### Category Tools
+| Tool | File | Description |
+|------|------|-------------|
+| `getCategories` | `get-categories.ts` | List transaction categories |
+| `createCategory` | `create-category.ts` | Create new category |
+| `updateCategory` | `update-category.ts` | Update existing category |
+| `deleteCategory` | `delete-category.ts` | Delete category |
+
+#### Customer Tools
+| Tool | File | Description |
+|------|------|-------------|
+| `getCustomers` | `get-customers.ts` | List customers |
+| `createCustomer` | `create-customer.ts` | Create new customer |
+| `updateCustomer` | `update-customer.ts` | Update existing customer |
+| `deleteCustomer` | `delete-customer.ts` | Delete customer |
+
+#### Bank Account Tools
+| Tool | File | Description |
+|------|------|-------------|
+| `getBankAccounts` | `get-bank-accounts.ts` | List bank accounts |
+| `createBankAccount` | `create-bank-account.ts` | Create new bank account |
+| `updateBankAccount` | `update-bank-account.ts` | Update existing bank account |
+| `deleteBankAccount` | `delete-bank-account.ts` | Delete bank account |
+
+#### Invoice Tools
+| Tool | File | Description |
+|------|------|-------------|
+| `getInvoices` | `get-invoices.ts` | List invoices |
+| `createInvoice` | `create-invoice.ts` | Create new invoice |
+| `updateInvoice` | `update-invoice.ts` | Update existing invoice |
+| `deleteInvoice` | `delete-invoice.ts` | Delete invoice |
+
+### Tool Implementation Pattern
+
+All tools follow a consistent pattern using the AI SDK:
+
+```typescript
+import { tool } from "ai";
+import { z } from "zod";
+
+export const myTool = ({ teamId, userId, db }: ToolContext) =>
+  tool({
+    description: "Description for the AI to understand when to use this tool",
+    parameters: z.object({
+      param1: z.string().describe("Description of param1"),
+      // ... more parameters
+    }),
+    execute: async ({ param1 }) => {
+      // Implementation
+      return { success: true, data: result };
+    },
+  });
+```
+
+### Adding New Tools
+
+1. Create tool file in `apps/api/src/ai/tools/`
+2. Export from `apps/api/src/ai/tools/index.ts`
+3. Add to appropriate agent in `apps/api/src/ai/agents/`
+
 ## tRPC Router Structure
 
 ```typescript
@@ -419,6 +526,62 @@ t('invoice.status.paid');
 const t = await getI18n();
 ```
 
+### Translation Key Structure
+
+```typescript
+{
+  // Transaction methods, categories, etc.
+  transaction_methods: { card_purchase, payment, transfer, ... },
+  transaction_categories: { ... },
+
+  // UI Settings
+  language: { title, description, placeholder },
+  locale: { title, description, placeholder },
+  timezone: { title, description, placeholder },
+
+  // Notifications
+  notifications: { transactions_created, invoice_paid, ... },
+
+  // Navigation
+  navigation: {
+    settings: { general, bank_connections, members, ... },
+    account: { general, date_locale, security, ... },
+  },
+
+  // Actions and dialogs
+  actions: { edit, delete, cancel, confirm, ... },
+  dialogs: { are_you_sure, delete_confirmation, edit_customer, ... },
+
+  // Forms
+  forms: {
+    sections: { general, details },
+    labels: { name, email, phone, address_line_1, ... },
+    placeholders: { name, email, search_address, ... },
+    descriptions: { billing_email, expense_tags, ... },
+    buttons: { cancel, create, update, save },
+    status: { active, inactive },
+  },
+
+  // Tables
+  table: {
+    columns: { name, email, invoices, projects, ... },
+    actions: { edit, delete, remove, edit_customer, ... },
+  },
+
+  // Toast messages
+  toast: { copied_to_clipboard, saved_successfully, ... },
+
+  // Validation
+  validation: { name_required, email_invalid, ... },
+
+  // Empty states
+  empty_states: { not_found, no_results, ... },
+
+  // AI Transaction creation
+  transaction_create: { title, expense, income, ... },
+}
+```
+
 ## Analytics Stub Functions
 
 The following analytics functions exist as stubs for future implementation:
@@ -438,6 +601,32 @@ These were previously connected to OpenPanel but have been removed for privacy. 
 3. **Background Jobs:** Add to `packages/jobs/src/tasks/`, register in Trigger.dev
 4. **UI Components:** Shared components in `packages/ui/src/components/`
 5. **Email Templates:** `packages/email/emails/`, preview with `bun email`
+6. **AI Tools:** Create in `apps/api/src/ai/tools/`, export from index, add to agent
+
+## Troubleshooting
+
+### Trigger.dev Not Configured
+
+If you see `ApiClientMissingError: You need to set the TRIGGER_SECRET_KEY`, the AI tools will still work but background jobs (like embedding transactions) will be skipped. This is handled gracefully with try-catch in the tools.
+
+```typescript
+// Example from create-transaction.ts
+try {
+  await tasks.trigger("embed-transaction", { transactionIds: [id], teamId });
+} catch {
+  // Trigger.dev not configured - skip embedding
+}
+```
+
+### Redis Connection Errors
+
+Redis is optional for development. If you see `ECONNREFUSED` errors for Redis, the app will continue to work but without caching.
+
+### Database Connection
+
+Ensure your Supabase instance is running and the connection strings in `.env` are correct:
+- `DATABASE_PRIMARY_URL` - Direct connection for migrations
+- `DATABASE_SESSION_POOLER` - Pooled connection for app queries
 
 ## Health Endpoints
 

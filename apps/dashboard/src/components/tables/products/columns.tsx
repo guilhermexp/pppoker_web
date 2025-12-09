@@ -1,6 +1,7 @@
 "use client";
 
 import { FormatAmount } from "@/components/format-amount";
+import { useI18n } from "@/locales/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import { Badge } from "@midday/ui/badge";
 import { Button } from "@midday/ui/button";
@@ -28,6 +29,7 @@ const ActionsCell = memo(
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
   }) => {
+    const t = useI18n();
     const handleEdit = useCallback(() => {
       onEdit(product.id);
     }, [product, onEdit]);
@@ -48,13 +50,15 @@ const ActionsCell = memo(
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleEdit}>
+            {t("table.actions.edit")}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={handleDelete}
             className="text-destructive focus:text-destructive"
           >
-            Delete
+            {t("table.actions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -63,6 +67,16 @@ const ActionsCell = memo(
 );
 
 ActionsCell.displayName = "ActionsCell";
+
+// Component for status badge
+function StatusBadge({ isActive }: { isActive: boolean }) {
+  const t = useI18n();
+  return (
+    <Badge variant="outline">
+      {isActive ? t("forms.status.active") : t("forms.status.inactive")}
+    </Badge>
+  );
+}
 
 export const columns: ColumnDef<Product>[] = [
   {
@@ -141,9 +155,7 @@ export const columns: ColumnDef<Product>[] = [
     header: "Status",
     cell: ({ row }) => {
       const isActive = row.original.isActive;
-      return (
-        <Badge variant="outline">{isActive ? "Active" : "Inactive"}</Badge>
-      );
+      return <StatusBadge isActive={isActive} />;
     },
   },
   {
