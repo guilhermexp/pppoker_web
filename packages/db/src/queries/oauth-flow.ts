@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   oauthAccessTokens,
   oauthApplications,
   oauthAuthorizationCodes,
   users,
-} from "@db/schema";
+} from "../schema";
 import { hash } from "@midday/encryption";
 import { and, desc, eq, gt, gte, lte } from "drizzle-orm";
 import { nanoid } from "nanoid";

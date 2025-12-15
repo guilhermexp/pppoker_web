@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { transactionTags } from "@db/schema";
+import type { Database } from "../client";
+import { transactionTags } from "../schema";
 import { and, eq } from "drizzle-orm";
 
 type CreateTransactionTagParams = {

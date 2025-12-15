@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { invoiceTemplates } from "@db/schema";
+import type { Database } from "../client";
+import { invoiceTemplates } from "../schema";
 import { eq } from "drizzle-orm";
 
 type DraftInvoiceTemplateParams = {

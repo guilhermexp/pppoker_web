@@ -1,4 +1,4 @@
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import { createActivity } from "../queries/activities";
 import type { activityTypeEnum } from "../schema";
 

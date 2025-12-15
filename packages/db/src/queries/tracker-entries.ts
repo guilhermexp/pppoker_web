@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { teams, trackerEntries } from "@db/schema";
+import type { Database } from "../client";
+import { teams, trackerEntries } from "../schema";
 import {
   endOfMonth,
   endOfWeek,

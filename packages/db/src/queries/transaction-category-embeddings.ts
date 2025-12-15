@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { transactionCategoryEmbeddings } from "@db/schema";
+import type { Database } from "../client";
+import { transactionCategoryEmbeddings } from "../schema";
 import { eq, sql } from "drizzle-orm";
 
 export type GetCategoryEmbeddingParams = {

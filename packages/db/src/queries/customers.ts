@@ -1,11 +1,11 @@
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   customerTags,
   customers,
   invoices,
   tags,
   trackerProjects,
-} from "@db/schema";
+} from "../schema";
 import { buildSearchQuery } from "@midday/db/utils/search-query";
 import { generateToken } from "@midday/invoice/token";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";

@@ -1,4 +1,4 @@
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   inbox,
   inboxEmbeddings,
@@ -6,7 +6,7 @@ import {
   transactionEmbeddings,
   transactionMatchSuggestions,
   transactions,
-} from "@db/schema";
+} from "../schema";
 import { logger } from "@midday/logger";
 import {
   and,

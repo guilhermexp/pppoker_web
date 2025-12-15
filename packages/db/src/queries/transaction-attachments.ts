@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { inbox, transactionAttachments, transactions } from "@db/schema";
+import type { Database } from "../client";
+import { inbox, transactionAttachments, transactions } from "../schema";
 import { and, eq } from "drizzle-orm";
 import { createActivity } from "./activities";
 

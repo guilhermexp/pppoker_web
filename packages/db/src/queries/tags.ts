@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { tags } from "@db/schema";
+import type { Database } from "../client";
+import { tags } from "../schema";
 import { and, eq } from "drizzle-orm";
 
 type CreateTagParams = {

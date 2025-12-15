@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { customers, invoiceStatusEnum, invoices } from "@db/schema";
+import type { Database } from "../client";
+import { customers, invoiceStatusEnum, invoices } from "../schema";
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 export type GetTopRevenueClientParams = {

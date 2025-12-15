@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { oauthApplications, users } from "@db/schema";
+import type { Database } from "../client";
+import { oauthApplications, users } from "../schema";
 import { hash } from "@midday/encryption";
 import slugify from "@sindresorhus/slugify";
 import { and, desc, eq } from "drizzle-orm";

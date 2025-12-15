@@ -1,4 +1,4 @@
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   inbox,
   inboxAccounts,
@@ -7,7 +7,7 @@ import {
   transactionEmbeddings,
   transactionMatchSuggestions,
   transactions,
-} from "@db/schema";
+} from "../schema";
 import { buildSearchQuery } from "@midday/db/utils/search-query";
 import { logger } from "@midday/logger";
 import { and, asc, desc, eq, ne, sql } from "drizzle-orm";

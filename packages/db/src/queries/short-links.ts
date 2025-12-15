@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { shortLinks, teams } from "@db/schema";
+import type { Database } from "../client";
+import { shortLinks, teams } from "../schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 

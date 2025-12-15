@@ -15,7 +15,7 @@
     "jobs:dashboard": "turbo jobs --filter=@midday/jobs",
     "format": "biome format --write .",
     "lint": "turbo lint && manypkg check",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck --concurrency=1"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.42",

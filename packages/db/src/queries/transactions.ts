@@ -1,4 +1,4 @@
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   bankAccounts,
   bankConnections,
@@ -12,7 +12,7 @@ import {
   transactionTags,
   transactions,
   users,
-} from "@db/schema";
+} from "../schema";
 import { buildSearchQuery } from "@midday/db/utils/search-query";
 import { logger } from "@midday/logger";
 import { resolveTaxValues } from "@midday/utils/tax";

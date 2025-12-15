@@ -1,5 +1,5 @@
 import { UTCDate } from "@date-fns/utc";
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   type activityTypeEnum,
   customers,
@@ -9,7 +9,7 @@ import {
   teams,
   trackerEntries,
   trackerProjects,
-} from "@db/schema";
+} from "../schema";
 import { buildSearchQuery } from "@midday/db/utils/search-query";
 import { generateToken } from "@midday/invoice/token";
 import type { EditorDoc, LineItem } from "@midday/invoice/types";

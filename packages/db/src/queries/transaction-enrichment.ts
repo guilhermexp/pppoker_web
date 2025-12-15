@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { transactions } from "@db/schema";
+import type { Database } from "../client";
+import { transactions } from "../schema";
 import { and, eq, inArray } from "drizzle-orm";
 
 export type GetTransactionsForEnrichmentParams = {

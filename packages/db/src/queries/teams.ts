@@ -1,11 +1,11 @@
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   bankConnections,
   teams,
   transactionCategories,
   users,
   usersOnTeam,
-} from "@db/schema";
+} from "../schema";
 import { teamPermissionsCache } from "@midday/cache/team-permissions-cache";
 import {
   CATEGORIES,

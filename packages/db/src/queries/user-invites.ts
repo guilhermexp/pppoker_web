@@ -1,5 +1,5 @@
-import type { Database } from "@db/client";
-import { teams, userInvites, users, usersOnTeam } from "@db/schema";
+import type { Database } from "../client";
+import { teams, userInvites, users, usersOnTeam } from "../schema";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 
 export async function getUserInvites(db: Database, email: string) {

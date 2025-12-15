@@ -1,5 +1,5 @@
 import { UTCDate } from "@date-fns/utc";
-import type { Database } from "@db/client";
+import type { Database } from "../client";
 import {
   eachMonthOfInterval,
   endOfMonth,
