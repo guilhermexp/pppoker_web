@@ -53,67 +53,33 @@ export function CreateTeamForm({
   const createTeamMutation = useMutation(
     trpc.team.create.mutationOptions({
       onSuccess: async (teamId) => {
-        const successId = `team_creation_success_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-        console.log(`[${successId}] Team creation mutation successful`, {
-          teamId,
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-        });
-
         // Lock the form permanently - never reset on success
         setIsLoading(true);
         isSubmittedRef.current = true;
 
         try {
           // Invalidate all queries to ensure fresh data everywhere
-          console.log(`[${successId}] Invalidating queries`);
           await queryClient.invalidateQueries();
 
           // Revalidate server-side paths and redirect
-          console.log(`[${successId}] Revalidating server-side paths`);
           await revalidateAfterTeamChange();
-
-          console.log(
-            `[${successId}] Team creation flow completed successfully`,
-          );
         } catch (error) {
           // Check if this is a Next.js redirect (expected behavior)
           if (error instanceof Error && error.message === "NEXT_REDIRECT") {
-            console.log(
-              `[${successId}] Team creation completed successfully - redirecting to home`,
-            );
             // This is expected - Next.js redirects work by throwing this error
             return;
           }
 
           // Only log actual errors, not expected redirects
-          console.error(`[${successId}] Team creation flow failed:`, {
+          console.error("[Team creation] Flow failed:", {
             error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
             teamId,
           });
         }
         // Note: We NEVER reset loading state on success - user should be redirected
       },
       onError: (error) => {
-        const errorId = `team_creation_error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-        const errorContext = {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-        };
-
-        console.error(
-          `[${errorId}] Team creation mutation failed`,
-          errorContext,
-        );
-
-        
-
+        console.error("[Team creation] Mutation failed:", error.message);
         setIsLoading(false);
         isSubmittedRef.current = false; // Reset on error to allow retry
       },
@@ -144,25 +110,8 @@ export function CreateTeamForm({
 
   function onSubmit(values: FormValues) {
     if (isFormLocked) {
-      console.warn("Team creation form submission blocked - form is locked", {
-        isFormLocked,
-        isLoading,
-        isSubmittedRef: isSubmittedRef.current,
-        formValues: values,
-      });
       return;
     }
-
-    const submissionId = `form_submission_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    console.log(`[${submissionId}] Team creation form submission started`, {
-      teamName: values.name,
-      baseCurrency: values.baseCurrency,
-      countryCode: values.countryCode,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-    });
 
     setIsLoading(true);
     isSubmittedRef.current = true; // Permanent flag that survives re-renders

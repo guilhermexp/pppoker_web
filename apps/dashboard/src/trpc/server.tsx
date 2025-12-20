@@ -32,8 +32,6 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
             data: { session },
           } = await supabase.auth.getSession();
 
-          console.log("[TRPC Server] getSession result:", session ? "session found" : "no session");
-
           return {
             Authorization: `Bearer ${session?.access_token}`,
             "x-user-timezone": await getTimezone(),

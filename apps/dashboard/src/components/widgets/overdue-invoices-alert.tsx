@@ -71,10 +71,9 @@ export function OverdueInvoicesAlertWidget() {
 
     return t("overdue_invoices.description", {
       count,
-      // @ts-ignore
       days: daysOverdue,
       dayText,
-    });
+    } as Parameters<typeof t>[1]);
   };
 
   return (

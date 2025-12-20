@@ -171,8 +171,8 @@ app.doc("/openapi", {
       url: "https://mid.poker",
     },
     license: {
-      name: "AGPL-3.0 license",
-      url: "https://github.com/midday-ai/midday/blob/main/LICENSE",
+      name: "Proprietary",
+      url: "https://mid.poker/terms",
     },
   },
   servers: [

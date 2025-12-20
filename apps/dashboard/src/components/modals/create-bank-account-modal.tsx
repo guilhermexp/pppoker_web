@@ -86,7 +86,6 @@ export function CreateBankAccountModal() {
   );
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Form submitted with values:", values);
     createAccountMutation.mutate({
       name: values.name,
       currency: values.currency,
@@ -113,9 +112,7 @@ export function CreateBankAccountModal() {
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.log("Form validation errors:", errors);
-            })} className="mt-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6">
               <FormField
                 control={form.control}
                 name="name"
