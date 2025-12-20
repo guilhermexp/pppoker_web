@@ -1,34 +1,107 @@
 ---
-title: "Introduction"
-"og:title": "Midday Engine API Reference - Introduction"
-description: "Fundamental concepts of Midday Engine API."
+title: "Introdução"
+"og:title": "API Reference Mid Poker - Introdução"
+description: "Conceitos fundamentais da API do Mid Poker."
 icon: webhook
 ---
 
 <Frame>
-  <img src="/images/engine.png" alt="Midday Engine" width="800" height="420" />
+  <img src="/images/engine.png" alt="Mid Poker API" width="800" height="420" />
 </Frame>
 
 <Info>
-  Midday Engine is currently in beta. If you have any questions or feedback,
-  please reach out to us at
-  [support@midday.ai](mailto:support@midday.ai?subject=Engine%20API%20API)
+  A API do Mid Poker está em constante evolução. Se você tiver dúvidas ou feedback,
+  entre em contato em [suporte@mid.poker](mailto:suporte@mid.poker?subject=API%20Feedback)
 </Info>
 
-## Base URL
+## URL Base
 
-Midday Engine API is built on REST principles and is served over HTTPS. To ensure data privacy, unencrypted HTTP is not supported.
+A API do Mid Poker é construída em princípios REST e servida via HTTPS. Para garantir a privacidade dos dados, HTTP não criptografado não é suportado.
 
-The Base URL for all API endpoints is:
+A URL base para todos os endpoints é:
 
-```bash Terminal
-https://engine-api.midday.ai
+```bash
+https://api.mid.poker
 ```
 
-## Authentication
+## Autenticação
 
-Authentication to Midday Engine API is performed via the Authorization header with a Bearer token. To authenticate, you need to include the Authorization header with the word `Bearer` followed by your token in your API requests like so:
+A autenticação é feita via header Authorization com um Bearer token:
 
-```bash Terminal
-Authorization: Bearer <Your-Token>
+```bash
+Authorization: Bearer <Seu-Token>
 ```
+
+### Obtendo um Token
+
+Tokens de API podem ser gerados no dashboard em **Configurações > API Keys**.
+
+## Rate Limiting
+
+A API implementa rate limiting para garantir a estabilidade do serviço:
+
+- **1000 requisições** por minuto por token
+- Headers de rate limit incluídos nas respostas:
+  - `X-RateLimit-Limit`: Limite total
+  - `X-RateLimit-Remaining`: Requisições restantes
+  - `X-RateLimit-Reset`: Timestamp de reset
+
+## Formato de Resposta
+
+Todas as respostas são retornadas em JSON:
+
+```json
+{
+  "data": { ... },
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "limit": 20
+  }
+}
+```
+
+### Erros
+
+Erros seguem o formato padrão HTTP:
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Token inválido ou expirado"
+  }
+}
+```
+
+## Endpoints Principais
+
+| Endpoint | Descrição |
+|----------|-----------|
+| `GET /transactions` | Listar transações |
+| `GET /accounts` | Listar contas bancárias |
+| `GET /accounts/:id/balance` | Saldo de uma conta |
+| `GET /institutions/search` | Buscar instituições bancárias |
+| `POST /auth/gocardless/link` | Criar link GoCardless |
+| `POST /auth/plaid/link` | Criar link Plaid |
+| `GET /health` | Status da API |
+
+## SDKs e Bibliotecas
+
+Atualmente, a API pode ser consumida diretamente via HTTP ou através do cliente tRPC incluído no projeto:
+
+```typescript
+import { trpc } from '@/trpc/client';
+
+// Exemplo de uso
+const transactions = await trpc.transactions.list.query({
+  limit: 50,
+  offset: 0
+});
+```
+
+## Suporte
+
+Para dúvidas sobre a API:
+- Email: suporte@mid.poker
+- Documentação: https://docs.mid.poker

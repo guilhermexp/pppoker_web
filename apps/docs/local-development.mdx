@@ -1,97 +1,154 @@
 ---
-title: "Local Development"
-"og:title": "How to setup Midday for Local Development"
-description: "A guide on how to run Midday's codebase locally."
+title: "Desenvolvimento Local"
+"og:title": "Como configurar o Mid Poker para desenvolvimento local"
+description: "Guia para executar o Mid Poker localmente."
 icon: code
 ---
 
-###
+## Introdução
 
-## Introduction
+O Mid Poker utiliza um monorepo gerenciado pelo [Turborepo](https://turbo.build/repo) com [Bun](https://bun.sh/) como runtime e package manager.
 
-Midday's codebase is set up in a monorepo via [Turborepo](https://turbo.build/repo) and is fully [open-source on GitHub](https://git.new/midday).
-
-Here's the monorepo structure:
+### Estrutura do Monorepo
 
 ```
-apps
-├── api
-├── dashboard
-├── docs
-├── engine
-├── mobile
-├── website
-packages
-├── documents
-├── email
-├── events
-├── import
-├── inbox
-├── jobs
-├── kv
-├── location
-├── notification
-├── supabase
-├── tsconfig
-├── ui
-├── utils
+apps/
+├── api          # Backend tRPC + Hono
+├── dashboard    # Aplicação Next.js 16
+├── docs         # Documentação (Mintlify)
+
+packages/
+├── db           # Schema e queries (Drizzle ORM)
+├── email        # Templates de email (React Email)
+├── invoice      # Geração de faturas PDF
+├── jobs         # Background jobs (Trigger.dev)
+├── supabase     # Cliente e middleware Supabase
+├── ui           # Componentes UI (Shadcn)
+├── utils        # Utilitários compartilhados
 ```
 
-The `apps` directory contains the code for:
+### Apps
 
-- `api`: The backend for Midday (supabase).
-- `dashboard`: Midday's application ([app.midday.ai](https://app.midday.ai)).
-- `docs`: Midday's documentation site ([midday.ai/docs](https://midday.ai/docs)).
-- `engine`: Midday's bank engine ([midday.ai/engine](https://midday.ai/engine)).
-- `mobile`: Midday's mobile app.
-- `website`: Midday's website app ([midday.ai](https://midday.ai)).
+- `api`: Backend com tRPC e Hono, servindo em `localhost:8080`
+- `dashboard`: Aplicação principal Next.js, servindo em `localhost:9000`
+- `docs`: Documentação usando Mintlify
 
-The `packages` directory contains the code for:
+### Packages
 
-- `documents`: OCR for receipts.
-- `events`: Analytics library.
-- `import`: CSV-importer.
-- `inbox`: Inbox utils.
-- `jobs`: Background jobs.
-- `kv`: Key value storage client.
-- `location`: Location related utils.
-- `notification`: Notifications client.
-- `supabase`: Queries and client.
-- `tsconfig`: The TypeScript configuration for Midday's web app.
-- `ui`: UI component library.
-- `utils`: A collection of utility functions and constants used across Midday's codebase.
+- `db`: Schema do banco de dados com Drizzle ORM
+- `email`: Templates de email usando React Email
+- `invoice`: Geração de faturas em PDF
+- `jobs`: Jobs em background com Trigger.dev
+- `supabase`: Cliente e utilitários Supabase
+- `ui`: Biblioteca de componentes UI
+- `utils`: Funções utilitárias compartilhadas
 
-## Running Midday locally
+## Executando Localmente
 
-To run Midday locally, you'll need to set up the following:
+### Pré-requisitos
 
-- A [Supabase](https://supabase.com/) account
-- An [Upstash](https://upstash.com/) account
+- [Bun](https://bun.sh/) >= 1.0
+- [Node.js](https://nodejs.org/) >= 20
+- Uma conta [Supabase](https://supabase.com/)
 
-## Step 1: Local setup
-
-First, you'll need to clone the Midday repo and install the dependencies.
+## Passo 1: Setup Inicial
 
 <Steps>
 
-  <Step title="Clone the repo">
+  <Step title="Clone o repositório">
 
-First, clone the [midday.ai repo](https://d.to/github) into a public GitHub repository.
-
-    ```bash Terminal
-    git clone https://github.com/midday-ai/midday.git
-    ```
+```bash
+git clone https://github.com/seu-usuario/mid.git
+cd mid
+```
 
   </Step>
 
-  <Step title="Install dependencies">
+  <Step title="Instale as dependências">
 
-    Run the following command to install the dependencies:
+```bash
+bun install
+```
 
-    ```bash Terminal
-    bun i
-    ```
+  </Step>
+
+  <Step title="Configure as variáveis de ambiente">
+
+```bash
+cp .env.example .env.local
+```
+
+Edite o `.env.local` com suas credenciais do Supabase e outros serviços.
+
+  </Step>
+
+  <Step title="Inicie o servidor de desenvolvimento">
+
+```bash
+bun run dev
+```
 
   </Step>
 
 </Steps>
+
+## Passo 2: Configuração do Supabase
+
+1. Crie um novo projeto no [Supabase](https://supabase.com/)
+2. Copie a URL e as chaves de API para o `.env.local`
+3. Execute as migrations do banco de dados
+
+```bash
+cd packages/db
+npx drizzle-kit push
+```
+
+## Variáveis de Ambiente Necessárias
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-anon-key
+SUPABASE_SERVICE_ROLE_KEY=sua-service-role-key
+DATABASE_SESSION_POOLER=postgresql://...
+
+# Email (Resend)
+RESEND_API_KEY=re_...
+
+# AI (OpenAI)
+OPENAI_API_KEY=sk-...
+
+# Opcional
+MISTRAL_API_KEY=...
+GOOGLE_GENERATIVE_AI_API_KEY=...
+```
+
+## URLs de Desenvolvimento
+
+| App | URL |
+|-----|-----|
+| Dashboard | http://localhost:9000 |
+| API | http://localhost:8080 |
+| Docs | http://localhost:3000 |
+
+## Comandos Úteis
+
+```bash
+# Desenvolvimento (todos os apps)
+bun run dev
+
+# Apenas dashboard
+bun run dev --filter=@midday/dashboard
+
+# Apenas API
+bun run dev --filter=@midday/api
+
+# Build de produção
+bun run build
+
+# Typecheck
+bun run typecheck
+
+# Lint
+bun run lint
+```

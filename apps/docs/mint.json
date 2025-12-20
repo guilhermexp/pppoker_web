@@ -1,10 +1,10 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Midday.ai Docs",
+  "name": "Mid Poker Docs",
   "logo": {
     "dark": "/logos/logotype-dark.svg",
     "light": "/logos/logotype.svg",
-    "href": "https://midday.ai"
+    "href": "https://mid.poker"
   },
   "favicon": "/logos/favicon.png",
   "colors": {
@@ -22,53 +22,46 @@
   },
   "topbarLinks": [
     {
-      "name": "Support",
-      "url": "mailto:support@midday.ai"
+      "name": "Suporte",
+      "url": "mailto:suporte@mid.poker"
     }
   ],
   "topbarCtaButton": {
     "name": "Dashboard",
-    "url": "https://app.midday.ai"
+    "url": "https://app.mid.poker"
   },
-  "openapi": "https://engine.midday.ai/openapi",
   "tabs": [
     {
-      "name": "Engine API Reference",
+      "name": "API Reference",
       "url": "api-reference/engine"
     }
   ],
   "anchors": [
     {
-      "name": "Help Center",
-      "icon": "question",
-      "url": "https://midday.ai/support"
-    },
-    {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://git.new/midday"
+      "url": "https://github.com/seu-usuario/mid"
     }
   ],
   "navigation": [
     {
-      "group": "Getting Started",
+      "group": "Primeiros Passos",
       "pages": ["introduction"]
     },
     {
-      "group": "Resources",
+      "group": "Recursos",
       "pages": ["integrations", "examples"]
     },
     {
-      "group": "Open source",
+      "group": "Open Source",
       "pages": ["local-development", "self-hosting"]
     },
-
     {
-      "group": "Engine API Reference",
+      "group": "API Reference",
       "pages": ["api-reference/engine/introduction"]
     },
     {
-      "group": "Links",
+      "group": "Endpoints",
       "pages": [
         "api-reference/engine/endpoint/get-transactions",
         "api-reference/engine/endpoint/get-accounts",
@@ -89,9 +82,7 @@
     "thumbsRating": true
   },
   "footerSocials": {
-    "twitter": "https://twitter.com/middayai",
-    "github": "https://git.new/midday",
-    "website": "https://midday.ai",
-    "linkedin": "https://www.linkedin.com/company/midday-ai"
+    "github": "https://github.com/seu-usuario/mid",
+    "website": "https://mid.poker"
   }
 }

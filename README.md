@@ -1,89 +1,126 @@
-![hero](github.png)
-
 <p align="center">
-	<h1 align="center"><b>Midday</b></h1>
+	<h1 align="center"><b>Mid Poker</b></h1>
 <p align="center">
-    Your AI-Powered Business Assistant
+    Plataforma de Gestão Financeira para Poker
     <br />
     <br />
-    <a href="https://midday.ai">Website</a>
+    <a href="https://mid.poker">Website</a>
     ·
-    <a href="https://github.com/midday-ai/midday/issues">Issues</a>
+    <a href="https://app.mid.poker">Dashboard</a>
+    ·
+    <a href="https://docs.mid.poker">Docs</a>
   </p>
 </p>
 
-<p align="center">
-  <a href="https://go.midday.ai/K7GwMoQ">
-    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-  </a>
-</p>
+## Sobre o Mid Poker
 
-## About Midday
+Mid Poker é uma plataforma completa de gestão financeira projetada especificamente para jogadores de poker. Integra diversas funcionalidades em um único sistema coeso, permitindo controle total sobre bankroll, sessões e análises financeiras.
 
-Midday is an all-in-one tool designed to help freelancers, contractors, consultants, and solo entrepreneurs manage their business operations more efficiently. It integrates various functions typically scattered across multiple platforms into a single, cohesive system.
+## Funcionalidades
 
+**Rastreamento de Sessões**: Controle em tempo real das sessões de poker com análises detalhadas de performance e rentabilidade.
 
-## Features
+**Gestão de Bankroll**: Acompanhamento completo do bankroll com métricas, gráficos e alertas de gestão de risco.
 
-**Time Tracking**: Allows for live time tracking of projects to boost productivity and collaboration, providing insightful project overviews.<br/>
-**Invoicing**: An upcoming feature that will enable users to create web-based invoices, collaborate in real-time, and synchronize projects seamlessly.<br/>
-**Magic Inbox**: Automatically matches incoming invoices or receipts to the correct transactions, simplifying financial tracking and organization.<br/>
-**Vault**: Secure storage for important files like contracts and agreements, keeping everything in one place for easy access​.<br/>
-**Seamless Export**: Facilitates easy export of financial data, packaged neatly in CSV files for accountants.<br/>
-**Assistant**: Provides tailored insights into financial situations, helping users understand spending patterns, cut costs, and find documents.<br/>
+**Faturamento**: Criação de faturas web-based para patrocínios, stakes e acordos financeiros.
 
+**Magic Inbox**: Correspondência automática de recibos e comprovantes com transações, simplificando o controle financeiro.
 
+**Vault**: Armazenamento seguro para documentos importantes como contratos e acordos de stake.
 
+**Exportação**: Exportação fácil de dados financeiros em CSV para contabilidade e declaração de impostos.
 
-## Get started
+**Assistente IA**: Insights personalizados sobre situação financeira, padrões de gastos e análise de performance.
 
-We are working on the documentation to get started with Midday for local development: https://docs.midday.ai
+## Stack Tecnológica
 
-## App Architecture
+### Arquitetura
+- Monorepo com Turborepo
+- Bun (runtime e package manager)
+- React 19 + TypeScript
+- Next.js 16 (com Turbopack)
+- Supabase (database, auth, storage)
+- Shadcn/ui + TailwindCSS
 
-- Monorepo
-- Bun
-- React
-- TypeScript
-- Nextjs
-- Supabase
-- Shadcn
-- Tauri
-- Expo
-- TailwindCSS
-
-### Hosting
-
+### Hospedagem
 - Supabase (database, storage, realtime, auth)
-- Vercel (Website, Dashboard)
-- Fly.io (API/tRPC)
+- Vercel (Dashboard)
+- API própria (tRPC + Hono)
 
-### Services
-
+### Serviços
 - Trigger.dev (background jobs)
-- Resend (Transactional & Marketing)
-- Github Actions (CI/CD)
-- GoCardLess (Bank connection EU)
-- Plaid (Bank connection in Canada and US)
-- Teller (Bank connection in the US)
-- OpenPanel (Events and Analytics)
-- Polar (Payment processing)
-- Typesense (Search)
-- Mistral
-- Gemini
-- OpenAI
+- Resend (emails transacionais)
+- GitHub Actions (CI/CD)
+- GoCardless (conexão bancária EU)
+- Plaid (conexão bancária US/CA)
+- OpenAI + Mistral + Gemini (IA)
 
-## Repo Activity
+## Estrutura do Projeto
 
-![Alt](https://repobeats.axiom.co/api/embed/96aae855e5dd87c30d53c1d154b37cf7aa5a89b3.svg "Repobeats analytics image")
+```
+apps/
+├── api          # Backend tRPC + Hono
+├── dashboard    # Aplicação principal Next.js
+├── docs         # Documentação (Mintlify)
 
-## License
+packages/
+├── db           # Schema e queries (Drizzle)
+├── email        # Templates de email (React Email)
+├── invoice      # Geração de faturas PDF
+├── jobs         # Background jobs (Trigger.dev)
+├── supabase     # Cliente e middleware Supabase
+├── ui           # Componentes UI (Shadcn)
+├── utils        # Utilitários compartilhados
+```
 
-This project is licensed under the **[AGPL-3.0](https://opensource.org/licenses/AGPL-3.0)** for non-commercial use. 
+## Desenvolvimento Local
 
-### Commercial Use
+### Pré-requisitos
+- [Bun](https://bun.sh/) >= 1.0
+- [Node.js](https://nodejs.org/) >= 20
+- Conta [Supabase](https://supabase.com/)
 
-For commercial use or deployments requiring a setup fee, please contact us
-for a commercial license at [engineer@midday.ai](mailto:engineer@midday.ai).
+### Setup
 
-By using this software, you agree to the terms of the license.
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/mid.git
+cd mid
+
+# Instale as dependências
+bun install
+
+# Configure as variáveis de ambiente
+cp .env.example .env.local
+
+# Inicie o desenvolvimento
+bun run dev
+```
+
+O dashboard estará disponível em `http://localhost:9000` e a API em `http://localhost:8080`.
+
+## Mudanças Recentes
+
+### Versão Atual (Dezembro 2024)
+- Migração para Next.js 16 com `proxy.ts` (substituindo `middleware.ts`)
+- Atualização do pdfjs-dist para v5.4.296
+- Tabela `activities` para sistema de notificações
+- Internacionalização completa (EN/PT)
+- Sistema de multi-agentes IA (OpenAI gpt-4o-mini)
+- Rebranding completo para Mid Poker
+
+### Independência do Upstream
+Este projeto é um fork independente, com as seguintes customizações:
+- Domínio próprio (mid.poker)
+- Branding personalizado
+- Remoção de analytics de terceiros
+- Configurações próprias de email e integrações
+
+## Licença
+
+Este projeto é baseado em código open-source. Consulte o arquivo LICENSE para mais detalhes.
+
+## Contato
+
+- Email: contato@mid.poker
+- Website: https://mid.poker

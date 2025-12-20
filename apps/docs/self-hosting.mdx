@@ -1,6 +1,137 @@
 ---
-title: "Self-hosting Midday"
-"og:title": "How to self-host Midday in 8 easy steps"
-description: "An end-to-end guide on how to self-host Midday"
+title: "Self-Hosting Mid Poker"
+"og:title": "Como hospedar o Mid Poker em sua própria infraestrutura"
+description: "Guia completo para self-hosting do Mid Poker"
 icon: server
 ---
+
+## Introdução
+
+Este guia explica como hospedar o Mid Poker em sua própria infraestrutura, garantindo total controle sobre seus dados.
+
+## Arquitetura
+
+O Mid Poker consiste em três componentes principais:
+
+1. **Dashboard** (Next.js 16) - Interface do usuário
+2. **API** (Hono + tRPC) - Backend
+3. **Database** (PostgreSQL via Supabase) - Armazenamento
+
+## Opções de Hospedagem
+
+### Opção 1: Vercel + Supabase (Recomendado)
+
+A forma mais simples de hospedar o Mid Poker.
+
+<Steps>
+
+<Step title="Configure o Supabase">
+
+1. Crie uma conta em [supabase.com](https://supabase.com)
+2. Crie um novo projeto
+3. Anote as credenciais (URL, anon key, service role key)
+4. Execute as migrations do banco
+
+</Step>
+
+<Step title="Deploy na Vercel">
+
+1. Faça fork do repositório no GitHub
+2. Conecte à sua conta Vercel
+3. Configure as variáveis de ambiente
+4. Deploy!
+
+</Step>
+
+</Steps>
+
+### Opção 2: Docker
+
+Para ambientes on-premise ou cloud privada.
+
+```dockerfile
+# Exemplo de docker-compose.yml
+version: '3.8'
+services:
+  dashboard:
+    build: ./apps/dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+
+  api:
+    build: ./apps/api
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_SESSION_POOLER=${DATABASE_URL}
+```
+
+## Variáveis de Ambiente
+
+### Obrigatórias
+
+| Variável | Descrição |
+|----------|-----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço do Supabase |
+| `DATABASE_SESSION_POOLER` | Connection string do PostgreSQL |
+
+### Opcionais (IA)
+
+| Variável | Descrição |
+|----------|-----------|
+| `OPENAI_API_KEY` | Chave da API OpenAI |
+| `MISTRAL_API_KEY` | Chave da API Mistral |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Chave da API Google AI |
+
+### Opcionais (Email)
+
+| Variável | Descrição |
+|----------|-----------|
+| `RESEND_API_KEY` | Chave da API Resend |
+| `FROM_EMAIL` | Email de remetente |
+
+### Opcionais (Banking)
+
+| Variável | Descrição |
+|----------|-----------|
+| `PLAID_CLIENT_ID` | Client ID do Plaid |
+| `PLAID_SECRET` | Secret do Plaid |
+| `GOCARDLESS_SECRET_ID` | Secret ID do GoCardless |
+| `GOCARDLESS_SECRET_KEY` | Secret Key do GoCardless |
+
+## Segurança
+
+### Recomendações
+
+1. **HTTPS**: Sempre use HTTPS em produção
+2. **Variáveis de Ambiente**: Nunca commite credenciais no código
+3. **Row Level Security**: O Supabase já vem configurado com RLS
+4. **Backups**: Configure backups automáticos do banco
+
+### Headers de Segurança
+
+O `vercel.json` já inclui headers de segurança importantes:
+
+```json
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}
+```
+
+## Suporte
+
+Para dúvidas sobre self-hosting, entre em contato:
+- Email: suporte@mid.poker

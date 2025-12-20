@@ -1,57 +1,59 @@
-# Security
+# Segurança
 
-Contact: [security@midday.ai](mailto:security@midday.ai)
+Contato: [seguranca@mid.poker](mailto:seguranca@mid.poker)
 
-Based on [https://supabase.com/.well-known/security.txt](https://supabase.com/.well-known/security.txt)
+No Mid Poker, consideramos a segurança dos nossos sistemas uma prioridade máxima. Porém, não importa quanto esforço dediquemos à segurança do sistema, ainda podem existir vulnerabilidades.
 
-At Midday, we consider the security of our systems a top priority. But no matter
-how much effort we put into system security, there can still be vulnerabilities
-present.
+Se você descobrir uma vulnerabilidade, gostaríamos de saber para que possamos tomar medidas para corrigi-la o mais rápido possível. Pedimos sua ajuda para proteger melhor nossos usuários e sistemas.
 
-If you discover a vulnerability, we would like to know about it so we can take
-steps to address it as quickly as possible. We would like to ask you to help us
-better protect our clients and our systems.
+## Vulnerabilidades Fora do Escopo
 
-## Out of scope vulnerabilities
-
-- Clickjacking on pages with no sensitive actions.
-- Unauthenticated/logout/login CSRF.
-- Attacks requiring MITM or physical access to a user's device.
-- Any activity that could lead to the disruption of our service (DoS).
-- Content spoofing and text injection issues without showing an attack
-  vector/without being able to modify HTML/CSS.
+- Clickjacking em páginas sem ações sensíveis
+- CSRF não autenticado/logout/login
+- Ataques que requerem MITM ou acesso físico ao dispositivo do usuário
+- Qualquer atividade que possa levar à interrupção do nosso serviço (DoS)
+- Spoofing de conteúdo e problemas de injeção de texto sem demonstrar um vetor de ataque
 - Email spoofing
-- Missing DNSSEC, CAA, CSP headers
-- Lack of Secure or HTTP only flag on non-sensitive cookies
-- Deadlinks
+- Headers DNSSEC, CAA, CSP ausentes
+- Falta de flag Secure ou HTTP only em cookies não sensíveis
+- Links quebrados
 
-## Please do the following
+## Por favor, faça o seguinte
 
-- E-mail your findings to [security@midday.ai](mailto:security@midday.ai).
-- Do not run automated scanners on our infrastructure or dashboard. If you wish
-  to do this, contact us and we will set up a sandbox for you.
-- Do not take advantage of the vulnerability or problem you have discovered,
-  for example by downloading more data than necessary to demonstrate the
-  vulnerability or deleting or modifying other people's data,
-- Do not reveal the problem to others until it has been resolved,
-- Do not use attacks on physical security, social engineering, distributed
-  denial of service, spam or applications of third parties,
-- Do provide sufficient information to reproduce the problem, so we will be
-  able to resolve it as quickly as possible. Usually, the IP address or the URL
-  of the affected system and a description of the vulnerability will be
-  sufficient, but complex vulnerabilities may require further explanation.
+- Envie suas descobertas por e-mail para [seguranca@mid.poker](mailto:seguranca@mid.poker)
+- Não execute scanners automatizados em nossa infraestrutura ou dashboard
+- Não tire vantagem da vulnerabilidade ou problema que descobriu
+- Não revele o problema para outros até que tenha sido resolvido
+- Não use ataques de segurança física, engenharia social, negação de serviço distribuída, spam ou aplicações de terceiros
+- Forneça informações suficientes para reproduzir o problema
 
-## What we promise
+## O que prometemos
 
-- We will respond to your report within 3 business days with our evaluation of
-  the report and an expected resolution date,
-- If you have followed the instructions above, we will not take any legal
-  action against you in regard to the report,
-- We will handle your report with strict confidentiality, and not pass on your
-  personal details to third parties without your permission,
-- We will keep you informed of the progress towards resolving the problem,
-- In the public information concerning the problem reported, we will give your
-  name as the discoverer of the problem (unless you desire otherwise), and
-- We strive to resolve all problems as quickly as possible, and we would like
-  to play an active role in the ultimate publication on the problem after it
-  is resolved.
+- Responderemos ao seu relatório dentro de 3 dias úteis com nossa avaliação e data esperada de resolução
+- Se você seguiu as instruções acima, não tomaremos nenhuma ação legal contra você
+- Trataremos seu relatório com estrita confidencialidade
+- Manteremos você informado sobre o progresso da resolução do problema
+- Nas informações públicas sobre o problema reportado, daremos seu nome como descobridor (a menos que deseje o contrário)
+- Nos esforçamos para resolver todos os problemas o mais rápido possível
+
+## Práticas de Segurança
+
+### Autenticação
+- Autenticação gerenciada pelo Supabase Auth
+- Suporte a MFA (Multi-Factor Authentication)
+- Tokens JWT com expiração
+
+### Banco de Dados
+- Row Level Security (RLS) habilitado em todas as tabelas
+- Conexões criptografadas (SSL)
+- Backups automáticos
+
+### API
+- Validação de entrada com Zod
+- Rate limiting
+- CORS configurado
+
+### Frontend
+- Headers de segurança (X-Frame-Options, CSP, etc.)
+- Sanitização de dados
+- HTTPS obrigatório em produção

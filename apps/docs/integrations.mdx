@@ -1,6 +1,87 @@
 ---
-title: "Integrations"
-"og:title": "Midday Integrations: Connect Midday to services"
-description: "Integrate Midday with your services."
+title: "Integrações"
+"og:title": "Integrações Mid Poker - Conecte com serviços externos"
+description: "Integre o Mid Poker com seus serviços."
 icon: object-union
 ---
+
+## Integrações Disponíveis
+
+O Mid Poker suporta integração com diversos serviços para ampliar suas funcionalidades.
+
+### Conexões Bancárias
+
+<CardGroup cols={2}>
+
+<Card title="Plaid" icon="building-columns">
+  Conexão com bancos nos EUA e Canadá. Sincronização automática de transações.
+</Card>
+
+<Card title="GoCardless" icon="euro-sign">
+  Conexão com bancos na Europa. Suporte a Open Banking.
+</Card>
+
+</CardGroup>
+
+### Comunicação
+
+<CardGroup cols={2}>
+
+<Card title="Slack" icon="slack">
+  Notificações de transações e alertas diretamente no Slack.
+</Card>
+
+<Card title="Email" icon="envelope">
+  Emails transacionais via Resend para faturas, lembretes e notificações.
+</Card>
+
+</CardGroup>
+
+### IA e Análise
+
+<CardGroup cols={2}>
+
+<Card title="OpenAI" icon="robot">
+  Assistente IA para análise de gastos e insights financeiros.
+</Card>
+
+<Card title="Mistral" icon="brain">
+  Processamento de documentos e extração de dados.
+</Card>
+
+</CardGroup>
+
+## Configuração
+
+Para configurar cada integração, adicione as variáveis de ambiente correspondentes:
+
+```env
+# Plaid
+PLAID_CLIENT_ID=seu_client_id
+PLAID_SECRET=seu_secret
+PLAID_ENV=sandbox|development|production
+
+# GoCardless
+GOCARDLESS_SECRET_ID=seu_secret_id
+GOCARDLESS_SECRET_KEY=sua_secret_key
+
+# Slack
+SLACK_CLIENT_ID=seu_client_id
+SLACK_CLIENT_SECRET=seu_client_secret
+
+# OpenAI
+OPENAI_API_KEY=sk-...
+
+# Mistral
+MISTRAL_API_KEY=...
+```
+
+## Webhooks
+
+O Mid Poker pode receber webhooks de serviços externos para processamento em tempo real:
+
+- **Postmark**: Recebimento de emails no inbox
+- **Plaid**: Atualizações de transações
+- **Stripe/Polar**: Eventos de pagamento (se configurado)
+
+Consulte a [documentação da API](/api-reference/engine/introduction) para mais detalhes sobre os endpoints de webhook.

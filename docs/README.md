@@ -1,13 +1,21 @@
-# Documentation
+# Documentação Técnica
 
-This directory contains technical documentation for the Midday.
+Este diretório contém documentação técnica interna do Mid Poker.
 
-## Contents
+## Conteúdo
 
-- **[inbox-matching.md](./inbox-matching.md)** - Detailed documentation of the AI-powered inbox matching algorithm that automatically matches receipts and invoices with bank transactions.
+- **[inbox-matching.md](./inbox-matching.md)** - Documentação detalhada do algoritmo de matching de inbox que automaticamente corresponde recibos e faturas com transações bancárias.
 
-## About
+## Sobre
 
-This documentation provides in-depth technical details about core Midday features and algorithms. It's intended for developers working on the codebase who need to understand the implementation details, data flows, and architectural decisions.
+Esta documentação fornece detalhes técnicos aprofundados sobre features e algoritmos do Mid Poker. É destinada a desenvolvedores trabalhando no código que precisam entender detalhes de implementação, fluxos de dados e decisões arquiteturais.
 
-The documentation here is kept in sync with the actual implementation and provides more technical depth than the user-facing documentation in the apps/docs directory.
+A documentação aqui é mantida em sincronia com a implementação real e fornece mais profundidade técnica do que a documentação voltada ao usuário no diretório apps/docs.
+
+## Estrutura do Projeto
+
+Para uma visão geral da arquitetura do projeto, consulte:
+- [README principal](../README.md) - Visão geral do projeto
+- [apps/docs](../apps/docs/) - Documentação para usuários (Mintlify)
+- [apps/api/README.md](../apps/api/README.md) - Documentação da API
+- [apps/dashboard/README.md](../apps/dashboard/README.md) - Documentação do Dashboard

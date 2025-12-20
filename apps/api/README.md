@@ -1,72 +1,102 @@
-## API
+# API Mid Poker
 
-### Environment Variables
+Backend do Mid Poker construído com Hono e tRPC.
 
-The API requires the following environment variables:
+## Stack
 
-#### Redis Configuration
+- **Runtime**: Bun
+- **Framework**: Hono
+- **RPC**: tRPC
+- **Database**: PostgreSQL (Drizzle ORM)
+- **Cache**: Redis (Upstash)
+- **AI**: OpenAI, Mistral, Google Gemini
+
+## Variáveis de Ambiente
+
+### Database
 ```bash
-# Local development (Docker):
+DATABASE_SESSION_POOLER=postgresql://...
+DATABASE_URL=postgresql://...
+```
+
+### Redis (Cache)
+```bash
+# Local (Docker):
 REDIS_URL=redis://localhost:6379
 
-# Production (Upstash Redis via Fly.io):
-# REDIS_URL=rediss://:password@fly-midday-redis.upstash.io:6379
+# Produção (Upstash):
+REDIS_URL=rediss://:password@host:6379
 ```
 
-#### Local Development Setup
-
-1. **Start Redis with Docker:**
-   ```bash
-   docker run -d --name redis -p 6379:6379 redis:alpine
-   ```
-
-2. **Set environment variable:**
-   ```bash
-   export REDIS_URL=redis://localhost:6379
-   ```
-
-#### Database Configuration
+### Supabase
 ```bash
-DATABASE_URL=postgresql://...
-DATABASE_READ_URL=postgresql://... # Optional: read replica URL
+NEXT_PUBLIC_SUPABASE_URL=https://...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
-### Development
+### IA (Opcional)
+```bash
+OPENAI_API_KEY=sk-...
+MISTRAL_API_KEY=...
+GOOGLE_GENERATIVE_AI_API_KEY=...
+```
 
+## Desenvolvimento Local
+
+### 1. Inicie o Redis com Docker
+```bash
+docker run -d --name redis -p 6379:6379 redis:alpine
+```
+
+### 2. Configure as variáveis de ambiente
+```bash
+cp .env.example .env
+```
+
+### 3. Inicie o servidor
 ```bash
 bun dev
 ```
 
-### Production
+O servidor estará disponível em `http://localhost:8080`.
+
+## Estrutura
+
+```
+src/
+├── ai/              # Agentes e ferramentas de IA
+│   ├── agents/      # Definição dos agentes
+│   └── tools/       # Ferramentas disponíveis
+├── rest/            # Rotas REST (Hono)
+│   └── routers/     # Definição das rotas
+├── trpc/            # Rotas tRPC
+│   ├── middleware/  # Middlewares (auth, permissions)
+│   └── routers/     # Definição dos routers
+├── schemas/         # Schemas Zod (validação)
+└── utils/           # Utilitários
+```
+
+## Cache
+
+O sistema usa Redis para cache distribuído:
+
+| Cache | TTL | Descrição |
+|-------|-----|-----------|
+| `apiKeyCache` | 30 min | Cache de API keys |
+| `userCache` | 30 min | Cache de dados do usuário |
+| `teamCache` | 30 min | Cache de permissões de team |
+| `replicationCache` | 10 sec | Consistência read-after-write |
+
+## Produção
 
 ```bash
 bun start
 ```
 
-### Cache Implementation
+## Endpoints Principais
 
-The API uses Redis for distributed caching across multiple server instances:
-
-- **apiKeyCache**: Caches API key lookups (30 min TTL)
-- **userCache**: Caches user data (30 min TTL)
-- **teamCache**: Caches team access permissions (30 min TTL)
-- **teamPermissionsCache**: Caches team permission lookups (30 min TTL)
-- **replicationCache**: Tracks recent mutations for read-after-write consistency (10 sec TTL)
-
-#### Environment-Specific Configuration
-
-The Redis client automatically configures itself based on the environment:
-
-**Production (Fly.io):**
-- Handles IPv6 connections
-- Longer connection timeouts (10s)
-- Higher retry attempts (10)
-- TLS support for Upstash Redis
-
-**Development (Local):**
-- IPv4 connections
-- Shorter timeouts (5s)
-- Fewer retries (3)
-- No idle timeout
-
-This ensures cache consistency across multiple stateful servers and eliminates the "No procedure found" TRPC errors caused by cache misses.
+- `GET /health` - Status da API
+- `POST /trpc/*` - Endpoints tRPC
+- `POST /rest/*` - Endpoints REST
+- `POST /v1/*` - API pública v1

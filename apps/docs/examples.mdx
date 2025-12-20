@@ -1,6 +1,111 @@
 ---
-title: "Examples"
-"og:title": "Midday API Examples - Build with the Midday API"
-description: "Explore ideas and examples of what you can build with the Midday API"
+title: "Exemplos"
+"og:title": "Exemplos de API Mid Poker - O que você pode construir"
+description: "Explore ideias e exemplos do que você pode construir com a API do Mid Poker"
 icon: github
 ---
+
+## Exemplos de Uso
+
+Explore diferentes formas de integrar e utilizar o Mid Poker.
+
+### Sincronização de Transações
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
+// Buscar transações recentes
+const { data: transactions } = await supabase
+  .from('transactions')
+  .select('*')
+  .eq('team_id', teamId)
+  .order('date', { ascending: false })
+  .limit(50);
+```
+
+### Gerar Relatório de Lucro/Perda
+
+```typescript
+// Via tRPC
+const report = await trpc.reports.profit.query({
+  from: '2024-01-01',
+  to: '2024-12-31',
+  currency: 'BRL',
+  revenueType: 'net'
+});
+
+console.log('Lucro total:', report.summary.profit);
+console.log('Receita:', report.summary.revenue);
+console.log('Despesas:', report.summary.expenses);
+```
+
+### Criar Fatura
+
+```typescript
+const invoice = await trpc.invoice.create.mutate({
+  customerId: 'customer-uuid',
+  dueDate: '2024-02-01',
+  lineItems: [
+    {
+      description: 'Stake 50/50 - Janeiro 2024',
+      quantity: 1,
+      price: 5000,
+    }
+  ],
+  currency: 'BRL'
+});
+```
+
+### Webhook de Transação
+
+```typescript
+// Endpoint para receber webhooks
+export async function POST(req: Request) {
+  const payload = await req.json();
+
+  if (payload.type === 'transaction.created') {
+    // Nova transação recebida
+    const { amount, name, category } = payload.data;
+
+    // Enviar notificação, atualizar dashboard, etc.
+    await sendSlackNotification({
+      text: `Nova transação: ${name} - R$ ${amount}`
+    });
+  }
+
+  return Response.json({ received: true });
+}
+```
+
+## Casos de Uso
+
+<CardGroup cols={2}>
+
+<Card title="Dashboard Personalizado" icon="chart-line">
+  Crie visualizações customizadas dos seus dados financeiros usando a API.
+</Card>
+
+<Card title="Automação de Relatórios" icon="file-export">
+  Gere relatórios automáticos semanais ou mensais para seu contador.
+</Card>
+
+<Card title="Bot de Telegram" icon="paper-plane">
+  Receba notificações e consulte seu saldo via Telegram.
+</Card>
+
+<Card title="Integração com Planilhas" icon="table">
+  Sincronize transações automaticamente com Google Sheets ou Excel.
+</Card>
+
+</CardGroup>
+
+## Recursos Adicionais
+
+- [Documentação da API](/api-reference/engine/introduction)
+- [Desenvolvimento Local](/local-development)
+- [Self-Hosting](/self-hosting)
