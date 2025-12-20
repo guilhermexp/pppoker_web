@@ -1114,4 +1114,54 @@ export default {
       remove: "Remove",
     },
   },
+  // Team Settings page
+  settings: {
+    company_logo: {
+      title: "Company logo",
+      description:
+        "This is your company's logo. Click on the logo to upload a custom one from your files.",
+      avatar_optional: "An avatar is optional but strongly recommended.",
+    },
+    company_name: {
+      title: "Company name",
+      description:
+        "This is your company's visible name within Midday. For example, the name of your company or department.",
+      max_characters: "Please use 32 characters at maximum.",
+    },
+    company_email: {
+      title: "Company email",
+      description:
+        "This is the email address that will be used to receive emails from Midday.",
+    },
+    company_country: {
+      title: "Company country",
+      description: "This is your company's country of origin.",
+      placeholder: "Select country",
+    },
+    base_currency: {
+      title: "Base currency",
+      description:
+        "If you have multiple currencies, you can set a base currency for your account to view your total balance in your preferred currency. Exchange rates are updated every 24 hours.",
+      update_title: "Update base currency",
+      update_description:
+        "This will update the base currency for all transactions and account balances.",
+      update_button: "Update",
+      updating: "Updating...",
+      updating_description:
+        "We're updating your base currency, please wait.",
+      success: "Transactions and account balances updated.",
+      error: "Something went wrong please try again.",
+    },
+    fiscal_year: {
+      title: "Fiscal year",
+      description:
+        "Set when your fiscal year begins. This determines the default date ranges for all reports and widgets throughout the application.",
+    },
+    delete_team: {
+      title: "Delete team",
+      description:
+        "Permanently remove your Team and all of its contents from the Midday platform. This action is not reversible — please continue with caution.",
+      button: "Delete",
+    },
+  },
 } as const;

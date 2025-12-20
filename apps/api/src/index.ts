@@ -162,13 +162,13 @@ app.doc("/openapi", {
   openapi: "3.1.0",
   info: {
     version: "0.0.1",
-    title: "Midday API",
+    title: "Mid Poker API",
     description:
-      "Midday is a platform for Invoicing, Time tracking, File reconciliation, Storage, Financial Overview & your own Assistant.",
+      "Mid Poker is a platform for Invoicing, Time tracking, File reconciliation, Storage, Financial Overview & your own Assistant.",
     contact: {
-      name: "Midday Support",
-      email: "engineer@midday.ai",
-      url: "https://midday.ai",
+      name: "Mid Poker Support",
+      email: "support@mid.poker",
+      url: "https://mid.poker",
     },
     license: {
       name: "AGPL-3.0 license",
@@ -177,7 +177,7 @@ app.doc("/openapi", {
   },
   servers: [
     {
-      url: "https://api.midday.ai",
+      url: "https://api.mid.poker",
       description: "Production API",
     },
   ],
@@ -194,12 +194,12 @@ app.openAPIRegistry.registerComponent("securitySchemes", "token", {
   type: "http",
   scheme: "bearer",
   description: "Default authentication mechanism",
-  "x-speakeasy-example": "MIDDAY_API_KEY",
+  "x-speakeasy-example": "MID_POKER_API_KEY",
 });
 
 app.get(
   "/",
-  Scalar({ url: "/openapi", pageTitle: "Midday API", theme: "saturn" }),
+  Scalar({ url: "/openapi", pageTitle: "Mid Poker API", theme: "saturn" }),
 );
 
 app.route("/", routers);

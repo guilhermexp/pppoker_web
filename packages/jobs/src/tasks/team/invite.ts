@@ -17,7 +17,7 @@ export const inviteTeamMembers = schemaTask({
     const { t } = getI18n({ locale });
 
     const emails = invites?.map(async (invite) => ({
-      from: "Midday <middaybot@midday.ai>",
+      from: "Mid Poker <noreply@mid.poker>",
       to: [invite.email],
       subject: t("invite.subject", {
         invitedByName: invite.invitedByName,

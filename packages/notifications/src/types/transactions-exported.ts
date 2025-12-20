@@ -24,7 +24,7 @@ export const transactionsExported: NotificationHandler = {
     replyTo: user.email,
     to: data.accountantEmail ? [data.accountantEmail] : [],
     subject: `Transaction Export from ${team.name}`,
-    from: `${team.name} <middaybot@midday.ai>`,
+    from: `${team.name} <noreply@mid.poker>`,
     data: {
       accountantEmail: data.accountantEmail,
       teamName: team.name,

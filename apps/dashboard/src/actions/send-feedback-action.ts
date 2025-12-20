@@ -1,13 +1,9 @@
 "use server";
 
-import { PlainClient } from "@team-plain/typescript-sdk";
 import { z } from "zod";
 import { authActionClient } from "./safe-action";
 
-const client = new PlainClient({
-  apiKey: process.env.PLAIN_API_KEY!,
-});
-
+// Plain integration removed - feedback is logged locally only
 export const sendFeebackAction = authActionClient
   .schema(
     z.object({
@@ -16,36 +12,17 @@ export const sendFeebackAction = authActionClient
   )
   .metadata({ name: "send-feedback" })
   .action(async ({ parsedInput: { feedback }, ctx: { user } }) => {
-    const customer = await client.upsertCustomer({
-      identifier: {
-        emailAddress: user.email,
-      },
-      onCreate: {
-        fullName: user.fullName ?? "",
-        externalId: user.id,
-        email: {
-          email: user.email!,
-          isVerified: true,
-        },
-      },
-      onUpdate: {},
+    // Log feedback locally instead of sending to external service
+    console.log("[Feedback]", {
+      userId: user.id,
+      email: user.email,
+      feedback,
+      timestamp: new Date().toISOString(),
     });
 
-    const response = await client.createThread({
-      title: "Feedback",
-      customerIdentifier: {
-        customerId: customer.data?.customer.id,
+    return {
+      data: {
+        success: true,
       },
-      // Feedback
-      labelTypeIds: ["lt_01HV93GFTZAKESXMVY8X371ADG"],
-      components: [
-        {
-          componentText: {
-            text: feedback,
-          },
-        },
-      ],
-    });
-
-    return response;
+    };
   });

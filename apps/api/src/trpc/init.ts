@@ -62,6 +62,25 @@ const withTeamPermissionMiddleware = t.middleware(async (opts) => {
 
 export const publicProcedure = t.procedure.use(withPrimaryDbMiddleware);
 
+// Procedure that only requires authentication but not team membership
+// Used for endpoints that need to work for new users without a team
+export const authProcedure = t.procedure
+  .use(withPrimaryDbMiddleware)
+  .use(async (opts) => {
+    const { session } = opts.ctx;
+    console.log("[authProcedure] Called, session:", session ? "present" : "missing");
+
+    if (!session) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "Auth required (authProcedure)" });
+    }
+
+    return opts.next({
+      ctx: {
+        session,
+      },
+    });
+  });
+
 export const protectedProcedure = t.procedure
   .use(withTeamPermissionMiddleware) // NOTE: This is needed to ensure that the teamId is set in the context
   .use(withPrimaryDbMiddleware)

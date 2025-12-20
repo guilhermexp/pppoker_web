@@ -22,16 +22,15 @@ export default async function Layout({
 }) {
   const queryClient = getQueryClient();
 
-  // NOTE: These are used in the global sheets
-  batchPrefetch([
-    trpc.team.current.queryOptions(),
-    trpc.invoice.defaultSettings.queryOptions(),
-    trpc.search.global.queryOptions({ searchTerm: "" }),
-  ]);
-
   // NOTE: Right now we want to fetch the user and hydrate the client
   // Next steps would be to prefetch and suspense
-  const user = await queryClient.fetchQuery(trpc.user.me.queryOptions());
+  let user;
+  try {
+    user = await queryClient.fetchQuery(trpc.user.me.queryOptions());
+  } catch (error) {
+    // If there's an auth error, redirect to login
+    redirect("/login");
+  }
 
   if (!user) {
     redirect("/login");
@@ -44,6 +43,13 @@ export default async function Layout({
   if (!user.teamId) {
     redirect("/teams");
   }
+
+  // NOTE: These are used in the global sheets - only prefetch after auth checks
+  batchPrefetch([
+    trpc.team.current.queryOptions(),
+    trpc.invoice.defaultSettings.queryOptions(),
+    trpc.search.global.queryOptions({ searchTerm: "" }),
+  ]);
 
   // Check if trial has expired - render upgrade content directly instead of redirecting
   const headersList = await headers();

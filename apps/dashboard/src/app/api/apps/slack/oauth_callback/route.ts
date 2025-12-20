@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: "Hello there! 👋 I'm your new Midday bot, I'll send notifications in this channel regarding new transactions and other important updates.",
+                text: "Hello there! 👋 I'm your new Mid Poker bot, I'll send notifications in this channel regarding new transactions and other important updates.",
               },
             },
             {
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
               elements: [
                 {
                   type: "mrkdwn",
-                  text: "<https://app.midday.ai/apps?app=slack&settings=true|Notification settings>",
+                  text: "<https://app.mid.poker/apps?app=slack&settings=true|Notification settings>",
                 },
               ],
             },

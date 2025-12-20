@@ -1,3 +1,6 @@
+"use client";
+
+import { useScopedI18n } from "@/locales/client";
 import {
   Card,
   CardContent,
@@ -8,15 +11,13 @@ import {
 import { SelectCurrency } from "./select-currency";
 
 export function BaseCurrency() {
+  const t = useScopedI18n("settings.base_currency");
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Base currency</CardTitle>
-        <CardDescription>
-          If you have multiple currencies, you can set a base currency for your
-          account to view your total balance in your preferred currency.
-          Exchange rates are updated every 24 hours.
-        </CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
 
       <CardContent>

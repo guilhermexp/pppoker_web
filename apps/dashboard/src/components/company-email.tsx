@@ -2,6 +2,7 @@
 
 import { useTeamMutation, useTeamQuery } from "@/hooks/use-team";
 import { useZodForm } from "@/hooks/use-zod-form";
+import { useScopedI18n } from "@/locales/client";
 import {
   Card,
   CardContent,
@@ -20,7 +21,6 @@ import {
 import { Input } from "@midday/ui/input";
 import { SubmitButton } from "@midday/ui/submit-button";
 import { z } from "zod/v3";
-import { CountrySelector } from "./country-selector";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -29,6 +29,9 @@ const formSchema = z.object({
 export function CompanyEmail() {
   const { data } = useTeamQuery();
   const updateTeamMutation = useTeamMutation();
+  const t = useScopedI18n("settings.company_email");
+  const tActions = useScopedI18n("actions");
+  const tPlaceholders = useScopedI18n("placeholders");
 
   const form = useZodForm(formSchema, {
     defaultValues: {
@@ -45,11 +48,8 @@ export function CompanyEmail() {
       <form onSubmit={onSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Company email</CardTitle>
-            <CardDescription>
-              This is the email address that will be used to receive emails from
-              Midday.
-            </CardDescription>
+            <CardTitle>{t("title")}</CardTitle>
+            <CardDescription>{t("description")}</CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -59,7 +59,7 @@ export function CompanyEmail() {
               render={({ field }) => (
                 <FormItem className="max-w-[300px]">
                   <FormControl>
-                    <Input {...field} placeholder="Email" />
+                    <Input {...field} placeholder={tPlaceholders("email")} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -72,7 +72,7 @@ export function CompanyEmail() {
               isSubmitting={updateTeamMutation.isPending}
               disabled={updateTeamMutation.isPending}
             >
-              Save
+              {tActions("save")}
             </SubmitButton>
           </CardFooter>
         </Card>

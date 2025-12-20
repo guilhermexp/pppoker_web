@@ -6,31 +6,78 @@ import * as schema from "./schema";
 const isDevelopment = process.env.NODE_ENV === "development";
 
 const connectionConfig = {
-  max: isDevelopment ? 8 : 12,
-  idleTimeoutMillis: isDevelopment ? 5000 : 60000,
-  connectionTimeoutMillis: 15000,
-  maxUses: isDevelopment ? 100 : 0,
+  max: isDevelopment ? 3 : 12,
+  idleTimeoutMillis: isDevelopment ? 10000 : 60000,
+  connectionTimeoutMillis: 30000,
+  maxUses: isDevelopment ? 50 : 0,
   allowExitOnIdle: true,
 };
 
-const primaryPool = new Pool({
-  connectionString: process.env.DATABASE_PRIMARY_URL!,
-  ...connectionConfig,
+// Lazy initialization to ensure env vars are loaded
+let _primaryPool: Pool | null = null;
+let _fraPool: Pool | null = null;
+let _sjcPool: Pool | null = null;
+let _iadPool: Pool | null = null;
+
+const getPrimaryPool = () => {
+  if (!_primaryPool) {
+    const connectionString = process.env.DATABASE_PRIMARY_URL;
+    if (!connectionString) {
+      throw new Error("DATABASE_PRIMARY_URL is not set");
+    }
+    _primaryPool = new Pool({
+      connectionString,
+      ...connectionConfig,
+    });
+  }
+  return _primaryPool;
+};
+
+const getFraPool = () => {
+  if (!_fraPool && process.env.DATABASE_FRA_URL) {
+    _fraPool = new Pool({
+      connectionString: process.env.DATABASE_FRA_URL,
+      ...connectionConfig,
+    });
+  }
+  return _fraPool;
+};
+
+const getSjcPool = () => {
+  if (!_sjcPool && process.env.DATABASE_SJC_URL) {
+    _sjcPool = new Pool({
+      connectionString: process.env.DATABASE_SJC_URL,
+      ...connectionConfig,
+    });
+  }
+  return _sjcPool;
+};
+
+const getIadPool = () => {
+  if (!_iadPool && process.env.DATABASE_IAD_URL) {
+    _iadPool = new Pool({
+      connectionString: process.env.DATABASE_IAD_URL,
+      ...connectionConfig,
+    });
+  }
+  return _iadPool;
+};
+
+// For backward compatibility - these will be initialized on first access
+const primaryPool = new Proxy({} as Pool, {
+  get: (_, prop) => (getPrimaryPool() as any)[prop],
 });
 
-const fraPool = new Pool({
-  connectionString: process.env.DATABASE_FRA_URL!,
-  ...connectionConfig,
+const fraPool = new Proxy({} as Pool, {
+  get: (_, prop) => (getFraPool() as any)?.[prop],
 });
 
-const sjcPool = new Pool({
-  connectionString: process.env.DATABASE_SJC_URL!,
-  ...connectionConfig,
+const sjcPool = new Proxy({} as Pool, {
+  get: (_, prop) => (getSjcPool() as any)?.[prop],
 });
 
-const iadPool = new Pool({
-  connectionString: process.env.DATABASE_IAD_URL!,
-  ...connectionConfig,
+const iadPool = new Proxy({} as Pool, {
+  get: (_, prop) => (getIadPool() as any)?.[prop],
 });
 
 const hasReplicas = Boolean(
@@ -131,25 +178,61 @@ const getReplicaIndexForRegion = () => {
 // Create the database instance once and export it
 const replicaIndex = getReplicaIndexForRegion();
 
-export const db = withReplicas(
-  primaryDb,
-  [
-    // Order of replicas is important
-    drizzle(fraPool, {
-      schema,
-      casing: "snake_case",
-    }),
-    drizzle(iadPool, {
-      schema,
-      casing: "snake_case",
-    }),
-    drizzle(sjcPool, {
-      schema,
-      casing: "snake_case",
-    }),
-  ],
-  (replicas) => replicas[replicaIndex]!,
-);
+// Create a wrapper that adds replica methods even when there are no replicas
+const createPrimaryOnlyDb = (primary: typeof primaryDb) => {
+  const executeOnReplica = async <
+    TRow extends Record<string, unknown> = Record<string, unknown>,
+  >(
+    query: string | any,
+  ): Promise<TRow[]> => {
+    const result = await primary.execute(query);
+    if (Array.isArray(result)) {
+      return result as TRow[];
+    }
+    return (result as any).rows as TRow[];
+  };
+
+  // Use a Proxy to properly delegate all methods to primary while adding replica methods
+  return new Proxy(primary, {
+    get(target, prop) {
+      // Add replica-specific methods
+      if (prop === "executeOnReplica") return executeOnReplica;
+      if (prop === "transactionOnReplica") return target.transaction;
+      if (prop === "$primary") return target;
+      if (prop === "usePrimaryOnly") return () => createPrimaryOnlyDb(target);
+      // Delegate everything else to primary
+      return (target as any)[prop];
+    },
+  }) as typeof primaryDb & {
+    executeOnReplica: typeof executeOnReplica;
+    transactionOnReplica: typeof primary.transaction;
+    $primary: typeof primary;
+    usePrimaryOnly: () => ReturnType<typeof createPrimaryOnlyDb>;
+  };
+};
+
+// Only use replicas when all replica URLs are configured
+export const db = hasReplicas
+  ? withReplicas(
+      primaryDb,
+      [
+        // Order of replicas is important
+        drizzle(fraPool, {
+          schema,
+          casing: "snake_case",
+        }),
+        drizzle(iadPool, {
+          schema,
+          casing: "snake_case",
+        }),
+        drizzle(sjcPool, {
+          schema,
+          casing: "snake_case",
+        }),
+      ],
+      (replicas) => replicas[replicaIndex]!,
+    )
+  : createPrimaryOnlyDb(primaryDb);
 
 // Keep connectDb for backward compatibility, but just return the singleton
 export const connectDb = async () => {

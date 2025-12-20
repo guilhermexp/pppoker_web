@@ -6,6 +6,7 @@ import { DocumentClient } from "@midday/documents";
 import { inboxSlackUploadSchema } from "@midday/jobs/schema";
 import { createClient } from "@midday/supabase/job";
 import { getExtensionFromMimeType } from "@midday/utils";
+import { getAppUrl } from "@midday/utils/envs";
 import { schemaTask, tasks } from "@trigger.dev/sdk";
 import { format } from "date-fns";
 
@@ -140,7 +141,7 @@ export const inboxSlackUpload = schemaTask({
                       text: "Show receipt",
                       emoji: true,
                     },
-                    url: `https://app.midday.ai/inbox?id=${encodeURIComponent(updatedInbox.id)}`,
+                    url: `${getAppUrl()}/inbox?id=${encodeURIComponent(updatedInbox.id)}`,
                     action_id: "view_receipt",
                   },
                 ],

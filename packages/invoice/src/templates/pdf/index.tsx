@@ -1,4 +1,5 @@
 import { Document, Font, Image, Page, Text, View } from "@react-pdf/renderer";
+import { getAppUrl } from "@midday/utils/envs";
 import QRCodeUtil from "qrcode";
 import type { Invoice } from "../../types";
 import { EditorContent } from "./components/editor-content";
@@ -74,7 +75,7 @@ export async function PdfTemplate({
   let qrCode = null;
 
   if (template.includeQr) {
-    qrCode = await QRCodeUtil.toDataURL(`https://app.midday.ai/i/${token}`, {
+    qrCode = await QRCodeUtil.toDataURL(`${getAppUrl()}/i/${token}`, {
       margin: 0,
       width: 40 * 3,
     });

@@ -1,28 +1,9 @@
 "use server";
 
-import { PlainClient, ThreadFieldSchemaType } from "@team-plain/typescript-sdk";
 import { z } from "zod";
 import { authActionClient } from "./safe-action";
 
-const client = new PlainClient({
-  apiKey: process.env.PLAIN_API_KEY!,
-});
-
-const mapToPriorityNumber = (priority: string) => {
-  switch (priority) {
-    case "low":
-      return 0;
-    case "normal":
-      return 1;
-    case "high":
-      return 2;
-    case "urgent":
-      return 3;
-    default:
-      return 1;
-  }
-};
-
+// Plain integration removed - support requests are logged locally only
 export const sendSupportAction = authActionClient
   .schema(
     z.object({
@@ -35,47 +16,21 @@ export const sendSupportAction = authActionClient
   )
   .metadata({ name: "send-support" })
   .action(async ({ parsedInput: data, ctx: { user } }) => {
-    const customer = await client.upsertCustomer({
-      identifier: {
-        emailAddress: user.email,
-      },
-      onCreate: {
-        fullName: user.fullName ?? "",
-        externalId: user.id,
-        email: {
-          email: user.email!,
-          isVerified: true,
-        },
-      },
-      onUpdate: {},
+    // Log support request locally instead of sending to external service
+    console.log("[Support Request]", {
+      userId: user.id,
+      email: user.email,
+      subject: data.subject,
+      priority: data.priority,
+      type: data.type,
+      message: data.message,
+      url: data.url,
+      timestamp: new Date().toISOString(),
     });
 
-    const response = await client.createThread({
-      title: data.subject,
-      description: data.message,
-      priority: mapToPriorityNumber(data.priority),
-      customerIdentifier: {
-        customerId: customer.data?.customer.id,
+    return {
+      data: {
+        success: true,
       },
-      // Support
-      labelTypeIds: ["lt_01HV93FQT6NSC1EN2HHA6BG9WK"],
-      components: [
-        {
-          componentText: {
-            text: data.message,
-          },
-        },
-      ],
-      threadFields: data.url
-        ? [
-            {
-              type: ThreadFieldSchemaType.String,
-              key: "url",
-              stringValue: data.url,
-            },
-          ]
-        : undefined,
-    });
-
-    return response;
+    };
   });

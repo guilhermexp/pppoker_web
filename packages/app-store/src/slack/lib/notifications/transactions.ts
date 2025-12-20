@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getAppUrl } from "@midday/utils/envs";
 import { z } from "zod";
 import { createSlackWebClient } from "../client";
 
@@ -44,7 +45,7 @@ export async function sendSlackTransactionNotifications({
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "You got some new transactions! We'll do our best to match these with receipts in your Inbox or you can simply upload them in your <slack://app?id=A07PN48FW3A|Midday Assistant>.",
+            text: "You got some new transactions! We'll do our best to match these with receipts in your Inbox or you can simply upload them in your <slack://app?id=A07PN48FW3A|Mid Poker Assistant>.",
           },
         },
         {
@@ -75,7 +76,7 @@ export async function sendSlackTransactionNotifications({
                 type: "plain_text",
                 text: "View transactions",
               },
-              url: "https://app.midday.ai/transactions",
+              url: `${getAppUrl()}/transactions`,
               action_id: "button_click",
             },
           ],

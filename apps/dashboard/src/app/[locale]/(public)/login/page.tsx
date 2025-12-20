@@ -1,125 +1,14 @@
-import { AppleSignIn } from "@/components/apple-sign-in";
-import { ConsentBanner } from "@/components/consent-banner";
 import { EmailSignIn } from "@/components/email-sign-in";
-import { GithubSignIn } from "@/components/github-sign-in";
-import { GoogleSignIn } from "@/components/google-sign-in";
-import { LoginAccordion } from "@/components/login-accordion";
 import LoginTestimonials from "@/components/login-testimonials";
-import { OTPSignIn } from "@/components/otp-sign-in";
-import { Cookies } from "@/utils/constants";
-import { isEU } from "@midday/location";
 import { Icons } from "@midday/ui/icons";
 import type { Metadata } from "next";
-import { cookies, headers } from "next/headers";
 import Link from "next/link";
-import { userAgent } from "next/server";
 
 export const metadata: Metadata = {
-  title: "Login | Midday",
+  title: "Login | Mid Poker",
 };
 
 export default async function Page() {
-  const cookieStore = await cookies();
-  const preferred = cookieStore.get(Cookies.PreferredSignInProvider);
-  const showTrackingConsent =
-    (await isEU()) && !cookieStore.has(Cookies.TrackingConsent);
-  const { device } = userAgent({ headers: await headers() });
-
-  let moreSignInOptions = null;
-  let preferredSignInOption =
-    device?.vendor === "Apple" ? (
-      <div className="flex flex-col space-y-3">
-        <GoogleSignIn showLastUsed={preferred?.value === "google"} />
-        <AppleSignIn showLastUsed={preferred?.value === "apple"} />
-      </div>
-    ) : (
-      <GoogleSignIn
-        showLastUsed={!preferred?.value || preferred?.value === "google"}
-      />
-    );
-
-  switch (preferred?.value) {
-    case "apple":
-      preferredSignInOption = <AppleSignIn showLastUsed={true} />;
-      moreSignInOptions = (
-        <>
-          <GoogleSignIn />
-          <GithubSignIn />
-          <EmailSignIn />
-          <OTPSignIn className="border-t-[1px] border-border pt-8" />
-        </>
-      );
-      break;
-
-    case "github":
-      preferredSignInOption = <GithubSignIn showLastUsed={true} />;
-      moreSignInOptions = (
-        <>
-          <GoogleSignIn />
-          <AppleSignIn />
-          <EmailSignIn />
-          <OTPSignIn className="border-t-[1px] border-border pt-8" />
-        </>
-      );
-      break;
-
-    case "google":
-      preferredSignInOption = <GoogleSignIn showLastUsed={true} />;
-      moreSignInOptions = (
-        <>
-          <AppleSignIn />
-          <GithubSignIn />
-          <EmailSignIn />
-          <OTPSignIn className="border-t-[1px] border-border pt-8" />
-        </>
-      );
-      break;
-
-    case "otp":
-      preferredSignInOption = <OTPSignIn />;
-      moreSignInOptions = (
-        <>
-          <GoogleSignIn />
-          <AppleSignIn />
-          <GithubSignIn />
-          <EmailSignIn />
-        </>
-      );
-      break;
-
-    case "email":
-      preferredSignInOption = <EmailSignIn showLastUsed={true} />;
-      moreSignInOptions = (
-        <>
-          <GoogleSignIn />
-          <AppleSignIn />
-          <GithubSignIn />
-          <OTPSignIn className="border-t-[1px] border-border pt-8" />
-        </>
-      );
-      break;
-
-    default:
-      if (device?.vendor === "Apple") {
-        moreSignInOptions = (
-          <>
-            <GithubSignIn />
-            <EmailSignIn />
-            <OTPSignIn className="border-t-[1px] border-border pt-8" />
-          </>
-        );
-      } else {
-        moreSignInOptions = (
-          <>
-            <AppleSignIn />
-            <GithubSignIn />
-            <EmailSignIn />
-            <OTPSignIn className="border-t-[1px] border-border pt-8" />
-          </>
-        );
-      }
-  }
-
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Video Background */}
@@ -163,31 +52,16 @@ export default async function Page() {
           <div className="space-y-8 flex-1 flex flex-col justify-center">
             {/* Header */}
             <div className="text-center space-y-2">
-              <h1 className="text-lg mb-4 font-serif">Welcome to Midday</h1>
+              <h1 className="text-lg mb-4 font-serif">Welcome to Mid Poker</h1>
               <p className="font-sans text-sm text-[#878787]">
                 Sign in to your account to continue
               </p>
             </div>
 
-            {/* Sign In Options */}
-            <div className="space-y-3 flex items-center justify-center">
-              {preferredSignInOption}
+            {/* Email Sign In */}
+            <div className="flex items-center justify-center">
+              <EmailSignIn />
             </div>
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-background font-sans text-[#878787]">
-                  or
-                </span>
-              </div>
-            </div>
-
-            {/* More Options Accordion */}
-            <LoginAccordion>{moreSignInOptions}</LoginAccordion>
 
             {/* Sign Up Link */}
             <div className="text-center">
@@ -208,14 +82,14 @@ export default async function Page() {
             <p className="font-sans text-xs text-[#878787]">
               By signing in you agree to our{" "}
               <Link
-                href="https://midday.ai/terms"
+                href="https://mid.poker/terms"
                 className="text-[#878787] hover:text-foreground transition-colors underline"
               >
                 Terms of service
               </Link>{" "}
               &{" "}
               <Link
-                href="https://midday.ai/policy"
+                href="https://mid.poker/policy"
                 className="text-[#878787] hover:text-foreground transition-colors underline"
               >
                 Privacy policy
@@ -224,9 +98,6 @@ export default async function Page() {
           </div>
         </div>
       </div>
-
-      {/* Consent Banner */}
-      {showTrackingConsent && <ConsentBanner />}
     </div>
   );
 }

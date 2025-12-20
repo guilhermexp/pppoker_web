@@ -2,7 +2,6 @@ import {
   Body,
   Container,
   Heading,
-  Link,
   Preview,
   Section,
   Text,
@@ -22,7 +21,7 @@ interface Props {
 
 export const TrialExpiringEmail = ({ fullName = "" }: Props) => {
   const firstName = fullName ? fullName.split(" ").at(0) : "";
-  const text = `${firstName ? `Hi ${firstName}, ` : ""}Just a quick reminder—your Midday trial ends in 3 days. We hope you've had a great experience so far.`;
+  const text = `${firstName ? `Hi ${firstName}, ` : ""}Just a quick reminder—your Mid Poker trial ends in 3 days. We hope you've had a great experience so far.`;
   const themeClasses = getEmailThemeClasses();
   const lightStyles = getEmailInlineStyles("light");
 
@@ -45,7 +44,7 @@ export const TrialExpiringEmail = ({ fullName = "" }: Props) => {
             className={`text-[21px] font-normal text-center p-0 my-[30px] mx-0 ${themeClasses.heading}`}
             style={{ color: lightStyles.text.color }}
           >
-            Your Midday Trial is Expiring Soon
+            Your Mid Poker Trial is Expiring Soon
           </Heading>
 
           <br />
@@ -60,7 +59,7 @@ export const TrialExpiringEmail = ({ fullName = "" }: Props) => {
             className={themeClasses.text}
             style={{ color: lightStyles.text.color }}
           >
-            Just a quick reminder—your Midday trial ends in 3 days. We hope
+            Just a quick reminder—your Mid Poker trial ends in 3 days. We hope
             you've had a great experience so far.
           </Text>
           <Text
@@ -72,7 +71,7 @@ export const TrialExpiringEmail = ({ fullName = "" }: Props) => {
             claim it before your trial ends.
           </Text>
           <Section className="text-center mt-[50px] mb-[50px]">
-            <Button href="https://app.midday.ai/settings/billing">
+            <Button href="https://app.mid.poker/settings/billing">
               Claim your discount
             </Button>
           </Section>
@@ -81,15 +80,7 @@ export const TrialExpiringEmail = ({ fullName = "" }: Props) => {
             style={{ color: lightStyles.text.color }}
           >
             If you're unsure or have any questions, we'd love to hear from you.
-            You can reply to this email or schedule a quick{" "}
-            <Link
-              href="https://cal.com/pontus-midday/15min"
-              className={`underline ${themeClasses.link}`}
-              style={{ color: lightStyles.text.color }}
-            >
-              call with us
-            </Link>
-            . We're always here to help.
+            Just reply to this email. We're always here to help.
           </Text>
           <Text
             className={`text-[14px] ${themeClasses.text}`}
@@ -97,7 +88,7 @@ export const TrialExpiringEmail = ({ fullName = "" }: Props) => {
           >
             Best,
             <br />
-            Pontus & Viktor
+            Mid Poker Team
           </Text>
 
           <br />

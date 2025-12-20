@@ -11,7 +11,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://app.midday.ai"
+          "value": "https://app.mid.poker"
         },
         {
           "key": "X-Content-Type-Options",

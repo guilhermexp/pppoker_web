@@ -4,15 +4,44 @@ import {
   exchangeCodeForAccountSchema,
   syncInboxAccountSchema,
 } from "@api/schemas/inbox-accounts";
+import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { deleteInboxAccount, getInboxAccounts } from "@midday/db/queries";
+import { deleteInboxAccount } from "@midday/db/queries";
 import { InboxConnector } from "@midday/inbox/connector";
 import { schedules, tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 
 export const inboxAccountsRouter = createTRPCRouter({
-  get: protectedProcedure.query(async ({ ctx: { db, teamId } }) => {
-    return getInboxAccounts(db, teamId!);
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  get: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const supabase = await createAdminClient();
+
+    const { data: accounts, error } = await supabase
+      .from("inbox_accounts")
+      .select(`
+        id,
+        email,
+        provider,
+        schedule_id,
+        last_sync_at,
+        created_at
+      `)
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.log("[inboxAccounts.get] Supabase REST error:", error.message);
+      return [];
+    }
+
+    return (accounts ?? []).map((acc: any) => ({
+      id: acc.id,
+      email: acc.email,
+      provider: acc.provider,
+      scheduleId: acc.schedule_id,
+      lastSyncAt: acc.last_sync_at,
+      createdAt: acc.created_at,
+    }));
   }),
 
   connect: protectedProcedure

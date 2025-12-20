@@ -1,4 +1,5 @@
-import { type JWTPayload, jwtVerify } from "jose";
+import type { Database } from "@midday/supabase/types";
+import { createClient } from "@supabase/supabase-js";
 
 export type Session = {
   user: {
@@ -9,35 +10,42 @@ export type Session = {
   teamId?: string;
 };
 
-type SupabaseJWTPayload = JWTPayload & {
-  user_metadata?: {
-    email?: string;
-    full_name?: string;
-    [key: string]: string | undefined;
-  };
-};
-
 export async function verifyAccessToken(
   accessToken?: string,
 ): Promise<Session | null> {
   if (!accessToken) return null;
 
   try {
-    const { payload } = await jwtVerify(
-      accessToken,
-      new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET),
+    // Create a Supabase client with the access token
+    const supabase = createClient<Database>(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      },
     );
 
-    const supabasePayload = payload as SupabaseJWTPayload;
+    // Use getUser() to verify the token - this validates with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+
+    if (error || !user) {
+      console.log("[verifyAccessToken] Failed:", error?.message || "No user");
+      return null;
+    }
 
     return {
       user: {
-        id: supabasePayload.sub!,
-        email: supabasePayload.user_metadata?.email,
-        full_name: supabasePayload.user_metadata?.full_name,
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name,
       },
     };
   } catch (error) {
+    console.log("[verifyAccessToken] Exception:", error);
     return null;
   }
 }

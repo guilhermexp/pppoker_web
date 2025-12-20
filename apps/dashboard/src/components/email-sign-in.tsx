@@ -50,11 +50,10 @@ export function EmailSignIn({ showLastUsed = false }: Props) {
         return;
       }
 
-      if (returnTo) {
-        router.push(returnTo);
-      } else {
-        router.push("/");
-      }
+      // Use hard redirect to ensure cookies are properly sent to server
+      // router.push() does client-side navigation which may not send new cookies
+      const redirectUrl = returnTo || "/";
+      window.location.href = redirectUrl;
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {

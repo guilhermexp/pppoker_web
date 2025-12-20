@@ -11,7 +11,8 @@ import {
   updateTeamByIdSchema,
   updateTeamMemberSchema,
 } from "@api/schemas/team";
-import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { createAdminClient } from "@api/services/supabase";
+import { authProcedure, createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import {
   acceptTeamInvite,
   createTeam,
@@ -38,35 +39,162 @@ import type {
 import { tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 
+// Helper to get team via Supabase REST (avoids Drizzle connection pool issues)
+async function getTeamViaSupabase(teamId: string) {
+  const supabase = await createAdminClient();
+
+  const { data: team, error: teamError } = await supabase
+    .from("teams")
+    .select("id, name, logo_url, email, inbox_id, plan, base_currency, country_code, fiscal_year_start_month, export_settings")
+    .eq("id", teamId)
+    .single();
+
+  if (teamError || !team) {
+    console.log("[getTeamViaSupabase] Error:", teamError?.message);
+    return null;
+  }
+
+  // Transform snake_case to camelCase
+  return {
+    id: team.id,
+    name: team.name,
+    logoUrl: team.logo_url,
+    email: team.email,
+    inboxId: team.inbox_id,
+    plan: team.plan,
+    baseCurrency: team.base_currency,
+    countryCode: team.country_code,
+    fiscalYearStartMonth: team.fiscal_year_start_month,
+    exportSettings: team.export_settings,
+  };
+}
+
 export const teamRouter = createTRPCRouter({
-  current: protectedProcedure.query(async ({ ctx: { db, teamId } }) => {
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  current: protectedProcedure.query(async ({ ctx: { teamId } }) => {
     if (!teamId) {
       return null;
     }
-
-    return getTeamById(db, teamId!);
+    return getTeamViaSupabase(teamId);
   }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   update: protectedProcedure
     .input(updateTeamByIdSchema)
-    .mutation(async ({ ctx: { db, teamId }, input }) => {
-      return updateTeamById(db, {
-        id: teamId!,
-        data: input,
-      });
+    .mutation(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Transform camelCase to snake_case for database
+      const updateData: Record<string, unknown> = {};
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.email !== undefined) updateData.email = input.email;
+      if (input.logoUrl !== undefined) updateData.logo_url = input.logoUrl;
+      if (input.baseCurrency !== undefined) updateData.base_currency = input.baseCurrency;
+      if (input.countryCode !== undefined) updateData.country_code = input.countryCode;
+      if (input.fiscalYearStartMonth !== undefined) updateData.fiscal_year_start_month = input.fiscalYearStartMonth;
+
+      const { data, error } = await supabase
+        .from("teams")
+        .update(updateData)
+        .eq("id", teamId)
+        .select()
+        .single();
+
+      if (error) {
+        console.log("[team.update] Supabase REST error:", error.message);
+        throw new Error(`Failed to update team: ${error.message}`);
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        logoUrl: data.logo_url,
+        baseCurrency: data.base_currency,
+        countryCode: data.country_code,
+        fiscalYearStartMonth: data.fiscal_year_start_month,
+      };
     }),
 
-  members: protectedProcedure.query(async ({ ctx: { db, teamId } }) => {
-    return getTeamMembersByTeamId(db, teamId!);
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  members: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const supabase = await createAdminClient();
+
+    const { data: members, error } = await supabase
+      .from("users_on_team")
+      .select(`
+        id,
+        role,
+        created_at,
+        user:user_id (
+          id,
+          full_name,
+          email,
+          avatar_url
+        )
+      `)
+      .eq("team_id", teamId);
+
+    if (error) {
+      console.log("[team.members] Supabase REST error:", error.message);
+      return [];
+    }
+
+    return (members ?? []).map((m: any) => ({
+      id: m.id,
+      role: m.role,
+      createdAt: m.created_at,
+      user: m.user ? {
+        id: m.user.id,
+        fullName: m.user.full_name,
+        email: m.user.email,
+        avatarUrl: m.user.avatar_url,
+      } : null,
+    }));
   }),
 
-  list: protectedProcedure.query(async ({ ctx: { db, session } }) => {
-    return getTeamsByUserId(db, session.user.id);
+  // Use authProcedure because users need to list their teams before selecting one
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  list: authProcedure.query(async ({ ctx: { session } }) => {
+    const supabase = await createAdminClient();
+
+    // Get user's team memberships
+    const { data: memberships, error: memberError } = await supabase
+      .from("users_on_team")
+      .select(`
+        team_id,
+        role,
+        teams:team_id (
+          id,
+          name,
+          logo_url,
+          created_at
+        )
+      `)
+      .eq("user_id", session.user.id);
+
+    if (memberError || !memberships) {
+      console.log("[team.list] Supabase REST error:", memberError?.message);
+      return [];
+    }
+
+    // Transform to match expected format
+    return memberships
+      .filter((m: any) => m.teams)
+      .map((m: any) => ({
+        id: m.teams.id,
+        name: m.teams.name,
+        logoUrl: m.teams.logo_url,
+        createdAt: m.teams.created_at,
+        role: m.role,
+      }));
   }),
 
-  create: protectedProcedure
+  // Use authProcedure because new users need to create their first team
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  create: authProcedure
     .input(createTeamSchema)
-    .mutation(async ({ ctx: { db, session }, input }) => {
+    .mutation(async ({ ctx: { session }, input }) => {
       const requestId = `trpc_team_create_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       console.log(`[${requestId}] TRPC team creation request`, {
@@ -79,28 +207,52 @@ export const teamRouter = createTRPCRouter({
         timestamp: new Date().toISOString(),
       });
 
-      try {
-        const teamId = await createTeam(db, {
-          ...input,
-          userId: session.user.id,
-          email: session.user.email!,
-        });
+      const supabase = await createAdminClient();
 
-        console.log(`[${requestId}] TRPC team creation successful`, {
-          teamId,
-          userId: session.user.id,
-        });
+      // Create team
+      const { data: team, error: teamError } = await supabase
+        .from("teams")
+        .insert({
+          name: input.name,
+          base_currency: input.baseCurrency,
+          country_code: input.countryCode,
+        })
+        .select("id")
+        .single();
 
-        return teamId;
-      } catch (error) {
-        console.error(`[${requestId}] TRPC team creation failed`, {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          userId: session.user.id,
-          input,
-        });
-        throw error;
+      if (teamError || !team) {
+        console.error(`[${requestId}] Failed to create team:`, teamError?.message);
+        throw new Error(`Failed to create team: ${teamError?.message}`);
       }
+
+      // Add user to team
+      const { error: memberError } = await supabase
+        .from("users_on_team")
+        .insert({
+          user_id: session.user.id,
+          team_id: team.id,
+          role: "owner",
+        });
+
+      if (memberError) {
+        console.error(`[${requestId}] Failed to add user to team:`, memberError.message);
+        throw new Error(`Failed to add user to team: ${memberError.message}`);
+      }
+
+      // Update user's default team if switchTeam is true
+      if (input.switchTeam) {
+        await supabase
+          .from("users")
+          .update({ team_id: team.id })
+          .eq("id", session.user.id);
+      }
+
+      console.log(`[${requestId}] TRPC team creation successful`, {
+        teamId: team.id,
+        userId: session.user.id,
+      });
+
+      return team.id;
     }),
 
   leave: protectedProcedure
@@ -183,8 +335,53 @@ export const teamRouter = createTRPCRouter({
     return getTeamInvites(db, teamId!);
   }),
 
-  invitesByEmail: protectedProcedure.query(async ({ ctx: { db, session } }) => {
-    return getInvitesByEmail(db, session.user.email!);
+  // Use authProcedure because users need to see invites before joining a team
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  invitesByEmail: authProcedure.query(async ({ ctx: { session } }) => {
+    const supabase = await createAdminClient();
+
+    const { data: invites, error: invitesError } = await supabase
+      .from("user_invites")
+      .select(`
+        id,
+        email,
+        code,
+        role,
+        user:invited_by (
+          id,
+          full_name,
+          email
+        ),
+        team:team_id (
+          id,
+          name,
+          logo_url
+        )
+      `)
+      .eq("email", session.user.email!);
+
+    if (invitesError || !invites) {
+      console.log("[team.invitesByEmail] Supabase REST error:", invitesError?.message);
+      return [];
+    }
+
+    // Transform to match expected format
+    return invites.map((inv: any) => ({
+      id: inv.id,
+      email: inv.email,
+      code: inv.code,
+      role: inv.role,
+      user: inv.user ? {
+        id: inv.user.id,
+        fullName: inv.user.full_name,
+        email: inv.user.email,
+      } : null,
+      team: inv.team ? {
+        id: inv.team.id,
+        name: inv.team.name,
+        logoUrl: inv.team.logo_url,
+      } : null,
+    }));
   }),
 
   invite: protectedProcedure

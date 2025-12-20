@@ -1133,4 +1133,54 @@ export default {
       remove: "Remover",
     },
   },
+  // Team Settings page
+  settings: {
+    company_logo: {
+      title: "Logo da empresa",
+      description:
+        "Este e o logo da sua empresa. Clique no logo para carregar um personalizado dos seus arquivos.",
+      avatar_optional: "Um avatar e opcional, mas fortemente recomendado.",
+    },
+    company_name: {
+      title: "Nome da empresa",
+      description:
+        "Este e o nome visivel da sua empresa no Midday. Por exemplo, o nome da sua empresa ou departamento.",
+      max_characters: "Por favor, use no maximo 32 caracteres.",
+    },
+    company_email: {
+      title: "Email da empresa",
+      description:
+        "Este e o endereco de email que sera usado para receber emails do Midday.",
+    },
+    company_country: {
+      title: "Pais da empresa",
+      description: "Este e o pais de origem da sua empresa.",
+      placeholder: "Selecionar pais",
+    },
+    base_currency: {
+      title: "Moeda base",
+      description:
+        "Se voce tem multiplas moedas, pode definir uma moeda base para sua conta para visualizar seu saldo total na moeda de sua preferencia. As taxas de cambio sao atualizadas a cada 24 horas.",
+      update_title: "Atualizar moeda base",
+      update_description:
+        "Isso atualizara a moeda base para todas as transacoes e saldos de contas.",
+      update_button: "Atualizar",
+      updating: "Atualizando...",
+      updating_description:
+        "Estamos atualizando sua moeda base, por favor aguarde.",
+      success: "Transacoes e saldos de contas atualizados.",
+      error: "Algo deu errado, por favor tente novamente.",
+    },
+    fiscal_year: {
+      title: "Ano fiscal",
+      description:
+        "Defina quando seu ano fiscal comeca. Isso determina os intervalos de datas padrao para todos os relatorios e widgets em todo o aplicativo.",
+    },
+    delete_team: {
+      title: "Excluir equipe",
+      description:
+        "Remova permanentemente sua Equipe e todo o seu conteudo da plataforma Midday. Esta acao nao e reversivel - por favor, proceda com cautela.",
+      button: "Excluir",
+    },
+  },
 } as const;

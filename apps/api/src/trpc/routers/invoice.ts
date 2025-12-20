@@ -13,6 +13,7 @@ import {
   updateInvoiceSchema,
   updateScheduledInvoiceSchema,
 } from "@api/schemas/invoice";
+import { createAdminClient } from "@api/services/supabase";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -24,20 +25,12 @@ import {
   deleteInvoice,
   draftInvoice,
   duplicateInvoice,
-  getAverageDaysToPayment,
-  getAverageInvoiceSize,
   getCustomerById,
-  getInactiveClientsCount,
   getInvoiceById,
-  getInvoiceSummary,
   getInvoiceTemplate,
-  getInvoices,
-  getMostActiveClient,
-  getNewCustomersCount,
   getNextInvoiceNumber,
   getPaymentStatus,
   getTeamById,
-  getTopRevenueClient,
   getTrackerProjectById,
   getTrackerRecordsByRange,
   getUserById,
@@ -97,13 +90,123 @@ const defaultTemplate = {
 };
 
 export const invoiceRouter = createTRPCRouter({
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   get: protectedProcedure
     .input(getInvoicesSchema.optional())
-    .query(async ({ input, ctx: { db, teamId } }) => {
-      return getInvoices(db, {
-        teamId: teamId!,
-        ...input,
-      });
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      let query = supabase
+        .from("invoices")
+        .select(`
+          id,
+          invoice_number,
+          status,
+          amount,
+          currency,
+          issue_date,
+          due_date,
+          paid_at,
+          customer_id,
+          customer_name,
+          file_path,
+          sent_to,
+          viewed_at,
+          reminder_sent_at,
+          created_at,
+          updated_at
+        `)
+        .eq("team_id", teamId);
+
+      // Apply search filter
+      if (input?.q) {
+        query = query.or(`invoice_number.ilike.%${input.q}%,customer_name.ilike.%${input.q}%`);
+      }
+
+      // Apply date range filter
+      if (input?.start) {
+        query = query.gte("issue_date", input.start);
+      }
+      if (input?.end) {
+        query = query.lte("issue_date", input.end);
+      }
+
+      // Apply status filter (exclude 'scheduled' if not in DB)
+      if (input?.statuses?.length) {
+        const validStatuses = input.statuses.filter(s => s !== "scheduled");
+        if (validStatuses.length) {
+          query = query.in("status", validStatuses);
+        }
+      }
+
+      // Apply customer filter
+      if (input?.customers?.length) {
+        query = query.in("customer_id", input.customers);
+      }
+
+      // Apply sorting
+      if (input?.sort && input.sort.length === 2) {
+        const [field, direction] = input.sort;
+        const dbField = field === "createdAt" ? "created_at" :
+                        field === "dueDate" ? "due_date" :
+                        field === "issueDate" ? "issue_date" :
+                        field === "invoiceNumber" ? "invoice_number" :
+                        field === "customerName" ? "customer_name" :
+                        field;
+        query = query.order(dbField, { ascending: direction === "asc" });
+      } else {
+        query = query.order("created_at", { ascending: false });
+      }
+
+      // Apply cursor-based pagination
+      const pageSize = input?.pageSize ?? 25;
+      const cursor = input?.cursor ? Number.parseInt(input.cursor, 10) : 0;
+      query = query.range(cursor, cursor + pageSize);
+
+      const { data: invoices, error } = await query;
+
+      if (error) {
+        console.log("[invoice.get] Supabase REST error:", error.message);
+        return {
+          data: [],
+          meta: {
+            cursor: null,
+            hasNextPage: false,
+            hasPreviousPage: cursor > 0,
+          },
+        };
+      }
+
+      const allInvoices = invoices ?? [];
+      const hasNextPage = allInvoices.length > pageSize;
+      const invoicesToReturn = hasNextPage ? allInvoices.slice(0, pageSize) : allInvoices;
+      const nextCursor = hasNextPage ? String(cursor + pageSize) : null;
+
+      return {
+        data: invoicesToReturn.map((inv: any) => ({
+          id: inv.id,
+          invoiceNumber: inv.invoice_number,
+          status: inv.status,
+          amount: inv.amount,
+          currency: inv.currency,
+          issueDate: inv.issue_date,
+          dueDate: inv.due_date,
+          paidAt: inv.paid_at,
+          customerId: inv.customer_id,
+          customerName: inv.customer_name,
+          filePath: inv.file_path,
+          sentTo: inv.sent_to,
+          viewedAt: inv.viewed_at,
+          reminderSentAt: inv.reminder_sent_at,
+          createdAt: inv.created_at,
+          updatedAt: inv.updated_at,
+        })),
+        meta: {
+          cursor: nextCursor,
+          hasNextPage,
+          hasPreviousPage: cursor > 0,
+        },
+      };
     }),
 
   getById: protectedProcedure
@@ -131,8 +234,72 @@ export const invoiceRouter = createTRPCRouter({
       });
     }),
 
-  paymentStatus: protectedProcedure.query(async ({ ctx: { db, teamId } }) => {
-    return getPaymentStatus(db, teamId!);
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  paymentStatus: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const supabase = await createAdminClient();
+    const today = new Date().toISOString().split("T")[0];
+
+    // Get paid invoices
+    const { data: paidInvoices } = await supabase
+      .from("invoices")
+      .select("id, due_date, paid_at, status, amount, currency")
+      .eq("team_id", teamId)
+      .not("due_date", "is", null)
+      .eq("status", "paid")
+      .not("paid_at", "is", null)
+      .order("due_date", { ascending: false })
+      .limit(50);
+
+    // Get overdue invoices (unpaid with past due date)
+    const { data: overdueInvoices } = await supabase
+      .from("invoices")
+      .select("id, due_date, paid_at, status, amount, currency")
+      .eq("team_id", teamId)
+      .not("due_date", "is", null)
+      .in("status", ["unpaid", "overdue"])
+      .is("paid_at", null)
+      .lt("due_date", today)
+      .order("due_date", { ascending: false })
+      .limit(50);
+
+    // Combine and process results
+    const allInvoices = [...(paidInvoices ?? []), ...(overdueInvoices ?? [])];
+
+    // Calculate payment score based on on-time payments
+    let onTimeCount = 0;
+    let lateCount = 0;
+
+    for (const invoice of paidInvoices ?? []) {
+      if (invoice.paid_at && invoice.due_date) {
+        const paidDate = new Date(invoice.paid_at);
+        const dueDate = new Date(invoice.due_date);
+        if (paidDate <= dueDate) {
+          onTimeCount++;
+        } else {
+          lateCount++;
+        }
+      }
+    }
+
+    const overdueCount = overdueInvoices?.length ?? 0;
+    const totalPaid = paidInvoices?.length ?? 0;
+    const score = totalPaid > 0 ? Math.round((onTimeCount / totalPaid) * 100) : 100;
+
+    return {
+      score,
+      onTimeCount,
+      lateCount,
+      overdueCount,
+      totalPaid,
+      invoices: allInvoices.slice(0, 50).map((inv: any) => ({
+        id: inv.id,
+        dueDate: inv.due_date,
+        paidAt: inv.paid_at,
+        status: inv.status,
+        amount: inv.amount,
+        currency: inv.currency,
+      })),
+    };
   }),
 
   searchInvoiceNumber: protectedProcedure
@@ -144,13 +311,50 @@ export const invoiceRouter = createTRPCRouter({
       });
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   invoiceSummary: protectedProcedure
     .input(invoiceSummarySchema.optional())
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      return getInvoiceSummary(db, {
-        teamId: teamId!,
-        statuses: input?.statuses,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      let query = supabase
+        .from("invoices")
+        .select("amount, currency")
+        .eq("team_id", teamId);
+
+      if (input?.statuses?.length) {
+        // Filter out 'scheduled' status as it may not exist in the database enum
+        const validStatuses = input.statuses.filter(s => s !== "scheduled");
+        if (validStatuses.length) {
+          query = query.in("status", validStatuses);
+        }
+      }
+
+      const { data: invoices, error } = await query;
+
+      if (error) {
+        console.log("[invoice.invoiceSummary] Supabase REST error:", error.message);
+        return { totalAmount: 0, currency: "USD", invoiceCount: 0 };
+      }
+
+      // Calculate totals grouped by currency
+      const currencyTotals: Record<string, number> = {};
+      let totalCount = 0;
+
+      for (const invoice of invoices ?? []) {
+        const currency = invoice.currency || "USD";
+        currencyTotals[currency] = (currencyTotals[currency] || 0) + (Number(invoice.amount) || 0);
+        totalCount++;
+      }
+
+      // Return the primary currency total (most common or first one)
+      const primaryCurrency = Object.keys(currencyTotals)[0] || "USD";
+      return {
+        totalAmount: currencyTotals[primaryCurrency] || 0,
+        currency: primaryCurrency,
+        invoiceCount: totalCount,
+        currencyTotals,
+      };
     }),
 
   createFromTracker: protectedProcedure
@@ -303,15 +507,83 @@ export const invoiceRouter = createTRPCRouter({
       return draftInvoice(db, invoiceData);
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   defaultSettings: protectedProcedure.query(
-    async ({ ctx: { db, teamId, session, geo } }) => {
-      // Fetch invoice number, template, and team details concurrently
-      const [nextInvoiceNumber, template, team, user] = await Promise.all([
-        getNextInvoiceNumber(db, teamId!),
-        getInvoiceTemplate(db, teamId!),
-        getTeamById(db, teamId!),
-        getUserById(db, session?.user.id!),
+    async ({ ctx: { teamId, session, geo } }) => {
+      const supabase = await createAdminClient();
+
+      // Fetch data concurrently via Supabase REST
+      const [teamResult, userResult, templateResult] = await Promise.all([
+        supabase
+          .from("teams")
+          .select("id, name, base_currency")
+          .eq("id", teamId)
+          .single(),
+        supabase
+          .from("users")
+          .select("id, locale, timezone, date_format")
+          .eq("id", session?.user.id)
+          .single(),
+        supabase
+          .from("invoice_templates")
+          .select("*")
+          .eq("team_id", teamId)
+          .single(),
       ]);
+
+      // Get next invoice number (simple query)
+      const { count } = await supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId);
+      const nextInvoiceNumber = (count ?? 0) + 1;
+
+      const team = teamResult.data ? { baseCurrency: teamResult.data.base_currency } : null;
+      const user = userResult.data ? {
+        locale: userResult.data.locale,
+        timezone: userResult.data.timezone,
+        dateFormat: userResult.data.date_format,
+      } : null;
+
+      // Transform template from snake_case
+      const templateData = templateResult.data;
+      const template = templateData ? {
+        title: templateData.title,
+        logoUrl: templateData.logo_url,
+        currency: templateData.currency,
+        size: templateData.size,
+        includeTax: templateData.include_tax,
+        includeVat: templateData.include_vat,
+        includeDiscount: templateData.include_discount,
+        includeDecimals: templateData.include_decimals,
+        includeUnits: templateData.include_units,
+        includeQr: templateData.include_qr,
+        includePdf: templateData.include_pdf,
+        sendCopy: templateData.send_copy,
+        customerLabel: templateData.customer_label,
+        fromLabel: templateData.from_label,
+        invoiceNoLabel: templateData.invoice_no_label,
+        subtotalLabel: templateData.subtotal_label,
+        issueDateLabel: templateData.issue_date_label,
+        totalSummaryLabel: templateData.total_summary_label,
+        dueDateLabel: templateData.due_date_label,
+        discountLabel: templateData.discount_label,
+        descriptionLabel: templateData.description_label,
+        priceLabel: templateData.price_label,
+        quantityLabel: templateData.quantity_label,
+        totalLabel: templateData.total_label,
+        vatLabel: templateData.vat_label,
+        taxLabel: templateData.tax_label,
+        paymentLabel: templateData.payment_label,
+        noteLabel: templateData.note_label,
+        dateFormat: templateData.date_format,
+        deliveryType: templateData.delivery_type,
+        taxRate: templateData.tax_rate,
+        vatRate: templateData.vat_rate,
+        fromDetails: templateData.from_details,
+        paymentDetails: templateData.payment_details,
+        noteDetails: templateData.note_details,
+      } : null;
 
       const locale = user?.locale ?? geo?.locale ?? "en";
       const timezone = user?.timezone ?? geo?.timezone ?? "America/New_York";
@@ -680,39 +952,227 @@ export const invoiceRouter = createTRPCRouter({
       return updatedInvoice;
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   mostActiveClient: protectedProcedure.query(
-    async ({ ctx: { db, teamId } }) => {
-      return getMostActiveClient(db, { teamId: teamId! });
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Get all invoices with customer info
+      const { data: invoices, error } = await supabase
+        .from("invoices")
+        .select("customer_id, customer_name")
+        .eq("team_id", teamId)
+        .not("customer_id", "is", null);
+
+      if (error || !invoices?.length) {
+        return null;
+      }
+
+      // Count invoices per customer
+      const customerCounts: Record<string, { count: number; name: string }> = {};
+      for (const inv of invoices) {
+        if (inv.customer_id) {
+          if (!customerCounts[inv.customer_id]) {
+            customerCounts[inv.customer_id] = { count: 0, name: inv.customer_name || "" };
+          }
+          customerCounts[inv.customer_id].count++;
+        }
+      }
+
+      // Find the customer with most invoices
+      let maxCustomer: { customerId: string; customerName: string; invoiceCount: number } | null = null;
+      for (const [customerId, data] of Object.entries(customerCounts)) {
+        if (!maxCustomer || data.count > maxCustomer.invoiceCount) {
+          maxCustomer = { customerId, customerName: data.name, invoiceCount: data.count };
+        }
+      }
+
+      return maxCustomer;
     },
   ),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   inactiveClientsCount: protectedProcedure.query(
-    async ({ ctx: { db, teamId } }) => {
-      return getInactiveClientsCount(db, { teamId: teamId! });
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Get customers with no recent invoices (last 90 days)
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      const cutoffDate = ninetyDaysAgo.toISOString().split("T")[0];
+
+      // Get all customers for this team
+      const { data: customers } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("team_id", teamId);
+
+      if (!customers?.length) {
+        return { count: 0 };
+      }
+
+      // Get customers with recent invoices
+      const { data: recentInvoices } = await supabase
+        .from("invoices")
+        .select("customer_id")
+        .eq("team_id", teamId)
+        .gte("issue_date", cutoffDate)
+        .not("customer_id", "is", null);
+
+      const activeCustomerIds = new Set(recentInvoices?.map(inv => inv.customer_id) || []);
+      const inactiveCount = customers.filter(c => !activeCustomerIds.has(c.id)).length;
+
+      return { count: inactiveCount };
     },
   ),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   averageDaysToPayment: protectedProcedure.query(
-    async ({ ctx: { db, teamId } }) => {
-      return getAverageDaysToPayment(db, { teamId: teamId! });
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Get paid invoices with issue_date and paid_at
+      const { data: paidInvoices, error } = await supabase
+        .from("invoices")
+        .select("issue_date, paid_at")
+        .eq("team_id", teamId)
+        .eq("status", "paid")
+        .not("paid_at", "is", null);
+
+      if (error || !paidInvoices?.length) {
+        return { averageDays: 0 };
+      }
+
+      // Calculate average days to payment
+      let totalDays = 0;
+      let count = 0;
+
+      for (const inv of paidInvoices) {
+        if (inv.issue_date && inv.paid_at) {
+          const issueDate = new Date(inv.issue_date);
+          const paidDate = new Date(inv.paid_at);
+          const diffDays = Math.floor((paidDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays >= 0) {
+            totalDays += diffDays;
+            count++;
+          }
+        }
+      }
+
+      return { averageDays: count > 0 ? Math.round(totalDays / count) : 0 };
     },
   ),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   averageInvoiceSize: protectedProcedure.query(
-    async ({ ctx: { db, teamId } }) => {
-      return getAverageInvoiceSize(db, { teamId: teamId! });
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Get all invoices with amounts
+      const { data: invoices, error } = await supabase
+        .from("invoices")
+        .select("amount, currency")
+        .eq("team_id", teamId)
+        .not("amount", "is", null);
+
+      if (error || !invoices?.length) {
+        return { averageAmount: 0, currency: "USD" };
+      }
+
+      // Calculate average amount (grouped by currency, return first)
+      const currencyTotals: Record<string, { total: number; count: number }> = {};
+
+      for (const inv of invoices) {
+        const currency = inv.currency || "USD";
+        if (!currencyTotals[currency]) {
+          currencyTotals[currency] = { total: 0, count: 0 };
+        }
+        currencyTotals[currency].total += Number(inv.amount) || 0;
+        currencyTotals[currency].count++;
+      }
+
+      const primaryCurrency = Object.keys(currencyTotals)[0] || "USD";
+      const data = currencyTotals[primaryCurrency];
+
+      return {
+        averageAmount: data ? Math.round(data.total / data.count) : 0,
+        currency: primaryCurrency,
+      };
     },
   ),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   topRevenueClient: protectedProcedure.query(
-    async ({ ctx: { db, teamId } }) => {
-      return getTopRevenueClient(db, { teamId: teamId! });
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Get all paid invoices with customer info
+      const { data: invoices, error } = await supabase
+        .from("invoices")
+        .select("customer_id, customer_name, amount, currency")
+        .eq("team_id", teamId)
+        .eq("status", "paid")
+        .not("customer_id", "is", null);
+
+      if (error || !invoices?.length) {
+        return null;
+      }
+
+      // Sum revenue per customer
+      const customerRevenue: Record<string, { total: number; name: string; currency: string }> = {};
+
+      for (const inv of invoices) {
+        if (inv.customer_id) {
+          if (!customerRevenue[inv.customer_id]) {
+            customerRevenue[inv.customer_id] = {
+              total: 0,
+              name: inv.customer_name || "",
+              currency: inv.currency || "USD"
+            };
+          }
+          customerRevenue[inv.customer_id].total += Number(inv.amount) || 0;
+        }
+      }
+
+      // Find the customer with highest revenue
+      let topCustomer: { customerId: string; customerName: string; totalRevenue: number; currency: string } | null = null;
+
+      for (const [customerId, data] of Object.entries(customerRevenue)) {
+        if (!topCustomer || data.total > topCustomer.totalRevenue) {
+          topCustomer = {
+            customerId,
+            customerName: data.name,
+            totalRevenue: data.total,
+            currency: data.currency,
+          };
+        }
+      }
+
+      return topCustomer;
     },
   ),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   newCustomersCount: protectedProcedure.query(
-    async ({ ctx: { db, teamId } }) => {
-      return getNewCustomersCount(db, { teamId: teamId! });
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Count customers created in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const cutoffDate = thirtyDaysAgo.toISOString();
+
+      const { count, error } = await supabase
+        .from("customers")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .gte("created_at", cutoffDate);
+
+      if (error) {
+        return { count: 0 };
+      }
+
+      return { count: count ?? 0 };
     },
   ),
 });

@@ -2,6 +2,7 @@
 
 import { useTeamMutation, useTeamQuery } from "@/hooks/use-team";
 import { useUpload } from "@/hooks/use-upload";
+import { useScopedI18n } from "@/locales/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@midday/ui/avatar";
 import {
   Card,
@@ -19,6 +20,7 @@ export function CompanyLogo() {
   const { isLoading, uploadFile } = useUpload();
   const { data } = useTeamQuery();
   const { mutate: updateTeam } = useTeamMutation();
+  const t = useScopedI18n("settings.company_logo");
 
   const handleUpload = async (evt: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = evt.target;
@@ -41,11 +43,8 @@ export function CompanyLogo() {
     <Card>
       <div className="flex justify-between items-center pr-6">
         <CardHeader>
-          <CardTitle>Company logo</CardTitle>
-          <CardDescription>
-            This is your company's logo. Click on the logo to upload a custom
-            one from your files.
-          </CardDescription>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </CardHeader>
 
         <Avatar
@@ -77,7 +76,7 @@ export function CompanyLogo() {
           />
         </Avatar>
       </div>
-      <CardFooter>An avatar is optional but strongly recommended.</CardFooter>
+      <CardFooter>{t("avatar_optional")}</CardFooter>
     </Card>
   );
 }

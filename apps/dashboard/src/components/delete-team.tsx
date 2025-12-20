@@ -1,6 +1,7 @@
 "use client";
 
 import { useUserQuery } from "@/hooks/use-user";
+import { useScopedI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import {
   AlertDialog,
@@ -33,6 +34,9 @@ export function DeleteTeam() {
   const trpc = useTRPC();
   const { data: user } = useUserQuery();
   const router = useRouter();
+  const t = useScopedI18n("settings.delete_team");
+  const tDialogs = useScopedI18n("dialogs");
+  const tActions = useScopedI18n("actions");
 
   const deleteTeamMutation = useMutation(
     trpc.team.delete.mutationOptions({
@@ -46,12 +50,8 @@ export function DeleteTeam() {
   return (
     <Card className="border-destructive">
       <CardHeader>
-        <CardTitle>Delete team</CardTitle>
-        <CardDescription>
-          Permanently remove your Team and all of its contents from the Midday
-          platform. This action is not reversible — please continue with
-          caution.
-        </CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardFooter className="flex justify-between">
         <div />
@@ -62,15 +62,14 @@ export function DeleteTeam() {
               variant="destructive"
               className="hover:bg-destructive text-muted"
             >
-              Delete
+              {t("button")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle>{tDialogs("are_you_sure")}</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your
-                team and remove your data from our servers.
+                {tDialogs("delete_confirmation")}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
@@ -86,7 +85,7 @@ export function DeleteTeam() {
             </div>
 
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{tActions("cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() =>
                   deleteTeamMutation.mutate({ teamId: user?.teamId! })
@@ -96,7 +95,7 @@ export function DeleteTeam() {
                 {deleteTeamMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Confirm"
+                  tActions("confirm")
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

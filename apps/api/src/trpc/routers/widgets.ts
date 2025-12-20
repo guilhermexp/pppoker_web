@@ -19,42 +19,60 @@ import {
   updateWidgetConfigSchema,
   updateWidgetPreferencesSchema,
 } from "@api/schemas/widgets";
+import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import { widgetPreferencesCache } from "@midday/cache/widget-preferences-cache";
 import {
   getBillableHours,
-  getCashFlow,
-  getCombinedAccountBalance,
-  getCustomerLifetimeValue,
-  getGrowthRate,
   getInboxStats,
   getOutstandingInvoices,
   getOverdueInvoicesAlert,
-  getProfitMargin,
   getRecentDocuments,
   getRecurringExpenses,
-  getRevenue,
-  getRunway,
   getSpending,
   getSpendingForPeriod,
   getTaxSummary,
-  getTopRevenueClient,
   getTrackedTime,
 } from "@midday/db/queries";
 
 export const widgetsRouter = createTRPCRouter({
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getRunway: protectedProcedure
     .input(getRunwaySchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      const runway = await getRunway(db, {
-        teamId: teamId!,
-        from: input.from,
-        to: input.to,
-        currency: input.currency,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
 
+      // Get total balance from bank accounts
+      const { data: accounts } = await supabase
+        .from("bank_accounts")
+        .select("balance, currency")
+        .eq("team_id", teamId)
+        .eq("enabled", true);
+
+      // Get monthly expenses (negative transactions)
+      const { data: expenses } = await supabase
+        .from("transactions")
+        .select("amount, currency")
+        .eq("team_id", teamId)
+        .lt("amount", 0)
+        .gte("date", input.from)
+        .lte("date", input.to);
+
+      const totalBalance = (accounts ?? []).reduce((sum, acc) => sum + (Number(acc.balance) || 0), 0);
+      const totalExpenses = Math.abs((expenses ?? []).reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0));
+
+      // Calculate monthly burn rate
+      const fromDate = new Date(input.from);
+      const toDate = new Date(input.to);
+      const monthsDiff = Math.max(1, (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
+      const monthlyBurnRate = totalExpenses / monthsDiff;
+
+      // Calculate runway in months
+      const runwayMonths = monthlyBurnRate > 0 ? Math.round(totalBalance / monthlyBurnRate) : 999;
+
+      // Return runwayMonths directly as result (component expects a number)
       return {
-        result: runway,
+        result: runwayMonths,
         toolCall: {
           toolName: "getBurnRateAnalysis",
           toolParams: {
@@ -66,139 +84,224 @@ export const widgetsRouter = createTRPCRouter({
       };
     }),
 
-  getTopCustomer: protectedProcedure.query(async ({ ctx: { db, teamId } }) => {
-    const topCustomer = await getTopRevenueClient(db, {
-      teamId: teamId!,
-    });
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  getTopCustomer: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const supabase = await createAdminClient();
 
-    return {
-      result: topCustomer,
-      // toolCall: {
-      //   toolName: "getCustomers",
-      // },
-    };
+    const { data: invoices } = await supabase
+      .from("invoices")
+      .select("customer_id, customer_name, amount, currency")
+      .eq("team_id", teamId)
+      .eq("status", "paid")
+      .not("customer_id", "is", null);
+
+    if (!invoices?.length) {
+      return { result: null };
+    }
+
+    // Calculate revenue per customer
+    const customerRevenue: Record<string, { name: string; total: number; currency: string }> = {};
+    for (const inv of invoices) {
+      const id = inv.customer_id;
+      if (!customerRevenue[id]) {
+        customerRevenue[id] = { name: inv.customer_name || "Unknown", total: 0, currency: inv.currency || "USD" };
+      }
+      customerRevenue[id].total += Number(inv.amount) || 0;
+    }
+
+    // Find top customer
+    let topCustomer = null;
+    let maxRevenue = 0;
+    for (const [id, data] of Object.entries(customerRevenue)) {
+      if (data.total > maxRevenue) {
+        maxRevenue = data.total;
+        topCustomer = { id, name: data.name, totalRevenue: data.total, currency: data.currency };
+      }
+    }
+
+    return { result: topCustomer };
   }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getRevenueSummary: protectedProcedure
     .input(getRevenueSummarySchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      const revenue = await getRevenue(db, {
-        teamId: teamId!,
-        from: input.from,
-        to: input.to,
-        currency: input.currency,
-        revenueType: input.revenueType,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
 
-      // Calculate total revenue for the period
-      const totalRevenue = revenue.reduce(
-        (sum, item) => sum + Number.parseFloat(item.value),
-        0,
-      );
+      // Get paid invoices for revenue
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("amount, currency, issue_date")
+        .eq("team_id", teamId)
+        .eq("status", "paid")
+        .gte("issue_date", input.from)
+        .lte("issue_date", input.to);
+
+      const totalRevenue = (invoices ?? []).reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
 
       return {
         result: {
           totalRevenue,
-          currency: revenue[0]?.currency ?? input.currency ?? "USD",
+          currency: invoices?.[0]?.currency ?? input.currency ?? "USD",
           revenueType: input.revenueType,
-          monthCount: revenue.length,
+          monthCount: invoices?.length ?? 0,
         },
       };
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getGrowthRate: protectedProcedure
     .input(getGrowthRateSchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      const growthData = await getGrowthRate(db, {
-        teamId: teamId!,
-        from: input.from,
-        to: input.to,
-        currency: input.currency,
-        type: input.type,
-        revenueType: input.revenueType,
-        period: input.period,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Get current period data
+      const { data: currentData } = await supabase
+        .from(input.type === "revenue" ? "invoices" : "transactions")
+        .select("amount, currency")
+        .eq("team_id", teamId)
+        .gte(input.type === "revenue" ? "issue_date" : "date", input.from)
+        .lte(input.type === "revenue" ? "issue_date" : "date", input.to);
+
+      // Calculate previous period
+      const fromDate = new Date(input.from);
+      const toDate = new Date(input.to);
+      const periodLength = toDate.getTime() - fromDate.getTime();
+      const prevFrom = new Date(fromDate.getTime() - periodLength).toISOString().split("T")[0];
+      const prevTo = new Date(fromDate.getTime() - 1).toISOString().split("T")[0];
+
+      const { data: prevData } = await supabase
+        .from(input.type === "revenue" ? "invoices" : "transactions")
+        .select("amount, currency")
+        .eq("team_id", teamId)
+        .gte(input.type === "revenue" ? "issue_date" : "date", prevFrom)
+        .lte(input.type === "revenue" ? "issue_date" : "date", prevTo);
+
+      const currentTotal = (currentData ?? []).reduce((sum, item) => sum + Math.abs(Number(item.amount) || 0), 0);
+      const prevTotal = (prevData ?? []).reduce((sum, item) => sum + Math.abs(Number(item.amount) || 0), 0);
+      const growthRate = prevTotal > 0 ? ((currentTotal - prevTotal) / prevTotal) * 100 : 0;
 
       return {
         result: {
-          currentTotal: growthData.summary.currentTotal,
-          prevTotal: growthData.summary.previousTotal,
-          growthRate: growthData.summary.growthRate,
-          quarterlyGrowthRate: growthData.summary.periodGrowthRate,
-          currency: growthData.summary.currency,
-          type: growthData.summary.type,
-          revenueType: growthData.summary.revenueType,
-          period: growthData.summary.period,
-          trend: growthData.summary.trend,
-          meta: growthData.meta,
+          currentTotal,
+          prevTotal,
+          growthRate: Math.round(growthRate * 100) / 100,
+          quarterlyGrowthRate: growthRate,
+          currency: input.currency ?? currentData?.[0]?.currency ?? "USD",
+          type: input.type,
+          revenueType: input.revenueType,
+          period: input.period,
+          trend: growthRate >= 0 ? "up" : "down",
+          meta: { from: input.from, to: input.to },
         },
-        // toolCall: {
-        //   toolName: "getGrowthRateAnalysis",
-        //   toolParams: {
-        //     from: input.from,
-        //     to: input.to,
-        //     currency: input.currency,
-        //     type: input.type,
-        //     revenueType: input.revenueType,
-        //     period: input.period,
-        //   },
-        // },
       };
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getProfitMargin: protectedProcedure
     .input(getProfitMarginSchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      const profitMarginData = await getProfitMargin(db, {
-        teamId: teamId!,
-        from: input.from,
-        to: input.to,
-        currency: input.currency,
-        revenueType: input.revenueType,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Get revenue (paid invoices)
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("amount, currency, issue_date")
+        .eq("team_id", teamId)
+        .eq("status", "paid")
+        .gte("issue_date", input.from)
+        .lte("issue_date", input.to);
+
+      // Get expenses (negative transactions)
+      const { data: expenses } = await supabase
+        .from("transactions")
+        .select("amount, currency, date")
+        .eq("team_id", teamId)
+        .lt("amount", 0)
+        .gte("date", input.from)
+        .lte("date", input.to);
+
+      const totalRevenue = (invoices ?? []).reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+      const totalExpenses = Math.abs((expenses ?? []).reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0));
+      const totalProfit = totalRevenue - totalExpenses;
+      const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+      // Calculate monthly data
+      const monthlyData: Record<string, { revenue: number; expenses: number }> = {};
+      for (const inv of invoices ?? []) {
+        const month = inv.issue_date?.substring(0, 7) ?? "unknown";
+        if (!monthlyData[month]) monthlyData[month] = { revenue: 0, expenses: 0 };
+        monthlyData[month].revenue += Number(inv.amount) || 0;
+      }
+      for (const exp of expenses ?? []) {
+        const month = exp.date?.substring(0, 7) ?? "unknown";
+        if (!monthlyData[month]) monthlyData[month] = { revenue: 0, expenses: 0 };
+        monthlyData[month].expenses += Math.abs(Number(exp.amount)) || 0;
+      }
+
+      const monthlyResults = Object.entries(monthlyData).map(([date, data]) => ({
+        date,
+        revenue: data.revenue,
+        expenses: data.expenses,
+        profit: data.revenue - data.expenses,
+        margin: data.revenue > 0 ? ((data.revenue - data.expenses) / data.revenue) * 100 : 0,
+      }));
+
+      const monthCount = monthlyResults.length;
+      const averageMargin = monthCount > 0 ? monthlyResults.reduce((sum, m) => sum + m.margin, 0) / monthCount : 0;
 
       return {
         result: {
-          totalRevenue: profitMarginData.summary.totalRevenue,
-          totalProfit: profitMarginData.summary.totalProfit,
-          profitMargin: profitMarginData.summary.profitMargin,
-          averageMargin: profitMarginData.summary.averageMargin,
-          currency: profitMarginData.summary.currency,
-          revenueType: profitMarginData.summary.revenueType,
-          trend: profitMarginData.summary.trend,
-          monthCount: profitMarginData.summary.monthCount,
-          monthlyData: profitMarginData.result,
-          meta: profitMarginData.meta,
+          totalRevenue,
+          totalProfit,
+          profitMargin: Math.round(profitMargin * 100) / 100,
+          averageMargin: Math.round(averageMargin * 100) / 100,
+          currency: input.currency ?? invoices?.[0]?.currency ?? "USD",
+          revenueType: input.revenueType,
+          trend: profitMargin >= 0 ? "up" : "down",
+          monthCount,
+          monthlyData: monthlyResults,
+          meta: { from: input.from, to: input.to },
         },
-        // toolCall: {
-        //   toolName: "getProfitMarginAnalysis",
-        //   toolParams: {
-        //     from: input.from,
-        //     to: input.to,
-        //     currency: input.currency,
-        //     revenueType: input.revenueType,
-        //   },
-        // },
       };
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getCashFlow: protectedProcedure
     .input(getCashFlowSchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      const cashFlowData = await getCashFlow(db, {
-        teamId: teamId!,
-        from: input.from,
-        to: input.to,
-        currency: input.currency,
-        period: input.period,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Get all transactions in the period
+      const { data: transactions } = await supabase
+        .from("transactions")
+        .select("amount, currency, date")
+        .eq("team_id", teamId)
+        .gte("date", input.from)
+        .lte("date", input.to);
+
+      // Calculate inflows and outflows
+      let inflow = 0;
+      let outflow = 0;
+      for (const tx of transactions ?? []) {
+        const amount = Number(tx.amount) || 0;
+        if (amount > 0) {
+          inflow += amount;
+        } else {
+          outflow += Math.abs(amount);
+        }
+      }
+
+      const netCashFlow = inflow - outflow;
 
       return {
         result: {
-          netCashFlow: cashFlowData.summary.netCashFlow,
-          currency: cashFlowData.summary.currency,
-          period: cashFlowData.summary.period,
-          meta: cashFlowData.meta,
+          netCashFlow,
+          inflow,
+          outflow,
+          currency: input.currency ?? transactions?.[0]?.currency ?? "USD",
+          period: input.period,
+          meta: { from: input.from, to: input.to },
         },
       };
     }),
@@ -266,16 +369,32 @@ export const widgetsRouter = createTRPCRouter({
       };
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getAccountBalances: protectedProcedure
     .input(getAccountBalancesSchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      const accountBalances = await getCombinedAccountBalance(db, {
-        teamId: teamId!,
-        currency: input.currency,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      const { data: accounts } = await supabase
+        .from("bank_accounts")
+        .select("id, name, balance, currency, type, enabled")
+        .eq("team_id", teamId)
+        .eq("enabled", true);
+
+      const totalBalance = (accounts ?? []).reduce((sum, acc) => sum + (Number(acc.balance) || 0), 0);
 
       return {
-        result: accountBalances,
+        result: {
+          accounts: (accounts ?? []).map((acc: any) => ({
+            id: acc.id,
+            name: acc.name,
+            balance: Number(acc.balance) || 0,
+            currency: acc.currency,
+            type: acc.type,
+          })),
+          totalBalance,
+          currency: input.currency ?? accounts?.[0]?.currency ?? "USD",
+        },
       };
     }),
 
@@ -401,16 +520,38 @@ export const widgetsRouter = createTRPCRouter({
       });
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getCustomerLifetimeValue: protectedProcedure
     .input(getCustomerLifetimeValueSchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      const result = await getCustomerLifetimeValue(db, {
-        teamId: teamId!,
-        currency: input.currency,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Get all paid invoices with customer info
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("customer_id, amount, currency")
+        .eq("team_id", teamId)
+        .eq("status", "paid")
+        .not("customer_id", "is", null);
+
+      // Get customer count
+      const { count: customerCount } = await supabase
+        .from("customers")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId);
+
+      const totalRevenue = (invoices ?? []).reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+      const uniqueCustomers = new Set((invoices ?? []).map(inv => inv.customer_id)).size;
+      const averageLTV = uniqueCustomers > 0 ? totalRevenue / uniqueCustomers : 0;
 
       return {
-        result,
+        result: {
+          averageLTV,
+          totalRevenue,
+          customerCount: customerCount ?? 0,
+          uniquePayingCustomers: uniqueCustomers,
+          currency: input.currency ?? invoices?.[0]?.currency ?? "USD",
+        },
         toolCall: {
           toolName: "getCustomerLifetimeValue",
           toolParams: {

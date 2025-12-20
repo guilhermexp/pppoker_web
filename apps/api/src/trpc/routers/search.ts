@@ -2,121 +2,147 @@ import {
   globalSearchSchema,
   searchAttachmentsSchema,
 } from "@api/schemas/search";
+import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { generateLLMFilters } from "@api/utils/search-filters";
-import {
-  getInboxSearch,
-  getInvoices,
-  globalSearchQuery,
-  globalSemanticSearchQuery,
-} from "@midday/db/queries";
 
 export const searchRouter = createTRPCRouter({
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   global: protectedProcedure
     .input(globalSearchSchema)
-    .query(async ({ input, ctx: { db, teamId } }) => {
-      const { searchTerm } = input;
+    .query(async ({ input, ctx: { teamId } }) => {
+      const { searchTerm, limit = 10 } = input;
 
-      // Determine if we should fall back to LLM-generated filters:
-      // we only do this when the user provides a multi-word query.
-      const shouldUseLLMFilters =
-        !!searchTerm && searchTerm.trim().split(/\s+/).length > 1;
+      // Use Supabase REST for simple search
+      const supabase = await createAdminClient();
 
-      const results = await globalSearchQuery(db, {
-        teamId: teamId!,
-        ...input,
-        searchTerm: searchTerm,
-        /**
-         * Tighten the relevance threshold whenever the user enters a multi-word query.
-         *
-         * Rationale:
-         * 1. A longer query usually implies a more specific intent, so we only want
-         *    results that score highly on relevance.
-         * 2. If this stricter search returns nothing, we immediately fall back to the
-         *    LLM-generated filter logic below.  By filtering aggressively here we avoid
-         *    surfacing low-quality matches and give the LLM a chance to produce a more
-         *    intelligent result instead.
-         */
-        relevanceThreshold: shouldUseLLMFilters
-          ? 0.01
-          : input.relevanceThreshold,
-      });
+      // Search transactions by name
+      const { data: transactions } = await supabase
+        .from("transactions")
+        .select("id, name, amount, currency, date, category_slug")
+        .eq("team_id", teamId)
+        .ilike("name", `%${searchTerm ?? ""}%`)
+        .limit(limit);
 
-      if (shouldUseLLMFilters && !results.length) {
-        const filters = await generateLLMFilters(searchTerm);
+      // Search customers by name
+      const { data: customers } = await supabase
+        .from("customers")
+        .select("id, name, email, website")
+        .eq("team_id", teamId)
+        .ilike("name", `%${searchTerm ?? ""}%`)
+        .limit(limit);
 
-        const semanticResults = await globalSemanticSearchQuery(db, {
-          teamId: teamId!,
-          itemsPerTableLimit: input.itemsPerTableLimit,
-          ...filters,
-        });
+      // Search invoices by invoice_number
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("id, invoice_number, amount, currency, status, customer_name")
+        .eq("team_id", teamId)
+        .or(`invoice_number.ilike.%${searchTerm ?? ""}%,customer_name.ilike.%${searchTerm ?? ""}%`)
+        .limit(limit);
 
-        return semanticResults;
-      }
-
-      return results;
+      return {
+        transactions: transactions?.map(t => ({
+          id: t.id,
+          name: t.name,
+          amount: t.amount,
+          currency: t.currency,
+          date: t.date,
+          categorySlug: t.category_slug,
+          type: "transaction" as const,
+        })) ?? [],
+        customers: customers?.map(c => ({
+          id: c.id,
+          name: c.name,
+          email: c.email,
+          website: c.website,
+          type: "customer" as const,
+        })) ?? [],
+        invoices: invoices?.map(i => ({
+          id: i.id,
+          invoiceNumber: i.invoice_number,
+          amount: i.amount,
+          currency: i.currency,
+          status: i.status,
+          customerName: i.customer_name,
+          type: "invoice" as const,
+        })) ?? [],
+      };
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   attachments: protectedProcedure
     .input(searchAttachmentsSchema)
-    .query(async ({ input, ctx: { db, teamId } }) => {
+    .query(async ({ input, ctx: { teamId } }) => {
       const { q, transactionId, limit = 30 } = input;
+      const supabase = await createAdminClient();
 
-      const [inboxResults, invoiceResults] = await Promise.all([
-        getInboxSearch(db, {
-          teamId: teamId!,
-          q: q ?? undefined,
-          transactionId: transactionId ?? undefined,
-          limit: limit,
-        }),
-        getInvoices(db, {
-          teamId: teamId!,
-          q: q ?? undefined,
-          statuses: ["unpaid", "overdue", "paid"],
-          pageSize: limit,
-          sort: null,
-        }),
+      // Search inbox items
+      let inboxQuery = supabase
+        .from("inbox")
+        .select("id, file_name, file_path, display_name, amount, currency, content_type, date, size, description, status, website, base_amount, base_currency, tax_amount, tax_rate, tax_type, created_at")
+        .eq("team_id", teamId)
+        .limit(limit);
+
+      if (q) {
+        inboxQuery = inboxQuery.or(`file_name.ilike.%${q}%,display_name.ilike.%${q}%,description.ilike.%${q}%`);
+      }
+      if (transactionId) {
+        inboxQuery = inboxQuery.eq("transaction_id", transactionId);
+      }
+
+      // Search invoices
+      let invoiceQuery = supabase
+        .from("invoices")
+        .select("id, invoice_number, customer_name, amount, currency, file_path, due_date, status, file_size, created_at")
+        .eq("team_id", teamId)
+        .in("status", ["unpaid", "overdue", "paid"])
+        .limit(limit);
+
+      if (q) {
+        invoiceQuery = invoiceQuery.or(`invoice_number.ilike.%${q}%,customer_name.ilike.%${q}%`);
+      }
+
+      const [inboxRes, invoiceRes] = await Promise.all([
+        inboxQuery,
+        invoiceQuery,
       ]);
 
       // Transform inbox results
-      const inboxItems =
-        inboxResults.map((item) => ({
-          type: "inbox" as const,
-          id: item.id,
-          fileName: item.fileName ?? null,
-          filePath: item.filePath ?? [],
-          displayName: item.displayName ?? null,
-          amount: item.amount ?? null,
-          currency: item.currency ?? null,
-          contentType: item.contentType ?? null,
-          date: item.date ?? null,
-          size: item.size ?? null,
-          description: item.description ?? null,
-          status: item.status ?? null,
-          website: item.website ?? null,
-          baseAmount: item.baseAmount ?? null,
-          baseCurrency: item.baseCurrency ?? null,
-          taxAmount: item.taxAmount ?? null,
-          taxRate: item.taxRate ?? null,
-          taxType: item.taxType ?? null,
-          createdAt: item.createdAt,
-        })) ?? [];
+      const inboxItems = (inboxRes.data ?? []).map((item) => ({
+        type: "inbox" as const,
+        id: item.id,
+        fileName: item.file_name ?? null,
+        filePath: item.file_path ?? [],
+        displayName: item.display_name ?? null,
+        amount: item.amount ?? null,
+        currency: item.currency ?? null,
+        contentType: item.content_type ?? null,
+        date: item.date ?? null,
+        size: item.size ?? null,
+        description: item.description ?? null,
+        status: item.status ?? null,
+        website: item.website ?? null,
+        baseAmount: item.base_amount ?? null,
+        baseCurrency: item.base_currency ?? null,
+        taxAmount: item.tax_amount ?? null,
+        taxRate: item.tax_rate ?? null,
+        taxType: item.tax_type ?? null,
+        createdAt: item.created_at,
+      }));
 
       // Transform invoice results
-      const invoices =
-        invoiceResults.data.map((invoice) => ({
-          type: "invoice" as const,
-          id: invoice.id,
-          invoiceNumber: invoice.invoiceNumber ?? null,
-          customerName: invoice.customerName ?? null,
-          amount: invoice.amount ?? null,
-          currency: invoice.currency ?? null,
-          filePath: invoice.filePath ?? [],
-          dueDate: invoice.dueDate ?? null,
-          status: invoice.status,
-          size: invoice.fileSize ?? null,
-          createdAt: invoice.createdAt,
-        })) ?? [];
+      const invoices = (invoiceRes.data ?? []).map((invoice) => ({
+        type: "invoice" as const,
+        id: invoice.id,
+        invoiceNumber: invoice.invoice_number ?? null,
+        customerName: invoice.customer_name ?? null,
+        amount: invoice.amount ?? null,
+        currency: invoice.currency ?? null,
+        filePath: invoice.file_path ?? [],
+        dueDate: invoice.due_date ?? null,
+        status: invoice.status,
+        size: invoice.file_size ?? null,
+        createdAt: invoice.created_at,
+      }));
 
       // Combine and return results
       return [...inboxItems, ...invoices];

@@ -161,7 +161,7 @@ export function ProfitAnalysisWidget() {
             {/* Chart */}
             {chartData.length > 0 ? (
               <div className="h-16 w-full mt-3">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minHeight={64}>
                   <ComposedChart
                     data={chartData}
                     margin={{ top: 0, right: 0, left: 0, bottom: 0 }}

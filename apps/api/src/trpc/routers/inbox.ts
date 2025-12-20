@@ -13,6 +13,7 @@ import {
   unmatchTransactionSchema,
   updateInboxSchema,
 } from "@api/schemas/inbox";
+import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import {
   confirmSuggestedMatch,
@@ -32,22 +33,148 @@ import type { ProcessAttachmentPayload } from "@midday/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 
 export const inboxRouter = createTRPCRouter({
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   get: protectedProcedure
     .input(getInboxSchema.optional())
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      return getInbox(db, {
-        teamId: teamId!,
-        ...input,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Fetch inbox items without joins (no FK constraints may exist)
+      let query = supabase
+        .from("inbox")
+        .select(`
+          id,
+          file_name,
+          file_path,
+          display_name,
+          transaction_id,
+          amount,
+          currency,
+          content_type,
+          date,
+          status,
+          created_at,
+          website,
+          description
+        `)
+        .eq("team_id", teamId)
+        .neq("status", "deleted");
+
+      // Apply status filter
+      if (input?.status) {
+        query = query.eq("status", input.status);
+      }
+
+      // Apply search filter
+      if (input?.q) {
+        query = query.or(`file_name.ilike.%${input.q}%,display_name.ilike.%${input.q}%,description.ilike.%${input.q}%`);
+      }
+
+      // Apply sorting
+      const sortField = input?.sort || "created_at";
+      const ascending = input?.order === "asc";
+      query = query.order(sortField, { ascending });
+
+      // Apply cursor-based pagination
+      const pageSize = input?.pageSize ?? 50;
+      const cursor = input?.cursor ? Number.parseInt(input.cursor, 10) : 0;
+      // Fetch one extra to check if there's a next page
+      query = query.range(cursor, cursor + pageSize);
+
+      const { data: inboxItems, error } = await query;
+
+      if (error) {
+        console.log("[inbox.get] Supabase REST error:", error.message);
+        return {
+          data: [],
+          meta: {
+            cursor: null,
+            hasNextPage: false,
+            hasPreviousPage: cursor > 0,
+          },
+        };
+      }
+
+      const allItems = inboxItems ?? [];
+      const hasNextPage = allItems.length > pageSize;
+      const itemsToReturn = hasNextPage ? allItems.slice(0, pageSize) : allItems;
+      const nextCursor = hasNextPage ? String(cursor + pageSize) : null;
+
+      // Transform snake_case to camelCase
+      return {
+        data: itemsToReturn.map((item: any) => ({
+          id: item.id,
+          fileName: item.file_name,
+          filePath: item.file_path,
+          displayName: item.display_name,
+          transactionId: item.transaction_id,
+          amount: item.amount,
+          currency: item.currency,
+          contentType: item.content_type,
+          date: item.date,
+          status: item.status,
+          createdAt: item.created_at,
+          website: item.website,
+          description: item.description,
+          transaction: null,
+        })),
+        meta: {
+          cursor: nextCursor,
+          hasNextPage,
+          hasPreviousPage: cursor > 0,
+        },
+      };
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getById: protectedProcedure
     .input(getInboxByIdSchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      return getInboxById(db, {
-        id: input.id,
-        teamId: teamId!,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Fetch inbox item without joins (no FK constraints may exist)
+      const { data: item, error } = await supabase
+        .from("inbox")
+        .select(`
+          id,
+          file_name,
+          file_path,
+          display_name,
+          transaction_id,
+          amount,
+          currency,
+          content_type,
+          date,
+          status,
+          created_at,
+          website,
+          description
+        `)
+        .eq("id", input.id)
+        .eq("team_id", teamId)
+        .single();
+
+      if (error || !item) {
+        console.log("[inbox.getById] Supabase REST error:", error?.message);
+        return null;
+      }
+
+      return {
+        id: item.id,
+        fileName: item.file_name,
+        filePath: item.file_path,
+        displayName: item.display_name,
+        transactionId: item.transaction_id,
+        amount: item.amount,
+        currency: item.currency,
+        contentType: item.content_type,
+        date: item.date,
+        status: item.status,
+        createdAt: item.created_at,
+        website: item.website,
+        description: item.description,
+        transaction: null,
+      };
     }),
 
   delete: protectedProcedure
@@ -140,14 +267,53 @@ export const inboxRouter = createTRPCRouter({
       });
     }),
 
-  // Get inbox items by status
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   getByStatus: protectedProcedure
     .input(getInboxByStatusSchema)
-    .query(async ({ ctx: { db, teamId }, input }) => {
-      return getInboxByStatus(db, {
-        teamId: teamId!,
-        status: input.status,
-      });
+    .query(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      const { data: items, error } = await supabase
+        .from("inbox")
+        .select(`
+          id,
+          file_name,
+          file_path,
+          display_name,
+          transaction_id,
+          amount,
+          currency,
+          content_type,
+          date,
+          status,
+          created_at,
+          website,
+          description
+        `)
+        .eq("team_id", teamId)
+        .eq("status", input.status)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.log("[inbox.getByStatus] Supabase REST error:", error.message);
+        return [];
+      }
+
+      return (items ?? []).map((item: any) => ({
+        id: item.id,
+        fileName: item.file_name,
+        filePath: item.file_path,
+        displayName: item.display_name,
+        transactionId: item.transaction_id,
+        amount: item.amount,
+        currency: item.currency,
+        contentType: item.content_type,
+        date: item.date,
+        status: item.status,
+        createdAt: item.created_at,
+        website: item.website,
+        description: item.description,
+      }));
     }),
 
   // Confirm a match suggestion

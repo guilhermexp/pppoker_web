@@ -19,6 +19,8 @@
         "lib/**"
       ],
       "passThroughEnv": [
+        "DATABASE_PRIMARY_URL",
+        "DATABASE_SESSION_POOLER",
         "SUPABASE_SERVICE_KEY",
         "SUPABASE_API_KEY",
         "RESEND_API_KEY",
@@ -57,7 +59,14 @@
     "dev": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "passThroughEnv": [
+        "DATABASE_PRIMARY_URL",
+        "DATABASE_SESSION_POOLER",
+        "DATABASE_FRA_URL",
+        "DATABASE_SJC_URL",
+        "DATABASE_IAD_URL"
+      ]
     },
     "jobs": {
       "persistent": true,

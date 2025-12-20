@@ -10,6 +10,7 @@ import {
 } from "@api/schemas/oauth-applications";
 import { revokeUserApplicationAccessSchema } from "@api/schemas/oauth-flow";
 import { resend } from "@api/services/resend";
+import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import {
   createAuthorizationCode,
@@ -17,7 +18,6 @@ import {
   deleteOAuthApplication,
   getOAuthApplicationByClientId,
   getOAuthApplicationById,
-  getOAuthApplicationsByTeam,
   getTeamsByUserId,
   getUserAuthorizedApplications,
   hasUserEverAuthorizedApp,
@@ -31,13 +31,80 @@ import { AppReviewRequestEmail } from "@midday/email/emails/app-review-request";
 import { render } from "@midday/email/render";
 
 export const oauthApplicationsRouter = createTRPCRouter({
+  // Use Supabase REST directly to avoid Drizzle connection pool issues (v2)
   list: protectedProcedure.query(async ({ ctx }) => {
-    const { db, teamId } = ctx;
+    console.log("[oauthApplications.list] Using Supabase REST");
+    const { teamId } = ctx;
+    const supabase = await createAdminClient();
 
-    const applications = await getOAuthApplicationsByTeam(db, teamId!);
+    const { data: applications, error } = await supabase
+      .from("oauth_applications")
+      .select(`
+        id,
+        name,
+        slug,
+        description,
+        overview,
+        developer_name,
+        logo_url,
+        website,
+        install_url,
+        screenshots,
+        redirect_uris,
+        client_id,
+        scopes,
+        team_id,
+        created_by,
+        created_at,
+        updated_at,
+        is_public,
+        active,
+        status,
+        users:created_by (
+          id,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.log("[oauth-applications.list] Supabase REST error:", error.message);
+      return { data: [] };
+    }
+
+    // Transform snake_case to camelCase
+    const transformedData = (applications ?? []).map((app: any) => ({
+      id: app.id,
+      name: app.name,
+      slug: app.slug,
+      description: app.description,
+      overview: app.overview,
+      developerName: app.developer_name,
+      logoUrl: app.logo_url,
+      website: app.website,
+      installUrl: app.install_url,
+      screenshots: app.screenshots,
+      redirectUris: app.redirect_uris,
+      clientId: app.client_id,
+      scopes: app.scopes,
+      teamId: app.team_id,
+      createdBy: app.created_by,
+      createdAt: app.created_at,
+      updatedAt: app.updated_at,
+      isPublic: app.is_public,
+      active: app.active,
+      status: app.status,
+      user: app.users ? {
+        id: app.users.id,
+        fullName: app.users.full_name,
+        avatarUrl: app.users.avatar_url,
+      } : null,
+    }));
 
     return {
-      data: applications,
+      data: transformedData,
     };
   }),
 
@@ -184,7 +251,7 @@ export const oauthApplicationsRouter = createTRPCRouter({
             );
 
             await resend.emails.send({
-              from: "Midday <middaybot@midday.ai>",
+              from: "Mid Poker <noreply@mid.poker>",
               to: session.user.email,
               subject: "An app has been added to your team",
               html,
@@ -283,17 +350,65 @@ export const oauthApplicationsRouter = createTRPCRouter({
       return result;
     }),
 
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   authorized: protectedProcedure.query(async ({ ctx }) => {
-    const { db, teamId, session } = ctx;
+    const { teamId, session } = ctx;
+    const supabase = await createAdminClient();
 
-    const applications = await getUserAuthorizedApplications(
-      db,
-      session.user.id,
-      teamId!,
-    );
+    // Get authorized applications for user
+    const { data: tokens, error } = await supabase
+      .from("oauth_access_tokens")
+      .select(`
+        scopes,
+        last_used_at,
+        created_at,
+        expires_at,
+        refresh_token_expires_at,
+        oauth_applications:application_id (
+          id,
+          name,
+          description,
+          overview,
+          developer_name,
+          logo_url,
+          website,
+          install_url,
+          screenshots
+        )
+      `)
+      .eq("user_id", session.user.id)
+      .eq("team_id", teamId)
+      .eq("revoked", false)
+      .gt("expires_at", new Date().toISOString())
+      .order("last_used_at", { ascending: false });
+
+    if (error) {
+      console.log("[oauthApplications.authorized] Supabase REST error:", error.message);
+      return { data: [] };
+    }
+
+    // Transform to match expected format
+    const transformedData = (tokens ?? []).map((token: any) => ({
+      scopes: token.scopes,
+      lastUsedAt: token.last_used_at,
+      createdAt: token.created_at,
+      expiresAt: token.expires_at,
+      refreshTokenExpiresAt: token.refresh_token_expires_at,
+      application: token.oauth_applications ? {
+        id: token.oauth_applications.id,
+        name: token.oauth_applications.name,
+        description: token.oauth_applications.description,
+        overview: token.oauth_applications.overview,
+        developerName: token.oauth_applications.developer_name,
+        logoUrl: token.oauth_applications.logo_url,
+        website: token.oauth_applications.website,
+        installUrl: token.oauth_applications.install_url,
+        screenshots: token.oauth_applications.screenshots,
+      } : null,
+    }));
 
     return {
-      data: applications,
+      data: transformedData,
     };
   }),
 
@@ -351,8 +466,8 @@ export const oauthApplicationsRouter = createTRPCRouter({
             );
 
             await resend.emails.send({
-              from: "Midday <middaybot@midday.ai>",
-              to: "pontus@midday.ai",
+              from: "Mid Poker <noreply@mid.poker>",
+              to: "support@mid.poker",
               subject: `Application Review Request - ${application.name}`,
               html,
             });

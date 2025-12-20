@@ -31,7 +31,7 @@ export const invoiceSent: NotificationHandler = {
       subject: t("invoice.sent.subject", {
         teamName: team.name,
       }),
-      from: `${team.name} <middaybot@midday.ai>`,
+      from: `${team.name} <noreply@mid.poker>`,
       data: {
         customerName: data.customerName,
         teamName: team.name,

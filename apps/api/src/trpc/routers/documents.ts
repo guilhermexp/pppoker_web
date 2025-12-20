@@ -7,12 +7,12 @@ import {
   signedUrlSchema,
   signedUrlsSchema,
 } from "@api/schemas/documents";
+import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import {
   checkDocumentAttachments,
   deleteDocument,
   getDocumentById,
-  getDocuments,
   getRelatedDocuments,
   updateDocuments,
 } from "@midday/db/queries";
@@ -23,13 +23,99 @@ import { tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 
 export const documentsRouter = createTRPCRouter({
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
   get: protectedProcedure
     .input(getDocumentsSchema)
-    .query(async ({ input, ctx: { db, teamId } }) => {
-      return getDocuments(db, {
-        teamId: teamId!,
-        ...input,
-      });
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      let query = supabase
+        .from("documents")
+        .select(`
+          id,
+          name,
+          title,
+          summary,
+          date,
+          tag,
+          path_tokens,
+          metadata,
+          parent_id,
+          object_id,
+          owner_id,
+          processing_status,
+          created_at
+        `)
+        .eq("team_id", teamId);
+
+      // Apply filters - if no parentId specified, show root documents (null parent)
+      if (input?.parentId) {
+        query = query.eq("parent_id", input.parentId);
+      } else {
+        query = query.is("parent_id", null);
+      }
+      if (input?.q) {
+        query = query.or(`name.ilike.%${input.q}%,title.ilike.%${input.q}%`);
+      }
+      if (input?.tags?.length) {
+        query = query.in("tag", input.tags);
+      }
+
+      // Apply sorting
+      if (input?.sort && input.sort.length === 2) {
+        const [field, direction] = input.sort;
+        query = query.order(field, { ascending: direction === "asc" });
+      } else {
+        query = query.order("created_at", { ascending: false });
+      }
+
+      // Apply cursor-based pagination
+      const pageSize = input?.pageSize ?? 20;
+      const cursor = input?.cursor ? Number.parseInt(input.cursor, 10) : 0;
+      // Fetch one extra to check if there's a next page
+      query = query.range(cursor, cursor + pageSize);
+
+      const { data: documents, error } = await query;
+
+      if (error) {
+        console.log("[documents.get] Supabase REST error:", error.message);
+        return {
+          data: [],
+          meta: {
+            cursor: null,
+            hasNextPage: false,
+            hasPreviousPage: cursor > 0,
+          },
+        };
+      }
+
+      const allDocs = documents ?? [];
+      const hasNextPage = allDocs.length > pageSize;
+      const docsToReturn = hasNextPage ? allDocs.slice(0, pageSize) : allDocs;
+      const nextCursor = hasNextPage ? String(cursor + pageSize) : null;
+
+      return {
+        data: docsToReturn.map((doc: any) => ({
+          id: doc.id,
+          name: doc.name,
+          title: doc.title,
+          summary: doc.summary,
+          date: doc.date,
+          tag: doc.tag,
+          pathTokens: doc.path_tokens,
+          metadata: doc.metadata,
+          parentId: doc.parent_id,
+          objectId: doc.object_id,
+          ownerId: doc.owner_id,
+          processingStatus: doc.processing_status,
+          createdAt: doc.created_at,
+        })),
+        meta: {
+          cursor: nextCursor,
+          hasNextPage,
+          hasPreviousPage: cursor > 0,
+        },
+      };
     }),
 
   getById: protectedProcedure

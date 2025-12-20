@@ -1,7 +1,46 @@
 import type { Session } from "@api/utils/auth";
+import { createAdminClient } from "@api/services/supabase";
 import { teamCache } from "@midday/cache/team-cache";
 import type { Database } from "@midday/db/client";
 import { TRPCError } from "@trpc/server";
+
+// Helper to get user team data via Supabase REST API (fallback when Drizzle fails)
+async function getUserTeamDataViaSupabase(userId: string) {
+  const supabase = await createAdminClient();
+
+  // Get user's team_id
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("id, team_id")
+    .eq("id", userId)
+    .single();
+
+  if (userError || !user) {
+    console.log("[getUserTeamDataViaSupabase] User error:", userError?.message);
+    return null;
+  }
+
+  // Get user's team memberships
+  const { data: memberships, error: memberError } = await supabase
+    .from("users_on_team")
+    .select("id, team_id")
+    .eq("user_id", userId);
+
+  if (memberError) {
+    console.log("[getUserTeamDataViaSupabase] Memberships error:", memberError?.message);
+  }
+
+  // Transform snake_case to camelCase to match Drizzle output
+  const transformedMemberships = (memberships || []).map((m: { id: string; team_id: string }) => ({
+    id: m.id,
+    teamId: m.team_id,
+  }));
+
+  return {
+    teamId: user.team_id,
+    usersOnTeams: transformedMemberships,
+  };
+}
 
 export const withTeamPermission = async <TReturn>(opts: {
   ctx: {
@@ -27,19 +66,11 @@ export const withTeamPermission = async <TReturn>(opts: {
     });
   }
 
-  const result = await ctx.db.query.users.findFirst({
-    with: {
-      usersOnTeams: {
-        columns: {
-          id: true,
-          teamId: true,
-        },
-      },
-    },
-    where: (users, { eq }) => eq(users.id, userId),
-  });
+  // Use Supabase REST directly to avoid Drizzle connection pool issues
+  const result = await getUserTeamDataViaSupabase(userId);
 
   if (!result) {
+    console.log("[withTeamPermission] No result from fallback - user not found");
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "User not found",
@@ -47,19 +78,24 @@ export const withTeamPermission = async <TReturn>(opts: {
   }
 
   const teamId = result.teamId;
+  console.log("[withTeamPermission] User data:", {
+    userId,
+    teamId,
+    usersOnTeams: result.usersOnTeams,
+  });
 
   // If teamId is null, user has no team assigned but this is now allowed
   if (teamId !== null) {
-    const cacheKey = `user:${userId}:team:${teamId}`;
-    let hasAccess = await teamCache.get(cacheKey);
+    // Skip cache for debugging - always check membership directly
+    const hasAccess = result.usersOnTeams.some(
+      (membership) => membership.teamId === teamId,
+    );
 
-    if (hasAccess === undefined) {
-      hasAccess = result.usersOnTeams.some(
-        (membership) => membership.teamId === teamId,
-      );
-
-      await teamCache.set(cacheKey, hasAccess);
-    }
+    console.log("[withTeamPermission] Access check:", {
+      teamId,
+      hasAccess,
+      memberships: result.usersOnTeams.map(m => m.teamId),
+    });
 
     if (!hasAccess) {
       throw new TRPCError({

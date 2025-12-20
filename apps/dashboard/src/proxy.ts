@@ -9,7 +9,7 @@ const I18nMiddleware = createI18nMiddleware({
   urlMappingStrategy: "rewrite",
 });
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = await updateSession(request, I18nMiddleware(request));
   const supabase = await createClient();
   const url = new URL("/", request.url);

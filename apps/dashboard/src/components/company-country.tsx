@@ -2,6 +2,7 @@
 
 import { useTeamMutation, useTeamQuery } from "@/hooks/use-team";
 import { useZodForm } from "@/hooks/use-zod-form";
+import { useScopedI18n } from "@/locales/client";
 import {
   Card,
   CardContent,
@@ -28,6 +29,8 @@ const formSchema = z.object({
 export function CompanyCountry() {
   const { data } = useTeamQuery();
   const updateTeamMutation = useTeamMutation();
+  const t = useScopedI18n("settings.company_country");
+  const tActions = useScopedI18n("actions");
 
   const form = useZodForm(formSchema, {
     defaultValues: {
@@ -44,10 +47,8 @@ export function CompanyCountry() {
       <form onSubmit={onSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Company country</CardTitle>
-            <CardDescription>
-              This is your company's country of origin.
-            </CardDescription>
+            <CardTitle>{t("title")}</CardTitle>
+            <CardDescription>{t("description")}</CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -76,7 +77,7 @@ export function CompanyCountry() {
               isSubmitting={updateTeamMutation.isPending}
               disabled={updateTeamMutation.isPending}
             >
-              Save
+              {tActions("save")}
             </SubmitButton>
           </CardFooter>
         </Card>

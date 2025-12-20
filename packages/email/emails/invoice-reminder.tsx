@@ -23,9 +23,9 @@ interface Props {
 
 export const InvoiceReminderEmail = ({
   companyName = "Customer",
-  teamName = "Midday",
+  teamName = "Mid Poker",
   invoiceNumber = "INV-0001",
-  link = "https://app.midday.ai/i/1234567890",
+  link = "https://app.mid.poker/i/1234567890",
 }: Props) => {
   const text = `Reminder: Payment for ${invoiceNumber}`;
   const themeClasses = getEmailThemeClasses();

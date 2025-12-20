@@ -11,46 +11,22 @@ import type { ReactElement } from "react";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://app.midday.ai"),
-  title: "Midday | Your AI-Powered Business Assistant",
+  metadataBase: new URL("https://app.mid.poker"),
+  title: "Mid Poker | Gestão Financeira",
   description:
-    "Automate financial tasks, stay organized, and make informed decisions effortlessly.",
+    "Automatize tarefas financeiras, mantenha-se organizado e tome decisões informadas.",
   twitter: {
-    title: "Midday | Your AI-Powered Business Assistant",
+    title: "Mid Poker | Gestão Financeira",
     description:
-      "Automate financial tasks, stay organized, and make informed decisions effortlessly.",
-    images: [
-      {
-        url: "https://cdn.midday.ai/opengraph-image.jpg",
-        width: 800,
-        height: 600,
-      },
-      {
-        url: "https://cdn.midday.ai/opengraph-image.jpg",
-        width: 1800,
-        height: 1600,
-      },
-    ],
+      "Automatize tarefas financeiras, mantenha-se organizado e tome decisões informadas.",
   },
   openGraph: {
-    title: "Midday | Your AI-Powered Business Assistant",
+    title: "Mid Poker | Gestão Financeira",
     description:
-      "Automate financial tasks, stay organized, and make informed decisions effortlessly.",
-    url: "https://app.midday.ai",
-    siteName: "Midday",
-    images: [
-      {
-        url: "https://cdn.midday.ai/opengraph-image.jpg",
-        width: 800,
-        height: 600,
-      },
-      {
-        url: "https://cdn.midday.ai/opengraph-image.jpg",
-        width: 1800,
-        height: 1600,
-      },
-    ],
-    locale: "en_US",
+      "Automatize tarefas financeiras, mantenha-se organizado e tome decisões informadas.",
+    url: "https://app.mid.poker",
+    siteName: "Mid Poker",
+    locale: "pt_BR",
     type: "website",
   },
 };

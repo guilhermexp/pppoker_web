@@ -2,6 +2,7 @@
 
 import { useTeamMutation, useTeamQuery } from "@/hooks/use-team";
 import { useZodForm } from "@/hooks/use-zod-form";
+import { useScopedI18n } from "@/locales/client";
 import {
   Card,
   CardContent,
@@ -28,6 +29,8 @@ const formSchema = z.object({
 export function CompanyFiscalYear() {
   const { data } = useTeamQuery();
   const updateTeamMutation = useTeamMutation();
+  const t = useScopedI18n("settings.fiscal_year");
+  const tActions = useScopedI18n("actions");
 
   const form = useZodForm(formSchema, {
     defaultValues: {
@@ -44,11 +47,8 @@ export function CompanyFiscalYear() {
       <form onSubmit={onSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Fiscal year</CardTitle>
-            <CardDescription>
-              Set when your fiscal year begins. This determines the default date
-              ranges for all reports and widgets throughout the application.
-            </CardDescription>
+            <CardTitle>{t("title")}</CardTitle>
+            <CardDescription>{t("description")}</CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -71,7 +71,7 @@ export function CompanyFiscalYear() {
               disabled={updateTeamMutation.isPending || !form.formState.isDirty}
               isSubmitting={updateTeamMutation.isPending}
             >
-              Save
+              {tActions("save")}
             </SubmitButton>
           </CardFooter>
         </Card>
