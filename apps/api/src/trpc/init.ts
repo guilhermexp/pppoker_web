@@ -68,7 +68,6 @@ export const authProcedure = t.procedure
   .use(withPrimaryDbMiddleware)
   .use(async (opts) => {
     const { session } = opts.ctx;
-    console.log("[authProcedure] Called, session:", session ? "present" : "missing");
 
     if (!session) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Auth required (authProcedure)" });

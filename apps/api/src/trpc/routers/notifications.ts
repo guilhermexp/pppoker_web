@@ -23,7 +23,6 @@ export const notificationsRouter = createTRPCRouter({
           type,
           status,
           priority,
-          payload,
           metadata
         `)
         .eq("team_id", teamId)
@@ -61,7 +60,6 @@ export const notificationsRouter = createTRPCRouter({
         type: act.type,
         status: act.status,
         priority: act.priority,
-        payload: act.payload,
         metadata: act.metadata,
       }));
     }),

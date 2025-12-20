@@ -78,24 +78,12 @@ export const withTeamPermission = async <TReturn>(opts: {
   }
 
   const teamId = result.teamId;
-  console.log("[withTeamPermission] User data:", {
-    userId,
-    teamId,
-    usersOnTeams: result.usersOnTeams,
-  });
 
   // If teamId is null, user has no team assigned but this is now allowed
   if (teamId !== null) {
-    // Skip cache for debugging - always check membership directly
     const hasAccess = result.usersOnTeams.some(
       (membership) => membership.teamId === teamId,
     );
-
-    console.log("[withTeamPermission] Access check:", {
-      teamId,
-      hasAccess,
-      memberships: result.usersOnTeams.map(m => m.teamId),
-    });
 
     if (!hasAccess) {
       throw new TRPCError({
