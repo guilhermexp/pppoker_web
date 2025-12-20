@@ -21,6 +21,7 @@ export function InvoicePaymentScoreWidget() {
   const { setChatId } = useChatInterface();
 
   const scorePercentage = data?.score ?? 0;
+  const paymentStatus = data?.paymentStatus ?? "none";
 
   const handleToolCall = (params: {
     toolName: string;
@@ -65,10 +66,7 @@ export function InvoicePaymentScoreWidget() {
       description={
         <div>
           <h2 className="text-sm text-[#666] mb-4">
-            {data?.paymentStatus
-              ? // @ts-expect-error
-                t(`payment_status_description.${data?.paymentStatus}`)
-              : "No payment history yet"}
+            {t(`payment_status_description.${paymentStatus}` as Parameters<typeof t>[0])}
           </h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">

@@ -31,12 +31,13 @@ export function InvoicePaymentScore() {
   const { data } = useSuspenseQuery(trpc.invoice.paymentStatus.queryOptions());
   const t = useI18n();
 
+  const paymentStatus = data?.paymentStatus ?? "none";
+
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-col xl:flex-row justify-between">
         <CardTitle className="font-medium text-2xl">
-          {/* @ts-expect-error */}
-          {t(`payment_status.${data?.paymentStatus}`)}
+          {t(`payment_status.${paymentStatus}` as Parameters<typeof t>[0])}
         </CardTitle>
 
         <PaymentScoreVisualizer score={data?.score ?? 0} count={15} />
@@ -46,9 +47,7 @@ export function InvoicePaymentScore() {
         <div className="flex flex-col gap-2">
           <div>Payment score</div>
           <div className="text-sm text-muted-foreground">
-            {data?.paymentStatus &&
-              // @ts-expect-error
-              t(`payment_status_description.${data?.paymentStatus}`)}
+            {t(`payment_status_description.${paymentStatus}` as Parameters<typeof t>[0])}
           </div>
         </div>
       </CardContent>
