@@ -1,7 +1,6 @@
 import "@/styles/globals.css";
 import { cn } from "@midday/ui/cn";
 import "@midday/ui/globals.css";
-import { DesktopHeader } from "@/components/desktop-header";
 import { isDesktopApp } from "@/utils/desktop";
 import { Toaster } from "@midday/ui/toaster";
 import type { Metadata } from "next";
@@ -78,8 +77,6 @@ export default async function Layout({
           "whitespace-pre-line overscroll-none antialiased",
         )}
       >
-        <DesktopHeader />
-
         <NuqsAdapter>
           <Providers locale={locale}>{children}</Providers>
           <Toaster />
