@@ -18,6 +18,8 @@ const icons = {
   "/settings": () => <Icons.Settings size={20} />,
   "/apps": () => <Icons.Apps size={20} />,
   "/inbox": () => <Icons.Inbox2 size={20} />,
+  "/poker": () => <Icons.PieChart size={20} />,
+  "/poker/league-import": () => <Icons.Globle size={20} />,
 } as const;
 
 const getItems = (t: ReturnType<typeof useI18n>) => [
@@ -77,6 +79,24 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
     name: t("sidebar.vault"),
   },
   {
+    path: "/poker",
+    name: t("sidebar.poker"),
+    children: [
+      { path: "/poker/players", name: t("sidebar.poker_players") },
+      { path: "/poker/agents", name: t("sidebar.poker_agents") },
+      { path: "/poker/sessions", name: t("sidebar.poker_sessions") },
+      { path: "/poker/settlements", name: t("sidebar.poker_settlements") },
+      { path: "/poker/import", name: t("sidebar.poker_import") },
+    ],
+  },
+  {
+    path: "/poker/league-import",
+    name: t("sidebar.super_union"),
+    children: [
+      { path: "/poker/league-import", name: t("sidebar.super_union_import") },
+    ],
+  },
+  {
     path: "/apps",
     name: t("sidebar.apps"),
     children: [
@@ -105,6 +125,8 @@ const KNOWN_MENU_PATHS = [
   "/tracker",
   "/customers",
   "/vault",
+  "/poker",
+  "/poker/league-import",
   "/apps",
   "/settings",
 ];

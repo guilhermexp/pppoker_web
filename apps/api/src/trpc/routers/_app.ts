@@ -32,6 +32,7 @@ import { transactionTagsRouter } from "./transaction-tags";
 import { transactionsRouter } from "./transactions";
 import { userRouter } from "./user";
 import { widgetsRouter } from "./widgets";
+import { pokerRouter } from "./poker";
 
 export const appRouter = createTRPCRouter({
   notifications: notificationsRouter,
@@ -66,6 +67,7 @@ export const appRouter = createTRPCRouter({
   shortLinks: shortLinksRouter,
   apiKeys: apiKeysRouter,
   widgets: widgetsRouter,
+  poker: pokerRouter,
 });
 
 // export type definition of API

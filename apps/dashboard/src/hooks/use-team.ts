@@ -53,3 +53,67 @@ export function useTeamMutation() {
     }),
   );
 }
+
+// =============================================================================
+// POKER SETTINGS HOOKS
+// =============================================================================
+
+export function usePokerSettingsQuery() {
+  const trpc = useTRPC();
+  return useSuspenseQuery(trpc.team.getPokerSettings.queryOptions());
+}
+
+export function usePokerSettingsMutation() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.team.updatePokerSettings.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.team.getPokerSettings.queryKey(),
+        });
+      },
+    }),
+  );
+}
+
+export function useLinkedClubsQuery() {
+  const trpc = useTRPC();
+  return useSuspenseQuery(trpc.team.getLinkedClubs.queryOptions());
+}
+
+export function useAddLinkedClubMutation() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.team.addLinkedClub.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.team.getLinkedClubs.queryKey(),
+        });
+      },
+    }),
+  );
+}
+
+export function useRemoveLinkedClubMutation() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.team.removeLinkedClub.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.team.getLinkedClubs.queryKey(),
+        });
+      },
+    }),
+  );
+}
+
+export function useSearchLigasQuery() {
+  const trpc = useTRPC();
+  return useSuspenseQuery(trpc.team.searchLigas.queryOptions());
+}

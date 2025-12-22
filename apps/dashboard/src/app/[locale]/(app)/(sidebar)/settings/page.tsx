@@ -5,6 +5,7 @@ import { CompanyFiscalYear } from "@/components/company-fiscal-year";
 import { CompanyLogo } from "@/components/company-logo";
 import { CompanyName } from "@/components/company-name";
 import { DeleteTeam } from "@/components/delete-team";
+import { PokerSettings } from "@/components/poker-settings";
 import { prefetch, trpc } from "@/trpc/server";
 import type { Metadata } from "next";
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function Account() {
   prefetch(trpc.team.current.queryOptions());
+  prefetch(trpc.team.getPokerSettings.queryOptions());
 
   return (
     <div className="space-y-12">
@@ -23,6 +25,7 @@ export default async function Account() {
       <CompanyCountry />
       <BaseCurrency />
       <CompanyFiscalYear />
+      <PokerSettings />
       <DeleteTeam />
     </div>
   );

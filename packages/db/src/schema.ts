@@ -1327,6 +1327,17 @@ export const teams = pgTable(
     plan: plansEnum().default("trial").notNull(),
     // subscriptionStatus: subscriptionStatusEnum("subscription_status"),
     exportSettings: jsonb("export_settings"),
+
+    // Poker Organization Settings
+    pokerPlatform: text("poker_platform"),
+    pokerEntityType: text("poker_entity_type"),
+    pokerClubId: text("poker_club_id"),
+    pokerClubName: text("poker_club_name"),
+    pokerLigaId: text("poker_liga_id"),
+    pokerLigaName: text("poker_liga_name"),
+    pokerSuId: text("poker_su_id"),
+    pokerSuName: text("poker_su_name"),
+    pokerParentLigaTeamId: uuid("poker_parent_liga_team_id"),
   },
   (table) => [
     unique("teams_inbox_id_key").on(table.inboxId),
@@ -3264,3 +3275,1000 @@ export const notificationSettings = pgTable(
     }),
   ],
 );
+
+// =============================================================================
+// POKER CLUB MANAGEMENT - ENUMS
+// =============================================================================
+
+export const pokerPlayerStatusEnum = pgEnum("poker_player_status", [
+  "active",
+  "inactive",
+  "suspended",
+  "blacklisted",
+]);
+
+export const pokerPlayerTypeEnum = pgEnum("poker_player_type", [
+  "player",
+  "agent",
+]);
+
+export const pokerGameVariantEnum = pgEnum("poker_game_variant", [
+  "nlh",
+  "nlh_6plus",
+  "nlh_aof",
+  "plo4",
+  "plo5",
+  "plo6",
+  "plo4_hilo",
+  "plo5_hilo",
+  "plo6_hilo",
+  "ofc",
+  "mixed",
+  "other",
+]);
+
+export const pokerSessionTypeEnum = pgEnum("poker_session_type", [
+  "cash_game",
+  "mtt",
+  "sit_n_go",
+  "spin",
+]);
+
+export const pokerTransactionTypeEnum = pgEnum("poker_transaction_type", [
+  "buy_in",
+  "cash_out",
+  "credit_given",
+  "credit_received",
+  "credit_paid",
+  "rake",
+  "agent_commission",
+  "rakeback",
+  "jackpot",
+  "adjustment",
+  "transfer_in",
+  "transfer_out",
+]);
+
+export const pokerSettlementStatusEnum = pgEnum("poker_settlement_status", [
+  "pending",
+  "partial",
+  "completed",
+  "disputed",
+  "cancelled",
+]);
+
+export const pokerImportStatusEnum = pgEnum("poker_import_status", [
+  "pending",
+  "validating",
+  "validated",
+  "processing",
+  "completed",
+  "failed",
+  "cancelled",
+]);
+
+export const pokerAlertTypeEnum = pgEnum("poker_alert_type", [
+  "liquidity_low",
+  "liquidity_critical",
+  "shark_detected",
+  "churn_risk",
+  "high_debt",
+  "collusion_suspected",
+  "unusual_activity",
+]);
+
+export const pokerAlertSeverityEnum = pgEnum("poker_alert_severity", [
+  "info",
+  "warning",
+  "critical",
+]);
+
+export const pokerPlatformEnum = pgEnum("poker_platform", [
+  "pppoker",
+  "suprema",
+  "pokerbros",
+  "fishpoker",
+  "xpoker",
+  "other",
+]);
+
+export const pokerEntityTypeEnum = pgEnum("poker_entity_type", [
+  "clube_privado",
+  "clube_liga",
+  "liga",
+  "ambos",
+]);
+
+// =============================================================================
+// POKER CLUB MANAGEMENT - TABLES
+// =============================================================================
+
+/**
+ * Poker Players - Main table for players and agents
+ * Maps to: PPPoker "Detalhes do usuário" sheet
+ */
+export const pokerPlayers = pgTable(
+  "poker_players",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // PPPoker Identity
+    ppPokerId: text("pppoker_id").notNull(),
+    nickname: text("nickname").notNull(),
+    memoName: text("memo_name"),
+    country: text("country"),
+
+    // Classification
+    type: pokerPlayerTypeEnum().default("player").notNull(),
+    status: pokerPlayerStatusEnum().default("active").notNull(),
+    agentId: uuid("agent_id"),
+    superAgentId: uuid("super_agent_id"),
+
+    // Contact Information
+    phone: text("phone"),
+    whatsappNumber: text("whatsapp_number"),
+    email: text("email"),
+
+    // Financial
+    creditLimit: numericCasted("credit_limit", { precision: 14, scale: 2 }).default(0),
+    currentBalance: numericCasted("current_balance", { precision: 14, scale: 2 }).default(0),
+    chipBalance: numericCasted("chip_balance", { precision: 14, scale: 2 }).default(0),
+    agentCreditBalance: numericCasted("agent_credit_balance", { precision: 14, scale: 2 }).default(0),
+
+    // Risk Management
+    riskScore: smallint("risk_score").default(50),
+    isVip: boolean("is_vip").default(false),
+    isShark: boolean("is_shark").default(false),
+    lastActiveAt: timestamp("last_active_at", { withTimezone: true, mode: "string" }),
+
+    // Rakeback Configuration (for agents)
+    rakebackPercent: numericCasted("rakeback_percent", { precision: 5, scale: 2 }).default(0),
+
+    // Integration Links
+    customerId: uuid("customer_id"),
+
+    // Notes and metadata
+    note: text("note"),
+    metadata: jsonb("metadata"),
+
+    // Full-text search
+    fts: tsvector("fts").generatedAlwaysAs(
+      (): SQL => sql`to_tsvector('portuguese', coalesce(${sql.identifier("nickname")}, '') || ' ' || coalesce(${sql.identifier("memo_name")}, '') || ' ' || coalesce(${sql.identifier("pppoker_id")}, '') || ' ' || coalesce(${sql.identifier("email")}, ''))`,
+    ),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_players_pppoker_id_team_id_key").on(table.ppPokerId, table.teamId),
+
+    // Indexes
+    index("poker_players_team_id_idx").on(table.teamId),
+    index("poker_players_agent_id_idx").on(table.agentId),
+    index("poker_players_super_agent_id_idx").on(table.superAgentId),
+    index("poker_players_status_idx").on(table.status),
+    index("poker_players_type_idx").on(table.type),
+    index("poker_players_last_active_at_idx").on(table.lastActiveAt),
+    index("poker_players_fts_idx").using("gin", table.fts),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_players_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.agentId],
+      foreignColumns: [table.id],
+      name: "poker_players_agent_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.superAgentId],
+      foreignColumns: [table.id],
+      name: "poker_players_super_agent_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.customerId],
+      foreignColumns: [customers.id],
+      name: "poker_players_customer_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Poker players can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Sessions - Game sessions (cash games, tournaments, etc)
+ * Maps to: PPPoker "Partidas" sheet (parsed from nested structure)
+ */
+export const pokerSessions = pgTable(
+  "poker_sessions",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // PPPoker Identity
+    externalId: text("external_id"),
+    tableName: text("table_name"),
+
+    // Session Classification
+    sessionType: pokerSessionTypeEnum("session_type").default("cash_game").notNull(),
+    gameVariant: pokerGameVariantEnum("game_variant").default("nlh").notNull(),
+
+    // Timing
+    startedAt: timestamp("started_at", { withTimezone: true, mode: "string" }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true, mode: "string" }),
+
+    // Game Configuration
+    blinds: text("blinds"),
+    buyInAmount: numericCasted("buy_in_amount", { precision: 12, scale: 2 }),
+    guaranteedPrize: numericCasted("guaranteed_prize", { precision: 12, scale: 2 }),
+
+    // Aggregated Stats
+    totalRake: numericCasted("total_rake", { precision: 14, scale: 2 }).default(0),
+    totalBuyIn: numericCasted("total_buy_in", { precision: 14, scale: 2 }).default(0),
+    totalCashOut: numericCasted("total_cash_out", { precision: 14, scale: 2 }).default(0),
+    playerCount: integer("player_count").default(0),
+    handsPlayed: integer("hands_played").default(0),
+
+    // Creator (the agent/admin who started the session)
+    createdById: uuid("created_by_id"),
+
+    // Raw data for auditing
+    rawData: jsonb("raw_data"),
+  },
+  (table) => [
+    // Unique constraint for external ID per team
+    unique("poker_sessions_external_id_team_id_key").on(table.externalId, table.teamId),
+
+    // Indexes
+    index("poker_sessions_team_id_idx").on(table.teamId),
+    index("poker_sessions_started_at_idx").on(table.startedAt),
+    index("poker_sessions_session_type_idx").on(table.sessionType),
+    index("poker_sessions_game_variant_idx").on(table.gameVariant),
+    index("poker_sessions_team_started_at_idx").on(table.teamId, table.startedAt),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_sessions_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.createdById],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_sessions_created_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Poker sessions can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Session Players - Player participation in sessions
+ * Maps to: PPPoker "Partidas" sheet (player rows within sessions)
+ */
+export const pokerSessionPlayers = pgTable(
+  "poker_session_players",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Relations
+    sessionId: uuid("session_id").notNull(),
+    playerId: uuid("player_id").notNull(),
+
+    // Results
+    ranking: integer("ranking"),
+    buyInChips: numericCasted("buy_in_chips", { precision: 14, scale: 2 }).default(0),
+    buyInTicket: numericCasted("buy_in_ticket", { precision: 14, scale: 2 }).default(0),
+    cashOut: numericCasted("cash_out", { precision: 14, scale: 2 }).default(0),
+    winnings: numericCasted("winnings", { precision: 14, scale: 2 }).default(0),
+    rake: numericCasted("rake", { precision: 14, scale: 2 }).default(0),
+
+    // Additional rake breakdown
+    rakePpst: numericCasted("rake_ppst", { precision: 14, scale: 2 }).default(0),
+    rakePpsr: numericCasted("rake_ppsr", { precision: 14, scale: 2 }).default(0),
+  },
+  (table) => [
+    // Unique constraint - one record per player per session
+    unique("poker_session_players_session_player_key").on(table.sessionId, table.playerId),
+
+    // Indexes
+    index("poker_session_players_team_id_idx").on(table.teamId),
+    index("poker_session_players_session_id_idx").on(table.sessionId),
+    index("poker_session_players_player_id_idx").on(table.playerId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_session_players_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.sessionId],
+      foreignColumns: [pokerSessions.id],
+      name: "poker_session_players_session_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.playerId],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_session_players_player_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("Poker session players can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Chip Transactions - All chip movements (buy-in, cash-out, credit, etc)
+ * Maps to: PPPoker "Transações" sheet
+ */
+export const pokerChipTransactions = pgTable(
+  "poker_chip_transactions",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // When did this transaction occur
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "string" }).notNull(),
+
+    // Transaction Type
+    type: pokerTransactionTypeEnum().notNull(),
+
+    // Sender (can be club or player)
+    senderClubId: text("sender_club_id"),
+    senderPlayerId: uuid("sender_player_id"),
+
+    // Recipient
+    recipientPlayerId: uuid("recipient_player_id"),
+
+    // Amounts - Credit
+    creditSent: numericCasted("credit_sent", { precision: 14, scale: 2 }).default(0),
+    creditRedeemed: numericCasted("credit_redeemed", { precision: 14, scale: 2 }).default(0),
+    creditLeftClub: numericCasted("credit_left_club", { precision: 14, scale: 2 }).default(0),
+
+    // Amounts - Chips
+    chipsSent: numericCasted("chips_sent", { precision: 14, scale: 2 }).default(0),
+    chipsPpsr: numericCasted("chips_ppsr", { precision: 14, scale: 2 }).default(0),
+    chipsRing: numericCasted("chips_ring", { precision: 14, scale: 2 }).default(0),
+    chipsCustomRing: numericCasted("chips_custom_ring", { precision: 14, scale: 2 }).default(0),
+    chipsMtt: numericCasted("chips_mtt", { precision: 14, scale: 2 }).default(0),
+    chipsRedeemed: numericCasted("chips_redeemed", { precision: 14, scale: 2 }).default(0),
+
+    // Calculated total amount
+    amount: numericCasted("amount", { precision: 14, scale: 2 }).default(0),
+
+    // Optional reference to session
+    sessionId: uuid("session_id"),
+
+    // Notes
+    note: text("note"),
+    rawData: jsonb("raw_data"),
+  },
+  (table) => [
+    // Indexes
+    index("poker_chip_transactions_team_id_idx").on(table.teamId),
+    index("poker_chip_transactions_occurred_at_idx").on(table.occurredAt),
+    index("poker_chip_transactions_type_idx").on(table.type),
+    index("poker_chip_transactions_sender_player_id_idx").on(table.senderPlayerId),
+    index("poker_chip_transactions_recipient_player_id_idx").on(table.recipientPlayerId),
+    index("poker_chip_transactions_team_occurred_at_idx").on(table.teamId, table.occurredAt),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_chip_transactions_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.senderPlayerId],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_chip_transactions_sender_player_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.recipientPlayerId],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_chip_transactions_recipient_player_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.sessionId],
+      foreignColumns: [pokerSessions.id],
+      name: "poker_chip_transactions_session_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Poker chip transactions can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Player Summary - Aggregated stats per player per period
+ * Maps to: PPPoker "Geral" sheet
+ */
+export const pokerPlayerSummary = pgTable(
+  "poker_player_summary",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Period
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+
+    // Player Reference
+    playerId: uuid("player_id").notNull(),
+
+    // Player Winnings by Game Type
+    winningsTotal: numericCasted("winnings_total", { precision: 14, scale: 2 }).default(0),
+    winningsGeneral: numericCasted("winnings_general", { precision: 14, scale: 2 }).default(0),
+    winningsRing: numericCasted("winnings_ring", { precision: 14, scale: 2 }).default(0),
+    winningsMttSitgo: numericCasted("winnings_mtt_sitgo", { precision: 14, scale: 2 }).default(0),
+    winningsSpinup: numericCasted("winnings_spinup", { precision: 14, scale: 2 }).default(0),
+    winningsCaribbean: numericCasted("winnings_caribbean", { precision: 14, scale: 2 }).default(0),
+    winningsColorGame: numericCasted("winnings_color_game", { precision: 14, scale: 2 }).default(0),
+    winningsCrash: numericCasted("winnings_crash", { precision: 14, scale: 2 }).default(0),
+    winningsLuckyDraw: numericCasted("winnings_lucky_draw", { precision: 14, scale: 2 }).default(0),
+    winningsJackpot: numericCasted("winnings_jackpot", { precision: 14, scale: 2 }).default(0),
+    winningsEvSplit: numericCasted("winnings_ev_split", { precision: 14, scale: 2 }).default(0),
+
+    // Club Earnings (Rake) by Game Type
+    clubEarningsGeneral: numericCasted("club_earnings_general", { precision: 14, scale: 2 }).default(0),
+    rakeTotal: numericCasted("rake_total", { precision: 14, scale: 2 }).default(0),
+    rakePpst: numericCasted("rake_ppst", { precision: 14, scale: 2 }).default(0),
+    rakeNonPpst: numericCasted("rake_non_ppst", { precision: 14, scale: 2 }).default(0),
+    rakePpsr: numericCasted("rake_ppsr", { precision: 14, scale: 2 }).default(0),
+    clubEarningsSpinup: numericCasted("club_earnings_spinup", { precision: 14, scale: 2 }).default(0),
+    clubEarningsCaribbean: numericCasted("club_earnings_caribbean", { precision: 14, scale: 2 }).default(0),
+    clubEarningsColorGame: numericCasted("club_earnings_color_game", { precision: 14, scale: 2 }).default(0),
+    clubEarningsCrash: numericCasted("club_earnings_crash", { precision: 14, scale: 2 }).default(0),
+    clubEarningsLuckyDraw: numericCasted("club_earnings_lucky_draw", { precision: 14, scale: 2 }).default(0),
+    clubEarningsJackpot: numericCasted("club_earnings_jackpot", { precision: 14, scale: 2 }).default(0),
+    clubEarningsOther: numericCasted("club_earnings_other", { precision: 14, scale: 2 }).default(0),
+
+    // Import reference
+    importId: uuid("import_id"),
+  },
+  (table) => [
+    // Unique constraint - one summary per player per period
+    unique("poker_player_summary_player_period_key").on(
+      table.playerId,
+      table.periodStart,
+      table.periodEnd,
+    ),
+
+    // Indexes
+    index("poker_player_summary_team_id_idx").on(table.teamId),
+    index("poker_player_summary_player_id_idx").on(table.playerId),
+    index("poker_player_summary_period_idx").on(table.periodStart, table.periodEnd),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_player_summary_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.playerId],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_player_summary_player_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("Poker player summary can be viewed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Settlements - Weekly/periodic settlements with players and agents
+ * "Fechar Semana" functionality
+ */
+export const pokerSettlements = pgTable(
+  "poker_settlements",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Period
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+
+    // Status
+    status: pokerSettlementStatusEnum().default("pending").notNull(),
+
+    // Who is this settlement for
+    playerId: uuid("player_id"),
+    agentId: uuid("agent_id"),
+
+    // Amounts
+    grossAmount: numericCasted("gross_amount", { precision: 14, scale: 2 }).notNull(),
+    rakebackAmount: numericCasted("rakeback_amount", { precision: 14, scale: 2 }).default(0),
+    commissionAmount: numericCasted("commission_amount", { precision: 14, scale: 2 }).default(0),
+    adjustmentAmount: numericCasted("adjustment_amount", { precision: 14, scale: 2 }).default(0),
+    netAmount: numericCasted("net_amount", { precision: 14, scale: 2 }).notNull(),
+
+    // Payment tracking
+    paidAmount: numericCasted("paid_amount", { precision: 14, scale: 2 }).default(0),
+    paidAt: timestamp("paid_at", { withTimezone: true, mode: "string" }),
+
+    // Integration with existing system
+    transactionId: uuid("transaction_id"),
+    invoiceId: uuid("invoice_id"),
+
+    // Audit
+    createdById: uuid("created_by_id"),
+    note: text("note"),
+  },
+  (table) => [
+    // Indexes
+    index("poker_settlements_team_id_idx").on(table.teamId),
+    index("poker_settlements_player_id_idx").on(table.playerId),
+    index("poker_settlements_agent_id_idx").on(table.agentId),
+    index("poker_settlements_status_idx").on(table.status),
+    index("poker_settlements_period_idx").on(table.periodStart, table.periodEnd),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_settlements_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.playerId],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_settlements_player_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.agentId],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_settlements_agent_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.transactionId],
+      foreignColumns: [transactions.id],
+      name: "poker_settlements_transaction_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.invoiceId],
+      foreignColumns: [invoices.id],
+      name: "poker_settlements_invoice_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.createdById],
+      foreignColumns: [users.id],
+      name: "poker_settlements_created_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Poker settlements can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Imports - Track data imports from PPPoker spreadsheets
+ */
+export const pokerImports = pgTable(
+  "poker_imports",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // File info
+    fileName: text("file_name").notNull(),
+    fileSize: integer("file_size"),
+    fileType: text("file_type"),
+
+    // Status
+    status: pokerImportStatusEnum().default("pending").notNull(),
+
+    // Period covered by import
+    periodStart: date("period_start"),
+    periodEnd: date("period_end"),
+
+    // Statistics
+    totalPlayers: integer("total_players").default(0),
+    totalSessions: integer("total_sessions").default(0),
+    totalTransactions: integer("total_transactions").default(0),
+    newPlayers: integer("new_players").default(0),
+    updatedPlayers: integer("updated_players").default(0),
+
+    // Validation results
+    validationPassed: boolean("validation_passed").default(false),
+    validationErrors: jsonb("validation_errors"),
+    validationWarnings: jsonb("validation_warnings"),
+
+    // Processing
+    processedAt: timestamp("processed_at", { withTimezone: true, mode: "string" }),
+    processedById: uuid("processed_by_id"),
+    processingErrors: jsonb("processing_errors"),
+
+    // Raw data snapshot
+    rawData: jsonb("raw_data"),
+  },
+  (table) => [
+    // Indexes
+    index("poker_imports_team_id_idx").on(table.teamId),
+    index("poker_imports_status_idx").on(table.status),
+    index("poker_imports_created_at_idx").on(table.createdAt),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_imports_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.processedById],
+      foreignColumns: [users.id],
+      name: "poker_imports_processed_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Poker imports can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Alerts - System alerts for liquidity, fraud detection, etc.
+ */
+export const pokerAlerts = pgTable(
+  "poker_alerts",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Alert Classification
+    type: pokerAlertTypeEnum().notNull(),
+    severity: pokerAlertSeverityEnum().default("info").notNull(),
+
+    // Alert Content
+    title: text("title").notNull(),
+    message: text("message"),
+
+    // Related entities
+    playerId: uuid("player_id"),
+    sessionId: uuid("session_id"),
+
+    // Alert state
+    isRead: boolean("is_read").default(false),
+    isDismissed: boolean("is_dismissed").default(false),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true, mode: "string" }),
+    dismissedById: uuid("dismissed_by_id"),
+
+    // Additional data
+    metadata: jsonb("metadata"),
+  },
+  (table) => [
+    // Indexes
+    index("poker_alerts_team_id_idx").on(table.teamId),
+    index("poker_alerts_type_idx").on(table.type),
+    index("poker_alerts_severity_idx").on(table.severity),
+    index("poker_alerts_created_at_idx").on(table.createdAt),
+    index("poker_alerts_is_read_idx").on(table.isRead),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_alerts_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.playerId],
+      foreignColumns: [pokerPlayers.id],
+      name: "poker_alerts_player_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.sessionId],
+      foreignColumns: [pokerSessions.id],
+      name: "poker_alerts_session_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.dismissedById],
+      foreignColumns: [users.id],
+      name: "poker_alerts_dismissed_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Poker alerts can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker Team Clubs - Tracks clubs under a Liga
+ * Allows a Liga to manage which clubs are affiliated with it
+ */
+export const pokerTeamClubs = pgTable(
+  "poker_team_clubs",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+
+    // Liga that owns this club entry
+    ligaTeamId: uuid("liga_team_id").notNull(),
+
+    // Club identification (from platform)
+    clubId: text("club_id").notNull(),
+    clubName: text("club_name"),
+
+    // Optional link to team in system (if club also has an account)
+    linkedTeamId: uuid("linked_team_id"),
+  },
+  (table) => [
+    // Unique constraint: one club ID per liga
+    unique("poker_team_clubs_liga_club_unique").on(table.ligaTeamId, table.clubId),
+
+    // Indexes
+    index("poker_team_clubs_liga_team_id_idx").on(table.ligaTeamId),
+    index("poker_team_clubs_club_id_idx").on(table.clubId),
+    index("poker_team_clubs_linked_team_id_idx").on(table.linkedTeamId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.ligaTeamId],
+      foreignColumns: [teams.id],
+      name: "poker_team_clubs_liga_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.linkedTeamId],
+      foreignColumns: [teams.id],
+      name: "poker_team_clubs_linked_team_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Poker team clubs can be managed by liga team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(liga_team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+// =============================================================================
+// POKER CLUB MANAGEMENT - RELATIONS
+// =============================================================================
+
+export const pokerPlayersRelations = relations(pokerPlayers, ({ one, many }) => ({
+  team: one(teams, {
+    fields: [pokerPlayers.teamId],
+    references: [teams.id],
+  }),
+  agent: one(pokerPlayers, {
+    fields: [pokerPlayers.agentId],
+    references: [pokerPlayers.id],
+    relationName: "agent_players",
+  }),
+  superAgent: one(pokerPlayers, {
+    fields: [pokerPlayers.superAgentId],
+    references: [pokerPlayers.id],
+    relationName: "super_agent_players",
+  }),
+  players: many(pokerPlayers, { relationName: "agent_players" }),
+  superAgentPlayers: many(pokerPlayers, { relationName: "super_agent_players" }),
+  customer: one(customers, {
+    fields: [pokerPlayers.customerId],
+    references: [customers.id],
+  }),
+  sessionParticipations: many(pokerSessionPlayers),
+  sentTransactions: many(pokerChipTransactions, { relationName: "sender" }),
+  receivedTransactions: many(pokerChipTransactions, { relationName: "recipient" }),
+  summaries: many(pokerPlayerSummary),
+  playerSettlements: many(pokerSettlements, { relationName: "player_settlements" }),
+  agentSettlements: many(pokerSettlements, { relationName: "agent_settlements" }),
+  alerts: many(pokerAlerts),
+}));
+
+export const pokerSessionsRelations = relations(pokerSessions, ({ one, many }) => ({
+  team: one(teams, {
+    fields: [pokerSessions.teamId],
+    references: [teams.id],
+  }),
+  createdBy: one(pokerPlayers, {
+    fields: [pokerSessions.createdById],
+    references: [pokerPlayers.id],
+  }),
+  players: many(pokerSessionPlayers),
+  transactions: many(pokerChipTransactions),
+  alerts: many(pokerAlerts),
+}));
+
+export const pokerSessionPlayersRelations = relations(pokerSessionPlayers, ({ one }) => ({
+  team: one(teams, {
+    fields: [pokerSessionPlayers.teamId],
+    references: [teams.id],
+  }),
+  session: one(pokerSessions, {
+    fields: [pokerSessionPlayers.sessionId],
+    references: [pokerSessions.id],
+  }),
+  player: one(pokerPlayers, {
+    fields: [pokerSessionPlayers.playerId],
+    references: [pokerPlayers.id],
+  }),
+}));
+
+export const pokerChipTransactionsRelations = relations(pokerChipTransactions, ({ one }) => ({
+  team: one(teams, {
+    fields: [pokerChipTransactions.teamId],
+    references: [teams.id],
+  }),
+  sender: one(pokerPlayers, {
+    fields: [pokerChipTransactions.senderPlayerId],
+    references: [pokerPlayers.id],
+    relationName: "sender",
+  }),
+  recipient: one(pokerPlayers, {
+    fields: [pokerChipTransactions.recipientPlayerId],
+    references: [pokerPlayers.id],
+    relationName: "recipient",
+  }),
+  session: one(pokerSessions, {
+    fields: [pokerChipTransactions.sessionId],
+    references: [pokerSessions.id],
+  }),
+}));
+
+export const pokerPlayerSummaryRelations = relations(pokerPlayerSummary, ({ one }) => ({
+  team: one(teams, {
+    fields: [pokerPlayerSummary.teamId],
+    references: [teams.id],
+  }),
+  player: one(pokerPlayers, {
+    fields: [pokerPlayerSummary.playerId],
+    references: [pokerPlayers.id],
+  }),
+  import: one(pokerImports, {
+    fields: [pokerPlayerSummary.importId],
+    references: [pokerImports.id],
+  }),
+}));
+
+export const pokerSettlementsRelations = relations(pokerSettlements, ({ one }) => ({
+  team: one(teams, {
+    fields: [pokerSettlements.teamId],
+    references: [teams.id],
+  }),
+  player: one(pokerPlayers, {
+    fields: [pokerSettlements.playerId],
+    references: [pokerPlayers.id],
+    relationName: "player_settlements",
+  }),
+  agent: one(pokerPlayers, {
+    fields: [pokerSettlements.agentId],
+    references: [pokerPlayers.id],
+    relationName: "agent_settlements",
+  }),
+  transaction: one(transactions, {
+    fields: [pokerSettlements.transactionId],
+    references: [transactions.id],
+  }),
+  invoice: one(invoices, {
+    fields: [pokerSettlements.invoiceId],
+    references: [invoices.id],
+  }),
+  createdBy: one(users, {
+    fields: [pokerSettlements.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const pokerImportsRelations = relations(pokerImports, ({ one, many }) => ({
+  team: one(teams, {
+    fields: [pokerImports.teamId],
+    references: [teams.id],
+  }),
+  processedBy: one(users, {
+    fields: [pokerImports.processedById],
+    references: [users.id],
+  }),
+  summaries: many(pokerPlayerSummary),
+}));
+
+export const pokerAlertsRelations = relations(pokerAlerts, ({ one }) => ({
+  team: one(teams, {
+    fields: [pokerAlerts.teamId],
+    references: [teams.id],
+  }),
+  player: one(pokerPlayers, {
+    fields: [pokerAlerts.playerId],
+    references: [pokerPlayers.id],
+  }),
+  session: one(pokerSessions, {
+    fields: [pokerAlerts.sessionId],
+    references: [pokerSessions.id],
+  }),
+  dismissedBy: one(users, {
+    fields: [pokerAlerts.dismissedById],
+    references: [users.id],
+  }),
+}));
+
+export const pokerTeamClubsRelations = relations(pokerTeamClubs, ({ one }) => ({
+  ligaTeam: one(teams, {
+    fields: [pokerTeamClubs.ligaTeamId],
+    references: [teams.id],
+    relationName: "ligaTeamClubs",
+  }),
+  linkedTeam: one(teams, {
+    fields: [pokerTeamClubs.linkedTeamId],
+    references: [teams.id],
+    relationName: "linkedTeamClub",
+  }),
+}))

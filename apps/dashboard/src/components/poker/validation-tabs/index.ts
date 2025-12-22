@@ -1,0 +1,10 @@
+export { ResumoTab } from "./resumo-tab";
+export { GeneralTab } from "./general-tab";
+export { DetailedTab } from "./detailed-tab";
+export { DemonstrativoTab } from "./demonstrativo-tab";
+export { UserDetailsTab } from "./user-details-tab";
+export { SessionsTab } from "./sessions-tab";
+export { TransactionsTab } from "./transactions-tab";
+export { RakebackTab } from "./rakeback-tab";
+export { ValidationTab } from "./validation-tab";
+export { CadastroTab } from "./cadastro-tab";

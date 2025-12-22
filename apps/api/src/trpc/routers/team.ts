@@ -11,6 +11,11 @@ import {
   updateTeamByIdSchema,
   updateTeamMemberSchema,
 } from "@api/schemas/team";
+import {
+  updatePokerSettingsSchema,
+  addLinkedClubSchema,
+  removeLinkedClubSchema,
+} from "@api/schemas/poker";
 import { createAdminClient } from "@api/services/supabase";
 import { authProcedure, createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import {
@@ -450,4 +455,227 @@ export const teamRouter = createTRPCRouter({
 
       return event;
     }),
+
+  // ==========================================================================
+  // POKER SETTINGS
+  // ==========================================================================
+
+  getPokerSettings: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const supabase = await createAdminClient();
+
+    const { data: team, error } = await supabase
+      .from("teams")
+      .select(`
+        poker_platform,
+        poker_entity_type,
+        poker_club_id,
+        poker_club_name,
+        poker_liga_id,
+        poker_liga_name,
+        poker_su_id,
+        poker_su_name,
+        poker_parent_liga_team_id
+      `)
+      .eq("id", teamId)
+      .single();
+
+    if (error || !team) {
+      return null;
+    }
+
+    return {
+      pokerPlatform: team.poker_platform,
+      pokerEntityType: team.poker_entity_type,
+      pokerClubId: team.poker_club_id,
+      pokerClubName: team.poker_club_name,
+      pokerLigaId: team.poker_liga_id,
+      pokerLigaName: team.poker_liga_name,
+      pokerSuId: team.poker_su_id,
+      pokerSuName: team.poker_su_name,
+      pokerParentLigaTeamId: team.poker_parent_liga_team_id,
+    };
+  }),
+
+  updatePokerSettings: protectedProcedure
+    .input(updatePokerSettingsSchema)
+    .mutation(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      const updateData: Record<string, unknown> = {};
+      if (input.pokerPlatform !== undefined) updateData.poker_platform = input.pokerPlatform;
+      if (input.pokerEntityType !== undefined) updateData.poker_entity_type = input.pokerEntityType;
+      if (input.pokerClubId !== undefined) updateData.poker_club_id = input.pokerClubId;
+      if (input.pokerClubName !== undefined) updateData.poker_club_name = input.pokerClubName;
+      if (input.pokerLigaId !== undefined) updateData.poker_liga_id = input.pokerLigaId;
+      if (input.pokerLigaName !== undefined) updateData.poker_liga_name = input.pokerLigaName;
+      if (input.pokerSuId !== undefined) updateData.poker_su_id = input.pokerSuId;
+      if (input.pokerSuName !== undefined) updateData.poker_su_name = input.pokerSuName;
+      if (input.pokerParentLigaTeamId !== undefined) updateData.poker_parent_liga_team_id = input.pokerParentLigaTeamId;
+
+      const { data, error } = await supabase
+        .from("teams")
+        .update(updateData)
+        .eq("id", teamId)
+        .select(`
+          poker_platform,
+          poker_entity_type,
+          poker_club_id,
+          poker_club_name,
+          poker_liga_id,
+          poker_liga_name,
+          poker_su_id,
+          poker_su_name,
+          poker_parent_liga_team_id
+        `)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to update poker settings: ${error.message}`,
+        });
+      }
+
+      return {
+        pokerPlatform: data.poker_platform,
+        pokerEntityType: data.poker_entity_type,
+        pokerClubId: data.poker_club_id,
+        pokerClubName: data.poker_club_name,
+        pokerLigaId: data.poker_liga_id,
+        pokerLigaName: data.poker_liga_name,
+        pokerSuId: data.poker_su_id,
+        pokerSuName: data.poker_su_name,
+        pokerParentLigaTeamId: data.poker_parent_liga_team_id,
+      };
+    }),
+
+  getLinkedClubs: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const supabase = await createAdminClient();
+
+    const { data: clubs, error } = await supabase
+      .from("poker_team_clubs")
+      .select(`
+        id,
+        club_id,
+        club_name,
+        linked_team_id,
+        created_at,
+        linked_team:linked_team_id (
+          name
+        )
+      `)
+      .eq("liga_team_id", teamId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      return { clubs: [], total: 0 };
+    }
+
+    return {
+      clubs: (clubs ?? []).map((c: any) => ({
+        id: c.id,
+        clubId: c.club_id,
+        clubName: c.club_name,
+        linkedTeamId: c.linked_team_id,
+        linkedTeamName: c.linked_team?.name ?? null,
+        createdAt: c.created_at,
+      })),
+      total: clubs?.length ?? 0,
+    };
+  }),
+
+  addLinkedClub: protectedProcedure
+    .input(addLinkedClubSchema)
+    .mutation(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      const { data, error } = await supabase
+        .from("poker_team_clubs")
+        .insert({
+          liga_team_id: teamId,
+          club_id: input.clubId,
+          club_name: input.clubName,
+          linked_team_id: input.linkedTeamId,
+        })
+        .select(`
+          id,
+          club_id,
+          club_name,
+          linked_team_id,
+          created_at
+        `)
+        .single();
+
+      if (error) {
+        if (error.code === "23505") {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Este clube já está vinculado à sua liga",
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to add linked club: ${error.message}`,
+        });
+      }
+
+      return {
+        id: data.id,
+        clubId: data.club_id,
+        clubName: data.club_name,
+        linkedTeamId: data.linked_team_id,
+        createdAt: data.created_at,
+      };
+    }),
+
+  removeLinkedClub: protectedProcedure
+    .input(removeLinkedClubSchema)
+    .mutation(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      const { error } = await supabase
+        .from("poker_team_clubs")
+        .delete()
+        .eq("liga_team_id", teamId)
+        .eq("club_id", input.clubId);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to remove linked club: ${error.message}`,
+        });
+      }
+
+      return { success: true };
+    }),
+
+  searchLigas: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const supabase = await createAdminClient();
+
+    // Find teams that are ligas (have poker_entity_type = 'liga' or 'ambos')
+    const { data: ligas, error } = await supabase
+      .from("teams")
+      .select(`
+        id,
+        name,
+        poker_liga_id,
+        poker_liga_name,
+        poker_platform
+      `)
+      .in("poker_entity_type", ["liga", "ambos"])
+      .neq("id", teamId)
+      .limit(100);
+
+    if (error) {
+      return [];
+    }
+
+    return (ligas ?? []).map((l: any) => ({
+      id: l.id,
+      name: l.name,
+      pokerLigaId: l.poker_liga_id,
+      pokerLigaName: l.poker_liga_name,
+      pokerPlatform: l.poker_platform,
+    }));
+  }),
 });

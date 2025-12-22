@@ -11,6 +11,8 @@ import { DocumentSheet } from "@/components/sheets/document-sheet";
 import { InboxDetailsSheet } from "@/components/sheets/inbox-details-sheet";
 import { InvoiceDetailsSheet } from "@/components/sheets/invoice-details-sheet";
 import { InvoiceSheet } from "@/components/sheets/invoice-sheet";
+import { PokerPlayerCreateSheet } from "@/components/sheets/poker-player-create-sheet";
+import { PokerPlayerEditSheet } from "@/components/sheets/poker-player-edit-sheet";
 import { ProductCreateSheet } from "@/components/sheets/product-create-sheet";
 import { ProductEditSheet } from "@/components/sheets/product-edit-sheet";
 import { TrackerCreateSheet } from "@/components/sheets/tracker-create-sheet";
@@ -35,6 +37,9 @@ export function GlobalSheets() {
 
       <ProductCreateSheet />
       <ProductEditSheet />
+
+      <PokerPlayerCreateSheet />
+      <PokerPlayerEditSheet />
 
       <TransactionSheet />
       <TransactionCreateSheet />
