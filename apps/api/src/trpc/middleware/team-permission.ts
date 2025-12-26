@@ -62,7 +62,7 @@ export const withTeamPermission = async <TReturn>(opts: {
   if (!userId) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "No permission to access this team",
+      message: "Authentication required - please log in",
     });
   }
 

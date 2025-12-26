@@ -1,12 +1,12 @@
 import { Logo } from "./assets/logo";
 
 export default {
-  name: "QuickBooks",
-  id: "quick-books",
+  name: "Suprema Poker",
+  id: "suprema-poker",
   active: false,
   logo: Logo,
   short_description:
-    "Integrating with QuickBooks enables you to synchronize transactions and attachments, neatly organizing them in your bookkeeping software. This streamlines the process for you or your accountant to close your books faster.",
+    "Integrate Suprema Poker to sync club, league, and transaction data into Midday for validation and reporting.",
   description: null,
   images: [],
   onInitialize: () => {},

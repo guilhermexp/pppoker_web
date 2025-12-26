@@ -123,7 +123,7 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
 
   // Query to check existing players
   const { data: existingData, isLoading: isCheckingExisting } = useQuery(
-    trpc.pokerPlayers.checkExistingByPpPokerIds.queryOptions(
+    trpc.poker.players.checkExistingByPpPokerIds.queryOptions(
       { ppPokerIds: allPpPokerIds },
       { enabled: allPpPokerIds.length > 0 }
     )
@@ -131,7 +131,7 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
 
   // Bulk create mutation
   const bulkCreateMutation = useMutation(
-    trpc.pokerPlayers.bulkCreate.mutationOptions({
+    trpc.poker.players.bulkCreate.mutationOptions({
       onSuccess: (result) => {
         setRegistrationComplete(true);
         setRegistrationResult(result);

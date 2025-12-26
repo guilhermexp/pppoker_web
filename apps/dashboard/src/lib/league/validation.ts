@@ -117,19 +117,26 @@ const STRUCTURE_RULES: ValidationRule[] = [
   {
     id: "jogos_ppsr_sheet_present",
     category: "structure",
-    severity: "warning", // Warning porque ainda não está implementado
+    severity: "warning",
     label: "Aba Jogos PPSR presente",
     description: "A aba Jogos PPSR deve conter dados de partidas de cash",
     validate: (data) => {
-      const count = data.jogosPPSR?.length ?? 0;
+      const jogos = data.jogosPPSR || [];
+      const totalJogadores = jogos.reduce(
+        (sum, jogo) => sum + jogo.jogadores.length,
+        0,
+      );
       return {
-        passed: true, // Sempre passa por enquanto (ainda não implementado)
-        details: count > 0 ? `${count} jogos` : "Ainda não implementado",
-        count,
+        passed: true, // Warning only - cash games are optional
+        details:
+          jogos.length > 0
+            ? `${jogos.length} mesas, ${totalJogadores} jogadores`
+            : "Aba Jogos PPSR vazia ou ausente",
+        count: jogos.length,
         debug: {
-          logic: "Verifica se jogosPPSR tem dados (implementação pendente)",
-          expected: "jogosPPSR.length > 0",
-          actual: `${count} jogos encontrados`,
+          logic: "Verifica se jogosPPSR tem dados de cash games",
+          expected: "jogosPPSR.length > 0 (opcional)",
+          actual: `${jogos.length} mesas encontradas`,
         },
       };
     },
@@ -171,6 +178,102 @@ const STRUCTURE_RULES: ValidationRule[] = [
           logic: "Verifica se o período tem entre 0 e 31 dias",
           expected: "0 <= days <= 31",
           actual: `${days} dias`,
+        },
+      };
+    },
+  },
+  {
+    id: "unknown_game_formats",
+    category: "structure",
+    severity: "warning",
+    label: "Formatos de torneio desconhecidos",
+    description:
+      "Torneios com formatos não mapeados foram encontrados e não serão importados",
+    validate: (data) => {
+      const unknownFormats = data.unknownGameFormats || [];
+      const count = unknownFormats.length;
+
+      if (count === 0) {
+        return {
+          passed: true,
+          details: "Todos os formatos de torneio são reconhecidos",
+          count: 0,
+          debug: {
+            logic: "Verifica se há formatos de torneio não reconhecidos pelo parser",
+            expected: "0 formatos desconhecidos",
+            actual: "0 formatos desconhecidos",
+          },
+        };
+      }
+
+      // Extract unique format types from raw text
+      const formatTypes = new Set<string>();
+      for (const uf of unknownFormats) {
+        const match = uf.rawText.match(/^([A-Z0-9\/+]+)/i);
+        if (match) {
+          formatTypes.add(match[1].toUpperCase());
+        }
+      }
+
+      return {
+        passed: false,
+        details: `${count} torneio(s) com formato desconhecido: ${[...formatTypes].join(", ")}`,
+        count,
+        debug: {
+          logic: "Verifica se há formatos de torneio não reconhecidos pelo parser",
+          expected: "0 formatos desconhecidos",
+          actual: `${count} formatos não reconhecidos`,
+          failedItems: unknownFormats.slice(0, 10).map(
+            (uf) => `Game ${uf.gameId}: ${uf.rawText.substring(0, 60)}...`,
+          ),
+        },
+      };
+    },
+  },
+  {
+    id: "unknown_cash_formats",
+    category: "structure",
+    severity: "warning",
+    label: "Formatos de cash desconhecidos",
+    description:
+      "Mesas de cash com formatos não mapeados foram encontradas e não serão importadas",
+    validate: (data) => {
+      const unknownFormats = data.unknownCashFormats || [];
+      const count = unknownFormats.length;
+
+      if (count === 0) {
+        return {
+          passed: true,
+          details: "Todos os formatos de cash são reconhecidos",
+          count: 0,
+          debug: {
+            logic: "Verifica se há formatos de cash não reconhecidos pelo parser",
+            expected: "0 formatos desconhecidos",
+            actual: "0 formatos desconhecidos",
+          },
+        };
+      }
+
+      // Extract unique format types from raw text
+      const formatTypes = new Set<string>();
+      for (const uf of unknownFormats) {
+        const match = uf.rawText.match(/(PPSR\/[A-Z0-9+]+)/i);
+        if (match) {
+          formatTypes.add(match[1].toUpperCase());
+        }
+      }
+
+      return {
+        passed: false,
+        details: `${count} mesa(s) de cash com formato desconhecido: ${[...formatTypes].join(", ")}`,
+        count,
+        debug: {
+          logic: "Verifica se há formatos de cash não reconhecidos pelo parser",
+          expected: "0 formatos desconhecidos",
+          actual: `${count} formatos não reconhecidos`,
+          failedItems: unknownFormats.slice(0, 10).map(
+            (uf) => `Game ${uf.gameId}: ${uf.rawText.substring(0, 60)}...`,
+          ),
         },
       };
     },
@@ -278,15 +381,15 @@ const INTEGRITY_RULES: ValidationRule[] = [
     category: "integrity",
     severity: "critical",
     label: "IDs de Jogador válidos",
-    description: "Todos os IDs de jogador devem ser números válidos (1M-99M)",
+    description: "Todos os IDs de jogador devem ser inteiros positivos",
     validate: (data) => {
       const invalidIds: string[] = [];
 
       for (const jogo of data.jogosPPST || []) {
         for (const jogador of jogo.jogadores) {
           const id = jogador.jogadorId;
-          // IDs de jogador PPPoker são geralmente entre 1 milhão e 99 milhões
-          if (!id || Number.isNaN(id) || id < 1000000 || id > 99999999) {
+          // IDs de jogador PPPoker são inteiros positivos
+          if (!id || Number.isNaN(id) || id <= 0 || !Number.isInteger(id)) {
             invalidIds.push(`${jogador.apelido} (ID: ${id})`);
           }
         }
@@ -303,9 +406,9 @@ const INTEGRITY_RULES: ValidationRule[] = [
             : `${uniqueInvalid.length} jogadores com IDs inválidos`,
         count: uniqueInvalid.length,
         debug: {
-          logic: "Verifica se todos os jogadorId estão entre 1M e 99M",
-          expected: "1000000 <= jogadorId <= 99999999",
-          actual: `${uniqueInvalid.length} IDs fora do range`,
+          logic: "Verifica se todos os jogadorId são inteiros positivos",
+          expected: "jogadorId > 0 && Number.isInteger(jogadorId)",
+          actual: `${uniqueInvalid.length} IDs inválidos`,
           failedItems: uniqueInvalid.slice(0, 10),
         },
       };
@@ -363,17 +466,13 @@ const INTEGRITY_RULES: ValidationRule[] = [
     category: "integrity",
     severity: "warning",
     label: "Rankings válidos",
-    description: "Rankings devem ser números positivos sequenciais",
+    description: "Rankings devem ser números não-negativos (0 = não colocou)",
     validate: (data) => {
       const issues: string[] = [];
 
       for (const jogo of data.jogosPPST || []) {
-        const rankings = jogo.jogadores
-          .map((j) => j.ranking)
-          .filter((r) => r > 0);
-
-        // Verifica se há rankings negativos ou zero
-        const invalidRankings = jogo.jogadores.filter((j) => j.ranking <= 0);
+        // Verifica se há rankings negativos (0 é válido para jogadores que não colocaram)
+        const invalidRankings = jogo.jogadores.filter((j) => j.ranking < 0);
         for (const j of invalidRankings) {
           issues.push(
             `${jogo.metadata.nomeMesa}: ${j.apelido} ranking=${j.ranking}`,
@@ -389,8 +488,8 @@ const INTEGRITY_RULES: ValidationRule[] = [
             : `${issues.length} rankings inválidos`,
         count: issues.length,
         debug: {
-          logic: "Verifica se rankings são números positivos",
-          expected: "ranking > 0 para todos os jogadores",
+          logic: "Verifica se rankings são números não-negativos",
+          expected: "ranking >= 0 para todos os jogadores",
           actual: `${issues.length} rankings inválidos`,
           failedItems: issues.slice(0, 10),
         },
@@ -499,6 +598,67 @@ const CONSISTENCY_RULES: ValidationRule[] = [
 // ============================================================================
 
 const MATH_RULES: ValidationRule[] = [
+  {
+    id: "formula_columns_consistent",
+    category: "math",
+    severity: "info",
+    label: "Colunas de fórmula consistentes",
+    description: "Verifica se colunas que são somas de outras estão corretas (Geral = soma das sub-colunas)",
+    validate: (data) => {
+      const issues: string[] = [];
+
+      // Check PPST: ganhosLigaGeral = Taxa + Buy-in SPIN + Prêmio SPIN + Ticket Entreg. + Buy-in Ticket
+      for (const bloco of data.geralPPST || []) {
+        for (const liga of bloco.ligas) {
+          const expectedGeral = liga.ganhosLigaTaxa + liga.buyinSpinup + liga.premiacaoSpinup +
+                               liga.valorTicketEntregue + liga.buyinTicketLiga;
+          // Tolerance of 0.1 for rounding
+          if (Math.abs(liga.ganhosLigaGeral - expectedGeral) > 0.1) {
+            issues.push(
+              `PPST Liga ${liga.ligaId}: Geral=${liga.ganhosLigaGeral.toFixed(2)}, esperado=${expectedGeral.toFixed(2)}`,
+            );
+          }
+        }
+      }
+
+      // Check PPSR: ganhosJogadorGeral = De adversários + De Jackpot + De Dividir EV
+      // Check PPSR: ganhosLigaGeral = Taxa + Taxa do Jackpot + Prêmio Jackpot + Dividir EV
+      for (const bloco of data.geralPPSR || []) {
+        for (const liga of bloco.ligas) {
+          const expectedJogadorGeral = liga.ganhosJogadorDeAdversarios + liga.ganhosJogadorDeJackpot +
+                                       liga.ganhosJogadorDeDividirEV;
+          if (Math.abs(liga.ganhosJogadorGeral - expectedJogadorGeral) > 0.1) {
+            issues.push(
+              `PPSR Liga ${liga.ligaId}: GanhosJogGeral=${liga.ganhosJogadorGeral.toFixed(2)}, esperado=${expectedJogadorGeral.toFixed(2)}`,
+            );
+          }
+
+          const expectedLigaGeral = liga.ganhosLigaTaxa + liga.ganhosLigaTaxaJackpot +
+                                   liga.ganhosLigaPremioJackpot + liga.ganhosLigaDividirEV;
+          if (Math.abs(liga.ganhosLigaGeral - expectedLigaGeral) > 0.1) {
+            issues.push(
+              `PPSR Liga ${liga.ligaId}: GanhosLigaGeral=${liga.ganhosLigaGeral.toFixed(2)}, esperado=${expectedLigaGeral.toFixed(2)}`,
+            );
+          }
+        }
+      }
+
+      return {
+        passed: issues.length === 0,
+        details:
+          issues.length === 0
+            ? "Todas as colunas de fórmula estão consistentes"
+            : `${issues.length} inconsistências detectadas (valores foram recalculados)`,
+        count: issues.length,
+        debug: {
+          logic: "Verifica se Geral = soma das sub-colunas (Taxa, SPIN, Ticket, etc.)",
+          expected: "Geral = soma das sub-colunas",
+          actual: `${issues.length} inconsistências`,
+          failedItems: issues.slice(0, 10),
+        },
+      };
+    },
+  },
   {
     id: "geral_totals_sum_correct",
     category: "math",
@@ -685,18 +845,15 @@ export function validateLeagueImportData(
   // Warnings baseados nos dados
   const warnings: LeagueValidationWarning[] = [];
 
-  // Verifica se PPSR não foi implementado
-  if (
-    (data.geralPPSR?.length ?? 0) === 0 &&
-    (data.jogosPPSR?.length ?? 0) === 0
-  ) {
+  // Verifica se PPSR não tem dados
+  if ((data.jogosPPSR?.length ?? 0) === 0 && (data.jogosPPSRInicioCount ?? 0) > 0) {
     warnings.push({
-      id: "ppsr_not_implemented",
-      severity: "info",
-      title: "PPSR não processado",
+      id: "ppsr_no_players",
+      severity: "warning",
+      title: "Cash games sem jogadores",
       description:
-        "As abas de cash games (PPSR) ainda não foram implementadas.",
-      suggestedAction: "Aguarde a implementação do parser PPSR",
+        "A aba Jogos PPSR contém mesas mas nenhum jogador foi parseado.",
+      suggestedAction: "Verifique o formato das colunas na aba Jogos PPSR",
     });
   }
 
@@ -728,12 +885,24 @@ export function validateLeagueImportData(
   // Distribuição por tipo de jogo
   let nlhCount = 0;
   let spinupCount = 0;
+  let knockoutCount = 0;
+  let satelliteCount = 0;
   for (const jogo of data.jogosPPST || []) {
-    if (jogo.metadata.tipoJogo === "PPST/NLH") nlhCount++;
-    else if (jogo.metadata.tipoJogo === "PPST/SPINUP") spinupCount++;
+    const subtipo = jogo.metadata.subtipo;
+    const tipoJogo = jogo.metadata.tipoJogo;
+
+    if (tipoJogo.includes("SPINUP")) {
+      spinupCount++;
+    } else if (subtipo === "knockout") {
+      knockoutCount++;
+    } else if (subtipo === "satellite") {
+      satelliteCount++;
+    } else {
+      nlhCount++;
+    }
   }
 
-  const totalJogos = nlhCount + spinupCount || 1;
+  const totalJogos = nlhCount + spinupCount + knockoutCount + satelliteCount || 1;
 
   // Top ligas por taxa
   const ligaTaxas = new Map<
@@ -798,9 +967,22 @@ export function validateLeagueImportData(
       totalGanhosPPST,
       totalTaxaPPST,
       totalGapGarantidoPPST,
-      totalLigasPPSR: 0, // Não implementado
-      totalJogosPPSR: 0,
-      totalJogadoresPPSR: 0,
+      // PPSR Stats
+      totalLigasPPSR: (() => {
+        const ligas = new Set<number>();
+        for (const jogo of data.jogosPPSR || []) {
+          for (const jogador of jogo.jogadores) {
+            ligas.add(jogador.ligaId);
+          }
+        }
+        return ligas.size;
+      })(),
+      totalJogosPPSR: data.jogosPPSR?.length ?? 0,
+      totalJogadoresPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.jogadores.length, 0),
+      totalMaosPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.maos, 0),
+      totalBuyinPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.buyinFichas, 0),
+      totalGanhosPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.ganhosJogadorGeral, 0),
+      totalTaxaPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.taxa, 0),
     },
 
     gameTypeDistribution: [
@@ -815,6 +997,18 @@ export function validateLeagueImportData(
         label: "SPIN",
         count: spinupCount,
         percentage: (spinupCount / totalJogos) * 100,
+      },
+      {
+        type: "KNOCKOUT",
+        label: "PKO/MKO",
+        count: knockoutCount,
+        percentage: (knockoutCount / totalJogos) * 100,
+      },
+      {
+        type: "SATELLITE",
+        label: "Satélite",
+        count: satelliteCount,
+        percentage: (satelliteCount / totalJogos) * 100,
       },
     ],
 

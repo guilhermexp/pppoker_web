@@ -9,6 +9,10 @@ export const pokerPlayerFilterSchema = {
   type: parseAsString,
   status: parseAsString,
   agentId: parseAsString,
+  superAgentId: parseAsString,
+  dateFrom: parseAsString,
+  dateTo: parseAsString,
+  viewAgentId: parseAsString, // For agent detail sheet
 };
 
 type SetParamsInput = {
@@ -18,6 +22,10 @@ type SetParamsInput = {
   type?: "player" | "agent" | null;
   status?: "active" | "inactive" | "suspended" | "blacklisted" | null;
   agentId?: string | null;
+  superAgentId?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  viewAgentId?: string | null;
 } | null;
 
 export function usePokerPlayerParams() {
@@ -35,6 +43,10 @@ export function usePokerPlayerParams() {
         type: null,
         status: null,
         agentId: null,
+        superAgentId: null,
+        dateFrom: null,
+        dateTo: null,
+        viewAgentId: null,
       });
     } else {
       // Only update the keys that are explicitly provided
@@ -58,6 +70,18 @@ export function usePokerPlayerParams() {
       if ("agentId" in newParams) {
         updates.agentId = newParams.agentId ?? null;
       }
+      if ("superAgentId" in newParams) {
+        updates.superAgentId = newParams.superAgentId ?? null;
+      }
+      if ("dateFrom" in newParams) {
+        updates.dateFrom = newParams.dateFrom ?? null;
+      }
+      if ("dateTo" in newParams) {
+        updates.dateTo = newParams.dateTo ?? null;
+      }
+      if ("viewAgentId" in newParams) {
+        updates.viewAgentId = newParams.viewAgentId ?? null;
+      }
 
       setParamsInternal(updates);
     }
@@ -74,7 +98,9 @@ export function usePokerPlayerParams() {
       params.q !== null ||
       params.type !== null ||
       params.status !== null ||
-      params.agentId !== null,
+      params.agentId !== null ||
+      params.superAgentId !== null,
+    hasDateFilter: params.dateFrom !== null || params.dateTo !== null,
   };
 }
 

@@ -71,6 +71,7 @@ export const pokerImportsRouter = createTRPCRouter({
           validationPassed: imp.validation_passed ?? false,
           validationErrors: imp.validation_errors,
           validationWarnings: imp.validation_warnings,
+          processingErrors: imp.processing_errors,
           processedAt: imp.processed_at,
         })),
       };
@@ -315,90 +316,267 @@ export const pokerImportsRouter = createTRPCRouter({
       const rawData = importRecord.raw_data as any;
       const processingErrors: string[] = [];
 
+      // Helper to split array into chunks for batch operations
+      const chunkArray = <T>(array: T[], size: number): T[][] => {
+        const chunks: T[][] = [];
+        for (let i = 0; i < array.length; i += size) {
+          chunks.push(array.slice(i, i + size));
+        }
+        return chunks;
+      };
+
+      // Helper to convert empty strings to null for timestamps
+      const parseTimestamp = (value: string | null | undefined): string | null => {
+        if (!value || value === "") return null;
+        return value;
+      };
+
+      const BATCH_SIZE = 500; // Supabase recommends max 1000, using 500 for safety
+
+      // Helper to deduplicate array by key (keeps last occurrence)
+      const deduplicateByKey = <T>(array: T[], keyFn: (item: T) => string): T[] => {
+        const map = new Map<string, T>();
+        for (const item of array) {
+          map.set(keyFn(item), item);
+        }
+        return Array.from(map.values());
+      };
+
       try {
-        // Process players (upsert)
+        // ============================================
+        // STEP 1: Batch upsert all players (from players array)
+        // ============================================
         if (rawData?.players?.length > 0) {
-          // First, get or create agents
-          const agentMap = new Map<string, string>();
+          const playersRaw = rawData.players.map((player: any) => ({
+            team_id: teamId,
+            pppoker_id: player.ppPokerId,
+            nickname: player.nickname,
+            memo_name: player.memoName ?? null,
+            country: player.country ?? null,
+            type: "player",
+            status: "active",
+            chip_balance: player.chipBalance ?? 0,
+            agent_credit_balance: player.agentCreditBalance ?? 0,
+            last_active_at: player.lastActiveAt ?? null,
+            updated_at: new Date().toISOString(),
+          }));
 
-          for (const player of rawData.players) {
-            if (player.agentPpPokerId && !agentMap.has(player.agentPpPokerId)) {
-              // Check if agent exists
-              const { data: existingAgent } = await supabase
-                .from("poker_players")
-                .select("id")
-                .eq("team_id", teamId)
-                .eq("pppoker_id", player.agentPpPokerId)
-                .single();
+          // Deduplicate by pppoker_id to avoid "ON CONFLICT DO UPDATE cannot affect row a second time"
+          const playersToUpsert = deduplicateByKey(playersRaw, (p) => p.pppoker_id);
 
-              if (existingAgent) {
-                agentMap.set(player.agentPpPokerId, existingAgent.id);
-              }
-            }
-          }
-
-          // Upsert players
-          for (const player of rawData.players) {
-            const agentId = player.agentPpPokerId
-              ? agentMap.get(player.agentPpPokerId)
-              : null;
-
-            const { error: upsertError } = await supabase
+          // Process in batches
+          for (const batch of chunkArray(playersToUpsert, BATCH_SIZE)) {
+            const { error } = await supabase
               .from("poker_players")
-              .upsert(
-                {
-                  team_id: teamId,
-                  pppoker_id: player.ppPokerId,
-                  nickname: player.nickname,
-                  memo_name: player.memoName ?? null,
-                  country: player.country ?? null,
-                  type: player.agentPpPokerId ? "player" : "player",
-                  agent_id: agentId,
-                  chip_balance: player.chipBalance ?? 0,
-                  agent_credit_balance: player.agentCreditBalance ?? 0,
-                  last_active_at: player.lastActiveAt ?? null,
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: "pppoker_id,team_id" }
-              );
+              .upsert(batch, { onConflict: "pppoker_id,team_id" });
 
-            if (upsertError) {
-              processingErrors.push(
-                `Failed to upsert player ${player.nickname}: ${upsertError.message}`
-              );
+            if (error) {
+              processingErrors.push(`Failed to upsert players batch: ${error.message}`);
             }
           }
         }
 
-        // Process transactions
-        if (rawData?.transactions?.length > 0) {
-          // Get player ID map
-          const { data: allPlayers } = await supabase
-            .from("poker_players")
-            .select("id, pppoker_id")
-            .eq("team_id", teamId);
+        // ============================================
+        // STEP 2: Extract and upsert agents/super agents from summaries FIRST
+        // ============================================
+        // Map to store pppoker_id -> agent relationships for later linking
+        const playerAgentMap = new Map<string, { agentPpPokerId: string | null; superAgentPpPokerId: string | null }>();
 
-          const playerIdMap = new Map(
-            (allPlayers ?? []).map((p) => [p.pppoker_id, p.id])
-          );
+        if (rawData?.summaries?.length > 0) {
+          // Extract unique agents and super agents
+          const agentsRaw: any[] = [];
+          const seenAgents = new Set<string>();
 
-          for (const tx of rawData.transactions) {
-            const senderPlayerId = tx.senderPlayerId
-              ? playerIdMap.get(tx.senderPlayerId)
-              : null;
-            const recipientPlayerId = tx.recipientPlayerId
-              ? playerIdMap.get(tx.recipientPlayerId)
-              : null;
+          for (const summary of rawData.summaries) {
+            // Store the agent relationship for this player
+            if (summary.ppPokerId) {
+              playerAgentMap.set(summary.ppPokerId, {
+                agentPpPokerId: summary.agentPpPokerId ?? null,
+                superAgentPpPokerId: summary.superAgentPpPokerId ?? null,
+              });
+            }
 
-            const { error: txError } = await supabase
-              .from("poker_chip_transactions")
-              .insert({
+            // Extract super agent FIRST (so they exist before agents reference them)
+            if (summary.superAgentPpPokerId && !seenAgents.has(summary.superAgentPpPokerId)) {
+              seenAgents.add(summary.superAgentPpPokerId);
+              agentsRaw.push({
                 team_id: teamId,
-                occurred_at: tx.occurredAt,
+                pppoker_id: summary.superAgentPpPokerId,
+                nickname: summary.superAgentNickname || `Super Agent ${summary.superAgentPpPokerId}`,
+                type: "super_agent",
+                status: "active",
+                updated_at: new Date().toISOString(),
+              });
+            }
+
+            // Extract agent
+            if (summary.agentPpPokerId && !seenAgents.has(summary.agentPpPokerId)) {
+              seenAgents.add(summary.agentPpPokerId);
+              agentsRaw.push({
+                team_id: teamId,
+                pppoker_id: summary.agentPpPokerId,
+                nickname: summary.agentNickname || `Agent ${summary.agentPpPokerId}`,
+                type: "agent",
+                status: "active",
+                updated_at: new Date().toISOString(),
+              });
+            }
+          }
+
+          if (agentsRaw.length > 0) {
+            // Deduplicate by pppoker_id
+            const agentsToUpsert = deduplicateByKey(agentsRaw, (a) => a.pppoker_id);
+
+            for (const batch of chunkArray(agentsToUpsert, BATCH_SIZE)) {
+              const { error } = await supabase
+                .from("poker_players")
+                .upsert(batch, { onConflict: "pppoker_id,team_id" });
+
+              if (error) {
+                processingErrors.push(`Failed to upsert agents batch: ${error.message}`);
+              }
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 2.5: Batch upsert players from summaries (Geral sheet)
+        // ============================================
+        if (rawData?.summaries?.length > 0) {
+          const summaryPlayersRaw = rawData.summaries.map((summary: any) => ({
+            team_id: teamId,
+            pppoker_id: summary.ppPokerId,
+            nickname: summary.nickname,
+            memo_name: summary.memoName ?? null,
+            country: summary.country ?? null,
+            type: "player",
+            status: "active",
+            updated_at: new Date().toISOString(),
+          }));
+
+          // Deduplicate by pppoker_id
+          const summaryPlayersToUpsert = deduplicateByKey(summaryPlayersRaw, (p) => p.pppoker_id);
+
+          for (const batch of chunkArray(summaryPlayersToUpsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_players")
+              .upsert(batch, { onConflict: "pppoker_id,team_id" });
+
+            if (error) {
+              processingErrors.push(`Failed to upsert summary players batch: ${error.message}`);
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 3: Get player ID map (needed for transactions and sessions)
+        // ============================================
+        const { data: allPlayers } = await supabase
+          .from("poker_players")
+          .select("id, pppoker_id")
+          .eq("team_id", teamId);
+
+        const playerIdMap = new Map(
+          (allPlayers ?? []).map((p) => [p.pppoker_id, p.id])
+        );
+
+        // ============================================
+        // STEP 3.5: Link players to their agents (update agent_id and super_agent_id)
+        // ============================================
+        if (playerAgentMap.size > 0) {
+          // Also need to link agents to their super_agents
+          const agentToSuperAgentMap = new Map<string, string>();
+
+          // Build agent -> super_agent relationships from summaries
+          for (const summary of rawData?.summaries ?? []) {
+            if (summary.agentPpPokerId && summary.superAgentPpPokerId) {
+              agentToSuperAgentMap.set(summary.agentPpPokerId, summary.superAgentPpPokerId);
+            }
+          }
+
+          // Update players with their agent_id and super_agent_id
+          const playerUpdates: Array<{ pppoker_id: string; agent_id: string | null; super_agent_id: string | null }> = [];
+
+          for (const [playerPpPokerId, relations] of playerAgentMap) {
+            const agentId = relations.agentPpPokerId ? playerIdMap.get(relations.agentPpPokerId) : null;
+            const superAgentId = relations.superAgentPpPokerId ? playerIdMap.get(relations.superAgentPpPokerId) : null;
+
+            if (agentId || superAgentId) {
+              playerUpdates.push({
+                pppoker_id: playerPpPokerId,
+                agent_id: agentId ?? null,
+                super_agent_id: superAgentId ?? null,
+              });
+            }
+          }
+
+          // Update agents with their super_agent_id
+          const agentUpdates: Array<{ pppoker_id: string; super_agent_id: string | null }> = [];
+
+          for (const [agentPpPokerId, superAgentPpPokerId] of agentToSuperAgentMap) {
+            const superAgentId = playerIdMap.get(superAgentPpPokerId);
+            if (superAgentId) {
+              agentUpdates.push({
+                pppoker_id: agentPpPokerId,
+                super_agent_id: superAgentId,
+              });
+            }
+          }
+
+          // Batch update players
+          for (const batch of chunkArray(playerUpdates, BATCH_SIZE)) {
+            for (const update of batch) {
+              const { error } = await supabase
+                .from("poker_players")
+                .update({
+                  agent_id: update.agent_id,
+                  super_agent_id: update.super_agent_id,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("pppoker_id", update.pppoker_id)
+                .eq("team_id", teamId);
+
+              if (error) {
+                processingErrors.push(`Failed to link player ${update.pppoker_id} to agent: ${error.message}`);
+              }
+            }
+          }
+
+          // Batch update agents with super_agent reference
+          for (const batch of chunkArray(agentUpdates, BATCH_SIZE)) {
+            for (const update of batch) {
+              const { error } = await supabase
+                .from("poker_players")
+                .update({
+                  super_agent_id: update.super_agent_id,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("pppoker_id", update.pppoker_id)
+                .eq("team_id", teamId);
+
+              if (error) {
+                processingErrors.push(`Failed to link agent ${update.pppoker_id} to super_agent: ${error.message}`);
+              }
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 4: Batch insert transactions
+        // ============================================
+        if (rawData?.transactions?.length > 0) {
+          const transactionsToInsert = rawData.transactions
+            .map((tx: any) => {
+              const occurredAt = parseTimestamp(tx.occurredAt);
+              if (!occurredAt) return null; // Skip invalid
+
+              return {
+                team_id: teamId,
+                occurred_at: occurredAt,
                 type: tx.creditSent ? "credit_given" : "transfer_in",
                 sender_club_id: tx.senderClubId ?? null,
-                sender_player_id: senderPlayerId,
-                recipient_player_id: recipientPlayerId,
+                sender_player_id: tx.senderPlayerId ? playerIdMap.get(tx.senderPlayerId) : null,
+                recipient_player_id: tx.recipientPlayerId ? playerIdMap.get(tx.recipientPlayerId) : null,
                 credit_sent: tx.creditSent ?? 0,
                 credit_redeemed: tx.creditRedeemed ?? 0,
                 chips_sent: tx.chipsSent ?? 0,
@@ -408,12 +586,183 @@ export const pokerImportsRouter = createTRPCRouter({
                   (tx.chipsSent ?? 0) -
                   (tx.creditRedeemed ?? 0) -
                   (tx.chipsRedeemed ?? 0),
-              });
+              };
+            })
+            .filter(Boolean);
 
-            if (txError) {
-              processingErrors.push(
-                `Failed to insert transaction: ${txError.message}`
-              );
+          const skippedTxCount = rawData.transactions.length - transactionsToInsert.length;
+          if (skippedTxCount > 0) {
+            processingErrors.push(`Skipped ${skippedTxCount} transactions with invalid timestamps`);
+          }
+
+          for (const batch of chunkArray(transactionsToInsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_chip_transactions")
+              .insert(batch);
+
+            if (error) {
+              processingErrors.push(`Failed to insert transactions batch: ${error.message}`);
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 5: Batch upsert sessions
+        // ============================================
+        if (rawData?.sessions?.length > 0) {
+          const sessionsRaw = rawData.sessions
+            .map((session: any) => {
+              const startedAt = parseTimestamp(session.startedAt);
+              if (!startedAt) return null; // Skip invalid
+
+              return {
+                team_id: teamId,
+                external_id: session.externalId,
+                table_name: session.tableName ?? null,
+                session_type: session.sessionType ?? "cash_game",
+                game_variant: session.gameVariant ?? "nlh",
+                started_at: startedAt,
+                ended_at: parseTimestamp(session.endedAt),
+                blinds: session.blinds ?? null,
+                buy_in_amount: session.buyInAmount ?? null,
+                guaranteed_prize: session.guaranteedPrize ?? null,
+                total_rake: session.totalRake ?? 0,
+                total_buy_in: session.totalBuyIn ?? 0,
+                total_cash_out: session.totalWinnings ?? 0,
+                player_count: session.playerCount ?? session.players?.length ?? 0,
+                hands_played: session.handsPlayed ?? 0,
+                created_by_id: session.createdByPpPokerId ? playerIdMap.get(session.createdByPpPokerId) : null,
+              };
+            })
+            .filter(Boolean);
+
+          // Deduplicate by external_id
+          const sessionsToUpsert = deduplicateByKey(sessionsRaw as any[], (s) => s.external_id);
+
+          const skippedSessionCount = rawData.sessions.length - sessionsToUpsert.length;
+          if (skippedSessionCount > 0) {
+            processingErrors.push(`Skipped ${skippedSessionCount} sessions with invalid timestamps or duplicates`);
+          }
+
+          for (const batch of chunkArray(sessionsToUpsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_sessions")
+              .upsert(batch, { onConflict: "external_id,team_id" });
+
+            if (error) {
+              processingErrors.push(`Failed to upsert sessions batch: ${error.message}`);
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 6: Get session IDs for session_players (if needed)
+        // ============================================
+        // Get all sessions we just created/updated
+        const { data: allSessions } = await supabase
+          .from("poker_sessions")
+          .select("id, external_id")
+          .eq("team_id", teamId);
+
+        const sessionIdMap = new Map(
+          (allSessions ?? []).map((s) => [s.external_id, s.id])
+        );
+
+        // ============================================
+        // STEP 7: Batch upsert session players
+        // ============================================
+        if (rawData?.sessions?.length > 0) {
+          const sessionPlayersRaw: any[] = [];
+
+          for (const session of rawData.sessions) {
+            const sessionId = sessionIdMap.get(session.externalId);
+            if (!sessionId || !session.players?.length) continue;
+
+            for (const player of session.players) {
+              const playerId = playerIdMap.get(player.ppPokerId);
+              if (!playerId) continue;
+
+              sessionPlayersRaw.push({
+                team_id: teamId,
+                session_id: sessionId,
+                player_id: playerId,
+                ranking: player.ranking ?? null,
+                buy_in_chips: player.buyIn ?? player.buyInChips ?? 0,
+                buy_in_ticket: player.buyInTicket ?? 0,
+                cash_out: player.winnings ?? player.winningsGeneral ?? 0,
+                winnings: player.winnings ?? player.winningsGeneral ?? 0,
+                rake: player.rake ?? player.clubWinningsFee ?? 0,
+              });
+            }
+          }
+
+          // Deduplicate by session_id + player_id combination
+          const sessionPlayersToUpsert = deduplicateByKey(
+            sessionPlayersRaw,
+            (sp) => `${sp.session_id}-${sp.player_id}`
+          );
+
+          for (const batch of chunkArray(sessionPlayersToUpsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_session_players")
+              .upsert(batch, { onConflict: "session_id,player_id" });
+
+            if (error) {
+              processingErrors.push(`Failed to upsert session players batch: ${error.message}`);
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 8: Batch upsert player summaries
+        // ============================================
+        if (rawData?.summaries?.length > 0) {
+          const periodStart = importRecord.period_start || rawData.periodStart;
+          const periodEnd = importRecord.period_end || rawData.periodEnd;
+
+          if (periodStart && periodEnd) {
+            const summariesRaw = rawData.summaries
+              .map((summary: any) => {
+                const playerId = playerIdMap.get(summary.ppPokerId);
+                if (!playerId) return null;
+
+                return {
+                  team_id: teamId,
+                  player_id: playerId,
+                  period_start: periodStart,
+                  period_end: periodEnd,
+                  winnings_total: summary.generalTotal ?? 0,
+                  winnings_general: summary.generalTotal ?? 0,
+                  winnings_ring: summary.ringGamesTotal ?? 0,
+                  winnings_mtt_sitgo: summary.mttSitNGoTotal ?? 0,
+                  winnings_spinup: summary.spinUpTotal ?? 0,
+                  winnings_caribbean: summary.caribbeanTotal ?? 0,
+                  winnings_color_game: summary.colorGameTotal ?? 0,
+                  winnings_crash: summary.crashTotal ?? 0,
+                  winnings_lucky_draw: summary.luckyDrawTotal ?? 0,
+                  winnings_jackpot: summary.jackpotTotal ?? summary.jackpotPrize ?? 0,
+                  winnings_ev_split: summary.evSplitTotal ?? 0,
+                  club_earnings_general: summary.feeGeneral ?? 0,
+                  rake_total: summary.feeGeneral ?? summary.fee ?? 0,
+                  rake_ppst: summary.feePpst ?? 0,
+                  rake_ppsr: summary.feePpsr ?? 0,
+                  rake_non_ppst: summary.feeNonPpst ?? 0,
+                  club_earnings_jackpot: summary.jackpotFee ?? 0,
+                };
+              })
+              .filter(Boolean);
+
+            // Deduplicate by player_id (since period_start and period_end are the same for all)
+            const summariesToUpsert = deduplicateByKey(summariesRaw as any[], (s) => s.player_id);
+
+            for (const batch of chunkArray(summariesToUpsert, BATCH_SIZE)) {
+              const { error } = await supabase
+                .from("poker_player_summary")
+                .upsert(batch, { onConflict: "player_id,period_start,period_end" });
+
+              if (error) {
+                processingErrors.push(`Failed to upsert summaries batch: ${error.message}`);
+              }
             }
           }
         }

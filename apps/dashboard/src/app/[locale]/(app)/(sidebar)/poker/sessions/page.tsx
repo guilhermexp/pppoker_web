@@ -2,6 +2,10 @@ import { ErrorFallback } from "@/components/error-fallback";
 import { PokerSessionsHeader } from "@/components/poker/poker-sessions-header";
 import { SessionsDataTable } from "@/components/tables/poker-sessions/data-table";
 import { DataTableSkeleton } from "@/components/tables/poker-sessions/skeleton";
+import {
+  SessionsBreakdownWidget,
+  SessionsOverviewWidget,
+} from "@/components/widgets/poker";
 import { loadPokerSessionFilterParams } from "@/hooks/use-poker-session-params";
 import { loadSortParams } from "@/hooks/use-sort-params";
 import { getI18n } from "@/locales/server";
@@ -35,6 +39,16 @@ export default async function PokerSessionsPage(props: Props) {
     })
   );
 
+  // Prefetch stats for widgets
+  await queryClient.fetchQuery(
+    trpc.poker.sessions.getStats.queryOptions({
+      dateFrom: filter.dateFrom ?? undefined,
+      dateTo: filter.dateTo ?? undefined,
+      sessionType: filter.sessionType ?? undefined,
+      gameVariant: filter.gameVariant ?? undefined,
+    })
+  );
+
   return (
     <HydrateClient>
       <div className="flex flex-col gap-6">
@@ -44,6 +58,20 @@ export default async function PokerSessionsPage(props: Props) {
             {t("poker.sessions.description")}
           </p>
         </div>
+
+        {/* Overview Widgets */}
+        <ErrorBoundary errorComponent={ErrorFallback}>
+          <Suspense fallback={<SessionsOverviewWidget.Skeleton />}>
+            <SessionsOverviewWidget />
+          </Suspense>
+        </ErrorBoundary>
+
+        {/* Breakdown Widgets */}
+        <ErrorBoundary errorComponent={ErrorFallback}>
+          <Suspense fallback={<SessionsBreakdownWidget.Skeleton />}>
+            <SessionsBreakdownWidget />
+          </Suspense>
+        </ErrorBoundary>
 
         <PokerSessionsHeader />
 

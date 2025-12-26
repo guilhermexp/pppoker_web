@@ -1,5 +1,6 @@
 "use client";
 
+import { PokerDateFilter } from "@/components/poker/poker-date-filter";
 import { usePokerSettlementParams } from "@/hooks/use-poker-settlement-params";
 import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
@@ -15,10 +16,17 @@ import { Icons } from "@midday/ui/icons";
 
 export function PokerSettlementFilters() {
   const t = useI18n();
-  const { status, setParams, hasFilters } = usePokerSettlementParams();
+  const { status, periodStart, periodEnd, setParams, hasFilters } = usePokerSettlementParams();
 
   return (
     <div className="flex items-center gap-2">
+      {/* Date Range Filter */}
+      <PokerDateFilter
+        from={periodStart}
+        to={periodEnd}
+        onChange={(params) => setParams({ periodStart: params.from, periodEnd: params.to })}
+      />
+
       {/* Status Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

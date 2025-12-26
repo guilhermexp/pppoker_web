@@ -1,12 +1,12 @@
 import { Logo } from "./assets/logo";
 
 export default {
-  name: "Xero",
-  id: "xero",
+  name: "X-Poker",
+  id: "x-poker",
   active: false,
   logo: Logo,
   short_description:
-    "Integrating with Xero allows you to synchronize transactions and attachments neatly organized in your bookkeeping software, making it easier for you or your accountant to close your books faster.",
+    "Integrate X-Poker to sync club, league, and transaction data into Midday for validation and reporting.",
   description: null,
   images: [],
   onInitialize: () => {},

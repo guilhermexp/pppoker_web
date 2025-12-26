@@ -25,7 +25,10 @@ export async function getDocumentById(
   }
 
   if (params.filePath) {
-    conditions.push(eq(documents.name, params.filePath));
+    // filePath is the full path (e.g., "folder/subfolder/file.pdf")
+    // We need to match against pathTokens array
+    const pathTokens = params.filePath.split("/");
+    conditions.push(eq(documents.pathTokens, pathTokens));
   }
 
   return db.query.documents.findFirst({

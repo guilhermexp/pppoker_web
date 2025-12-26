@@ -30,6 +30,7 @@ export type PokerSession = {
   totalCashOut: number;
   playerCount: number;
   handsPlayed: number;
+  guaranteedPrize: number | null;
   createdBy: {
     id: string;
     nickname: string;
@@ -131,6 +132,32 @@ function SessionActions({
 
 export const columns: ColumnDef<PokerSession>[] = [
   {
+    id: "expand",
+    meta: {
+      className: "w-[40px]",
+    },
+    header: () => null,
+    cell: ({ row }) => {
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            row.toggleExpanded();
+          }}
+        >
+          <Icons.ChevronRight
+            className={`h-4 w-4 transition-transform ${
+              row.getIsExpanded() ? "rotate-90" : ""
+            }`}
+          />
+        </Button>
+      );
+    },
+  },
+  {
     accessorKey: "tableName",
     header: "Session",
     meta: {
@@ -190,6 +217,18 @@ export const columns: ColumnDef<PokerSession>[] = [
     ),
   },
   {
+    accessorKey: "handsPlayed",
+    header: "Hands",
+    meta: {
+      className: "w-[80px] text-right",
+    },
+    cell: ({ row }) => (
+      <span className="font-mono text-muted-foreground">
+        {row.original.handsPlayed > 0 ? row.original.handsPlayed.toLocaleString("pt-BR") : "-"}
+      </span>
+    ),
+  },
+  {
     accessorKey: "totalBuyIn",
     header: "Buy-ins",
     meta: {
@@ -218,6 +257,28 @@ export const columns: ColumnDef<PokerSession>[] = [
         })}
       </span>
     ),
+  },
+  {
+    accessorKey: "guaranteedPrize",
+    header: "GTD",
+    meta: {
+      className: "w-[100px] text-right",
+    },
+    cell: ({ row }) => {
+      const gtd = row.original.guaranteedPrize;
+      const isTournament = ["mtt", "sit_n_go", "spin"].includes(row.original.sessionType);
+      if (!isTournament || !gtd || gtd === 0) {
+        return <span className="text-muted-foreground">-</span>;
+      }
+      return (
+        <span className="font-mono text-sm text-blue-600">
+          {gtd.toLocaleString("pt-BR", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          })}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "duration",

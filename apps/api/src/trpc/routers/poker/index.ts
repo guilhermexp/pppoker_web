@@ -4,6 +4,7 @@ import { pokerImportsRouter } from "./imports";
 import { pokerPlayersRouter } from "./players";
 import { pokerSessionsRouter } from "./sessions";
 import { pokerSettlementsRouter } from "./settlements";
+import { pokerTransactionsRouter } from "./transactions";
 
 export const pokerRouter = createTRPCRouter({
   players: pokerPlayersRouter,
@@ -11,4 +12,5 @@ export const pokerRouter = createTRPCRouter({
   settlements: pokerSettlementsRouter,
   imports: pokerImportsRouter,
   analytics: pokerAnalyticsRouter,
+  transactions: pokerTransactionsRouter,
 });

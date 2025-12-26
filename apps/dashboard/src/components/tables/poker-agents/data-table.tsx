@@ -6,7 +6,11 @@ import { useSortParams } from "@/hooks/use-sort-params";
 import { useTableScroll } from "@/hooks/use-table-scroll";
 import { useTRPC } from "@/trpc/client";
 import { Table, TableBody } from "@midday/ui/table";
-import { useMutation, useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -14,14 +18,15 @@ import {
 } from "@tanstack/react-table";
 import { useDeferredValue, useEffect, useMemo } from "react";
 import { useInView } from "react-intersection-observer";
-import { columns } from "./columns";
+import { type PokerAgent, columns } from "./columns";
 import { EmptyState, NoResults } from "./empty-states";
 import { PokerAgentRow } from "./row";
 import { TableHeader } from "./table-header";
 
 export function AgentsDataTable() {
   const { ref, inView } = useInView();
-  const { setParams, q, status, hasFilters } = usePokerPlayerParams();
+  const { setParams, q, status, hasFilters, dateFrom, dateTo, superAgentId } =
+    usePokerPlayerParams();
   const trpc = useTRPC();
   const { params: sortParams } = useSortParams();
 
@@ -49,6 +54,15 @@ export function AgentsDataTable() {
   const { data, fetchNextPage, hasNextPage, refetch } =
     useSuspenseInfiniteQuery(infiniteQueryOptions);
 
+  // Fetch agent stats to get metrics
+  const { data: statsData } = useQuery(
+    trpc.poker.players.getAgentStats.queryOptions({
+      dateFrom: dateFrom ?? undefined,
+      dateTo: dateTo ?? undefined,
+      superAgentId: superAgentId ?? undefined,
+    })
+  );
+
   const deleteAgentMutation = useMutation(
     trpc.poker.players.delete.mutationOptions({
       onSuccess: () => {
@@ -67,9 +81,25 @@ export function AgentsDataTable() {
     }
   }, [inView, fetchNextPage]);
 
+  // Merge agent data with metrics
   const tableData = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) ?? [];
-  }, [data]);
+    const agents = data?.pages.flatMap((page) => page.data) ?? [];
+    const metricsMap = new Map(
+      (statsData?.agentMetrics ?? []).map((m) => [m.id, m])
+    );
+
+    return agents.map((agent): PokerAgent => {
+      const metrics = metricsMap.get(agent.id);
+      return {
+        ...agent,
+        playerCount: metrics?.playerCount ?? 0,
+        totalRake: metrics?.totalRake ?? 0,
+        rakePpst: metrics?.rakePpst ?? 0,
+        rakePpsr: metrics?.rakePpsr ?? 0,
+        estimatedCommission: metrics?.estimatedCommission ?? 0,
+      };
+    });
+  }, [data, statsData]);
 
   const setOpen = (id?: string) => {
     if (id) {

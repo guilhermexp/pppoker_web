@@ -1,3 +1,5 @@
+"use client";
+
 import { AppsTabs } from "./apps-tabs";
 import { SearchField } from "./search-field";
 

@@ -48,9 +48,14 @@ export function TRPCReactProvider(
               data: { session },
             } = await supabase.auth.getSession();
 
-            return {
-              Authorization: `Bearer ${session?.access_token}`,
-            };
+            const headers: Record<string, string> = {};
+
+            // Only send Authorization header if we have a valid session
+            if (session?.access_token) {
+              headers.Authorization = `Bearer ${session.access_token}`;
+            }
+
+            return headers;
           },
         }),
         loggerLink({

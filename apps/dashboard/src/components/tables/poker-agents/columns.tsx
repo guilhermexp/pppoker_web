@@ -37,6 +37,12 @@ export type PokerAgent = {
     nickname: string;
     memoName: string | null;
   } | null;
+  // Metrics (from agentStats)
+  playerCount?: number;
+  totalRake?: number;
+  rakePpst?: number;
+  rakePpsr?: number;
+  estimatedCommission?: number;
 };
 
 const StatusBadge = memo(
@@ -63,6 +69,19 @@ const StatusBadge = memo(
 );
 StatusBadge.displayName = "StatusBadge";
 
+function formatCurrency(value: number) {
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(2)}M`;
+  }
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}K`;
+  }
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+}
+
 function AgentActions({
   agent,
   table,
@@ -81,14 +100,18 @@ function AgentActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setParams({ viewAgentId: agent.id })}>
+          <Icons.Visibility className="mr-2 h-4 w-4" />
+          Ver Detalhes
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setParams({ playerId: agent.id })}>
           <Icons.Edit className="mr-2 h-4 w-4" />
-          Edit
+          Editar
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={`/poker/players?agentId=${agent.id}`}>
             <Icons.Customers className="mr-2 h-4 w-4" />
-            View Players
+            Ver Jogadores
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -97,7 +120,7 @@ function AgentActions({
           }}
         >
           <Icons.Copy className="mr-2 h-4 w-4" />
-          Copy PPPoker ID
+          Copiar PPPoker ID
         </DropdownMenuItem>
         {agent.phone && (
           <DropdownMenuItem asChild>
@@ -117,7 +140,7 @@ function AgentActions({
           className="text-destructive"
         >
           <Icons.Delete className="mr-2 h-4 w-4" />
-          Delete
+          Excluir
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -179,81 +202,78 @@ export const columns: ColumnDef<PokerAgent>[] = [
     cell: ({ row }) => <StatusBadge status={row.original.status} />,
   },
   {
+    accessorKey: "playerCount",
+    header: "Jogadores",
+    meta: {
+      className: "w-[90px] text-center",
+    },
+    cell: ({ row }) => (
+      <span className="font-mono text-sm font-medium">
+        {row.original.playerCount ?? 0}
+      </span>
+    ),
+  },
+  {
     accessorKey: "rakebackPercent",
-    header: "Rakeback %",
+    header: "Rakeback",
+    meta: {
+      className: "w-[80px] text-right",
+    },
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">
+        {row.original.rakebackPercent.toFixed(0)}%
+      </span>
+    ),
+  },
+  {
+    accessorKey: "rakePpst",
+    header: "PPST",
     meta: {
       className: "w-[100px] text-right",
     },
     cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        {row.original.rakebackPercent.toFixed(1)}%
+      <span className="font-mono text-sm text-blue-600">
+        {formatCurrency(row.original.rakePpst ?? 0)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "rakePpsr",
+    header: "PPSR",
+    meta: {
+      className: "w-[100px] text-right",
+    },
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-purple-600">
+        {formatCurrency(row.original.rakePpsr ?? 0)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "estimatedCommission",
+    header: "Comissao",
+    meta: {
+      className: "w-[100px] text-right",
+    },
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-orange-600 font-medium">
+        {formatCurrency(row.original.estimatedCommission ?? 0)}
       </span>
     ),
   },
   {
     accessorKey: "superAgent",
-    header: "Super Agent",
+    header: "Super Agente",
     meta: {
-      className: "w-[150px]",
+      className: "w-[140px]",
     },
     cell: ({ row }) => {
       const superAgent = row.original.superAgent;
       if (!superAgent) return <span className="text-muted-foreground">-</span>;
       return (
-        <span className="text-sm">
+        <span className="text-sm truncate">
           {superAgent.nickname}
-          {superAgent.memoName && (
-            <span className="text-muted-foreground ml-1">
-              ({superAgent.memoName})
-            </span>
-          )}
         </span>
-      );
-    },
-  },
-  {
-    accessorKey: "currentBalance",
-    header: "Balance",
-    meta: {
-      className: "w-[120px] text-right",
-    },
-    cell: ({ row }) => {
-      const balance = row.original.currentBalance;
-      return (
-        <span
-          className={`font-mono text-sm ${
-            balance > 0 ? "text-green-600" : balance < 0 ? "text-red-600" : ""
-          }`}
-        >
-          {balance >= 0 ? "+" : ""}
-          {balance.toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "email",
-    header: "Contact",
-    meta: {
-      className: "w-[200px]",
-    },
-    cell: ({ row }) => {
-      const agent = row.original;
-      return (
-        <div className="flex flex-col text-sm">
-          {agent.email && (
-            <span className="truncate">{agent.email}</span>
-          )}
-          {agent.phone && (
-            <span className="text-muted-foreground">{agent.phone}</span>
-          )}
-          {!agent.email && !agent.phone && (
-            <span className="text-muted-foreground">-</span>
-          )}
-        </div>
       );
     },
   },

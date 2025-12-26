@@ -1,7 +1,10 @@
 "use client";
 
 import type { ParsedSession, ParsedSummary, ValidationCheck } from "@/lib/poker/types";
+import { useTRPC } from "@/trpc/client";
 import { Icons } from "@midday/ui/icons";
+import { Spinner } from "@midday/ui/spinner";
+import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMemo } from "react";
@@ -35,6 +38,60 @@ type ResumoTabProps = {
 };
 
 export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInfo }: ResumoTabProps) {
+  const trpc = useTRPC();
+
+  // Extract all unique ppPokerIds from summaries (players, agents, super agents)
+  const allPpPokerIds = useMemo(() => {
+    const ids = new Set<string>();
+
+    const isValidId = (id: string | null | undefined): id is string => {
+      if (!id) return false;
+      const normalized = id.trim().toLowerCase();
+      return (
+        normalized !== "" &&
+        normalized !== "(none)" &&
+        normalized !== "none" &&
+        normalized !== "/" &&
+        normalized !== "-" &&
+        /\d/.test(id)
+      );
+    };
+
+    for (const summary of summaries) {
+      if (isValidId(summary.ppPokerId)) ids.add(summary.ppPokerId);
+      if (isValidId(summary.agentPpPokerId)) ids.add(summary.agentPpPokerId);
+      if (isValidId(summary.superAgentPpPokerId)) ids.add(summary.superAgentPpPokerId);
+    }
+
+    return [...ids];
+  }, [summaries]);
+
+  // Query to check existing players in database
+  const { data: existingData, isLoading: isCheckingExisting } = useQuery(
+    trpc.poker.players.checkExistingByPpPokerIds.queryOptions(
+      { ppPokerIds: allPpPokerIds },
+      { enabled: allPpPokerIds.length > 0 }
+    )
+  );
+
+  // Calculate new vs existing counts
+  const cadastroStats = useMemo(() => {
+    if (!existingData) {
+      return { totalInSheet: allPpPokerIds.length, newCount: 0, existingCount: 0, isLoading: true };
+    }
+
+    const existingSet = new Set(existingData.existing.map((e) => e.ppPokerId));
+    const newCount = allPpPokerIds.filter((id) => !existingSet.has(id)).length;
+    const existingCount = allPpPokerIds.filter((id) => existingSet.has(id)).length;
+
+    return {
+      totalInSheet: allPpPokerIds.length,
+      newCount,
+      existingCount,
+      isLoading: false,
+    };
+  }, [allPpPokerIds, existingData]);
+
   const stats = useMemo(() => {
     // Helper to check valid ID
     const isValidId = (id: string | null | undefined): boolean => {
@@ -202,7 +259,7 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Jogadores */}
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
@@ -220,6 +277,37 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
               <span className="font-mono">{stats.playersWithoutAgent}</span>
             </div>
           </div>
+        </div>
+
+        {/* Cadastro - Novos vs Existentes */}
+        <div className="p-3 border rounded-lg bg-muted/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Icons.Customers className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground font-medium">Cadastro</span>
+          </div>
+          {isCheckingExisting ? (
+            <div className="flex items-center gap-2">
+              <Spinner size={16} />
+              <span className="text-xs text-muted-foreground">Verificando...</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold text-[#00C969]">{cadastroStats.newCount}</p>
+                <span className="text-xs text-muted-foreground">novos</span>
+              </div>
+              <div className="mt-2 space-y-1 text-[11px] text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>Já cadastrados</span>
+                  <span className="font-mono">{cadastroStats.existingCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Na planilha</span>
+                  <span className="font-mono">{cadastroStats.totalInSheet}</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Agentes */}

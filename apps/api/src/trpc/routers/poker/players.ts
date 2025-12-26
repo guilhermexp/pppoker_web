@@ -4,6 +4,7 @@ import {
   bulkCreatePlayersSchema,
   checkExistingPlayersSchema,
   deletePokerPlayerSchema,
+  getAgentStatsSchema,
   getPlayersByAgentSchema,
   getPokerAgentsSchema,
   getPokerPlayerByIdSchema,
@@ -530,6 +531,192 @@ export const pokerPlayersRouter = createTRPCRouter({
 
     return stats;
   }),
+
+  /**
+   * Get agent statistics for dashboard widgets
+   * Includes total agents, managed players, rake breakdown, commissions
+   */
+  getAgentStats: protectedProcedure
+    .input(getAgentStatsSchema.optional())
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      const { dateFrom, dateTo, superAgentId } = input ?? {};
+
+      // Build base query for agents
+      let agentsQuery = supabase
+        .from("poker_players")
+        .select("id, nickname, status, rakeback_percent, super_agent_id")
+        .eq("team_id", teamId)
+        .eq("type", "agent");
+
+      if (superAgentId) {
+        agentsQuery = agentsQuery.eq("super_agent_id", superAgentId);
+      }
+
+      const { data: agents, error: agentsError } = await agentsQuery;
+
+      if (agentsError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: agentsError.message,
+        });
+      }
+
+      const agentIds = (agents ?? []).map((a) => a.id);
+
+      // Get all players managed by these agents
+      const { data: managedPlayers, error: playersError } = await supabase
+        .from("poker_players")
+        .select("id, agent_id")
+        .eq("team_id", teamId)
+        .eq("type", "player")
+        .in("agent_id", agentIds.length > 0 ? agentIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      if (playersError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: playersError.message,
+        });
+      }
+
+      // Get rake summary data
+      let summaryQuery = supabase
+        .from("poker_player_summary")
+        .select("player_id, rake_total, rake_ppst, rake_ppsr")
+        .eq("team_id", teamId);
+
+      if (dateFrom) {
+        summaryQuery = summaryQuery.gte("period_start", dateFrom);
+      }
+      if (dateTo) {
+        summaryQuery = summaryQuery.lte("period_end", dateTo);
+      }
+
+      const { data: summaries, error: summaryError } = await summaryQuery;
+
+      if (summaryError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: summaryError.message,
+        });
+      }
+
+      // Build maps for aggregation
+      const playerAgentMap = new Map<string, string>();
+      for (const player of managedPlayers ?? []) {
+        if (player.agent_id) {
+          playerAgentMap.set(player.id, player.agent_id);
+        }
+      }
+
+      const agentRakeMap = new Map<string, { total: number; ppst: number; ppsr: number }>();
+      for (const summary of summaries ?? []) {
+        const agentId = playerAgentMap.get(summary.player_id);
+        if (agentId) {
+          const current = agentRakeMap.get(agentId) ?? { total: 0, ppst: 0, ppsr: 0 };
+          current.total += summary.rake_total ?? 0;
+          current.ppst += summary.rake_ppst ?? 0;
+          current.ppsr += summary.rake_ppsr ?? 0;
+          agentRakeMap.set(agentId, current);
+        }
+      }
+
+      // Calculate totals
+      let totalRake = 0;
+      let totalRakePpst = 0;
+      let totalRakePpsr = 0;
+      let totalCommission = 0;
+
+      const byStatus: Record<string, { count: number; rake: number }> = {};
+      const bySuperAgent: Record<string, { nickname: string; count: number; rake: number }> = {};
+
+      // Get super agent nicknames
+      const superAgentIds = [...new Set((agents ?? []).map((a) => a.super_agent_id).filter(Boolean))] as string[];
+      let superAgentMap: Record<string, string> = {};
+      if (superAgentIds.length > 0) {
+        const { data: superAgents } = await supabase
+          .from("poker_players")
+          .select("id, nickname")
+          .in("id", superAgentIds);
+        superAgentMap = (superAgents ?? []).reduce((acc, sa) => {
+          acc[sa.id] = sa.nickname;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+
+      // Aggregate per agent
+      const agentMetrics: Array<{
+        id: string;
+        nickname: string;
+        status: string;
+        rakebackPercent: number;
+        playerCount: number;
+        totalRake: number;
+        rakePpst: number;
+        rakePpsr: number;
+        estimatedCommission: number;
+        superAgentId: string | null;
+      }> = [];
+
+      for (const agent of agents ?? []) {
+        const playerCount = (managedPlayers ?? []).filter((p) => p.agent_id === agent.id).length;
+        const rake = agentRakeMap.get(agent.id) ?? { total: 0, ppst: 0, ppsr: 0 };
+        const rakebackPercent = agent.rakeback_percent ?? 0;
+        const commission = rake.total * (rakebackPercent / 100);
+
+        totalRake += rake.total;
+        totalRakePpst += rake.ppst;
+        totalRakePpsr += rake.ppsr;
+        totalCommission += commission;
+
+        // By status
+        const status = agent.status ?? "active";
+        if (!byStatus[status]) {
+          byStatus[status] = { count: 0, rake: 0 };
+        }
+        byStatus[status].count++;
+        byStatus[status].rake += rake.total;
+
+        // By super agent
+        if (agent.super_agent_id) {
+          const superAgentNickname = superAgentMap[agent.super_agent_id] ?? "Unknown";
+          if (!bySuperAgent[agent.super_agent_id]) {
+            bySuperAgent[agent.super_agent_id] = { nickname: superAgentNickname, count: 0, rake: 0 };
+          }
+          bySuperAgent[agent.super_agent_id].count++;
+          bySuperAgent[agent.super_agent_id].rake += rake.total;
+        }
+
+        agentMetrics.push({
+          id: agent.id,
+          nickname: agent.nickname,
+          status: agent.status,
+          rakebackPercent,
+          playerCount,
+          totalRake: rake.total,
+          rakePpst: rake.ppst,
+          rakePpsr: rake.ppsr,
+          estimatedCommission: commission,
+          superAgentId: agent.super_agent_id,
+        });
+      }
+
+      return {
+        totalAgents: agents?.length ?? 0,
+        totalManagedPlayers: managedPlayers?.length ?? 0,
+        totalRake,
+        totalRakePpst,
+        totalRakePpsr,
+        totalCommission,
+        byStatus,
+        bySuperAgent: Object.entries(bySuperAgent)
+          .map(([id, data]) => ({ id, ...data }))
+          .sort((a, b) => b.rake - a.rake)
+          .slice(0, 5),
+        agentMetrics: agentMetrics.sort((a, b) => b.totalRake - a.totalRake),
+      };
+    }),
 
   /**
    * Check which PPPoker IDs already exist in the database

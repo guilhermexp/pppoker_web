@@ -1,11 +1,18 @@
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NextRequest, NextResponse } from "next/server";
+import type { Database } from "../types";
+
+type UpdateSessionResult = {
+  response: NextResponse;
+  supabase: SupabaseClient<Database>;
+};
 
 export async function updateSession(
   request: NextRequest,
   response: NextResponse,
-) {
-  const supabase = createServerClient(
+): Promise<UpdateSessionResult> {
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -29,5 +36,5 @@ export async function updateSession(
   // This ensures the auth tokens are valid and refreshed in cookies
   await supabase.auth.getUser();
 
-  return response;
+  return { response, supabase };
 }

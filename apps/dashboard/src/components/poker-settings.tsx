@@ -44,8 +44,8 @@ const PLATFORMS = [
 const ENTITY_TYPES = [
   { value: "clube_privado", label: "Clube Privado", description: "Clube independente com lobby próprio" },
   { value: "clube_liga", label: "Clube em Liga", description: "Clube filiado a uma liga" },
-  { value: "liga", label: "Liga", description: "Gerencia vários clubes" },
-  { value: "ambos", label: "Liga + Clube", description: "Opera como liga e clube" },
+  { value: "liga", label: "Liga", description: "Gerencia vários clubes (você é o Clube Master/Botão)" },
+  { value: "ambos", label: "Liga + Clube", description: "Opera como liga e clube master" },
 ] as const;
 
 const formSchema = z.object({
@@ -305,21 +305,26 @@ function PokerSettingsForm() {
                     />
                   </div>
 
-                  {/* Super Liga */}
+                  {/* Super Union (PPST/PPSR) */}
                   <div className="space-y-4 p-4 rounded-lg bg-muted/30">
-                    <h5 className="text-sm font-medium">Super Liga (opcional)</h5>
+                    <div>
+                      <h5 className="text-sm font-medium">Super Union (opcional)</h5>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        PPST = Torneios Globais | PPSR = Cash Games Globais
+                      </p>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="pokerSuId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>ID da Super Liga</FormLabel>
+                            <FormLabel>ID da Super Union</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 value={field.value ?? ""}
-                                placeholder="Ex: SU001"
+                                placeholder="Ex: 1765"
                               />
                             </FormControl>
                             <FormMessage />
@@ -332,12 +337,12 @@ function PokerSettingsForm() {
                         name="pokerSuName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome da Super Liga</FormLabel>
+                            <FormLabel>Nome da Super Union</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 value={field.value ?? ""}
-                                placeholder="Ex: Super Liga Brasil"
+                                placeholder="Ex: Super Union Brasil"
                               />
                             </FormControl>
                             <FormMessage />

@@ -80,6 +80,7 @@ export type ParsedSession = {
     buyInChips?: number;
     buyInTicket?: number;
     prize?: number; // SPIN: "Prêmio" (alternativa a buyInTicket)
+    bounty?: number; // PKO: "De recompensa" (bounty tournaments)
     hands?: number;
     winnings?: number;
     // Ganhos do jogador (CASH/HU)
@@ -94,6 +95,9 @@ export type ParsedSession = {
     clubWinningsJackpotPrize?: number;
     clubWinningsEvSplit?: number;
     rake?: number;
+    // Club context (League imports - columns B, C)
+    clubId?: string;
+    clubName?: string;
   }>;
   // Status for import preview
   importStatus?: "new" | "existing" | "error";
@@ -166,6 +170,10 @@ export type ParsedSummary = {
 };
 
 export type ParsedDetailed = {
+  // Club context (from merged cells in column A)
+  clubId?: string | null;
+  clubName?: string | null;
+
   // Identificação do Jogador (A-I)
   date: string | null; // A - Data
   ppPokerId: string; // B - ID do jogador

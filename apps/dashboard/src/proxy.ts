@@ -1,5 +1,4 @@
 import { updateSession } from "@midday/supabase/middleware";
-import { createClient } from "@midday/supabase/server";
 import { createI18nMiddleware } from "next-international/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -10,8 +9,12 @@ const I18nMiddleware = createI18nMiddleware({
 });
 
 export async function proxy(request: NextRequest) {
-  const response = await updateSession(request, I18nMiddleware(request));
-  const supabase = await createClient();
+  // updateSession now returns both the response and the supabase client
+  // with refreshed tokens from the request cookies
+  const { response, supabase } = await updateSession(
+    request,
+    I18nMiddleware(request),
+  );
   const url = new URL("/", request.url);
   const nextUrl = request.nextUrl;
 

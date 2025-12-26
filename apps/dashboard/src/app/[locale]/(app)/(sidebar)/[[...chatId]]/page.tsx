@@ -3,6 +3,7 @@ import { Widgets } from "@/components/widgets";
 import { HydrateClient, getQueryClient, prefetch, trpc } from "@/trpc/server";
 import { AIDevtools } from "@ai-sdk-tools/devtools";
 import { Provider as ChatProvider } from "@ai-sdk-tools/store";
+import { createClient } from "@midday/supabase/server";
 import { geolocation } from "@vercel/functions";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -17,6 +18,18 @@ type Props = {
 };
 
 export default async function Overview(props: Props) {
+  // Validate session before making any tRPC calls
+  // This prevents SSR errors when tokens are expired
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/login");
+  }
+
   const { chatId } = await props.params;
 
   // Extract the first chatId if it exists
@@ -30,17 +43,30 @@ export default async function Overview(props: Props) {
   const queryClient = getQueryClient();
 
   // Fetch widget preferences directly for initial data (no prefetch needed)
-  const widgetPreferences = await queryClient.fetchQuery(
-    trpc.widgets.getWidgetPreferences.queryOptions(),
-  );
+  // Wrapped in try-catch to handle potential auth errors gracefully
+  let widgetPreferences;
+  try {
+    widgetPreferences = await queryClient.fetchQuery(
+      trpc.widgets.getWidgetPreferences.queryOptions(),
+    );
+  } catch (error) {
+    // If auth error, redirect to login
+    redirect("/login");
+  }
 
   prefetch(trpc.suggestedActions.list.queryOptions({ limit: 6 }));
 
-  const chat = currentChatId
-    ? await queryClient.fetchQuery(
+  let chat = null;
+  if (currentChatId) {
+    try {
+      chat = await queryClient.fetchQuery(
         trpc.chats.get.queryOptions({ chatId: currentChatId }),
-      )
-    : null;
+      );
+    } catch (error) {
+      // If chat not found or auth error, redirect to home
+      redirect("/");
+    }
+  }
 
   if (currentChatId && !chat) {
     redirect("/");

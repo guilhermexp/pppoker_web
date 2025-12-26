@@ -1,6 +1,7 @@
 "use client";
 
 import type { LeagueImportValidationModalProps } from "@/lib/league/types";
+import { isBrazilianLeague, parseSpreadsheetFileName } from "@/lib/poker/spreadsheet-types";
 import { Badge } from "@midday/ui/badge";
 import { Button } from "@midday/ui/button";
 import {
@@ -15,14 +16,19 @@ import { Spinner } from "@midday/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
 import { getWeek, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import {
+  LeagueGeralPPSRTab,
   LeagueGeralPPSTTab,
+  LeagueJogosPPSRTab,
   LeagueJogosPPSTTab,
   LeagueOverviewTab,
   LeagueValidationTab,
 } from "./validation-tabs";
+
+// Storage key for SU validation data (used by Painel SU)
+const SU_VALIDATION_STORAGE_KEY = "su-validation-data";
 
 // Helper to get week number from date string (yyyy-MM-dd format)
 function getWeekFromDateString(dateStr: string): number | null {
@@ -42,13 +48,18 @@ function getWeekFromDateString(dateStr: string): number | null {
   }
 }
 
+// Helper to check if a liga is Brazilian (uses centralized KNOWN_LEAGUE_IDS)
+function isBrasileiraLiga(tipo: string, id: string): boolean {
+  return tipo === "Liga" && isBrazilianLeague(id);
+}
+
 // Column counts per tab (from spreadsheet mapping)
 const TAB_COLUMNS: Record<string, { name: string; cols: number }> = {
   overview: { name: "Resumo", cols: 0 },
   "geral-ppst": { name: "Geral PPST", cols: 15 },
   "jogos-ppst": { name: "Jogos PPST", cols: 14 },
-  "geral-ppsr": { name: "Geral PPSR", cols: 0 },
-  "jogos-ppsr": { name: "Jogos PPSR", cols: 0 },
+  "geral-ppsr": { name: "Geral PPSR", cols: 13 },
+  "jogos-ppsr": { name: "Jogos PPSR", cols: 18 },
   validation: { name: "Validação", cols: 0 },
 };
 
@@ -99,6 +110,111 @@ export function LeagueImportValidationModal({
   const geralPPSTCount = validationResult.stats.totalLigasPPST;
   const jogosPPSTCount = validationResult.stats.totalJogosPPST;
   const jogadoresPPSTCount = validationResult.stats.totalJogadoresPPST;
+  // Use actual parsed data count for Geral PPSR (not jogos-derived stats)
+  const geralPPSRCount = parsedData.geralPPSR?.reduce((s, b) => s + b.ligas.length, 0) ?? 0;
+  const jogosPPSRCount = validationResult.stats.totalJogosPPSR ?? 0;
+
+  // Calculate stats for Painel SU
+  const suStats = useMemo(() => {
+    // Taxa PPST from Geral PPST
+    let totalTaxaPPST = 0;
+    let totalGanhosJogador = 0;
+    let gapBrasileiro = 0;
+    let gapEstrangeiro = 0;
+
+    for (const bloco of parsedData.geralPPST) {
+      totalTaxaPPST += bloco.total.ganhosLigaTaxa;
+      totalGanhosJogador += bloco.total.ganhosJogador;
+
+      // Separar gap por origem (BR = Ligas 1765, 1675, 2448, 2101)
+      const isBrasileiro = isBrasileiraLiga(bloco.contexto.entidadeTipo, bloco.contexto.entidadeId);
+      if (isBrasileiro) {
+        gapBrasileiro += bloco.total.gapGarantido;
+      } else {
+        gapEstrangeiro += bloco.total.gapGarantido;
+      }
+    }
+
+    // Taxa PPSR from Geral PPSR
+    let totalTaxaPPSR = 0;
+    for (const bloco of parsedData.geralPPSR ?? []) {
+      totalTaxaPPSR += bloco.total.taxaLigaTotal;
+    }
+
+    // GTD stats from Jogos PPST
+    let totalGTD = 0;
+    let totalArrecadacao = 0;
+    const gameTypes = { mtt: 0, spin: 0, pko: 0, mko: 0, sat: 0 };
+
+    for (const jogo of parsedData.jogosPPST) {
+      // GTD
+      if (jogo.metadata?.premiacaoGarantida) {
+        totalGTD += jogo.metadata.premiacaoGarantida;
+        // Arrecadação = soma dos buy-ins
+        totalArrecadacao += jogo.jogadores.reduce((sum, j) => sum + j.buyinFichas, 0);
+      }
+
+      // Game types
+      const formato = jogo.metadata?.formatoJogo?.toLowerCase() || "";
+      if (formato.includes("spin")) {
+        gameTypes.spin++;
+      } else if (formato.includes("pko") || formato.includes("progressive")) {
+        gameTypes.pko++;
+      } else if (formato.includes("mko") || formato.includes("mystery")) {
+        gameTypes.mko++;
+      } else if (formato.includes("sat") || formato.includes("satellite")) {
+        gameTypes.sat++;
+      } else {
+        gameTypes.mtt++;
+      }
+    }
+
+    const totalGap = totalGTD - totalArrecadacao;
+    const totalGapAbs = Math.abs(gapBrasileiro) + Math.abs(gapEstrangeiro);
+    const percBrasileiro = totalGapAbs > 0 ? (Math.abs(gapBrasileiro) / totalGapAbs) * 100 : 0;
+    const percEstrangeiro = totalGapAbs > 0 ? (Math.abs(gapEstrangeiro) / totalGapAbs) * 100 : 0;
+
+    return {
+      totalLigas: parsedData.geralPPST.length, // Número de blocos/entidades, não linhas
+      totalTorneios: jogosPPSTCount,
+      totalJogadores: jogadoresPPSTCount,
+      totalTaxaPPST,
+      totalTaxaPPSR,
+      totalTaxa: totalTaxaPPST + totalTaxaPPSR,
+      totalGanhosJogador,
+      totalGTD,
+      totalArrecadacao,
+      totalGap,
+      gapBrasileiro,
+      gapEstrangeiro,
+      percBrasileiro,
+      percEstrangeiro,
+      gameTypes,
+    };
+  }, [parsedData, jogosPPSTCount, jogadoresPPSTCount]);
+
+  // Save data to localStorage for Painel SU
+  const saveToLocalStorage = useCallback(() => {
+    try {
+      const data = {
+        ...suStats,
+        period: {
+          start: validationResult.period.start || "",
+          end: validationResult.period.end || "",
+        },
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(SU_VALIDATION_STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error("Failed to save SU data to localStorage:", error);
+    }
+  }, [suStats, validationResult.period]);
+
+  // Handle approve with save
+  const handleApprove = useCallback(() => {
+    saveToLocalStorage();
+    onApprove();
+  }, [saveToLocalStorage, onApprove]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -108,33 +224,15 @@ export function LeagueImportValidationModal({
             <div>
               <div className="flex items-center gap-3">
                 <DialogTitle className="text-lg font-medium">
-                  Validação de Planilha de Liga
+                  Validação de Liga
                 </DialogTitle>
-                {validationResult.period.start &&
-                  validationResult.period.end && (
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md font-mono">
-                      {validationResult.period.start} -{" "}
-                      {validationResult.period.end}
-                    </span>
-                  )}
-                {weekInfo.importWeek && (
-                  <span
-                    className={`text-xs px-2 py-1 rounded-md font-medium ${
-                      weekInfo.isSameWeek
-                        ? "bg-[#00C969]/10 text-[#00C969] border border-[#00C969]/30"
-                        : "bg-amber-500/10 text-amber-500 border border-amber-500/30"
-                    }`}
-                  >
-                    Semana {weekInfo.importWeek}
-                    {!weekInfo.isSameWeek && weekInfo.currentWeek && (
-                      <span className="text-[10px] ml-1 opacity-70">
-                        (atual: {weekInfo.currentWeek})
-                      </span>
-                    )}
+                {validationResult.period.start && validationResult.period.end && (
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-mono">
+                    {validationResult.period.start} - {validationResult.period.end}
                   </span>
                 )}
                 {currentTabInfo && currentTabInfo.cols > 0 && (
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
                     {currentTabInfo.cols} colunas
                   </span>
                 )}
@@ -145,40 +243,24 @@ export function LeagueImportValidationModal({
                   : "Revise os dados extraídos antes de processar"}
               </DialogDescription>
             </div>
-
-            {/* Quality Score Badge */}
-            <div className="flex items-center gap-3">
-              <div
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg border
-                  ${
-                    hasBlockingErrors
-                      ? "bg-red-500/10 text-red-500 border-red-500/30"
-                      : qualityScore >= 80
-                        ? "bg-[#00C969]/10 text-[#00C969] border-[#00C969]/30"
-                        : qualityScore >= 50
-                          ? "bg-amber-500/10 text-amber-500 border-amber-500/30"
-                          : "bg-red-500/10 text-red-500 border-red-500/30"
-                  }
-                `}
-              >
-                {hasBlockingErrors ? (
-                  <>
-                    <Icons.AlertCircle className="h-4 w-4" />
-                    <span className="font-medium text-sm">
-                      {criticalFailed} erro{criticalFailed !== 1 ? "s" : ""}{" "}
-                      crítico{criticalFailed !== 1 ? "s" : ""}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Icons.Check className="h-4 w-4" />
-                    <span className="font-medium text-sm">
-                      {passedChecks}/{totalChecks} validações
-                    </span>
-                  </>
-                )}
-              </div>
+            <div className="text-right mr-6">
+              {hasBlockingErrors ? (
+                <Badge variant="outline" className="text-xs px-2 py-0.5 gap-1 border-[#FF3638]/30 text-[#FF3638]">
+                  <Icons.AlertCircle className="w-3 h-3" />
+                  Bloqueado
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs px-2 py-0.5 gap-1 border-[#00C969]/30 text-[#00C969]">
+                  <Icons.Check className="w-3 h-3" />
+                  {qualityScore}% válido
+                </Badge>
+              )}
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {hasBlockingErrors
+                  ? `${criticalFailed} verificação(ões) crítica(s)`
+                  : `${passedChecks}/${totalChecks} verificações`
+                }
+              </p>
             </div>
           </div>
         </DialogHeader>
@@ -187,52 +269,50 @@ export function LeagueImportValidationModal({
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="flex-1 flex flex-col overflow-hidden"
+          className="flex-1 overflow-hidden flex flex-col"
         >
-          <div className="border-b border-border px-6">
-            <TabsList className="h-12 bg-transparent p-0 gap-1">
-              <TabsTrigger
-                value="overview"
-                className="data-[state=active]:bg-muted data-[state=active]:shadow-none px-4 h-10"
-              >
-                Resumo
-              </TabsTrigger>
-              <TabsTrigger
-                value="geral-ppst"
-                className="data-[state=active]:bg-muted data-[state=active]:shadow-none px-4 h-10"
-              >
-                Geral PPST ({geralPPSTCount})
-              </TabsTrigger>
-              <TabsTrigger
-                value="jogos-ppst"
-                className="data-[state=active]:bg-muted data-[state=active]:shadow-none px-4 h-10"
-              >
-                Jogos PPST ({jogosPPSTCount})
-              </TabsTrigger>
-              <TabsTrigger
-                value="geral-ppsr"
-                className="data-[state=active]:bg-muted data-[state=active]:shadow-none px-4 h-10"
-                disabled
-              >
-                Geral PPSR (-)
-              </TabsTrigger>
-              <TabsTrigger
-                value="jogos-ppsr"
-                className="data-[state=active]:bg-muted data-[state=active]:shadow-none px-4 h-10"
-                disabled
-              >
-                Jogos PPSR (-)
-              </TabsTrigger>
-              <TabsTrigger
-                value="validation"
-                className={`data-[state=active]:bg-muted data-[state=active]:shadow-none px-4 h-10 ${
-                  hasBlockingErrors ? "text-red-500" : ""
-                }`}
-              >
-                Validação ({passedChecks}/{totalChecks})
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="flex-shrink-0 w-full justify-start border-b border-border bg-transparent h-auto px-4 py-3 gap-1">
+            <TabsTrigger
+              value="overview"
+              className="rounded-md data-[state=active]:bg-muted/50 px-3 py-2"
+            >
+              <Icons.Overview className="w-3.5 h-3.5 mr-1" />
+              Resumo
+            </TabsTrigger>
+            <TabsTrigger
+              value="geral-ppst"
+              className="rounded-md data-[state=active]:bg-muted/50 px-3 py-2"
+            >
+              Geral PPST ({geralPPSTCount})
+            </TabsTrigger>
+            <TabsTrigger
+              value="jogos-ppst"
+              className="rounded-md data-[state=active]:bg-muted/50 px-3 py-2"
+            >
+              Jogos PPST ({jogosPPSTCount})
+            </TabsTrigger>
+            <TabsTrigger
+              value="geral-ppsr"
+              className="rounded-md data-[state=active]:bg-muted/50 px-3 py-2"
+            >
+              Geral PPSR ({geralPPSRCount})
+            </TabsTrigger>
+            <TabsTrigger
+              value="jogos-ppsr"
+              className="rounded-md data-[state=active]:bg-muted/50 px-3 py-2"
+              disabled={jogosPPSRCount === 0}
+            >
+              Jogos PPSR ({jogosPPSRCount})
+            </TabsTrigger>
+            <TabsTrigger
+              value="validation"
+              className={`rounded-md data-[state=active]:bg-muted/50 px-3 py-2 ${
+                hasBlockingErrors ? "text-red-500" : ""
+              }`}
+            >
+              Validação ({passedChecks}/{totalChecks})
+            </TabsTrigger>
+          </TabsList>
 
           <div className="flex-1 overflow-auto p-6">
             <TabsContent value="overview" className="m-0 h-full">
@@ -248,18 +328,26 @@ export function LeagueImportValidationModal({
             </TabsContent>
             <TabsContent value="jogos-ppst" className="m-0 h-full">
               {activeTab === "jogos-ppst" && (
-                <LeagueJogosPPSTTab data={parsedData.jogosPPST} />
+                <LeagueJogosPPSTTab
+                  data={parsedData.jogosPPST}
+                  inicioCount={parsedData.jogosPPSTInicioCount}
+                  unknownFormatsCount={parsedData.unknownGameFormats?.length}
+                />
               )}
             </TabsContent>
             <TabsContent value="geral-ppsr" className="m-0 h-full">
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Aba PPSR ainda não implementada
-              </div>
+              {activeTab === "geral-ppsr" && (
+                <LeagueGeralPPSRTab data={parsedData.geralPPSR} />
+              )}
             </TabsContent>
             <TabsContent value="jogos-ppsr" className="m-0 h-full">
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Aba PPSR ainda não implementada
-              </div>
+              {activeTab === "jogos-ppsr" && (
+                <LeagueJogosPPSRTab
+                  data={parsedData.jogosPPSR || []}
+                  inicioCount={parsedData.jogosPPSRInicioCount}
+                  unknownFormatsCount={parsedData.unknownCashFormats?.length}
+                />
+              )}
             </TabsContent>
             <TabsContent value="validation" className="m-0 h-full">
               <LeagueValidationTab
@@ -271,39 +359,88 @@ export function LeagueImportValidationModal({
         </Tabs>
 
         {/* Footer */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-border bg-muted/30">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Icons.Description className="h-4 w-4" />
-            <span>{parsedData.fileName}</span>
-            <span className="text-muted-foreground/50">|</span>
-            <span>{((parsedData.fileSize ?? 0) / 1024).toFixed(1)} KB</span>
-          </div>
+        <div className="flex-shrink-0 border-t border-border bg-muted/30">
+          {/* Spreadsheet Info Bar */}
+          {(() => {
+            const metadata = parseSpreadsheetFileName(parsedData.fileName || "");
+            return (
+              <div className="px-6 py-2 border-b border-border/50 bg-muted/20">
+                <div className="flex items-center gap-4 text-xs">
+                  {/* Type Badge */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Tipo:</span>
+                    <Badge variant="outline" className="px-2 py-0.5 text-[10px] font-medium">
+                      {metadata.typeLabel}
+                    </Badge>
+                  </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={onReject}
-              disabled={isProcessing}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={onApprove}
-              disabled={hasBlockingErrors || isProcessing}
-              className={hasBlockingErrors ? "opacity-50" : ""}
-            >
-              {isProcessing ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4" />
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <Icons.Check className="mr-2 h-4 w-4" />
-                  Aprovar e Processar
-                </>
-              )}
-            </Button>
+                  {/* IDs */}
+                  {metadata.parsed && (
+                    <>
+                      {(metadata.type === "super-union" || metadata.type === "super-union-ppst" || metadata.type === "super-union-ppsr" || metadata.type === "league") ? (
+                        <>
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Liga:</span>
+                            <span className="font-mono font-medium">{metadata.primaryId}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Clube Master:</span>
+                            <span className="font-mono font-medium">{metadata.secondaryId}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Clube:</span>
+                          <span className="font-mono font-medium">{metadata.primaryId}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Description */}
+                  <div className="flex-1 text-muted-foreground/70 text-[10px] italic">
+                    {metadata.typeDescription}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Actions Bar */}
+          <div className="flex items-center justify-between px-6 py-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Icons.Description className="h-4 w-4" />
+              <span className="font-mono text-xs">{parsedData.fileName}</span>
+              <span className="text-muted-foreground/50">|</span>
+              <span className="text-xs">{((parsedData.fileSize ?? 0) / 1024).toFixed(1)} KB</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={onReject}
+                disabled={isProcessing}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleApprove}
+                disabled={hasBlockingErrors || isProcessing}
+                className={hasBlockingErrors ? "opacity-50" : ""}
+              >
+                {isProcessing ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Icons.Check className="mr-2 h-4 w-4" />
+                    Aprovar e Processar
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

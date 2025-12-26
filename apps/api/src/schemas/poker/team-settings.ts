@@ -50,12 +50,12 @@ export const updatePokerSettingsSchema = z.object({
     example: "Liga ABC",
   }),
   pokerSuId: z.string().nullable().optional().openapi({
-    description: "Super Liga ID (if affiliated)",
-    example: "SU001",
+    description: "Super Union ID (PPST/PPSR global lobby)",
+    example: "1765",
   }),
   pokerSuName: z.string().nullable().optional().openapi({
-    description: "Super Liga name",
-    example: "Super Liga Brasil",
+    description: "Super Union name",
+    example: "Super Union Brasil",
   }),
   pokerParentLigaTeamId: z.string().uuid().nullable().optional().openapi({
     description: "If this is a club in a liga, reference to the Liga team in the system",

@@ -3,6 +3,7 @@
 import { usePokerSessionParams } from "@/hooks/use-poker-session-params";
 import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
+import { Calendar } from "@midday/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -12,13 +13,68 @@ import {
   DropdownMenuTrigger,
 } from "@midday/ui/dropdown-menu";
 import { Icons } from "@midday/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
+import { format, parseISO } from "date-fns";
+
+function formatDateRange(dateFrom: string | null, dateTo: string | null): string {
+  if (!dateFrom && !dateTo) return "Período";
+
+  const fromDate = dateFrom ? parseISO(dateFrom) : null;
+  const toDate = dateTo ? parseISO(dateTo) : null;
+
+  if (fromDate && toDate) {
+    return `${format(fromDate, "dd/MM")} - ${format(toDate, "dd/MM")}`;
+  }
+  if (fromDate) {
+    return `Desde ${format(fromDate, "dd/MM/yyyy")}`;
+  }
+  if (toDate) {
+    return `Até ${format(toDate, "dd/MM/yyyy")}`;
+  }
+  return "Período";
+}
 
 export function PokerSessionFilters() {
   const t = useI18n();
-  const { sessionType, gameVariant, setParams, hasFilters } = usePokerSessionParams();
+  const { sessionType, gameVariant, dateFrom, dateTo, setParams, hasFilters } = usePokerSessionParams();
+
+  const dateRange = dateFrom || dateTo
+    ? {
+        from: dateFrom ? parseISO(dateFrom) : undefined,
+        to: dateTo ? parseISO(dateTo) : undefined,
+      }
+    : undefined;
+
+  const handleDateSelect = (range: { from?: Date; to?: Date } | undefined) => {
+    setParams({
+      dateFrom: range?.from ? format(range.from, "yyyy-MM-dd") : null,
+      dateTo: range?.to ? format(range.to, "yyyy-MM-dd") : null,
+    });
+  };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
+      {/* Date Range Picker */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9">
+            <Icons.CalendarMonth className="mr-2 h-4 w-4" />
+            {formatDateRange(dateFrom, dateTo)}
+            <Icons.ChevronDown className="ml-2 h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={dateRange?.from}
+            selected={dateRange}
+            onSelect={handleDateSelect}
+            numberOfMonths={2}
+          />
+        </PopoverContent>
+      </Popover>
+
       {/* Session Type Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -107,6 +163,18 @@ export function PokerSessionFilters() {
             onCheckedChange={() => setParams({ gameVariant: "plo5" })}
           >
             PLO5
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuCheckboxItem
+            checked={gameVariant === "plo6"}
+            onCheckedChange={() => setParams({ gameVariant: "plo6" })}
+          >
+            PLO6
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuCheckboxItem
+            checked={gameVariant === "ofc"}
+            onCheckedChange={() => setParams({ gameVariant: "ofc" })}
+          >
+            OFC
           </DropdownMenuCheckboxItem>
           <DropdownMenuCheckboxItem
             checked={gameVariant === "nlh_6plus"}

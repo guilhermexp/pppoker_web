@@ -1,14 +1,39 @@
 "use client";
 
 import type { ParsedSession } from "@/lib/poker/types";
-import { Badge } from "@midday/ui/badge";
+import { Button } from "@midday/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@midday/ui/collapsible";
-import { Icons } from "@midday/ui/icons";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@midday/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@midday/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { ReactNode } from "react";
-import { useState } from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Filter,
+  Users,
+} from "lucide-react";
+import { memo, useMemo, useState } from "react";
+
+// Filter options for session types
+type SessionFilter = "all" | "cash" | "mtt" | "sitng" | "spin";
+
+const FILTER_OPTIONS: { value: SessionFilter; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "cash", label: "CASH" },
+  { value: "mtt", label: "MTT" },
+  { value: "sitng", label: "SITNG" },
+  { value: "spin", label: "SPIN" },
+];
 
 type SessionsTabProps = {
   sessions: ParsedSession[];
@@ -16,751 +41,43 @@ type SessionsTabProps = {
     start: string;
     end: string;
   };
-  utcCount?: number; // Number of UTC markers found in column A (expected matches)
+  utcCount?: number;
 };
 
-type SessionWithIndex = ParsedSession & { numero: number };
+const ITEMS_PER_PAGE = 50;
 
-export function SessionsTab({ sessions, period, utcCount }: SessionsTabProps) {
-  const [expandedMatches, setExpandedMatches] = useState<Set<string>>(new Set());
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
-
-  const toggleCard = (card: string) => {
-    setExpandedCards((prev) => {
-      const next = new Set(prev);
-      if (next.has(card)) {
-        next.delete(card);
-      } else {
-        next.add(card);
-      }
-      return next;
-    });
-  };
-
-  const sessionsWithIndex: SessionWithIndex[] = sessions.map((session, index) => ({
-    ...session,
-    numero: index + 1,
-  }));
-
-  // Calculate totals
-  const totalCashGames = sessions.filter(
-    (s) => formatSessionTypeTag(s.sessionType, s.createdByNickname) === "CASH",
-  ).length;
-  const totalMTT = sessions.filter(
-    (s) => formatSessionTypeTag(s.sessionType, s.createdByNickname) === "MTT",
-  ).length;
-  const totalSitNG = sessions.filter(
-    (s) => formatSessionTypeTag(s.sessionType, s.createdByNickname) === "SITNG",
-  ).length;
-  const totalSpin = sessions.filter(
-    (s) => formatSessionTypeTag(s.sessionType, s.createdByNickname) === "SPIN",
-  ).length;
-  const totalBuyIn = sessions.reduce((sum, s) => sum + (s.totalBuyIn ?? 0), 0);
-  const totalWinnings = sessions.reduce((sum, s) => sum + (s.totalWinnings ?? 0), 0);
-  const totalTaxa = sessions.reduce((sum, s) => sum + (s.totalRake ?? 0), 0);
-  const totalHands = sessions.reduce((sum, s) => sum + (s.handsPlayed ?? 0), 0);
-  const totalPlayers = sessions.reduce((sum, s) => sum + (s.playerCount ?? 0), 0);
-
-  // Calculate by organizer: PPST, PPSR, Liga
-  const ppstSessions = sessions.filter((s) => s.createdByNickname === "PPST");
-  const ppsrSessions = sessions.filter((s) => s.createdByNickname === "PPSR");
-  const ligaSessions = sessions.filter((s) => s.createdByNickname === "Liga");
-
-  const totalPPST = ppstSessions.length;
-  const totalPPSR = ppsrSessions.length;
-  const totalLiga = ligaSessions.length;
-
-  // PPST breakdown by type (já filtrado por PPST, usar organizador)
-  const ppstMTT = ppstSessions.filter((s) => formatSessionTypeTag(s.sessionType, "PPST") === "MTT").length;
-  const ppstSitNG = ppstSessions.filter((s) => formatSessionTypeTag(s.sessionType, "PPST") === "SITNG").length;
-  const ppstSpin = ppstSessions.filter((s) => formatSessionTypeTag(s.sessionType, "PPST") === "SPIN").length;
-
-  // Liga breakdown by type (pode ter Ring Games e Torneios)
-  const ligaMTT = ligaSessions.filter((s) => formatSessionTypeTag(s.sessionType, "Liga") === "MTT").length;
-  const ligaSitNG = ligaSessions.filter((s) => formatSessionTypeTag(s.sessionType, "Liga") === "SITNG").length;
-  const ligaSpin = ligaSessions.filter((s) => formatSessionTypeTag(s.sessionType, "Liga") === "SPIN").length;
-  const ligaCash = ligaSessions.filter((s) => formatSessionTypeTag(s.sessionType, "Liga") === "CASH").length;
-
-  // Buy-in by organizer
-  const ppstBuyIn = ppstSessions.reduce((sum, s) => sum + (s.totalBuyIn ?? 0), 0);
-  const ppsrBuyIn = ppsrSessions.reduce((sum, s) => sum + (s.totalBuyIn ?? 0), 0);
-  const ligaTorneioBuyIn = ligaSessions
-    .filter((s) => formatSessionTypeTag(s.sessionType, "Liga") !== "CASH")
-    .reduce((sum, s) => sum + (s.totalBuyIn ?? 0), 0);
-  const ligaRingBuyIn = ligaSessions
-    .filter((s) => formatSessionTypeTag(s.sessionType, "Liga") === "CASH")
-    .reduce((sum, s) => sum + (s.totalBuyIn ?? 0), 0);
-
-  // Taxa by organizer
-  const ppstTaxa = ppstSessions.reduce((sum, s) => sum + (s.totalRake ?? 0), 0);
-  const ppsrTaxa = ppsrSessions.reduce((sum, s) => sum + (s.totalRake ?? 0), 0);
-  const ligaTorneioTaxa = ligaSessions
-    .filter((s) => formatSessionTypeTag(s.sessionType, "Liga") !== "CASH")
-    .reduce((sum, s) => sum + (s.totalRake ?? 0), 0);
-  const ligaRingTaxa = ligaSessions
-    .filter((s) => formatSessionTypeTag(s.sessionType, "Liga") === "CASH")
-    .reduce((sum, s) => sum + (s.totalRake ?? 0), 0);
-
-  // Mãos by organizer (only Cash Games have hands)
-  const ppsrHands = ppsrSessions.reduce((sum, s) => sum + (s.handsPlayed ?? 0), 0);
-  const ligaRingHands = ligaSessions
-    .filter((s) => formatSessionTypeTag(s.sessionType, "Liga") === "CASH")
-    .reduce((sum, s) => sum + (s.handsPlayed ?? 0), 0);
-
-  // GTD (Premiação Garantida) - apenas torneios MTT e SITNG (não SPIN)
-  const tournamentsWithGTD = sessions.filter((s) => {
-    const type = formatSessionTypeTag(s.sessionType, s.createdByNickname);
-    return (type === "MTT" || type === "SITNG") && (s.guaranteedPrize ?? 0) > 0;
+function formatCurrency(value: number): string {
+  // Se for inteiro, não mostra casas decimais
+  if (Number.isInteger(value)) {
+    return value.toLocaleString("pt-BR");
+  }
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
-  const totalGTD = tournamentsWithGTD.reduce((sum, s) => sum + (s.guaranteedPrize ?? 0), 0);
-  const gtdCount = tournamentsWithGTD.length;
-
-  // Calculate unique table names with counts (remove ? from emoji artifacts)
-  const cleanTableName = (name: string | null) => {
-    if (!name) return "Sem nome";
-    return name.replace(/\(\?\)/g, "").replace(/\?/g, "").trim() || "Sem nome";
-  };
-  const tableNameCounts = sessions.reduce((acc, s) => {
-    const name = cleanTableName(s.tableName);
-    acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  const uniqueTableNames = Object.entries(tableNameCounts).sort((a, b) => b[1] - a[1]);
-
-  // HU (Heads Up) tables - identified by "HU" in table name
-  const huSessions = sessions.filter((s) =>
-    s.tableName?.toUpperCase().includes("HU") ||
-    s.tableName?.toLowerCase().includes("heads up")
-  );
-  const huTableNames = huSessions.reduce((acc, s) => {
-    const name = cleanTableName(s.tableName);
-    acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  const uniqueHuTables = Object.entries(huTableNames).sort((a, b) => b[1] - a[1]);
-  const huBuyIn = huSessions.reduce((sum, s) => sum + (s.totalBuyIn ?? 0), 0);
-  const huTaxa = huSessions.reduce((sum, s) => sum + (s.totalRake ?? 0), 0);
-  const huHands = huSessions.reduce((sum, s) => sum + (s.handsPlayed ?? 0), 0);
-
-  return (
-    <div className="space-y-4 pb-4">
-      {/* Section 1: Resumo Geral */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Resumo Geral</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-start">
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground">Partidas</p>
-            <p className="text-lg font-semibold">{sessions.length}</p>
-            {utcCount !== undefined && (
-              <p className={`text-[9px] mt-0.5 ${utcCount === sessions.length ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-                UTC na planilha: {utcCount}
-              </p>
-            )}
-          </div>
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground">Jogadores</p>
-            <p className="text-lg font-semibold">{totalPlayers}</p>
-          </div>
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground">Total Ganhos</p>
-            <p className={`text-lg font-semibold font-mono ${totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {totalWinnings.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-            </p>
-          </div>
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground">Buy-in Total</p>
-            <p className="text-lg font-semibold font-mono">
-              {totalBuyIn.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-            </p>
-          </div>
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground">Taxa Total</p>
-            <p className="text-lg font-semibold font-mono">
-              {totalTaxa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Por Tipo de Jogo */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Por Tipo de Jogo</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-start">
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground">Cash Games</p>
-            <p className="text-lg font-semibold">{totalCashGames}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">
-              PPSR: {totalPPSR} · Liga: {ligaCash}
-            </p>
-          </div>
-          <div className="p-3 border rounded-lg bg-muted/30">
-            <p className="text-xs text-muted-foreground">Torneios</p>
-            <p className="text-lg font-semibold">{totalMTT + totalSitNG + totalSpin}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">
-              MTT: {totalMTT} · SNG: {totalSitNG} · SPIN: {totalSpin}
-            </p>
-          </div>
-          <div
-            className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => toggleCard("maos")}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Mãos Jogadas</p>
-              <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.has("maos") ? "rotate-180" : ""}`} />
-            </div>
-            <p className="text-lg font-semibold font-mono">{totalHands.toLocaleString("pt-BR")}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">
-              Somente Cash Games
-            </p>
-            {expandedCards.has("maos") && (
-              <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">PPSR</span>
-                  <span className="font-medium font-mono">{ppsrHands.toLocaleString("pt-BR")}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Liga Ring</span>
-                  <span className="font-medium font-mono">{ligaRingHands.toLocaleString("pt-BR")}</span>
-                </div>
-                {huHands > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">HU (incluso)</span>
-                    <span className="font-medium font-mono">{huHands.toLocaleString("pt-BR")}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          {totalGTD > 0 && (
-            <div className="p-3 border rounded-lg bg-amber-500/10 border-amber-500/30">
-              <p className="text-xs text-amber-600">GTD Total</p>
-              <p className="text-lg font-semibold font-mono text-amber-500">
-                {totalGTD.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-              </p>
-              <p className="text-[9px] text-amber-600/70 mt-0.5">
-                {gtdCount} torneio{gtdCount !== 1 ? "s" : ""} garantidos
-              </p>
-            </div>
-          )}
-          <div
-            className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => toggleCard("hu")}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Mesas HU</p>
-              <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.has("hu") ? "rotate-180" : ""}`} />
-            </div>
-            <p className="text-lg font-semibold">{huSessions.length}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">
-              Heads Up
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Expanded HU Panel */}
-      {expandedCards.has("hu") && (
-        <div className="border rounded-lg bg-muted/20 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-medium">Mesas Heads Up (HU)</h4>
-              <span className="text-xs text-muted-foreground">
-                Buy-in: {huBuyIn.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} ·
-                Taxa: {huTaxa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => toggleCard("hu")}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Icons.Close className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {uniqueHuTables.map(([name, count]) => (
-              <div key={name} className="border rounded-lg bg-background p-2">
-                <p className="text-xs text-muted-foreground truncate" title={name}>{name}</p>
-                <p className="text-sm font-semibold">{count} partida{count !== 1 ? "s" : ""}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Section 3: Por Organizador */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Por Organizador</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
-          <div
-            className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => toggleCard("ppst")}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">PPST</p>
-              <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.has("ppst") ? "rotate-180" : ""}`} />
-            </div>
-            <p className="text-lg font-semibold">{totalPPST}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">Torneios Oficiais</p>
-            {expandedCards.has("ppst") && (
-              <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">MTT</span>
-                  <span className="font-medium">{ppstMTT}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Sit&Go</span>
-                  <span className="font-medium">{ppstSitNG}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">SPIN</span>
-                  <span className="font-medium">{ppstSpin}</span>
-                </div>
-                <div className="border-t border-border/30 pt-1 mt-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Buy-in</span>
-                    <span className="font-medium font-mono">{ppstBuyIn.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Taxa</span>
-                    <span className="font-medium font-mono">{ppstTaxa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <div
-            className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => toggleCard("ppsr")}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">PPSR</p>
-              <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.has("ppsr") ? "rotate-180" : ""}`} />
-            </div>
-            <p className="text-lg font-semibold">{totalPPSR}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">Ring Games Oficiais</p>
-            {expandedCards.has("ppsr") && (
-              <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Cash Games</span>
-                  <span className="font-medium">{totalPPSR}</span>
-                </div>
-                <div className="border-t border-border/30 pt-1 mt-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Buy-in</span>
-                    <span className="font-medium font-mono">{ppsrBuyIn.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Taxa</span>
-                    <span className="font-medium font-mono">{ppsrTaxa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <div
-            className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => toggleCard("ligaTorneios")}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Liga Torneios</p>
-              <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.has("ligaTorneios") ? "rotate-180" : ""}`} />
-            </div>
-            <p className="text-lg font-semibold">{ligaMTT + ligaSitNG + ligaSpin}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">Torneios Internos</p>
-            {expandedCards.has("ligaTorneios") && (
-              <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-                {ligaMTT > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">MTT</span>
-                    <span className="font-medium">{ligaMTT}</span>
-                  </div>
-                )}
-                {ligaSitNG > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Sit&Go</span>
-                    <span className="font-medium">{ligaSitNG}</span>
-                  </div>
-                )}
-                {ligaSpin > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">SPIN</span>
-                    <span className="font-medium">{ligaSpin}</span>
-                  </div>
-                )}
-                <div className="border-t border-border/30 pt-1 mt-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Buy-in</span>
-                    <span className="font-medium font-mono">{ligaTorneioBuyIn.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Taxa</span>
-                    <span className="font-medium font-mono">{ligaTorneioTaxa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <div
-            className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => toggleCard("ligaRing")}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Liga Ring</p>
-              <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.has("ligaRing") ? "rotate-180" : ""}`} />
-            </div>
-            <p className="text-lg font-semibold">{ligaCash}</p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">Cash Games Internos</p>
-            {expandedCards.has("ligaRing") && (
-              <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Cash Games</span>
-                  <span className="font-medium">{ligaCash}</span>
-                </div>
-                <div className="border-t border-border/30 pt-1 mt-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Buy-in</span>
-                    <span className="font-medium font-mono">{ligaRingBuyIn.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Taxa</span>
-                    <span className="font-medium font-mono">{ligaRingTaxa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Section 4: Tipos de Mesas */}
-      <div className="space-y-2">
-        <div
-          className="flex items-center justify-between cursor-pointer hover:opacity-80"
-          onClick={() => toggleCard("mesas")}
-        >
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Tipos de Mesas ({uniqueTableNames.length})
-          </h3>
-          <Icons.ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCards.has("mesas") ? "rotate-180" : ""}`} />
-        </div>
-        {expandedCards.has("mesas") && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {uniqueTableNames.map(([name, count]) => (
-              <div key={name} className="border rounded-lg bg-muted/30 p-2">
-                <p className="text-xs text-muted-foreground truncate" title={name}>{name}</p>
-                <p className="text-sm font-semibold">{count} partida{count !== 1 ? "s" : ""}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Matches List */}
-      <div className="space-y-3">
-        {sessionsWithIndex.length === 0 ? (
-          <div className="border rounded-lg p-8 text-center text-[#878787]">
-            Nenhuma partida encontrada
-          </div>
-        ) : null}
-        {sessionsWithIndex.map((session) => {
-          const sessionKey = session.externalId || String(session.numero);
-          const isExpanded = expandedMatches.has(sessionKey);
-          const playerCount = session.playerCount ?? session.players?.length ?? 0;
-
-          const handsPlayed = session.handsPlayed ?? session.players?.reduce(
-            (sum, player) => sum + (player.hands ?? 0),
-            0,
-          );
-
-          return (
-            <Collapsible
-              key={sessionKey}
-              open={isExpanded}
-              onOpenChange={(open) => {
-                setExpandedMatches((prev) => {
-                  const next = new Set(prev);
-                  if (open) {
-                    next.add(sessionKey);
-                  } else {
-                    next.delete(sessionKey);
-                  }
-                  return next;
-                });
-              }}
-              className="border rounded-lg overflow-hidden"
-            >
-              <CollapsibleTrigger className="w-full text-left">
-                <div className="p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        {isExpanded ? (
-                          <Icons.ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Icons.ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="text-sm font-medium">#{session.numero}</span>
-                      </div>
-                      <Badge variant="secondary">
-                        {formatSessionTypeTag(session.sessionType, session.createdByNickname)}
-                      </Badge>
-                      {isHeadsUp(session.tableName) && (
-                        <Badge variant="outline" className="border-amber-500/50 text-amber-500">
-                          HU
-                        </Badge>
-                      )}
-                      {session.createdByNickname || session.createdByPpPokerId ? (
-                        <span className="text-sm text-muted-foreground">
-                          Organizador: {session.createdByNickname || `pp${session.createdByPpPokerId}`}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Icons.Customers className="h-4 w-4" />
-                      {playerCount} jogadores
-                    </div>
-                  </div>
-
-                  <div className="mt-2 space-y-1">
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium">Mesa:</span> {session.tableName || "Sem nome"}
-                      {session.blinds ? ` · Blinds: ${session.blinds}` : ""}
-                      {session.gameVariant
-                        ? ` · ${session.gameVariant.toUpperCase()}`
-                        : ""}
-                      {session.rakePercent ? ` · Taxa: ${session.rakePercent}%` : ""}
-                      {session.rakeCap ? ` Cap: ${session.rakeCap}` : ""}
-                      {session.timeLimit ? ` · Tempo: ${session.timeLimit}` : ""}
-                    </div>
-                    {session.externalId && !session.externalId.startsWith("match_") && (
-                      <div className="text-xs text-muted-foreground/70 font-mono">
-                        ID: {session.externalId}
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground/70">
-                      {session.startedAt ? `Início: ${formatDateTime(session.startedAt)}` : ""}
-                      {session.endedAt ? ` · Fim: ${formatDateTime(session.endedAt)}` : ""}
-                      {(session.startedAt && session.endedAt) ? ` · Duração: ${formatDuration(session.startedAt, session.endedAt)}` : ""}
-                    </div>
-                    {(session.buyInAmount || session.guaranteedPrize) && (
-                      <div className="text-xs text-muted-foreground/70">
-                        {session.buyInAmount ? `Buy-in: ${formatCurrency(session.buyInAmount)}` : ""}
-                        {session.guaranteedPrize ? ` · GTD: ${formatCurrency(session.guaranteedPrize)}` : ""}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                    <StatItem
-                      icon={<Icons.Transactions className="h-4 w-4" />}
-                      label="Buy-in"
-                      value={formatCurrency(session.totalBuyIn ?? 0)}
-                    />
-                    <StatItem
-                      icon={<Icons.Transactions className="h-4 w-4" />}
-                      label="Taxa"
-                      value={formatCurrency(session.totalRake ?? 0)}
-                    />
-                    <StatItem
-                      icon={<Icons.Customers className="h-4 w-4" />}
-                      label="Mãos"
-                      value={handsPlayed ? handsPlayed.toLocaleString("pt-BR") : "-"}
-                    />
-                    <StatItem
-                      icon={<Icons.Transactions className="h-4 w-4" />}
-                      label="Ganhos"
-                      value={formatCurrency(session.totalWinnings ?? 0)}
-                      className={(session.totalWinnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}
-                    />
-                  </div>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="border-t bg-muted/20">
-                <div className="p-4">
-                  {session.players && session.players.length > 0 ? (
-                    <div className="border rounded-lg overflow-hidden bg-background overflow-x-auto">
-                      {formatSessionTypeTag(session.sessionType, session.createdByNickname) === "CASH" ? (
-                        /* CASH/HU Table - All columns */
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="text-xs">ID</TableHead>
-                              <TableHead className="text-xs">Apelido</TableHead>
-                              <TableHead className="text-xs">Memorando</TableHead>
-                              <TableHead className="text-xs text-right">Buy-in</TableHead>
-                              <TableHead className="text-xs text-right">Mãos</TableHead>
-                              <TableHead className="text-xs text-right text-emerald-600" colSpan={4}>Ganhos do Jogador</TableHead>
-                              <TableHead className="text-xs text-right text-rose-500" colSpan={5}>Ganhos do Clube</TableHead>
-                            </TableRow>
-                            <TableRow className="bg-muted/30">
-                              <TableHead className="text-[10px]" />
-                              <TableHead className="text-[10px]" />
-                              <TableHead className="text-[10px]" />
-                              <TableHead className="text-[10px]" />
-                              <TableHead className="text-[10px]" />
-                              <TableHead className="text-[10px] text-right">Geral</TableHead>
-                              <TableHead className="text-[10px] text-right">Adversários</TableHead>
-                              <TableHead className="text-[10px] text-right">Jackpot</TableHead>
-                              <TableHead className="text-[10px] text-right">Dividir EV</TableHead>
-                              <TableHead className="text-[10px] text-right">Geral</TableHead>
-                              <TableHead className="text-[10px] text-right">Taxa</TableHead>
-                              <TableHead className="text-[10px] text-right">Taxa Jackpot</TableHead>
-                              <TableHead className="text-[10px] text-right">Prêmios Jackpot</TableHead>
-                              <TableHead className="text-[10px] text-right">Dividir EV</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {session.players.map((player, index) => (
-                              <TableRow key={`${sessionKey}-${player.ppPokerId}-${index}`}>
-                                <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
-                                <TableCell className="text-xs">{player.nickname}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.buyIn ?? 0)}</TableCell>
-                                <TableCell className="text-xs text-right font-mono">{player.hands ?? 0}</TableCell>
-                                {/* Ganhos do Jogador */}
-                                <TableCell className={`text-xs text-right font-mono ${(player.winningsGeneral ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                                  {formatCurrency(player.winningsGeneral ?? 0)}
-                                </TableCell>
-                                <TableCell className={`text-xs text-right font-mono ${(player.winningsOpponents ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                                  {formatCurrency(player.winningsOpponents ?? 0)}
-                                </TableCell>
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.winningsJackpot ?? 0)}</TableCell>
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.winningsEvSplit ?? 0)}</TableCell>
-                                {/* Ganhos do Clube */}
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsGeneral ?? 0)}</TableCell>
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsFee ?? 0)}</TableCell>
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsJackpotFee ?? 0)}</TableCell>
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsJackpotPrize ?? 0)}</TableCell>
-                                <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsEvSplit ?? 0)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      ) : formatSessionTypeTag(session.sessionType, session.createdByNickname) === "SPIN" ? (
-                        /* SPIN Table - Ranking, Buy-in, Prêmio, Ganhos (sem Taxa) */
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="text-xs">ID</TableHead>
-                              <TableHead className="text-xs">Apelido</TableHead>
-                              <TableHead className="text-xs">Memorando</TableHead>
-                              <TableHead className="text-right">Ranking</TableHead>
-                              <TableHead className="text-right">Buy-in Fichas</TableHead>
-                              <TableHead className="text-right">Prêmio</TableHead>
-                              <TableHead className="text-right">Ganhos</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {session.players.map((player, index) => (
-                              <TableRow key={`${sessionKey}-${player.ppPokerId}-${index}`}>
-                                <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
-                                <TableCell className="text-xs">{player.nickname}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
-                                <TableCell className="text-right font-mono text-xs">
-                                  {player.ranking ? `#${player.ranking}` : "-"}
-                                </TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(player.buyInChips ?? player.buyIn ?? 0)}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(player.prize ?? 0)}</TableCell>
-                                <TableCell className={`text-right font-mono ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                                  {formatCurrency(player.winnings ?? 0)}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      ) : (
-                        /* MTT/SITNG Table - Ranking, Buy-in Fichas, Buy-in Ticket, Ganhos, Taxa */
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="text-xs">ID</TableHead>
-                              <TableHead className="text-xs">Apelido</TableHead>
-                              <TableHead className="text-xs">Memorando</TableHead>
-                              <TableHead className="text-right">Ranking</TableHead>
-                              <TableHead className="text-right">Buy-in Fichas</TableHead>
-                              <TableHead className="text-right">Buy-in Ticket</TableHead>
-                              <TableHead className="text-right">Ganhos</TableHead>
-                              <TableHead className="text-right">Taxa</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {session.players.map((player, index) => (
-                              <TableRow key={`${sessionKey}-${player.ppPokerId}-${index}`}>
-                                <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
-                                <TableCell className="text-xs">{player.nickname}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
-                                <TableCell className="text-right font-mono text-xs">
-                                  {player.ranking ? `#${player.ranking}` : "-"}
-                                </TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(player.buyInChips ?? player.buyIn ?? 0)}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(player.buyInTicket ?? 0)}</TableCell>
-                                <TableCell className={`text-right font-mono ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                                  {formatCurrency(player.winnings ?? 0)}
-                                </TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(player.rake ?? 0)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Nenhum jogador encontrado nesta partida.
-                    </p>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
-      </div>
-    </div>
-  );
 }
 
-function formatSessionType(type: string): string {
-  const types: Record<string, string> = {
-    cash_game: "Cash",
-    ring: "Cash",
-    cash: "Cash",
-    mtt: "MTT",
-    tournament: "MTT",
-    sit_n_go: "Sit&Go",
-    sng: "Sit&Go",
-    spin: "SPIN",
-    spinup: "SPIN",
-  };
-  return types[type.toLowerCase()] || type;
+function formatNumber(value: number): string {
+  return value.toLocaleString("pt-BR");
 }
 
 function formatSessionTypeTag(type: string, organizador?: string | null): "CASH" | "MTT" | "SITNG" | "SPIN" {
-  const normalized = formatSessionType(type).toLowerCase();
+  const normalized = type.toLowerCase();
 
-  // Se o organizador é PPST, é torneio (nunca CASH)
   if (organizador === "PPST") {
     if (normalized.includes("spin")) return "SPIN";
     if (normalized.includes("sit")) return "SITNG";
-    return "MTT"; // Default para PPST é MTT
+    return "MTT";
   }
 
-  // Se o organizador é PPSR, é sempre CASH
   if (organizador === "PPSR") {
     return "CASH";
   }
 
-  // Liga ou outros - usar o tipo
   if (normalized.includes("spin")) return "SPIN";
-  if (normalized.includes("mtt")) return "MTT";
-  if (normalized.includes("sit")) return "SITNG";
+  if (normalized.includes("mtt") || normalized.includes("tournament")) return "MTT";
+  if (normalized.includes("sit") || normalized.includes("sng")) return "SITNG";
   return "CASH";
-}
-
-function isHeadsUp(tableName: string | null): boolean {
-  if (!tableName) return false;
-  const name = tableName.toUpperCase();
-  return name.includes(" HU") || name.includes("HU ") || name.endsWith("HU") || name.includes("HEADS UP");
 }
 
 function formatDateTime(dateStr: string): string {
@@ -772,45 +89,770 @@ function formatDateTime(dateStr: string): string {
   }
 }
 
+// Session content - only renders when expanded
+const SessionContent = memo(function SessionContent({
+  session,
+}: { session: ParsedSession }) {
+  const sessionType = formatSessionTypeTag(session.sessionType, session.createdByNickname);
 
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
-function formatDuration(start: string, end: string | null): string {
-  if (!end) return "-";
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const diffMs = Math.max(0, endDate.getTime() - startDate.getTime());
-  const totalMinutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (!totalMinutes) return "-";
-  if (hours === 0) return `${minutes}m`;
-  return `${hours}h${minutes.toString().padStart(2, "0")}m`;
-}
-
-function StatItem({
-  icon,
-  label,
-  value,
-  className,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  className?: string;
-}) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="text-muted-foreground">{icon}</div>
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-sm font-medium ${className || ""}`}>{value}</p>
+    <div className="px-4 pb-4 space-y-3">
+      {/* Session Metadata */}
+      <div className="flex flex-wrap gap-4 text-sm bg-muted/30 rounded-lg p-3">
+        <div>
+          <span className="text-muted-foreground">Mesa:</span>{" "}
+          {session.tableName || "Sem nome"}
+        </div>
+        {session.blinds && (
+          <div>
+            <span className="text-muted-foreground">Blinds:</span> {session.blinds}
+          </div>
+        )}
+        {session.rakePercent && (
+          <div>
+            <span className="text-muted-foreground">Taxa:</span> {session.rakePercent}%
+            {session.rakeCap ? ` (cap: ${session.rakeCap})` : ""}
+          </div>
+        )}
+        {session.startedAt && (
+          <div>
+            <span className="text-muted-foreground">Início:</span>{" "}
+            {formatDateTime(session.startedAt)}
+          </div>
+        )}
+        {session.endedAt && (
+          <div>
+            <span className="text-muted-foreground">Fim:</span>{" "}
+            {formatDateTime(session.endedAt)}
+          </div>
+        )}
       </div>
+
+      {/* Players Table */}
+      {session.players && session.players.length > 0 ? (
+        <div className="rounded-md border overflow-x-auto">
+          {sessionType === "CASH" ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">ID</TableHead>
+                  <TableHead className="text-xs">Apelido</TableHead>
+                  <TableHead className="text-xs">Memorando</TableHead>
+                  <TableHead className="text-xs text-right">Buy-in</TableHead>
+                  <TableHead className="text-xs text-right">Mãos</TableHead>
+                  <TableHead className="text-xs text-right text-emerald-600" colSpan={4}>Ganhos Jogador</TableHead>
+                  <TableHead className="text-xs text-right text-rose-500" colSpan={5}>Ganhos Clube</TableHead>
+                </TableRow>
+                <TableRow className="bg-muted/30">
+                  <TableHead className="text-[10px]" />
+                  <TableHead className="text-[10px]" />
+                  <TableHead className="text-[10px]" />
+                  <TableHead className="text-[10px]" />
+                  <TableHead className="text-[10px]" />
+                  <TableHead className="text-[10px] text-right">Geral</TableHead>
+                  <TableHead className="text-[10px] text-right">Advers.</TableHead>
+                  <TableHead className="text-[10px] text-right">Jackpot</TableHead>
+                  <TableHead className="text-[10px] text-right">Div. EV</TableHead>
+                  <TableHead className="text-[10px] text-right">Geral</TableHead>
+                  <TableHead className="text-[10px] text-right">Taxa</TableHead>
+                  <TableHead className="text-[10px] text-right">Tx. JP</TableHead>
+                  <TableHead className="text-[10px] text-right">Pr. JP</TableHead>
+                  <TableHead className="text-[10px] text-right">Div. EV</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {session.players.map((player, index) => (
+                  <TableRow key={`${player.ppPokerId}-${index}`}>
+                    <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
+                    <TableCell className="text-xs">{player.nickname}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.buyIn ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{player.hands ?? 0}</TableCell>
+                    <TableCell className={`text-xs text-right font-mono ${(player.winningsGeneral ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                      {formatCurrency(player.winningsGeneral ?? 0)}
+                    </TableCell>
+                    <TableCell className={`text-xs text-right font-mono ${(player.winningsOpponents ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                      {formatCurrency(player.winningsOpponents ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.winningsJackpot ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.winningsEvSplit ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsGeneral ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsFee ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsJackpotFee ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsJackpotPrize ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">{formatCurrency(player.clubWinningsEvSplit ?? 0)}</TableCell>
+                  </TableRow>
+                ))}
+                {/* Total Row */}
+                <TableRow className="bg-muted/50 font-medium border-t-2">
+                  <TableCell className="text-xs">-</TableCell>
+                  <TableCell className="text-xs font-bold">Total</TableCell>
+                  <TableCell className="text-xs">-</TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.buyIn ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {session.players.reduce((s, p) => s + (p.hands ?? 0), 0)}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.winningsGeneral ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.winningsOpponents ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.winningsJackpot ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.winningsEvSplit ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.clubWinningsGeneral ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold text-green-600">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.clubWinningsFee ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.clubWinningsJackpotFee ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.clubWinningsJackpotPrize ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.clubWinningsEvSplit ?? 0), 0))}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          ) : sessionType === "SPIN" ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">ID</TableHead>
+                  <TableHead className="text-xs">Apelido</TableHead>
+                  <TableHead className="text-xs">Memorando</TableHead>
+                  <TableHead className="text-right text-xs">#</TableHead>
+                  <TableHead className="text-right text-xs">Buy-in</TableHead>
+                  <TableHead className="text-right text-xs">Prêmio</TableHead>
+                  <TableHead className="text-right text-xs">Ganhos</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {session.players.map((player, index) => (
+                  <TableRow key={`${player.ppPokerId}-${index}`}>
+                    <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
+                    <TableCell className="text-xs">{player.nickname}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{player.ranking ?? "-"}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{formatCurrency(player.buyInChips ?? player.buyIn ?? 0)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs text-pink-600">{formatCurrency(player.prize ?? 0)}</TableCell>
+                    <TableCell className={`text-right font-mono text-xs ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                      {formatCurrency(player.winnings ?? 0)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {/* Total Row */}
+                <TableRow className="bg-muted/50 font-medium border-t-2">
+                  <TableCell className="text-xs">-</TableCell>
+                  <TableCell className="text-xs font-bold">Total</TableCell>
+                  <TableCell className="text-xs">-</TableCell>
+                  <TableCell className="text-xs text-right font-bold">-</TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.buyInChips ?? p.buyIn ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold text-pink-600">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.prize ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.winnings ?? 0), 0))}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">ID</TableHead>
+                  <TableHead className="text-xs">Apelido</TableHead>
+                  <TableHead className="text-xs">Memorando</TableHead>
+                  <TableHead className="text-right text-xs">#</TableHead>
+                  <TableHead className="text-right text-xs">Buy-in</TableHead>
+                  <TableHead className="text-right text-xs">Ticket</TableHead>
+                  <TableHead className="text-right text-xs">Ganhos</TableHead>
+                  <TableHead className="text-right text-xs">Taxa</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {session.players.map((player, index) => (
+                  <TableRow key={`${player.ppPokerId}-${index}`}>
+                    <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
+                    <TableCell className="text-xs">{player.nickname}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{player.ranking ?? "-"}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{formatCurrency(player.buyInChips ?? player.buyIn ?? 0)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{formatCurrency(player.buyInTicket ?? 0)}</TableCell>
+                    <TableCell className={`text-right font-mono text-xs ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                      {formatCurrency(player.winnings ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">{formatCurrency(player.rake ?? 0)}</TableCell>
+                  </TableRow>
+                ))}
+                {/* Total Row */}
+                <TableRow className="bg-muted/50 font-medium border-t-2">
+                  <TableCell className="text-xs">-</TableCell>
+                  <TableCell className="text-xs font-bold">Total</TableCell>
+                  <TableCell className="text-xs">-</TableCell>
+                  <TableCell className="text-xs text-right font-bold">-</TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.buyInChips ?? p.buyIn ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.buyInTicket ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.winnings ?? 0), 0))}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold text-green-600">
+                    {formatCurrency(session.players.reduce((s, p) => s + (p.rake ?? 0), 0))}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Nenhum jogador encontrado.</p>
+      )}
+    </div>
+  );
+});
+
+// Session item - compact row style
+const SessionItem = memo(function SessionItem({
+  session,
+  isOpen,
+  onToggle,
+  index,
+}: {
+  session: ParsedSession;
+  isOpen: boolean;
+  onToggle: () => void;
+  index: number;
+}) {
+  const sessionType = formatSessionTypeTag(session.sessionType, session.createdByNickname);
+  const playerCount = session.playerCount ?? session.players?.length ?? 0;
+
+  // Type badge styling
+  const getBadgeClass = () => {
+    switch (sessionType) {
+      case "CASH":
+        return "bg-green-500 text-white";
+      case "MTT":
+        return "bg-blue-500 text-white";
+      case "SITNG":
+        return "bg-purple-500 text-white";
+      case "SPIN":
+        return "bg-pink-500 text-white";
+      default:
+        return "bg-muted";
+    }
+  };
+
+  // Clean table name
+  const tableName = session.tableName?.replace(/\(\?\)/g, "").replace(/\?/g, "").trim() || "Sem nome";
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <CollapsibleTrigger className="flex items-center w-full px-3 py-1.5 hover:bg-muted/30 border-b border-border/50 text-xs">
+        {/* Expand icon */}
+        <ChevronDown className={`h-3 w-3 mr-1 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
+
+        {/* Index number */}
+        <span className="text-muted-foreground/60 font-mono w-[40px] text-right mr-2 flex-shrink-0">
+          {index}
+        </span>
+
+        {/* Type badge */}
+        <span className={`${getBadgeClass()} px-1.5 py-0.5 rounded text-[10px] font-medium mr-2 flex-shrink-0`}>
+          {sessionType}
+        </span>
+
+        {/* Game variant */}
+        {session.gameVariant && (
+          <span className="text-muted-foreground font-mono text-[10px] mr-2 flex-shrink-0">
+            {session.gameVariant.toUpperCase()}
+          </span>
+        )}
+
+        {/* Table name - truncate */}
+        <span className="font-medium truncate max-w-[180px] mr-2" title={tableName}>
+          {tableName}
+        </span>
+
+        {/* Organizer */}
+        {session.createdByNickname && (
+          <span className="text-muted-foreground mr-2 flex-shrink-0">
+            [{session.createdByNickname}]
+          </span>
+        )}
+
+        {/* Session ID */}
+        {session.externalId && (
+          <span className="text-muted-foreground/60 font-mono text-[10px] mr-3 flex-shrink-0">
+            {session.externalId}
+          </span>
+        )}
+
+        {/* Spacer */}
+        <span className="flex-1" />
+
+        {/* Players */}
+        <span className="text-muted-foreground mr-3 flex-shrink-0 text-[10px]">
+          <Users className="h-3 w-3 inline mr-0.5" />
+          {playerCount}
+        </span>
+
+        {/* Buy-in */}
+        <span className="text-muted-foreground mr-3 flex-shrink-0">
+          <span className="text-[10px] mr-1">Buy-in:</span>
+          <span className="font-mono">{formatCurrency(session.totalBuyIn ?? 0)}</span>
+        </span>
+
+        {/* Ganhos */}
+        <span className="mr-3 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground mr-1">Ganhos:</span>
+          <span className={`font-mono ${(session.totalWinnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+            {formatCurrency(session.totalWinnings ?? 0)}
+          </span>
+        </span>
+
+        {/* Taxa */}
+        <span className="mr-3 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground mr-1">Taxa:</span>
+          <span className="text-green-600 font-medium font-mono">{formatCurrency(session.totalRake ?? 0)}</span>
+        </span>
+
+        {/* GTD */}
+        {session.guaranteedPrize && session.guaranteedPrize > 0 ? (
+          <span className="text-yellow-500 font-medium mr-3 flex-shrink-0">
+            GTD {formatNumber(session.guaranteedPrize)}
+          </span>
+        ) : null}
+
+        {/* Date/time */}
+        <span className="text-muted-foreground flex-shrink-0 w-[90px]">
+          {session.startedAt ? formatDateTime(session.startedAt) : "-"}
+        </span>
+      </CollapsibleTrigger>
+
+      <CollapsibleContent>
+        {isOpen && <SessionContent session={session} />}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+});
+
+export function SessionsTab({ sessions, period, utcCount }: SessionsTabProps) {
+  const [openSessions, setOpenSessions] = useState<Set<number>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [typeFilter, setTypeFilter] = useState<SessionFilter>("all");
+
+  // Filter sessions by type
+  const filteredData = useMemo(() => {
+    if (typeFilter === "all") return sessions;
+    return sessions.filter((s) => {
+      const type = formatSessionTypeTag(s.sessionType, s.createdByNickname);
+      switch (typeFilter) {
+        case "cash":
+          return type === "CASH";
+        case "mtt":
+          return type === "MTT";
+        case "sitng":
+          return type === "SITNG";
+        case "spin":
+          return type === "SPIN";
+        default:
+          return true;
+      }
+    });
+  }, [sessions, typeFilter]);
+
+  const handleFilterChange = (value: SessionFilter) => {
+    setTypeFilter(value);
+    setCurrentPage(1);
+    setOpenSessions(new Set());
+  };
+
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
+  // Calculate summary stats
+  const summaryStats = useMemo(() => {
+    let totalCash = 0;
+    let totalMTT = 0;
+    let totalSitNG = 0;
+    let totalSpin = 0;
+    let totalBuyIn = 0;
+    let totalRake = 0;
+    let totalGTD = 0;
+    let totalPlayers = 0;
+    let totalHands = 0;
+    const gameTypes: Record<string, number> = {};
+
+    for (const s of sessions) {
+      const type = formatSessionTypeTag(s.sessionType, s.createdByNickname);
+      if (type === "CASH") totalCash++;
+      else if (type === "MTT") totalMTT++;
+      else if (type === "SITNG") totalSitNG++;
+      else if (type === "SPIN") totalSpin++;
+
+      // Contagem detalhada por gameVariant (PLO5, PLO6, NLH, SPIN, etc)
+      const variant = s.gameVariant?.toUpperCase() || "Outros";
+      gameTypes[variant] = (gameTypes[variant] || 0) + 1;
+
+      // Calcula a partir dos jogadores para garantir consistência com a linha de Total
+      const sessionBuyIn = s.players?.reduce((sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0), 0) ?? 0;
+      const sessionRake = s.players?.reduce((sum, p) => sum + (p.rake ?? p.clubWinningsFee ?? 0), 0) ?? 0;
+
+      totalBuyIn += sessionBuyIn;
+      totalRake += sessionRake;
+      totalGTD += s.guaranteedPrize ?? 0;
+      totalPlayers += s.playerCount ?? s.players?.length ?? 0;
+      totalHands += s.handsPlayed ?? 0;
+    }
+
+    return {
+      totalCash,
+      totalMTT,
+      totalSitNG,
+      totalSpin,
+      totalBuyIn,
+      totalRake,
+      totalGTD,
+      totalPlayers,
+      totalHands,
+      gameTypes,
+    };
+  }, [sessions]);
+
+  // Get paginated data from filtered results
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return filteredData.slice(start, end);
+  }, [filteredData, currentPage]);
+
+  const getGlobalIndex = (pageIndex: number) => {
+    return (currentPage - 1) * ITEMS_PER_PAGE + pageIndex;
+  };
+
+  const toggleSession = (globalIndex: number) => {
+    setOpenSessions((prev) => {
+      const newOpen = new Set(prev);
+      if (newOpen.has(globalIndex)) {
+        newOpen.delete(globalIndex);
+      } else {
+        newOpen.add(globalIndex);
+      }
+      return newOpen;
+    });
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setOpenSessions(new Set());
+    }
+  };
+
+  if (sessions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        Nenhuma partida encontrada
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="bg-muted/30 rounded-lg p-3 border">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Partidas</div>
+          <div className="text-xl font-bold">{formatNumber(sessions.length)}</div>
+          <div className="text-[10px] text-muted-foreground">headers de jogo detectados</div>
+          {utcCount !== undefined && (
+            <div className={`text-[10px] ${utcCount === sessions.length ? "text-green-500" : "text-red-500"}`}>
+              UTC planilha: {utcCount}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-muted/30 rounded-lg p-3 border">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Jogadores</div>
+          <div className="text-xl font-bold">{formatNumber(summaryStats.totalPlayers)}</div>
+          <div className="text-[10px] text-muted-foreground">linhas de jogador por partida</div>
+        </div>
+
+        <div className="bg-muted/30 rounded-lg p-3 border">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Buy-in Total</div>
+          <div className="text-xl font-bold">{formatCurrency(summaryStats.totalBuyIn)}</div>
+          <div className="text-[10px] text-muted-foreground">
+            SPIN: col.F | MTT: col.F+G | CASH: col.E
+          </div>
+        </div>
+
+        <div className="bg-muted/30 rounded-lg p-3 border">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Taxa Total</div>
+          <div className="text-xl font-bold text-green-500">{formatCurrency(summaryStats.totalRake)}</div>
+          <div className="text-[10px] text-muted-foreground">
+            MTT: col.I | CASH: col.L (SPIN não tem)
+          </div>
+        </div>
+
+        {summaryStats.totalGTD > 0 && (
+          <div className="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/20">
+            <div className="text-[10px] text-yellow-600 uppercase tracking-wide">GTD Total</div>
+            <div className="text-xl font-bold text-yellow-500">{formatCurrency(summaryStats.totalGTD)}</div>
+            <div className="text-[10px] text-yellow-600/70">
+              header "Premiação Garantida: X"
+            </div>
+          </div>
+        )}
+
+        {summaryStats.totalHands > 0 && (
+          <div className="bg-muted/30 rounded-lg p-3 border">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Mãos</div>
+            <div className="text-xl font-bold">{formatNumber(summaryStats.totalHands)}</div>
+            <div className="text-[10px] text-muted-foreground">CASH: col.F (Mãos)</div>
+          </div>
+        )}
+      </div>
+
+      {/* Game Types Legend - Clickable filters */}
+      <div className="bg-muted/20 rounded-lg p-3 border">
+        <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
+          Tipos de Partida (clique para filtrar)
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {/* All */}
+          <button
+            type="button"
+            onClick={() => handleFilterChange("all")}
+            className={`flex items-center gap-1.5 rounded px-2 py-1 transition-all cursor-pointer ${
+              typeFilter === "all"
+                ? "bg-foreground/20 ring-2 ring-foreground/50"
+                : "bg-muted/50 hover:bg-muted"
+            }`}
+          >
+            <span className="text-xs font-medium">Todos</span>
+            <span className="text-xs text-muted-foreground">{sessions.length}</span>
+          </button>
+          {summaryStats.totalCash > 0 && (
+            <button
+              type="button"
+              onClick={() => handleFilterChange("cash")}
+              className={`flex items-center gap-1.5 rounded px-2 py-1 transition-all cursor-pointer ${
+                typeFilter === "cash"
+                  ? "bg-green-500/30 ring-2 ring-green-500"
+                  : "bg-green-500/10 hover:bg-green-500/20"
+              }`}
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              <span className="text-xs font-medium">CASH</span>
+              <span className="text-xs text-muted-foreground">{summaryStats.totalCash}</span>
+            </button>
+          )}
+          {summaryStats.totalMTT > 0 && (
+            <button
+              type="button"
+              onClick={() => handleFilterChange("mtt")}
+              className={`flex items-center gap-1.5 rounded px-2 py-1 transition-all cursor-pointer ${
+                typeFilter === "mtt"
+                  ? "bg-blue-500/30 ring-2 ring-blue-500"
+                  : "bg-blue-500/10 hover:bg-blue-500/20"
+              }`}
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <span className="text-xs font-medium">MTT</span>
+              <span className="text-xs text-muted-foreground">{summaryStats.totalMTT}</span>
+            </button>
+          )}
+          {summaryStats.totalSitNG > 0 && (
+            <button
+              type="button"
+              onClick={() => handleFilterChange("sitng")}
+              className={`flex items-center gap-1.5 rounded px-2 py-1 transition-all cursor-pointer ${
+                typeFilter === "sitng"
+                  ? "bg-purple-500/30 ring-2 ring-purple-500"
+                  : "bg-purple-500/10 hover:bg-purple-500/20"
+              }`}
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+              <span className="text-xs font-medium">SITNG</span>
+              <span className="text-xs text-muted-foreground">{summaryStats.totalSitNG}</span>
+            </button>
+          )}
+          {summaryStats.totalSpin > 0 && (
+            <button
+              type="button"
+              onClick={() => handleFilterChange("spin")}
+              className={`flex items-center gap-1.5 rounded px-2 py-1 transition-all cursor-pointer ${
+                typeFilter === "spin"
+                  ? "bg-pink-500/30 ring-2 ring-pink-500"
+                  : "bg-pink-500/10 hover:bg-pink-500/20"
+              }`}
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-pink-500" />
+              <span className="text-xs font-medium">SPIN</span>
+              <span className="text-xs text-muted-foreground">{summaryStats.totalSpin}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Detailed breakdown */}
+        {Object.keys(summaryStats.gameTypes).length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
+              Detalhado:
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {Object.entries(summaryStats.gameTypes)
+                .sort((a, b) => b[1] - a[1])
+                .map(([type, count]) => (
+                  <div key={type} className="text-xs">
+                    <span className="text-muted-foreground">{type}:</span>{" "}
+                    <span className="font-mono font-medium">{formatNumber(count)}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination Header */}
+      <div className="flex items-center justify-between py-2 px-1">
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-muted-foreground">
+            Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
+            {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} de {filteredData.length}{" "}
+            partidas
+            {typeFilter !== "all" && (
+              <span className="text-muted-foreground/60 ml-1">
+                (filtrado de {sessions.length})
+              </span>
+            )}
+          </div>
+          {/* Type Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={typeFilter} onValueChange={(v) => handleFilterChange(v as SessionFilter)}>
+              <SelectTrigger className="w-[120px] h-8">
+                <SelectValue placeholder="Filtrar tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                {FILTER_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          {/* First page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(1)}
+            disabled={currentPage === 1}
+            className="gap-1"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+            <span className="text-[10px] text-muted-foreground">(primeiro)</span>
+          </Button>
+          {/* Previous page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "ghost"}
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={() => goToPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          {/* Next page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          {/* Last page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="gap-1"
+          >
+            <span className="text-[10px] text-muted-foreground">(último pela Planilha)</span>
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Sessions List */}
+      <div className="border rounded-lg overflow-hidden">
+        {paginatedData.map((session, pageIndex) => {
+          const globalIndex = getGlobalIndex(pageIndex);
+          return (
+            <SessionItem
+              key={session.externalId || globalIndex}
+              session={session}
+              isOpen={openSessions.has(globalIndex)}
+              onToggle={() => toggleSession(globalIndex)}
+              index={globalIndex + 1}
+            />
+          );
+        })}
+      </div>
+
+      {/* Pagination Footer */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center py-2">
+          <div className="text-sm text-muted-foreground">
+            Página {currentPage} de {totalPages}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

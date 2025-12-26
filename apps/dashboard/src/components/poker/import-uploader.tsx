@@ -5,9 +5,7 @@ import type { ParsedImportData, ValidationResult } from "@/lib/poker/types";
 import { validateImportData } from "@/lib/poker/validation";
 import { useTRPC } from "@/trpc/client";
 import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
 import { Skeleton } from "@midday/ui/skeleton";
-import { Spinner } from "@midday/ui/spinner";
 import { useToast } from "@midday/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
@@ -75,7 +73,7 @@ function parseSessionSheet(data: any[]): any[] {
       tableName: row["Table Name"] || row["table_name"] || null,
       sessionType: row["Game Type"] || row["session_type"] || "ring",
       gameVariant: row["Variant"] || row["game_variant"] || "nlh",
-      startedAt: row["Start Time"] || row["started_at"] || "",
+      startedAt: row["Start Time"] || row["started_at"] || null,
       endedAt: row["End Time"] || row["ended_at"] || null,
       blinds: row["Blinds"] || row["blinds"] || null,
       buyInAmount: parseFloat(row["Buy-In"] || row["buy_in_amount"] || 0) || null,
@@ -164,6 +162,7 @@ function normalizeGameVariant(rawType: string): string {
   if (value.includes("ofc")) return "ofc";
   if (value.includes("6+")) return "nlh_6plus";
   if (value.includes("aof")) return "nlh_aof";
+  if (value.includes("spin")) return "spin"; // SPINUP tournaments
   if (value.includes("nlh") || value.includes("holdem")) return "nlh";
   return "other";
 }
@@ -227,18 +226,20 @@ function detectGameType(gameInfo: string): "MTT" | "SITNG" | "SPIN" | "CASH" {
   return "CASH";
 }
 
-// Check if row is a player row (ID between 1,000,000 and 99,999,999)
+// Check if row is a player row (valid positive integer ID)
 function isPlayerRow(row: Array<string | number | null>): boolean {
   const playerId = row[1];
   return (
     typeof playerId === "number" &&
-    playerId >= 1000000 &&
-    playerId <= 99999999
+    playerId > 0 &&
+    Number.isInteger(playerId)
   );
 }
 
 // Extract time from "Início: 2024-01-15 14:30" or "Início: 2024-01-15 14:30:00" format
-function extractTime(timeStr: string): string {
+function extractTime(timeStr: string): string | null {
+  if (!timeStr) return null;
+
   // Try with seconds first (HH:mm:ss)
   let match = timeStr.match(/(\d{4}[-/]\d{2}[-/]\d{2}\s+\d{2}:\d{2}:\d{2})/);
   if (match) return match[1];
@@ -247,8 +248,12 @@ function extractTime(timeStr: string): string {
   match = timeStr.match(/(\d{4}[-/]\d{2}[-/]\d{2}\s+\d{2}:\d{2})/);
   if (match) return match[1];
 
-  // Fallback: clean up the string
-  return timeStr.replace("Início:", "").replace("Fim:", "").trim();
+  // Try dd/MM/yyyy HH:mm format (Brazilian format)
+  match = timeStr.match(/(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/);
+  if (match) return match[1];
+
+  // No valid timestamp found - return null instead of empty string
+  return null;
 }
 
 // Get blinds from game type string (e.g., "0.1/0.2")
@@ -568,7 +573,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
       tableName,
       sessionType,
       gameVariant,
-      startedAt: normalizeDateTime(startedAt) || "",
+      startedAt: normalizeDateTime(startedAt) || null,
       endedAt: normalizeDateTime(endedAt),
       blinds,
       buyInAmount,
@@ -589,6 +594,36 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
     });
 
     rowIndex = dataRowIndex;
+  }
+
+  // Debug: Log game variant distribution summary
+  const variantCounts: Record<string, number> = {};
+  const otherRawTypes: Record<string, number> = {}; // Track raw types that became "other"
+  for (const session of sessions) {
+    const v = session.gameVariant?.toUpperCase() || "UNKNOWN";
+    variantCounts[v] = (variantCounts[v] || 0) + 1;
+  }
+  console.log(`[ClubParser] ✅ Parsed ${sessions.length} sessions (UTC markers: ${utcCount})`);
+  console.log("[ClubParser] 📊 Game Variant Distribution:",
+    Object.entries(variantCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `${k}:${v}`)
+      .join(" | ")
+  );
+
+  // Log what raw types became "other" so we can add proper mappings
+  if (variantCounts["OTHER"] > 0) {
+    // Re-scan to find raw types - look at first 5 unique "other" examples
+    const otherExamples: string[] = [];
+    for (const session of sessions) {
+      if (session.gameVariant === "other" && session.tableName) {
+        const example = session.tableName.substring(0, 50);
+        if (!otherExamples.includes(example) && otherExamples.length < 5) {
+          otherExamples.push(example);
+        }
+      }
+    }
+    console.log("[ClubParser] ⚠️ 'OTHER' examples (table names):", otherExamples.join(" | "));
   }
 
   return { sessions, utcCount };
@@ -1694,8 +1729,35 @@ export function ImportUploader() {
 
   const createImportMutation = useMutation(
     trpc.poker.imports.create.mutationOptions({
+      onError: (error) => {
+        toast({
+          title: t("poker.import.uploadError"),
+          description: error.message,
+          variant: "error",
+        });
+      },
+    })
+  );
+
+  const validateImportMutation = useMutation(
+    trpc.poker.imports.validate.mutationOptions({
+      onError: (error) => {
+        toast({
+          title: "Erro na validação",
+          description: error.message,
+          variant: "error",
+        });
+      },
+    })
+  );
+
+  const processImportMutation = useMutation(
+    trpc.poker.imports.process.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["poker", "imports"] });
+        queryClient.invalidateQueries({ queryKey: ["poker", "players"] });
+        queryClient.invalidateQueries({ queryKey: ["poker", "sessions"] });
+        queryClient.invalidateQueries({ queryKey: ["poker", "agents"] });
         toast({
           title: t("poker.import.uploadSuccess"),
           variant: "success",
@@ -1707,7 +1769,7 @@ export function ImportUploader() {
       },
       onError: (error) => {
         toast({
-          title: t("poker.import.uploadError"),
+          title: "Erro no processamento",
           description: error.message,
           variant: "error",
         });
@@ -1720,16 +1782,36 @@ export function ImportUploader() {
 
     setIsImporting(true);
     try {
-      await createImportMutation.mutateAsync({
+      // Step 1: Create the import record
+      const { id: importId } = await createImportMutation.mutateAsync({
         fileName: currentFileName,
         fileSize: currentFileSize,
         fileType: currentFileType,
         rawData: parsedDataForValidation,
       });
+
+      // Step 2: Validate the import
+      const validationResult = await validateImportMutation.mutateAsync({ id: importId });
+
+      if (!validationResult.validationPassed) {
+        toast({
+          title: "Validação falhou",
+          description: `${validationResult.errors.length} erro(s) encontrado(s)`,
+          variant: "error",
+        });
+        return;
+      }
+
+      // Step 3: Process the import (save to database tables)
+      await processImportMutation.mutateAsync({ id: importId });
+
+    } catch (error) {
+      // Errors are handled by individual mutation onError callbacks
+      console.error("Import failed:", error);
     } finally {
       setIsImporting(false);
     }
-  }, [parsedDataForValidation, currentFileName, currentFileSize, currentFileType, createImportMutation]);
+  }, [parsedDataForValidation, currentFileName, currentFileSize, currentFileType, createImportMutation, validateImportMutation, processImportMutation, toast]);
 
   const handleRejectImport = useCallback(() => {
     setValidationModalOpen(false);
@@ -1744,6 +1826,14 @@ export function ImportUploader() {
   const processFile = useCallback(
     async (file: File) => {
       setIsProcessing(true);
+
+      // Show processing toast (Vault style)
+      const { dismiss } = toast({
+        variant: "spinner",
+        title: t("poker.import.processing"),
+        description: file.name,
+        duration: Number.POSITIVE_INFINITY,
+      });
 
       try {
         const fileType = file.name.endsWith(".csv") ? "csv" : "xlsx";
@@ -1766,12 +1856,19 @@ export function ImportUploader() {
           // Parse Excel file
           // cellFormula: true preserva fórmulas, cellStyles: true ajuda com valores calculados
           const arrayBuffer = await file.arrayBuffer();
+
+          // Micro-delay para permitir UI atualizar antes do parse pesado
+          await new Promise((resolve) => setTimeout(resolve, 0));
+
           const workbook = XLSX.read(arrayBuffer, {
             type: "array",
             cellFormula: true,
             cellStyles: true,
             cellDates: true,
           });
+
+          // Micro-delay após parse para UI continuar responsiva
+          await new Promise((resolve) => setTimeout(resolve, 0));
 
           // Extract period from Geral sheet header if available
           const geralSheet = workbook.Sheets["Geral"] || workbook.Sheets["General"];
@@ -1789,6 +1886,9 @@ export function ImportUploader() {
           // Parse all sheets from PPPoker export
           const sheetData = parseExcelWorkbook(workbook);
           parsedData = { ...parsedData, ...sheetData };
+
+          // Micro-delay para UI continuar responsiva
+          await new Promise((resolve) => setTimeout(resolve, 0));
 
           // If no PPPoker sheets found, try auto-detect on first sheet
           if (
@@ -1830,7 +1930,11 @@ export function ImportUploader() {
         setParsedDataForValidation(parsedData);
         setValidationResult(validation);
         setValidationModalOpen(true);
+
+        // Dismiss processing toast
+        dismiss();
       } catch (error: any) {
+        dismiss();
         toast({
           title: t("poker.import.parseError"),
           description: error.message,
@@ -1866,39 +1970,52 @@ export function ImportUploader() {
 
   return (
     <>
+      {/* Drop zone wrapper */}
       <div
-        {...getRootProps()}
-        className={cn(
-          "border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors",
-          isDragActive
-            ? "border-primary bg-primary/5"
-            : "border-border hover:border-primary/50",
-          isProcessing && "opacity-50 cursor-not-allowed"
-        )}
+        className="relative h-full"
+        {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
       >
-        <input {...getInputProps()} />
+        {/* Drag overlay */}
+        <div className="absolute top-0 right-0 left-0 z-[51] w-full pointer-events-none h-[calc(100vh-150px)]">
+          <div
+            className={cn(
+              "bg-background dark:bg-[#1A1A1A] h-full w-full flex items-center justify-center text-center transition-opacity",
+              isDragActive ? "visible opacity-100" : "invisible opacity-0"
+            )}
+          >
+            <input {...getInputProps()} id="upload-club-file" />
+            <div className="flex flex-col items-center justify-center gap-2">
+              <p className="text-sm">{t("poker.import.dropHere")}</p>
+              <span className="text-xs text-[#878787]">
+                {t("poker.import.supportedFormats")}
+              </span>
+            </div>
+          </div>
+        </div>
 
-        <div className="flex flex-col items-center gap-4">
-          {isProcessing ? (
-            <>
-              <Spinner size={48} className="text-muted-foreground" />
-              <p className="text-lg font-medium">{t("poker.import.processing")}</p>
-            </>
-          ) : (
-            <>
-              <Icons.Import className="h-12 w-12 text-muted-foreground" />
-              <div>
-                <p className="text-lg font-medium">
-                  {isDragActive
-                    ? t("poker.import.dropHere")
-                    : t("poker.import.dragOrClick")}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("poker.import.supportedFormats")}
-                </p>
+        {/* Empty state - Vault style */}
+        <div className="h-[calc(100vh-250px)] flex items-center justify-center">
+          <div className="relative z-20 m-auto flex w-full max-w-[380px] flex-col">
+            <div className="flex w-full flex-col relative text-center">
+              <div className="pb-4">
+                <h2 className="font-medium text-lg">
+                  {t("poker.import.empty_title")}
+                </h2>
               </div>
-            </>
-          )}
+
+              <p className="pb-6 text-sm text-[#878787]">
+                {t("poker.import.empty_description")}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => document.getElementById("upload-club-file")?.click()}
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+              >
+                {t("poker.import.upload")}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

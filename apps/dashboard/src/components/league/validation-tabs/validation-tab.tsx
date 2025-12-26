@@ -1,13 +1,16 @@
 "use client";
 
-import type { LeagueValidationCheck } from "@/lib/league/types";
+import type {
+  LeagueValidationCheck,
+  LeagueValidationWarning,
+} from "@/lib/league/types";
 import { Badge } from "@midday/ui/badge";
 import { Icons } from "@midday/ui/icons";
 import { useState } from "react";
 
 interface LeagueValidationTabProps {
   checks: LeagueValidationCheck[];
-  warnings: string[];
+  warnings: LeagueValidationWarning[];
 }
 
 // Category labels and order
@@ -148,9 +151,19 @@ export function LeagueValidationTab({
               <p className="font-medium text-amber-500">
                 {warnings.length} aviso(s) de validação
               </p>
-              <ul className="text-sm text-muted-foreground mt-2 space-y-1">
-                {warnings.map((warning, idx) => (
-                  <li key={idx}>• {warning}</li>
+              <ul className="text-sm text-muted-foreground mt-2 space-y-2">
+                {warnings.map((warning) => (
+                  <li key={warning.id} className="space-y-0.5">
+                    <span className="font-medium text-foreground">
+                      • {warning.title}
+                    </span>
+                    <p className="ml-3 text-xs">{warning.description}</p>
+                    {warning.suggestedAction && (
+                      <p className="ml-3 text-xs text-amber-600">
+                        💡 {warning.suggestedAction}
+                      </p>
+                    )}
+                  </li>
                 ))}
               </ul>
             </div>

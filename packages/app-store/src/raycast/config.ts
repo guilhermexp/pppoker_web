@@ -1,13 +1,13 @@
 import { Logo } from "./assets/logo";
 
 export default {
-  name: "Raycast",
-  id: "raycast",
-  category: "Time Tracking",
+  name: "PPPoker",
+  id: "pppoker",
+  category: "Integration",
   active: false,
   logo: Logo,
   short_description:
-    "Track time directly in Raycast. You can start a timer, add time to an existing project or create a new project directly from Raycast.",
+    "Integrate PPPoker to sync club, league, and transaction data into Midday for validation and reporting.",
   description: null,
   images: [],
 };

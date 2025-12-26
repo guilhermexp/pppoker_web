@@ -140,13 +140,15 @@ export const pokerSessionsRouter = createTRPCRouter({
           created_by:poker_players!poker_sessions_created_by_id_fkey(id, nickname, memo_name),
           session_players:poker_session_players(
             id,
-            player:poker_players(id, nickname, memo_name),
+            player:poker_players(id, nickname, memo_name, pppoker_id),
             ranking,
             buy_in_chips,
             buy_in_ticket,
             cash_out,
             winnings,
-            rake
+            rake,
+            rake_ppst,
+            rake_ppsr
           )
         `,
         )
@@ -199,6 +201,7 @@ export const pokerSessionsRouter = createTRPCRouter({
                 id: sp.player.id,
                 nickname: sp.player.nickname,
                 memoName: sp.player.memo_name,
+                ppPokerId: sp.player.pppoker_id,
               }
             : null,
           ranking: sp.ranking,
@@ -207,6 +210,8 @@ export const pokerSessionsRouter = createTRPCRouter({
           cashOut: sp.cash_out ?? 0,
           winnings: sp.winnings ?? 0,
           rake: sp.rake ?? 0,
+          rakePpst: sp.rake_ppst ?? 0,
+          rakePpsr: sp.rake_ppsr ?? 0,
         })),
       };
     }),
@@ -312,7 +317,7 @@ export const pokerSessionsRouter = createTRPCRouter({
   getStats: protectedProcedure
     .input(
       getPokerSessionsSchema
-        .pick({ dateFrom: true, dateTo: true })
+        .pick({ dateFrom: true, dateTo: true, sessionType: true, gameVariant: true })
         .optional()
     )
     .query(async ({ input, ctx: { teamId } }) => {
@@ -320,7 +325,7 @@ export const pokerSessionsRouter = createTRPCRouter({
 
       let query = supabase
         .from("poker_sessions")
-        .select("session_type, game_variant, total_rake, total_buy_in, player_count")
+        .select("session_type, game_variant, total_rake, total_buy_in, player_count, hands_played, guaranteed_prize, raw_data")
         .eq("team_id", teamId);
 
       if (input?.dateFrom) {
@@ -329,6 +334,14 @@ export const pokerSessionsRouter = createTRPCRouter({
 
       if (input?.dateTo) {
         query = query.lte("started_at", input.dateTo);
+      }
+
+      if (input?.sessionType) {
+        query = query.eq("session_type", input.sessionType);
+      }
+
+      if (input?.gameVariant) {
+        query = query.eq("game_variant", input.gameVariant);
       }
 
       const { data: sessions, error } = await query;
@@ -345,22 +358,57 @@ export const pokerSessionsRouter = createTRPCRouter({
         totalRake: 0,
         totalBuyIn: 0,
         totalPlayers: 0,
-        byType: {} as Record<string, number>,
-        byVariant: {} as Record<string, number>,
+        totalHandsPlayed: 0,
+        totalGtd: 0,
+        byType: {} as Record<string, { count: number; rake: number; buyIn: number }>,
+        byVariant: {} as Record<string, { count: number; rake: number }>,
+        byOrganizer: {} as Record<string, { count: number; rake: number }>,
       };
 
       for (const session of sessions ?? []) {
         stats.totalRake += session.total_rake ?? 0;
         stats.totalBuyIn += session.total_buy_in ?? 0;
         stats.totalPlayers += session.player_count ?? 0;
+        stats.totalHandsPlayed += session.hands_played ?? 0;
+        stats.totalGtd += session.guaranteed_prize ?? 0;
 
         const type = session.session_type ?? "unknown";
-        stats.byType[type] = (stats.byType[type] ?? 0) + 1;
+        if (!stats.byType[type]) {
+          stats.byType[type] = { count: 0, rake: 0, buyIn: 0 };
+        }
+        stats.byType[type].count++;
+        stats.byType[type].rake += session.total_rake ?? 0;
+        stats.byType[type].buyIn += session.total_buy_in ?? 0;
 
         const variant = session.game_variant ?? "unknown";
-        stats.byVariant[variant] = (stats.byVariant[variant] ?? 0) + 1;
+        if (!stats.byVariant[variant]) {
+          stats.byVariant[variant] = { count: 0, rake: 0 };
+        }
+        stats.byVariant[variant].count++;
+        stats.byVariant[variant].rake += session.total_rake ?? 0;
+
+        // Extract organizer from raw_data if available
+        const rawData = session.raw_data as any;
+        const organizer = rawData?.organizer ?? "unknown";
+        if (!stats.byOrganizer[organizer]) {
+          stats.byOrganizer[organizer] = { count: 0, rake: 0 };
+        }
+        stats.byOrganizer[organizer].count++;
+        stats.byOrganizer[organizer].rake += session.total_rake ?? 0;
       }
 
-      return stats;
+      // Get unique player count
+      const { data: uniquePlayers } = await supabase
+        .from("poker_session_players")
+        .select("player_id")
+        .eq("team_id", teamId);
+
+      const uniquePlayerIds = new Set((uniquePlayers ?? []).map((p) => p.player_id));
+      const uniquePlayerCount = uniquePlayerIds.size;
+
+      return {
+        ...stats,
+        uniquePlayerCount,
+      };
     }),
 });

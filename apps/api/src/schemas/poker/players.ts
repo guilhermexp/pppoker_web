@@ -195,6 +195,18 @@ export const getPlayersByAgentSchema = z.object({
   pageSize: z.coerce.number().min(1).max(1000).optional(),
 });
 
+export const getAgentStatsSchema = z.object({
+  dateFrom: z.string().nullable().optional().openapi({
+    description: "Filter stats from this date (ISO string)",
+  }),
+  dateTo: z.string().nullable().optional().openapi({
+    description: "Filter stats to this date (ISO string)",
+  }),
+  superAgentId: z.string().uuid().nullable().optional().openapi({
+    description: "Filter by super agent ID",
+  }),
+});
+
 export const checkExistingPlayersSchema = z.object({
   ppPokerIds: z.array(z.string()).openapi({
     description: "Array of PPPoker IDs to check",

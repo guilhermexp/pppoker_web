@@ -13,6 +13,7 @@ import {
   trpc,
 } from "@/trpc/server";
 import { shouldShowUpgradeContent } from "@/utils/trial";
+import { createClient } from "@midday/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -21,6 +22,19 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
+  // Use getUser() instead of getSession() to validate the token with Supabase
+  // getSession() only reads from cookies and may return expired tokens
+  // getUser() validates the token and refreshes it if needed
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !authUser) {
+    redirect("/login");
+  }
+
   const queryClient = getQueryClient();
 
   // NOTE: Right now we want to fetch the user and hydrate the client
@@ -46,11 +60,17 @@ export default async function Layout({
   }
 
   // NOTE: These are used in the global sheets - only prefetch after auth checks
-  batchPrefetch([
-    trpc.team.current.queryOptions(),
-    trpc.invoice.defaultSettings.queryOptions(),
-    trpc.search.global.queryOptions({ searchTerm: "" }),
-  ]);
+  // Wrapped in try-catch to prevent SSR crashes on auth errors
+  try {
+    batchPrefetch([
+      trpc.team.current.queryOptions(),
+      trpc.invoice.defaultSettings.queryOptions(),
+      trpc.search.global.queryOptions({ searchTerm: "" }),
+    ]);
+  } catch (error) {
+    // Silently fail - client will refetch if needed
+    console.error("[Layout] Prefetch error:", error);
+  }
 
   // Check if trial has expired - render upgrade content directly instead of redirecting
   const headersList = await headers();

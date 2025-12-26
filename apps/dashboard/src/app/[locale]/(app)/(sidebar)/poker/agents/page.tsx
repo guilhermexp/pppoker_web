@@ -1,7 +1,10 @@
 import { ErrorFallback } from "@/components/error-fallback";
 import { PokerAgentsHeader } from "@/components/poker/poker-agents-header";
+import { PokerAgentDetailSheet } from "@/components/sheets/poker-agent-detail-sheet";
 import { AgentsDataTable } from "@/components/tables/poker-agents/data-table";
 import { DataTableSkeleton } from "@/components/tables/poker-agents/skeleton";
+import { AgentsBreakdownWidget } from "@/components/widgets/poker/agents-breakdown-widget";
+import { AgentsOverviewWidget } from "@/components/widgets/poker/agents-overview-widget";
 import { loadPokerPlayerFilterParams } from "@/hooks/use-poker-player-params";
 import { loadSortParams } from "@/hooks/use-sort-params";
 import { getI18n } from "@/locales/server";
@@ -48,11 +51,20 @@ export default async function PokerAgentsPage(props: Props) {
 
         <PokerAgentsHeader />
 
+        {/* Widgets Section */}
+        <div className="space-y-4">
+          <AgentsOverviewWidget />
+          <AgentsBreakdownWidget />
+        </div>
+
         <ErrorBoundary errorComponent={ErrorFallback}>
           <Suspense fallback={<DataTableSkeleton />}>
             <AgentsDataTable />
           </Suspense>
         </ErrorBoundary>
+
+        {/* Detail Sheet */}
+        <PokerAgentDetailSheet />
       </div>
     </HydrateClient>
   );

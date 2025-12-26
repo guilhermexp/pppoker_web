@@ -191,21 +191,26 @@ export function ImportsList() {
                     variant="ghost"
                     onClick={() => cancelMutation.mutate({ id: imp.id })}
                     disabled={cancelMutation.isPending}
+                    title="Cancelar"
                   >
                     <Icons.Close className="h-4 w-4" />
                   </Button>
                 )}
 
-                {["completed", "failed", "cancelled"].includes(imp.status) && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => deleteMutation.mutate({ id: imp.id })}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Icons.Delete className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (window.confirm("Tem certeza que deseja excluir esta importação?")) {
+                      deleteMutation.mutate({ id: imp.id });
+                    }
+                  }}
+                  disabled={deleteMutation.isPending || imp.status === "processing"}
+                  title="Excluir"
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Icons.Delete className="h-4 w-4" />
+                </Button>
 
                 <Button
                   size="sm"
@@ -257,10 +262,23 @@ export function ImportsList() {
               {imp.validationErrors && imp.validationErrors.length > 0 && (
                 <div>
                   <p className="text-sm text-destructive font-medium mb-2">
-                    {t("poker.import.errors")}
+                    {t("poker.import.validationErrors")}
                   </p>
                   <ul className="list-disc list-inside text-sm text-muted-foreground">
                     {(imp.validationErrors as string[]).map((error, i) => (
+                      <li key={i}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {imp.processingErrors && (imp.processingErrors as string[]).length > 0 && (
+                <div>
+                  <p className="text-sm text-destructive font-medium mb-2">
+                    {t("poker.import.processingErrors")}
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground">
+                    {(imp.processingErrors as string[]).map((error, i) => (
                       <li key={i}>{error}</li>
                     ))}
                   </ul>

@@ -3,7 +3,6 @@ import "server-only";
 import type { AppRouter } from "@midday/api/trpc/routers/_app";
 import { getCountryCode, getLocale, getTimezone } from "@midday/location";
 import { createClient } from "@midday/supabase/server";
-import { HydrationBoundary } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import {
@@ -12,6 +11,7 @@ import {
 } from "@trpc/tanstack-react-query";
 import { cache } from "react";
 import superjson from "superjson";
+import { HydrateClientBoundary } from "./hydrate-client";
 import { makeQueryClient } from "./query-client";
 
 // IMPORTANT: Create a stable getter for the query client that
@@ -28,16 +28,25 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
         async headers() {
           const supabase = await createClient();
 
+          // Use getSession() to get the access token
+          // Note: getUser() validates the token but doesn't return access_token directly
+          // The middleware should have already refreshed the session if needed
           const {
             data: { session },
           } = await supabase.auth.getSession();
 
-          return {
-            Authorization: `Bearer ${session?.access_token}`,
+          const headers: Record<string, string> = {
             "x-user-timezone": await getTimezone(),
             "x-user-locale": await getLocale(),
             "x-user-country": await getCountryCode(),
           };
+
+          // Only send Authorization header if we have a valid session
+          if (session?.access_token) {
+            headers.Authorization = `Bearer ${session.access_token}`;
+          }
+
+          return headers;
         },
       }),
       loggerLink({
@@ -51,11 +60,12 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 
 export function HydrateClient(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
+  const dehydratedState = dehydrate(queryClient);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
+    <HydrateClientBoundary state={dehydratedState}>
       {props.children}
-    </HydrationBoundary>
+    </HydrateClientBoundary>
   );
 }
 

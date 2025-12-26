@@ -9,6 +9,7 @@ import { Table, TableBody } from "@midday/ui/table";
 import { useMutation, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import {
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -88,6 +89,7 @@ export function SessionsDataTable() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     meta: {
       deleteSession: handleDeleteSession,
     },
