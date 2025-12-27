@@ -21,8 +21,18 @@ import { TableHeader } from "./table-header";
 
 export function DataTable() {
   const { ref, inView } = useInView();
-  const { setParams, q, type, status, agentId, hasFilters } =
-    usePokerPlayerParams();
+  const {
+    setParams,
+    q,
+    type,
+    status,
+    agentId,
+    hasCreditLimit,
+    hasRake,
+    hasBalance,
+    hasAgent,
+    hasFilters,
+  } = usePokerPlayerParams();
   const trpc = useTRPC();
   const { params: sortParams } = useSortParams();
 
@@ -41,6 +51,10 @@ export function DataTable() {
       type,
       status,
       agentId,
+      hasCreditLimit: hasCreditLimit || null,
+      hasRake: hasRake || null,
+      hasBalance: hasBalance || null,
+      hasAgent: hasAgent || null,
       sort: sortArray,
     },
     {

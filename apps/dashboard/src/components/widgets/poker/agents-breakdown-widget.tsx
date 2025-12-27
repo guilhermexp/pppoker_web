@@ -8,16 +8,12 @@ import { Skeleton } from "@midday/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 
 function formatCurrency(value: number) {
-  if (value >= 1000000) {
-    return `R$ ${(value / 1000000).toFixed(2)}M`;
-  }
-  if (value >= 1000) {
-    return `R$ ${(value / 1000).toFixed(1)}K`;
-  }
-  return `R$ ${value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })}`;
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 const statusColors: Record<string, { bg: string; text: string; dot: string }> = {

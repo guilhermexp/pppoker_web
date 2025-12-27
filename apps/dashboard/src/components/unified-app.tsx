@@ -16,13 +16,22 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@midday/ui/carousel";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@midday/ui/dropdown-menu";
 import { ScrollArea } from "@midday/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { AppSettings } from "./app-settings";
+import { PokerImportSheet } from "./poker-import-sheet";
+import { ImportsList } from "./poker/imports-list";
 
 interface UnifiedAppProps {
   app: UnifiedApp;
@@ -86,10 +95,14 @@ function CarouselWithDots({
   );
 }
 
+type PokerImportType = "club" | "league" | "su";
+
 export function UnifiedAppComponent({ app }: UnifiedAppProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isLoading, setLoading] = useState(false);
+  const [pokerImportType, setPokerImportType] =
+    useState<PokerImportType | null>(null);
   const [params, setParams] = useQueryStates({
     app: parseAsString,
     settings: parseAsBoolean,
@@ -199,6 +212,26 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
                 ? "Disconnecting..."
                 : "Disconnect"}
             </Button>
+          ) : app.id === "pppoker" ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  Importar
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setPokerImportType("su")}>
+                  Super Union Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPokerImportType("league")}>
+                  Liga Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPokerImportType("club")}>
+                  Clube Data
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Button
               variant="outline"
@@ -210,6 +243,14 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
             </Button>
           )}
         </div>
+
+        {app.id === "pppoker" && (
+          <PokerImportSheet
+            open={pokerImportType !== null}
+            onOpenChange={(open) => !open && setPokerImportType(null)}
+            type={pokerImportType}
+          />
+        )}
 
         <SheetContent>
           <SheetHeader>
@@ -230,71 +271,13 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
               </div>
             )}
 
-            <div className="flex items-center justify-between border-b border-border pb-2">
-              <div className="flex items-center space-x-2">
-                {app.type === "official" &&
-                app.logo &&
-                typeof app.logo !== "string" ? (
-                  <app.logo />
-                ) : (
-                  <img
-                    src={app.logo as string}
-                    alt={app.name}
-                    className="w-8 h-8 rounded"
-                  />
-                )}
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-lg leading-none">{app.name}</h3>
-                    {app.installed && (
-                      <div className="bg-green-600 text-[9px] dark:bg-green-300 rounded-full size-1" />
-                    )}
-                  </div>
-
-                  <span className="text-xs text-[#878787]">
-                    {app.category} •{" "}
-                    {app.type === "external"
-                      ? `By ${app.developerName}`
-                      : "By Midday"}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                {app.installed ? (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleDisconnect}
-                    disabled={
-                      disconnectOfficialAppMutation.isPending ||
-                      revokeExternalAppMutation.isPending
-                    }
-                  >
-                    {disconnectOfficialAppMutation.isPending ||
-                    revokeExternalAppMutation.isPending
-                      ? "Disconnecting..."
-                      : "Disconnect"}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full border-primary"
-                    onClick={handleOnInitialize}
-                    disabled={!app.active || isLoading}
-                  >
-                    {isLoading ? "Installing..." : "Install"}
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4">
+            <div>
               <ScrollArea className="h-[calc(100vh-530px)] pt-2" hideScrollbar>
                 <Accordion
                   type="multiple"
                   defaultValue={[
                     "description",
+                    ...(app.id === "pppoker" ? ["imports"] : []),
                     ...(params.settings ? ["settings"] : []),
                   ]}
                   className="mt-4"
@@ -305,6 +288,17 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
                       {app.description || app.overview}
                     </AccordionContent>
                   </AccordionItem>
+
+                  {app.id === "pppoker" && (
+                    <AccordionItem value="imports" className="border-none">
+                      <AccordionTrigger>Planilhas Importadas</AccordionTrigger>
+                      <AccordionContent>
+                        <Suspense fallback={<ImportsList.Skeleton />}>
+                          <ImportsList />
+                        </Suspense>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
 
                   {app.type === "official" &&
                     app.settings &&
@@ -378,22 +372,6 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
                 </Accordion>
               </ScrollArea>
 
-              <div className="absolute bottom-4 pt-8 border-t border-border">
-                <p className="text-[10px] text-[#878787]">
-                  All apps on the Midday App Store are open-source and
-                  peer-reviewed. Midday Labs AB maintains high standards but
-                  doesn't endorse third-party apps. Apps published by Midday are
-                  officially certified. Report any concerns about app content or
-                  behavior.
-                </p>
-
-                <a
-                  href="mailto:support@midday.dev"
-                  className="text-[10px] text-red-500"
-                >
-                  Report app
-                </a>
-              </div>
             </div>
           </SheetHeader>
         </SheetContent>

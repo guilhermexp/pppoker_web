@@ -13,6 +13,11 @@ export const pokerPlayerFilterSchema = {
   dateFrom: parseAsString,
   dateTo: parseAsString,
   viewAgentId: parseAsString, // For agent detail sheet
+  // Simple boolean filters
+  hasCreditLimit: parseAsString, // "true" or null
+  hasRake: parseAsString, // "true" or null
+  hasBalance: parseAsString, // "true" or null
+  hasAgent: parseAsString, // "true" or null
 };
 
 type SetParamsInput = {
@@ -26,6 +31,11 @@ type SetParamsInput = {
   dateFrom?: string | null;
   dateTo?: string | null;
   viewAgentId?: string | null;
+  // Simple boolean filters
+  hasCreditLimit?: boolean | null;
+  hasRake?: boolean | null;
+  hasBalance?: boolean | null;
+  hasAgent?: boolean | null;
 } | null;
 
 export function usePokerPlayerParams() {
@@ -47,6 +57,10 @@ export function usePokerPlayerParams() {
         dateFrom: null,
         dateTo: null,
         viewAgentId: null,
+        hasCreditLimit: null,
+        hasRake: null,
+        hasBalance: null,
+        hasAgent: null,
       });
     } else {
       // Only update the keys that are explicitly provided
@@ -82,6 +96,18 @@ export function usePokerPlayerParams() {
       if ("viewAgentId" in newParams) {
         updates.viewAgentId = newParams.viewAgentId ?? null;
       }
+      if ("hasCreditLimit" in newParams) {
+        updates.hasCreditLimit = newParams.hasCreditLimit ? "true" : null;
+      }
+      if ("hasRake" in newParams) {
+        updates.hasRake = newParams.hasRake ? "true" : null;
+      }
+      if ("hasBalance" in newParams) {
+        updates.hasBalance = newParams.hasBalance ? "true" : null;
+      }
+      if ("hasAgent" in newParams) {
+        updates.hasAgent = newParams.hasAgent ? "true" : null;
+      }
 
       setParamsInternal(updates);
     }
@@ -93,13 +119,20 @@ export function usePokerPlayerParams() {
     createPlayer: params.createPlayer === "true",
     type: params.type as "player" | "agent" | null,
     status: params.status as "active" | "inactive" | "suspended" | "blacklisted" | null,
+    hasCreditLimit: params.hasCreditLimit === "true",
+    hasRake: params.hasRake === "true",
+    hasBalance: params.hasBalance === "true",
+    hasAgent: params.hasAgent === "true",
     setParams,
     hasFilters:
       params.q !== null ||
       params.type !== null ||
       params.status !== null ||
       params.agentId !== null ||
-      params.superAgentId !== null,
+      params.hasCreditLimit !== null ||
+      params.hasRake !== null ||
+      params.hasBalance !== null ||
+      params.hasAgent !== null,
     hasDateFilter: params.dateFrom !== null || params.dateTo !== null,
   };
 }

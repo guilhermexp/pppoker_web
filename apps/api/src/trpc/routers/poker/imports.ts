@@ -1,4 +1,5 @@
 import { createAdminClient } from "@api/services/supabase";
+import { calculateBatchActivityMetrics } from "@api/utils/poker-activity";
 import { TRPCError } from "@trpc/server";
 import {
   cancelPokerImportSchema,
@@ -19,7 +20,7 @@ export const pokerImportsRouter = createTRPCRouter({
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
-      const { cursor, pageSize = 20, status } = input ?? {};
+      const { cursor, pageSize = 20, status, sourceType } = input ?? {};
 
       let query = supabase
         .from("poker_imports")
@@ -29,6 +30,10 @@ export const pokerImportsRouter = createTRPCRouter({
 
       if (status) {
         query = query.eq("status", status);
+      }
+
+      if (sourceType) {
+        query = query.eq("source_type", sourceType);
       }
 
       const currentCursor = cursor ? Number.parseInt(cursor, 10) : 0;
@@ -53,27 +58,81 @@ export const pokerImportsRouter = createTRPCRouter({
           hasNextPage,
           totalCount: count ?? 0,
         },
-        data: (data ?? []).map((imp) => ({
-          id: imp.id,
-          createdAt: imp.created_at,
-          updatedAt: imp.updated_at,
-          fileName: imp.file_name,
-          fileSize: imp.file_size,
-          fileType: imp.file_type,
-          status: imp.status,
-          periodStart: imp.period_start,
-          periodEnd: imp.period_end,
-          totalPlayers: imp.total_players ?? 0,
-          totalSessions: imp.total_sessions ?? 0,
-          totalTransactions: imp.total_transactions ?? 0,
-          newPlayers: imp.new_players ?? 0,
-          updatedPlayers: imp.updated_players ?? 0,
-          validationPassed: imp.validation_passed ?? false,
-          validationErrors: imp.validation_errors,
-          validationWarnings: imp.validation_warnings,
-          processingErrors: imp.processing_errors,
-          processedAt: imp.processed_at,
-        })),
+        data: (data ?? []).map((imp) => {
+          const rawData = imp.raw_data as any;
+
+          // Calculate detailed stats from raw_data
+          const summaries = rawData?.summaries ?? [];
+          const sessions = rawData?.sessions ?? [];
+          const rakebacks = rawData?.rakebacks ?? [];
+
+          // Players breakdown
+          const playersWithAgent = summaries.filter((s: any) => s.agentPpPokerId).length;
+          const playersWithoutAgent = summaries.length - playersWithAgent;
+
+          // Unique agents and super agents from summaries
+          const agentIds = new Set(summaries.map((s: any) => s.agentPpPokerId).filter(Boolean));
+          const superAgentIds = new Set(summaries.map((s: any) => s.superAgentPpPokerId).filter(Boolean));
+
+          // Sessions breakdown by type
+          const sessionsByType = sessions.reduce((acc: any, s: any) => {
+            const type = s.sessionType || 'unknown';
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+          }, {});
+
+          // Calculate totals from summaries
+          const totalWinnings = summaries.reduce((sum: number, s: any) => {
+            return sum + (s.generalTotal ?? s.winningsTotal ?? 0);
+          }, 0);
+
+          const totalRake = summaries.reduce((sum: number, s: any) => {
+            return sum + (s.feeGeneral ?? s.rakeTotal ?? 0);
+          }, 0);
+
+          // Winners vs Losers
+          const winners = summaries.filter((s: any) => (s.generalTotal ?? s.winningsTotal ?? 0) > 0).length;
+          const losers = summaries.filter((s: any) => (s.generalTotal ?? s.winningsTotal ?? 0) < 0).length;
+
+          return {
+            id: imp.id,
+            createdAt: imp.created_at,
+            updatedAt: imp.updated_at,
+            fileName: imp.file_name,
+            fileSize: imp.file_size,
+            fileType: imp.file_type,
+            sourceType: imp.source_type ?? "club",
+            status: imp.status,
+            periodStart: imp.period_start,
+            periodEnd: imp.period_end,
+            totalPlayers: imp.total_players ?? 0,
+            totalSessions: imp.total_sessions ?? 0,
+            totalTransactions: imp.total_transactions ?? 0,
+            newPlayers: imp.new_players ?? 0,
+            updatedPlayers: imp.updated_players ?? 0,
+            validationPassed: imp.validation_passed ?? false,
+            validationErrors: imp.validation_errors,
+            validationWarnings: imp.validation_warnings,
+            processingErrors: imp.processing_errors,
+            processedAt: imp.processed_at,
+            // Metadata from raw_data
+            clubId: rawData?.clubId ?? null,
+            unionId: rawData?.unionId ?? null,
+            // Detailed stats
+            stats: {
+              playersWithAgent,
+              playersWithoutAgent,
+              agentsCount: agentIds.size,
+              superAgentsCount: superAgentIds.size,
+              rakebacksCount: rakebacks.length,
+              sessionsByType,
+              totalWinnings,
+              totalRake,
+              winners,
+              losers,
+            },
+          };
+        }),
       };
     }),
 
@@ -143,6 +202,7 @@ export const pokerImportsRouter = createTRPCRouter({
           file_name: input.fileName,
           file_size: input.fileSize,
           file_type: input.fileType,
+          source_type: input.sourceType ?? "club",
           status: "validating",
           raw_data: input.rawData,
         })
@@ -195,7 +255,8 @@ export const pokerImportsRouter = createTRPCRouter({
       const { data: existingPlayers } = await supabase
         .from("poker_players")
         .select("pppoker_id")
-        .eq("team_id", teamId);
+        .eq("team_id", teamId)
+        .limit(50000); // Avoid 1000 row limit
 
       const existingIds = new Set(
         (existingPlayers ?? []).map((p) => p.pppoker_id)
@@ -344,8 +405,11 @@ export const pokerImportsRouter = createTRPCRouter({
 
       try {
         // ============================================
-        // STEP 1: Batch upsert all players (from players array)
+        // STEP 1: Batch upsert ALL players from "Detalhes do usuário"
         // ============================================
+        // This sheet contains ALL club members - important for historical record.
+        // Stats/widgets should count from poker_player_summary (players with activity)
+        // not from poker_players (all club members).
         if (rawData?.players?.length > 0) {
           const playersRaw = rawData.players.map((player: any) => ({
             team_id: teamId,
@@ -357,6 +421,7 @@ export const pokerImportsRouter = createTRPCRouter({
             status: "active",
             chip_balance: player.chipBalance ?? 0,
             agent_credit_balance: player.agentCreditBalance ?? 0,
+            super_agent_credit_balance: player.superAgentCreditBalance ?? 0,
             last_active_at: player.lastActiveAt ?? null,
             updated_at: new Date().toISOString(),
           }));
@@ -469,12 +534,54 @@ export const pokerImportsRouter = createTRPCRouter({
         }
 
         // ============================================
+        // STEP 2.6: Batch upsert players from sessions (Partidas sheet)
+        // These players may not be in Geral sheet but are in individual game results
+        // ============================================
+        if (rawData?.sessions?.length > 0) {
+          const sessionPlayersRaw: any[] = [];
+
+          for (const session of rawData.sessions) {
+            if (!session.players?.length) continue;
+
+            for (const player of session.players) {
+              if (!player.ppPokerId) continue;
+
+              sessionPlayersRaw.push({
+                team_id: teamId,
+                pppoker_id: player.ppPokerId,
+                nickname: player.nickname || `Player ${player.ppPokerId}`,
+                memo_name: player.memoName ?? null,
+                type: "player",
+                status: "active",
+                updated_at: new Date().toISOString(),
+              });
+            }
+          }
+
+          if (sessionPlayersRaw.length > 0) {
+            // Deduplicate by pppoker_id
+            const sessionPlayersToUpsert = deduplicateByKey(sessionPlayersRaw, (p) => p.pppoker_id);
+
+            for (const batch of chunkArray(sessionPlayersToUpsert, BATCH_SIZE)) {
+              const { error } = await supabase
+                .from("poker_players")
+                .upsert(batch, { onConflict: "pppoker_id,team_id" });
+
+              if (error) {
+                processingErrors.push(`Failed to upsert session players batch: ${error.message}`);
+              }
+            }
+          }
+        }
+
+        // ============================================
         // STEP 3: Get player ID map (needed for transactions and sessions)
         // ============================================
         const { data: allPlayers } = await supabase
           .from("poker_players")
           .select("id, pppoker_id")
-          .eq("team_id", teamId);
+          .eq("team_id", teamId)
+          .limit(50000); // Avoid 1000 row limit
 
         const playerIdMap = new Map(
           (allPlayers ?? []).map((p) => [p.pppoker_id, p.id])
@@ -577,10 +684,27 @@ export const pokerImportsRouter = createTRPCRouter({
                 sender_club_id: tx.senderClubId ?? null,
                 sender_player_id: tx.senderPlayerId ? playerIdMap.get(tx.senderPlayerId) : null,
                 recipient_player_id: tx.recipientPlayerId ? playerIdMap.get(tx.recipientPlayerId) : null,
+                // Identificação completa - sender (100% coverage)
+                sender_nickname: tx.senderNickname ?? null,
+                sender_memo_name: tx.senderMemoName ?? null,
+                // Identificação completa - recipient (100% coverage)
+                recipient_nickname: tx.recipientNickname ?? null,
+                recipient_memo_name: tx.recipientMemoName ?? null,
                 credit_sent: tx.creditSent ?? 0,
                 credit_redeemed: tx.creditRedeemed ?? 0,
+                credit_left_club: tx.creditLeftClub ?? 0,
                 chips_sent: tx.chipsSent ?? 0,
                 chips_redeemed: tx.chipsRedeemed ?? 0,
+                chips_left_club: tx.chipsLeftClub ?? 0,
+                // Classification by chip type (M-P)
+                chips_ppsr: tx.classificationPpsr ?? 0,
+                chips_ring: tx.classificationRing ?? 0,
+                chips_custom_ring: tx.classificationCustomRing ?? 0,
+                chips_mtt: tx.classificationMtt ?? 0,
+                // Tickets (S-U)
+                ticket_sent: tx.ticketSent ?? 0,
+                ticket_redeemed: tx.ticketRedeemed ?? 0,
+                ticket_expired: tx.ticketExpired ?? 0,
                 amount:
                   (tx.creditSent ?? 0) +
                   (tx.chipsSent ?? 0) -
@@ -628,7 +752,8 @@ export const pokerImportsRouter = createTRPCRouter({
                 guaranteed_prize: session.guaranteedPrize ?? null,
                 total_rake: session.totalRake ?? 0,
                 total_buy_in: session.totalBuyIn ?? 0,
-                total_cash_out: session.totalWinnings ?? 0,
+                // totalWinnings is net result (can be negative), so cash_out = buy_in + winnings
+                total_cash_out: (session.totalBuyIn ?? 0) + (session.totalWinnings ?? 0),
                 player_count: session.playerCount ?? session.players?.length ?? 0,
                 hands_played: session.handsPlayed ?? 0,
                 created_by_id: session.createdByPpPokerId ? playerIdMap.get(session.createdByPpPokerId) : null,
@@ -662,7 +787,8 @@ export const pokerImportsRouter = createTRPCRouter({
         const { data: allSessions } = await supabase
           .from("poker_sessions")
           .select("id, external_id")
-          .eq("team_id", teamId);
+          .eq("team_id", teamId)
+          .limit(50000); // Avoid 1000 row limit
 
         const sessionIdMap = new Map(
           (allSessions ?? []).map((s) => [s.external_id, s.id])
@@ -686,12 +812,29 @@ export const pokerImportsRouter = createTRPCRouter({
                 team_id: teamId,
                 session_id: sessionId,
                 player_id: playerId,
+                // Identificação completa (100% coverage)
+                nickname: player.nickname ?? null,
+                memo_name: player.memoName ?? null,
                 ranking: player.ranking ?? null,
                 buy_in_chips: player.buyIn ?? player.buyInChips ?? 0,
                 buy_in_ticket: player.buyInTicket ?? 0,
                 cash_out: player.winnings ?? player.winningsGeneral ?? 0,
                 winnings: player.winnings ?? player.winningsGeneral ?? 0,
                 rake: player.rake ?? player.clubWinningsFee ?? 0,
+                // Club winnings general (calculable but saving for completeness)
+                club_winnings_general: player.clubWinningsGeneral ?? null,
+                // New fields - CASH game detailed winnings
+                hands: player.hands ?? null,
+                winnings_opponents: player.winningsOpponents ?? null,
+                winnings_jackpot: player.winningsJackpot ?? null,
+                winnings_ev_split: player.winningsEvSplit ?? null,
+                // Club winnings details
+                club_winnings_jackpot_fee: player.clubWinningsJackpotFee ?? null,
+                club_winnings_jackpot_prize: player.clubWinningsJackpotPrize ?? null,
+                club_winnings_ev_split: player.clubWinningsEvSplit ?? null,
+                // Tournament specific
+                bounty: player.bounty ?? null,
+                prize: player.prize ?? null,
               });
             }
           }
@@ -720,17 +863,42 @@ export const pokerImportsRouter = createTRPCRouter({
           const periodStart = importRecord.period_start || rawData.periodStart;
           const periodEnd = importRecord.period_end || rawData.periodEnd;
 
+          // Build a map of ppPokerId -> balance data from "Detalhes do usuário"
+          // This captures the player's balance state at the time of the report
+          const playerBalanceMap = new Map<string, {
+            chipBalance: number;
+            agentCreditBalance: number;
+            superAgentCreditBalance: number;
+          }>();
+
+          for (const player of rawData?.players ?? []) {
+            if (player.ppPokerId) {
+              playerBalanceMap.set(String(player.ppPokerId), {
+                chipBalance: player.chipBalance ?? 0,
+                agentCreditBalance: player.agentCreditBalance ?? 0,
+                superAgentCreditBalance: player.superAgentCreditBalance ?? 0,
+              });
+            }
+          }
+
           if (periodStart && periodEnd) {
             const summariesRaw = rawData.summaries
               .map((summary: any) => {
                 const playerId = playerIdMap.get(summary.ppPokerId);
                 if (!playerId) return null;
 
+                // Get balance snapshot from "Detalhes do usuário" sheet
+                const balanceData = playerBalanceMap.get(String(summary.ppPokerId));
+
                 return {
                   team_id: teamId,
                   player_id: playerId,
                   period_start: periodStart,
                   period_end: periodEnd,
+                  // Balance snapshot at period end (from "Detalhes do usuário")
+                  chip_balance: balanceData?.chipBalance ?? 0,
+                  agent_credit_balance: balanceData?.agentCreditBalance ?? 0,
+                  super_agent_credit_balance: balanceData?.superAgentCreditBalance ?? 0,
                   winnings_total: summary.generalTotal ?? 0,
                   winnings_general: summary.generalTotal ?? 0,
                   winnings_ring: summary.ringGamesTotal ?? 0,
@@ -747,7 +915,37 @@ export const pokerImportsRouter = createTRPCRouter({
                   rake_ppst: summary.feePpst ?? 0,
                   rake_ppsr: summary.feePpsr ?? 0,
                   rake_non_ppst: summary.feeNonPpst ?? 0,
+                  rake_non_ppsr: summary.feeNonPpsr ?? 0,
                   club_earnings_jackpot: summary.jackpotFee ?? 0,
+                  // Classifications (K-N)
+                  classification_ppsr: summary.classificationPpsr ?? 0,
+                  classification_ring: summary.classificationRing ?? 0,
+                  classification_custom_ring: summary.classificationCustomRing ?? 0,
+                  classification_mtt: summary.classificationMtt ?? 0,
+                  // Tickets (Y-AA)
+                  ticket_value_won: summary.ticketValueWon ?? 0,
+                  ticket_buy_in: summary.ticketBuyIn ?? 0,
+                  custom_prize_value: summary.customPrizeValue ?? 0,
+                  // SPINUP details (AH-AI)
+                  spinup_buy_in: summary.spinUpBuyIn ?? 0,
+                  spinup_prize: summary.spinUpPrize ?? 0,
+                  // Caribbean (AJ-AK)
+                  caribbean_bets: summary.caribbeanBets ?? 0,
+                  caribbean_prize: summary.caribbeanPrize ?? 0,
+                  // Color Game (AL-AM)
+                  color_game_bets: summary.colorGameBets ?? 0,
+                  color_game_prize: summary.colorGamePrize ?? 0,
+                  // Crash (AN-AO)
+                  crash_bets: summary.crashBets ?? 0,
+                  crash_prize: summary.crashPrize ?? 0,
+                  // Lucky Draw (AP-AQ)
+                  lucky_draw_bets: summary.luckyDrawBets ?? 0,
+                  lucky_draw_prize: summary.luckyDrawPrize ?? 0,
+                  // EV Split (AT)
+                  ev_split: summary.evSplit ?? 0,
+                  // Ticket delivered (AU-AV)
+                  ticket_delivered_value: summary.ticketDeliveredValue ?? 0,
+                  ticket_delivered_buy_in: summary.ticketDeliveredBuyIn ?? 0,
                 };
               })
               .filter(Boolean);
@@ -765,6 +963,335 @@ export const pokerImportsRouter = createTRPCRouter({
               }
             }
           }
+        }
+
+        // ============================================
+        // STEP 9: Batch upsert player detailed data
+        // ============================================
+        if (rawData?.detailed?.length > 0) {
+          const periodStart = importRecord.period_start || rawData.periodStart;
+          const periodEnd = importRecord.period_end || rawData.periodEnd;
+
+          if (periodStart && periodEnd) {
+            const detailedRaw = rawData.detailed
+              .map((d: any) => {
+                const playerId = playerIdMap.get(d.ppPokerId);
+                if (!playerId) return null;
+
+                return {
+                  team_id: teamId,
+                  player_id: playerId,
+                  period_start: periodStart,
+                  period_end: periodEnd,
+                  date: d.date ? parseTimestamp(d.date) : null,
+                  // Identificação completa (A-I)
+                  country: d.country || null,
+                  nickname: d.nickname || null,
+                  memo_name: d.memoName || null,
+                  agent_nickname: d.agentNickname || null,
+                  agent_pppoker_id: d.agentPpPokerId || null,
+                  super_agent_nickname: d.superAgentNickname || null,
+                  super_agent_pppoker_id: d.superAgentPpPokerId || null,
+                  // Ganhos NLH (J-R)
+                  nlh_regular: d.nlhRegular ?? 0,
+                  nlh_three_one: d.nlhThreeOne ?? 0,
+                  nlh_three_one_f: d.nlhThreeOneF ?? 0,
+                  nlh_six_plus: d.nlhSixPlus ?? 0,
+                  nlh_aof: d.nlhAof ?? 0,
+                  nlh_sitng: d.nlhSitNGo ?? 0,
+                  nlh_spinup: d.nlhSpinUp ?? 0,
+                  nlh_mtt: d.nlhMtt ?? 0,
+                  nlh_mtt_six_plus: d.nlhMttSixPlus ?? 0,
+                  // Ganhos PLO (S-AB)
+                  plo4: d.plo4 ?? 0,
+                  plo5: d.plo5 ?? 0,
+                  plo6: d.plo6 ?? 0,
+                  plo4_hilo: d.plo4Hilo ?? 0,
+                  plo5_hilo: d.plo5Hilo ?? 0,
+                  plo6_hilo: d.plo6Hilo ?? 0,
+                  plo_sitng: d.ploSitNGo ?? 0,
+                  plo_mtt_plo4: d.ploMttPlo4 ?? 0,
+                  plo_mtt_plo5: d.ploMttPlo5 ?? 0,
+                  plo_nlh: d.ploNlh ?? 0,
+                  // FLASH e outros (AC-AO)
+                  flash_plo4: d.flashPlo4 ?? 0,
+                  flash_plo5: d.flashPlo5 ?? 0,
+                  mixed_game: d.mixedGame ?? 0,
+                  ofc: d.ofc ?? 0,
+                  seka_36: d.seka36 ?? 0,
+                  seka_32: d.seka32 ?? 0,
+                  seka_21: d.seka21 ?? 0,
+                  teen_patti_regular: d.teenPattiRegular ?? 0,
+                  teen_patti_ak47: d.teenPattiAk47 ?? 0,
+                  teen_patti_hukam: d.teenPattiHukam ?? 0,
+                  teen_patti_muflis: d.teenPattiMuflis ?? 0,
+                  tongits: d.tongits ?? 0,
+                  pusoy: d.pusoy ?? 0,
+                  // Cassino (AP-AU)
+                  caribbean: d.caribbean ?? 0,
+                  color_game: d.colorGame ?? 0,
+                  crash: d.crash ?? 0,
+                  lucky_draw: d.luckyDraw ?? 0,
+                  jackpot: d.jackpot ?? 0,
+                  ev_split_winnings: d.evSplitWinnings ?? 0,
+                  // Totais (AV)
+                  total_winnings: d.totalWinnings ?? 0,
+                  // Classificações (AW-AZ)
+                  classification_ppsr: d.classificationPpsr ?? 0,
+                  classification_ring: d.classificationRing ?? 0,
+                  classification_custom_ring: d.classificationCustomRing ?? 0,
+                  classification_mtt: d.classificationMtt ?? 0,
+                  // Valores Gerais (BA-BD)
+                  general_plus_events: d.generalPlusEvents ?? 0,
+                  ticket_value_won: d.ticketValueWon ?? 0,
+                  ticket_buy_in: d.ticketBuyIn ?? 0,
+                  custom_prize_value: d.customPrizeValue ?? 0,
+                  // ============================================
+                  // TAXA POR VARIANTE (BE-CI) - 33 colunas
+                  // ============================================
+                  // Taxa NLH (BE-BM)
+                  fee_nlh_regular: d.feeNlhRegular ?? 0,
+                  fee_nlh_three_one: d.feeNlhThreeOne ?? 0,
+                  fee_nlh_three_one_f: d.feeNlhThreeOneF ?? 0,
+                  fee_nlh_six_plus: d.feeNlhSixPlus ?? 0,
+                  fee_nlh_aof: d.feeNlhAof ?? 0,
+                  fee_nlh_sitng: d.feeNlhSitNGo ?? 0,
+                  fee_nlh_spinup: d.feeNlhSpinUp ?? 0,
+                  fee_nlh_mtt: d.feeNlhMtt ?? 0,
+                  fee_nlh_mtt_six_plus: d.feeNlhMttSixPlus ?? 0,
+                  // Taxa PLO (BN-BU)
+                  fee_plo4: d.feePlo4 ?? 0,
+                  fee_plo5: d.feePlo5 ?? 0,
+                  fee_plo6: d.feePlo6 ?? 0,
+                  fee_plo4_hilo: d.feePlo4Hilo ?? 0,
+                  fee_plo5_hilo: d.feePlo5Hilo ?? 0,
+                  fee_plo6_hilo: d.feePlo6Hilo ?? 0,
+                  fee_plo_sitng: d.feePloSitNGo ?? 0,
+                  fee_plo_mtt_plo4: d.feePloMttPlo4 ?? 0,
+                  fee_plo_mtt_plo5: d.feePloMttPlo5 ?? 0,
+                  // Taxa FLASH e outros (BV-CI)
+                  fee_flash_nlh: d.feeFlashNlh ?? 0,
+                  fee_flash_plo4: d.feeFlashPlo4 ?? 0,
+                  fee_flash_plo5: d.feeFlashPlo5 ?? 0,
+                  fee_mixed_game: d.feeMixedGame ?? 0,
+                  fee_ofc: d.feeOfc ?? 0,
+                  fee_seka_36: d.feeSeka36 ?? 0,
+                  fee_seka_32: d.feeSeka32 ?? 0,
+                  fee_seka_21: d.feeSeka21 ?? 0,
+                  fee_teen_patti_regular: d.feeTeenPattiRegular ?? 0,
+                  fee_teen_patti_ak47: d.feeTeenPattiAk47 ?? 0,
+                  fee_teen_patti_hukam: d.feeTeenPattiHukam ?? 0,
+                  fee_teen_patti_muflis: d.feeTeenPattiMuflis ?? 0,
+                  fee_tongits: d.feeTongits ?? 0,
+                  fee_pusoy: d.feePusoy ?? 0,
+                  // Taxa Total (CJ)
+                  fee_total: d.feeTotal ?? 0,
+                  // SPINUP (CK-CL)
+                  spinup_buy_in: d.spinUpBuyIn ?? 0,
+                  spinup_prize: d.spinUpPrize ?? 0,
+                  // Jackpot (CM-CN)
+                  jackpot_fee: d.jackpotFee ?? 0,
+                  jackpot_prize: d.jackpotPrize ?? 0,
+                  // EV Split (CO-CQ)
+                  ev_split_nlh: d.evSplitNlh ?? 0,
+                  ev_split_plo: d.evSplitPlo ?? 0,
+                  ev_split_total: d.evSplitTotal ?? 0,
+                  // Ticket entregue (CR)
+                  ticket_delivered_value: d.ticketDeliveredValue ?? 0,
+                  // Fichas (CS-CY)
+                  chip_ticket_buy_in: d.chipTicketBuyIn ?? 0,
+                  chip_sent: d.chipSent ?? 0,
+                  chip_class_ppsr: d.chipClassPpsr ?? 0,
+                  chip_class_ring: d.chipClassRing ?? 0,
+                  chip_class_custom_ring: d.chipClassCustomRing ?? 0,
+                  chip_class_mtt: d.chipClassMtt ?? 0,
+                  chip_redeemed: d.chipRedeemed ?? 0,
+                  // Crédito (CZ-DC)
+                  credit_left_club: d.creditLeftClub ?? 0,
+                  credit_sent: d.creditSent ?? 0,
+                  credit_redeemed: d.creditRedeemed ?? 0,
+                  credit_left_club_2: d.creditLeftClub2 ?? 0,
+                  // ============================================
+                  // MÃOS POR VARIANTE (DD-EG) - 36 colunas
+                  // ============================================
+                  // Mãos NLH (DD-DH)
+                  hands_nlh_regular: d.handsNlhRegular ?? 0,
+                  hands_nlh_three_one: d.handsNlhThreeOne ?? 0,
+                  hands_nlh_three_one_f: d.handsNlhThreeOneF ?? 0,
+                  hands_nlh_six_plus: d.handsNlhSixPlus ?? 0,
+                  hands_nlh_aof: d.handsNlhAof ?? 0,
+                  // Mãos PLO (DI-DN)
+                  hands_plo4: d.handsPlo4 ?? 0,
+                  hands_plo5: d.handsPlo5 ?? 0,
+                  hands_plo6: d.handsPlo6 ?? 0,
+                  hands_plo4_hilo: d.handsPlo4Hilo ?? 0,
+                  hands_plo5_hilo: d.handsPlo5Hilo ?? 0,
+                  hands_plo6_hilo: d.handsPlo6Hilo ?? 0,
+                  // Mãos FLASH (DO-DQ)
+                  hands_flash_nlh: d.handsFlashNlh ?? 0,
+                  hands_flash_plo4: d.handsFlashPlo4 ?? 0,
+                  hands_flash_plo5: d.handsFlashPlo5 ?? 0,
+                  // Mãos outros (DR-EF)
+                  hands_mixed_game: d.handsMixedGame ?? 0,
+                  hands_ofc: d.handsOfc ?? 0,
+                  hands_seka_36: d.handsSeka36 ?? 0,
+                  hands_seka_32: d.handsSeka32 ?? 0,
+                  hands_seka_21: d.handsSeka21 ?? 0,
+                  hands_teen_patti_regular: d.handsTeenPattiRegular ?? 0,
+                  hands_teen_patti_ak47: d.handsTeenPattiAk47 ?? 0,
+                  hands_teen_patti_hukam: d.handsTeenPattiHukam ?? 0,
+                  hands_teen_patti_muflis: d.handsTeenPattiMuflis ?? 0,
+                  hands_tongits: d.handsTongits ?? 0,
+                  hands_pusoy: d.handsPusoy ?? 0,
+                  hands_caribbean: d.handsCaribbean ?? 0,
+                  hands_color_game: d.handsColorGame ?? 0,
+                  hands_crash: d.handsCrash ?? 0,
+                  hands_lucky_draw: d.handsLuckyDraw ?? 0,
+                  // Mãos Total (EG)
+                  hands_total: d.handsTotal ?? 0,
+                };
+              })
+              .filter(Boolean);
+
+            // Deduplicate by player_id + date
+            const detailedToUpsert = deduplicateByKey(
+              detailedRaw as any[],
+              (d) => `${d.player_id}-${d.date || 'null'}`
+            );
+
+            for (const batch of chunkArray(detailedToUpsert, BATCH_SIZE)) {
+              const { error } = await supabase
+                .from("poker_player_detailed")
+                .upsert(batch, { onConflict: "player_id,period_start,period_end,date" });
+
+              if (error) {
+                processingErrors.push(`Failed to upsert detailed batch: ${error.message}`);
+              }
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 10: Batch upsert agent rakeback data
+        // ============================================
+        if (rawData?.rakebacks?.length > 0) {
+          const periodStart = importRecord.period_start || rawData.periodStart;
+          const periodEnd = importRecord.period_end || rawData.periodEnd;
+
+          if (periodStart && periodEnd) {
+            const rakebacksRaw = rawData.rakebacks.map((rb: any) => {
+              const agentId = playerIdMap.get(rb.agentPpPokerId);
+              const superAgentId = rb.superAgentPpPokerId
+                ? playerIdMap.get(rb.superAgentPpPokerId)
+                : null;
+
+              return {
+                team_id: teamId,
+                period_start: periodStart,
+                period_end: periodEnd,
+                agent_id: agentId ?? null,
+                agent_pppoker_id: rb.agentPpPokerId,
+                agent_nickname: rb.agentNickname ?? null,
+                memo_name: rb.memoName ?? null,
+                country: rb.country ?? null,
+                super_agent_id: superAgentId ?? null,
+                super_agent_pppoker_id: rb.superAgentPpPokerId ?? null,
+                average_rakeback_percent: rb.averageRakebackPercent ?? 0,
+                total_rt: rb.totalRt ?? 0,
+              };
+            });
+
+            // Deduplicate by agent_pppoker_id
+            const rakebacksToUpsert = deduplicateByKey(
+              rakebacksRaw,
+              (rb) => rb.agent_pppoker_id
+            );
+
+            for (const batch of chunkArray(rakebacksToUpsert, BATCH_SIZE)) {
+              const { error } = await supabase
+                .from("poker_agent_rakeback")
+                .upsert(batch, { onConflict: "team_id,agent_pppoker_id,period_start,period_end" });
+
+              if (error) {
+                processingErrors.push(`Failed to upsert rakebacks batch: ${error.message}`);
+              }
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 11: Batch insert demonstrativo data
+        // ============================================
+        if (rawData?.demonstrativo?.length > 0) {
+          const demonstrativoToInsert = rawData.demonstrativo
+            .map((d: any) => {
+              const occurredAt = parseTimestamp(d.occurredAt);
+              const playerId = d.ppPokerId ? playerIdMap.get(d.ppPokerId) : null;
+
+              return {
+                team_id: teamId,
+                occurred_at: occurredAt,
+                player_id: playerId ?? null,
+                pppoker_id: d.ppPokerId || null,
+                nickname: d.nickname || null,
+                memo_name: d.memoName || null,
+                type: d.type || null,
+                amount: d.amount ?? 0,
+                import_id: input.id,
+              };
+            })
+            .filter((d: any) => d.occurred_at || d.pppoker_id); // Keep if has date or player ID
+
+          for (const batch of chunkArray(demonstrativoToInsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_demonstrativo")
+              .insert(batch);
+
+            if (error) {
+              processingErrors.push(`Failed to insert demonstrativo batch: ${error.message}`);
+            }
+          }
+        }
+
+        // ============================================
+        // STEP 12: Calculate and update activity metrics for all players
+        // ============================================
+        try {
+          // Get all player IDs that were affected by this import
+          const affectedPlayerIds = Array.from(playerIdMap.values());
+
+          if (affectedPlayerIds.length > 0) {
+            // Calculate activity metrics in batches
+            const activityBatchSize = 100;
+            for (let i = 0; i < affectedPlayerIds.length; i += activityBatchSize) {
+              const batchIds = affectedPlayerIds.slice(i, i + activityBatchSize);
+              const metricsMap = await calculateBatchActivityMetrics(supabase, teamId, batchIds);
+
+              // Update each player with their activity metrics
+              for (const [playerId, metrics] of metricsMap) {
+                const { error } = await supabase
+                  .from("poker_players")
+                  .update({
+                    last_session_at: metrics.lastSessionAt ?? null,
+                    sessions_last_4_weeks: metrics.sessionsLast4Weeks ?? 0,
+                    weeks_active_last_4: metrics.weeksActiveLast4 ?? 0,
+                    days_since_last_session: metrics.daysSinceLastSession ?? null,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", playerId)
+                  .eq("team_id", teamId);
+
+                if (error) {
+                  // Don't fail the import for activity metrics errors
+                  console.error(`Failed to update activity metrics for player ${playerId}: ${error.message}`);
+                }
+              }
+            }
+          }
+        } catch (activityError: any) {
+          // Don't fail the import for activity calculation errors
+          console.error(`Activity metrics calculation error: ${activityError.message}`);
+          processingErrors.push(`Warning: Failed to calculate activity metrics: ${activityError.message}`);
         }
 
         // Update status to completed

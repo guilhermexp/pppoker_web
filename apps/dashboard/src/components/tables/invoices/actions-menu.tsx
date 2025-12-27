@@ -3,6 +3,7 @@
 import { OpenURL } from "@/components/open-url";
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
 import { downloadFile } from "@/lib/download";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { getUrl } from "@/utils/environment";
 import { Button } from "@midday/ui/button";
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export function ActionsMenu({ row }: Props) {
+  const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { setParams } = useInvoiceParams();
@@ -168,16 +170,18 @@ export function ActionsMenu({ row }: Props) {
                 })
               }
             >
-              Edit invoice
+              {t("invoice_table.actions.edit_invoice")}
             </DropdownMenuItem>
           )}
 
           <DropdownMenuItem>
-            <OpenURL href={`${getUrl()}/i/${row.token}`}>Open invoice</OpenURL>
+            <OpenURL href={`${getUrl()}/i/${row.token}`}>
+              {t("invoice_table.actions.open_invoice")}
+            </OpenURL>
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={handleCopyLink}>
-            Copy link
+            {t("invoice_table.actions.copy_link")}
           </DropdownMenuItem>
 
           {row.status !== "draft" && (
@@ -189,14 +193,14 @@ export function ActionsMenu({ row }: Props) {
                 );
               }}
             >
-              Download
+              {t("invoice_table.actions.download")}
             </DropdownMenuItem>
           )}
 
           <DropdownMenuItem
             onClick={() => duplicateInvoiceMutation.mutate({ id: row.id })}
           >
-            Duplicate
+            {t("invoice_table.actions.duplicate")}
           </DropdownMenuItem>
 
           {row.status === "scheduled" && (
@@ -204,7 +208,7 @@ export function ActionsMenu({ row }: Props) {
               onClick={() => cancelScheduleMutation.mutate({ id: row.id })}
               className="text-[#FF3638]"
             >
-              Cancel schedule
+              {t("invoice_table.actions.cancel_schedule")}
             </DropdownMenuItem>
           )}
 
@@ -218,14 +222,16 @@ export function ActionsMenu({ row }: Props) {
                 })
               }
             >
-              Mark as unpaid
+              {t("invoice_table.actions.mark_as_unpaid")}
             </DropdownMenuItem>
           )}
 
           {(row.status === "overdue" || row.status === "unpaid") && (
             <>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Mark as paid</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger>
+                  {t("invoice_table.actions.mark_as_paid")}
+                </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   <Calendar
                     mode="single"
@@ -261,7 +267,7 @@ export function ActionsMenu({ row }: Props) {
                 }
                 className="text-[#FF3638]"
               >
-                Cancel
+                {t("invoice_table.actions.cancel")}
               </DropdownMenuItem>
             </>
           )}
@@ -271,7 +277,7 @@ export function ActionsMenu({ row }: Props) {
               onClick={() => deleteInvoiceMutation.mutate({ id: row.id })}
               className="text-[#FF3638]"
             >
-              Delete
+              {t("invoice_table.actions.delete")}
             </DropdownMenuItem>
           )}
 
@@ -280,7 +286,7 @@ export function ActionsMenu({ row }: Props) {
               onClick={() => deleteInvoiceMutation.mutate({ id: row.id })}
               className="text-[#FF3638]"
             >
-              Delete
+              {t("invoice_table.actions.delete")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

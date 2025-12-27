@@ -2,6 +2,7 @@
 
 import { HorizontalPagination } from "@/components/horizontal-pagination";
 import { useSortParams } from "@/hooks/use-sort-params";
+import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
 import { Checkbox } from "@midday/ui/checkbox";
 import { cn } from "@midday/ui/cn";
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export function TableHeader({ table, tableScroll }: Props) {
+  const t = useI18n();
   const { params, setParams } = useSortParams();
 
   const [column, value] = params.sort || [];
@@ -85,7 +87,7 @@ export function TableHeader({ table, tableScroll }: Props) {
                 variant="ghost"
                 onClick={() => createSortQuery("invoice_number")}
               >
-                <span>Invoice no.</span>
+                <span>{t("invoice_table.headers.invoice_no")}</span>
                 {"invoiceNumber" === column && value === "asc" && (
                   <ArrowDown size={16} />
                 )}
@@ -112,7 +114,7 @@ export function TableHeader({ table, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("status")}
             >
-              <span>Status</span>
+              <span>{t("invoice_table.headers.status")}</span>
               {"status" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -128,7 +130,7 @@ export function TableHeader({ table, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("due_date")}
             >
-              <span>Due Date</span>
+              <span>{t("invoice_table.headers.due_date")}</span>
               {"dueDate" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -146,7 +148,7 @@ export function TableHeader({ table, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("customer")}
             >
-              <span>Customer</span>
+              <span>{t("invoice_table.headers.customer")}</span>
               {"customer" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -163,7 +165,7 @@ export function TableHeader({ table, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("amount")}
             >
-              <span>Amount</span>
+              <span>{t("invoice_table.headers.amount")}</span>
               {"amount" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -174,43 +176,43 @@ export function TableHeader({ table, tableScroll }: Props) {
 
         {isVisible("vatRate") && (
           <TableHead className="w-[100px] min-w-[100px]">
-            <span>VAT Rate</span>
+            <span>{t("invoice_table.headers.vat_rate")}</span>
           </TableHead>
         )}
 
         {isVisible("vatAmount") && (
           <TableHead className="w-[150px] min-w-[150px]">
-            <span>VAT Amount</span>
+            <span>{t("invoice_table.headers.vat_amount")}</span>
           </TableHead>
         )}
 
         {isVisible("taxRate") && (
           <TableHead className="w-[100px] min-w-[100px]">
-            <span>Tax Rate</span>
+            <span>{t("invoice_table.headers.tax_rate")}</span>
           </TableHead>
         )}
 
         {isVisible("taxAmount") && (
           <TableHead className="w-[150px] min-w-[150px]">
-            <span>Tax Amount</span>
+            <span>{t("invoice_table.headers.tax_amount")}</span>
           </TableHead>
         )}
 
         {isVisible("exclVat") && (
           <TableHead className="w-[150px] min-w-[150px]">
-            <span>Excl. VAT</span>
+            <span>{t("invoice_table.headers.excl_vat")}</span>
           </TableHead>
         )}
 
         {isVisible("exclTax") && (
           <TableHead className="w-[150px] min-w-[150px]">
-            <span>Excl. Tax</span>
+            <span>{t("invoice_table.headers.excl_tax")}</span>
           </TableHead>
         )}
 
         {isVisible("internalNote") && (
           <TableHead className="w-[150px] min-w-[150px]">
-            <span>Internal Note</span>
+            <span>{t("invoice_table.headers.internal_note")}</span>
           </TableHead>
         )}
 
@@ -221,7 +223,7 @@ export function TableHeader({ table, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("issue_date")}
             >
-              <span>Issue Date</span>
+              <span>{t("invoice_table.headers.issue_date")}</span>
               {"issueDate" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -234,7 +236,7 @@ export function TableHeader({ table, tableScroll }: Props) {
 
         {isVisible("sentAt") && (
           <TableHead className="w-[150px] min-w-[150px]">
-            <span>Sent at</span>
+            <span>{t("invoice_table.headers.sent_at")}</span>
           </TableHead>
         )}
 
@@ -246,7 +248,7 @@ export function TableHeader({ table, tableScroll }: Props) {
               "after:absolute after:left-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-r after:from-transparent after:to-background after:z-[-1]",
             )}
           >
-            Actions
+            {t("invoice_table.headers.actions")}
           </TableHead>
         )}
       </TableRow>

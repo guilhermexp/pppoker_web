@@ -391,10 +391,13 @@ export type StructureCheckId =
   | "geral_sheet_present"
   | "geral_columns_complete"
   | "detalhado_sheet_present"
+  | "detalhado_columns_complete"
   | "transactions_sheet_present"
   | "user_details_sheet_present"
   | "partidas_sheet_present"
+  | "partidas_structure_valid"
   | "rakeback_sheet_present"
+  | "rakeback_columns_complete"
   | "period_detected";
 
 // Integrity checks

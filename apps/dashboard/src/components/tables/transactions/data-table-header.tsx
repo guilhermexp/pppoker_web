@@ -3,6 +3,7 @@
 import { HorizontalPagination } from "@/components/horizontal-pagination";
 import { useSortParams } from "@/hooks/use-sort-params";
 import { useStickyColumns } from "@/hooks/use-sticky-columns";
+import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
 import { Checkbox } from "@midday/ui/checkbox";
 import { cn } from "@midday/ui/cn";
@@ -38,6 +39,7 @@ interface Props {
 }
 
 export function DataTableHeader({ table, loading, tableScroll }: Props) {
+  const t = useI18n();
   const { params, setParams } = useSortParams();
   const [column, value] = params.sort || [];
 
@@ -99,7 +101,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("date")}
             >
-              <span>Date</span>
+              <span>{t("transaction_table.headers.date")}</span>
               {"date" === column && value === "asc" && <ArrowDown size={16} />}
               {"date" === column && value === "desc" && <ArrowUp size={16} />}
             </Button>
@@ -121,7 +123,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
                 variant="ghost"
                 onClick={() => createSortQuery("name")}
               >
-                <span>Description</span>
+                <span>{t("transaction_table.headers.description")}</span>
                 {"name" === column && value === "asc" && (
                   <ArrowDown size={16} />
                 )}
@@ -147,7 +149,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("amount")}
             >
-              <span>Amount</span>
+              <span>{t("transaction_table.headers.amount")}</span>
               {"amount" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -158,7 +160,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
 
         {isVisible("taxAmount") && (
           <TableHead className="w-[170px] min-w-[170px] px-3 md:px-4 py-2">
-            <span>Tax Amount</span>
+            <span>{t("transaction_table.headers.tax_amount")}</span>
           </TableHead>
         )}
 
@@ -169,7 +171,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("category")}
             >
-              <span>Category</span>
+              <span>{t("transaction_table.headers.category")}</span>
               {"category" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -187,7 +189,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("counterparty")}
             >
-              <span>From / To</span>
+              <span>{t("transaction_table.headers.from_to")}</span>
               {"counterparty" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -205,7 +207,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("tags")}
             >
-              <span>Tags</span>
+              <span>{t("transaction_table.headers.tags")}</span>
               {"tags" === column && value === "asc" && <ArrowDown size={16} />}
               {"tags" === column && value === "desc" && <ArrowUp size={16} />}
             </Button>
@@ -219,7 +221,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("bank_account")}
             >
-              <span>Account</span>
+              <span>{t("transaction_table.headers.account")}</span>
               {"bank_account" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -237,7 +239,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("method")}
             >
-              <span>Method</span>
+              <span>{t("transaction_table.headers.method")}</span>
               {"method" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -253,7 +255,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("assigned")}
             >
-              <span>Assigned</span>
+              <span>{t("transaction_table.headers.assigned")}</span>
               {"assigned" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -271,7 +273,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               variant="ghost"
               onClick={() => createSortQuery("attachment")}
             >
-              <span>Status</span>
+              <span>{t("transaction_table.headers.status")}</span>
               {"attachment" === column && value === "asc" && (
                 <ArrowDown size={16} />
               )}
@@ -290,7 +292,7 @@ export function DataTableHeader({ table, loading, tableScroll }: Props) {
               "after:absolute after:left-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-r after:from-transparent after:to-background after:z-[-1]",
             )}
           >
-            Actions
+            {t("transaction_table.headers.actions")}
           </TableHead>
         )}
       </TableRow>

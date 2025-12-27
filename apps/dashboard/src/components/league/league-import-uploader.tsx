@@ -20,11 +20,13 @@ import type {
 } from "@/lib/league/types";
 import { validateLeagueImportData } from "@/lib/league/validation";
 import { cn } from "@midday/ui/cn";
+import { Skeleton } from "@midday/ui/skeleton";
 import { useToast } from "@midday/ui/use-toast";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
 import { LeagueImportValidationModal } from "./league-import-validation-modal";
+import { ImportsList } from "../poker/imports-list";
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -1719,9 +1721,10 @@ export function LeagueImportUploader() {
           </div>
         </div>
 
-        {/* Empty state - Vault style */}
-        <div className="h-[calc(100vh-250px)] flex items-center justify-center">
-          <div className="relative z-20 m-auto flex w-full max-w-[380px] flex-col">
+        {/* Content area */}
+        <div className="space-y-6 py-4">
+          {/* Upload area */}
+          <div className="relative z-20 flex w-full flex-col">
             <div className="flex w-full flex-col relative text-center">
               <div className="pb-4">
                 <h2 className="font-medium text-lg">
@@ -1740,11 +1743,19 @@ export function LeagueImportUploader() {
                 onClick={() =>
                   document.getElementById("upload-league-file")?.click()
                 }
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mx-auto"
               >
                 Upload
               </button>
             </div>
+          </div>
+
+          {/* Imports list for SU type */}
+          <div className="border-t pt-6">
+            <h3 className="font-medium text-sm mb-4">Importações de Super Union</h3>
+            <Suspense fallback={<ImportsList.Skeleton />}>
+              <ImportsList sourceType="su" compact />
+            </Suspense>
           </div>
         </div>
       </div>

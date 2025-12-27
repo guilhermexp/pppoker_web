@@ -3,6 +3,7 @@
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
 import { useUserQuery } from "@/hooks/use-user";
 import { downloadFile } from "@/lib/download";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { getUrl } from "@/utils/environment";
 import { getWebsiteLogo } from "@/utils/logos";
@@ -28,6 +29,7 @@ import { InvoiceActivity } from "./invoice/activity";
 import { OpenURL } from "./open-url";
 
 export function InvoiceDetails() {
+  const t = useI18n();
   const trpc = useTRPC();
   const { invoiceId } = useInvoiceParams();
   const { data: user } = useUserQuery();
@@ -129,10 +131,14 @@ export function InvoiceDetails() {
         {status === "paid" && (
           <div className="mt-8 flex flex-col space-y-1">
             <span className="text-base font-medium">
-              Paid on {paidAt && format(new Date(paidAt), "MMM dd")}
+              {t("invoice_details.paid_on", {
+                date: paidAt ? format(new Date(paidAt), "MMM dd") : "",
+              })}
             </span>
             <span className="text-xs">
-              <span className="text-[#606060]">Marked as paid</span>
+              <span className="text-[#606060]">
+                {t("invoice_details.marked_as_paid")}
+              </span>
             </span>
           </div>
         )}
@@ -140,23 +146,31 @@ export function InvoiceDetails() {
         {status === "canceled" && (
           <div className="mt-8 flex flex-col space-y-1">
             <span className="text-base font-medium">
-              Canceled on {updatedAt && format(new Date(updatedAt), "MMM dd")}
+              {t("invoice_details.canceled_on", {
+                date: updatedAt ? format(new Date(updatedAt), "MMM dd") : "",
+              })}
             </span>
             <span className="text-xs">
-              <span className="text-[#606060]">Marked as canceled</span>
+              <span className="text-[#606060]">
+                {t("invoice_details.marked_as_canceled")}
+              </span>
             </span>
           </div>
         )}
 
         <div className="mt-6 flex flex-col space-y-4 border-t border-border pt-6">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-[#606060]">Due date</span>
+            <span className="text-sm text-[#606060]">
+              {t("invoice_details.due_date")}
+            </span>
             <span className="text-sm">
               <span>{dueDate && format(new Date(dueDate), "MMM dd")}</span>
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-[#606060]">Issue date</span>
+            <span className="text-sm text-[#606060]">
+              {t("invoice_details.issue_date")}
+            </span>
             <span className="text-sm">
               <span>{issueDate && format(new Date(issueDate), "MMM dd")}</span>
             </span>
@@ -164,7 +178,9 @@ export function InvoiceDetails() {
 
           {scheduledAt && status === "scheduled" && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#606060]">Scheduled at</span>
+              <span className="text-sm text-[#606060]">
+                {t("invoice_details.scheduled_at")}
+              </span>
               <span className="text-sm">
                 <span>
                   {format(
@@ -178,7 +194,9 @@ export function InvoiceDetails() {
 
           {sentAt && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#606060]">Sent at</span>
+              <span className="text-sm text-[#606060]">
+                {t("invoice_details.sent_at")}
+              </span>
               <span className="text-sm">
                 <span>{sentAt && format(new Date(sentAt), "MMM dd")}</span>
               </span>
@@ -187,13 +205,17 @@ export function InvoiceDetails() {
 
           {sentTo && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#606060]">Sent to</span>
+              <span className="text-sm text-[#606060]">
+                {t("invoice_details.sent_to")}
+              </span>
               <span className="text-sm">{sentTo}</span>
             </div>
           )}
 
           <div className="flex justify-between items-center">
-            <span className="text-sm text-[#606060]">Invoice no.</span>
+            <span className="text-sm text-[#606060]">
+              {t("invoice_details.invoice_no")}
+            </span>
             <span className="text-sm">
               <span>{invoiceNumber}</span>
             </span>
@@ -202,7 +224,9 @@ export function InvoiceDetails() {
 
         {customer && (
           <div className="mt-6 flex flex-col space-y-2 border-t border-border pt-6">
-            <span className="text-sm text-[#606060]">Invoice link</span>
+            <span className="text-sm text-[#606060]">
+              {t("invoice_details.invoice_link")}
+            </span>
             <div className="flex w-full gap-2">
               <div className="flex-1 min-w-0 relative">
                 <CopyInput value={`${getUrl()}/i/${token}`} className="pr-14" />
@@ -240,13 +264,15 @@ export function InvoiceDetails() {
           defaultValue={internalNote ? ["note", "activity"] : ["activity"]}
         >
           <AccordionItem value="activity">
-            <AccordionTrigger>Activity</AccordionTrigger>
+            <AccordionTrigger>{t("invoice_details.activity")}</AccordionTrigger>
             <AccordionContent>
               <InvoiceActivity data={data} />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="note">
-            <AccordionTrigger>Internal note</AccordionTrigger>
+            <AccordionTrigger>
+              {t("invoice_details.internal_note")}
+            </AccordionTrigger>
             <AccordionContent>
               <InvoiceNote id={id} defaultValue={internalNote} />
             </AccordionContent>

@@ -11,9 +11,23 @@ import { Spinner } from "@midday/ui/spinner";
 import { useToast } from "@midday/ui/use-toast";
 import { useMutation, useQueryClient, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 type ImportStatus = "pending" | "validating" | "validated" | "processing" | "completed" | "failed" | "cancelled";
+type SourceType = "club" | "league" | "su";
+
+const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
+  club: "Clube",
+  league: "Liga",
+  su: "Super Union",
+};
+
+const SOURCE_TYPE_COLORS: Record<SourceType, string> = {
+  club: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  league: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  su: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
+};
 
 function getStatusVariant(status: ImportStatus): "default" | "secondary" | "success" | "destructive" | "warning" {
   switch (status) {
@@ -39,7 +53,12 @@ function formatFileSize(bytes: number | null | undefined): string {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
-export function ImportsList() {
+type ImportsListProps = {
+  sourceType?: SourceType;
+  compact?: boolean;
+};
+
+export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
   const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -48,7 +67,7 @@ export function ImportsList() {
 
   const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery(
     trpc.poker.imports.get.infiniteQueryOptions(
-      { pageSize: 10 },
+      { pageSize: compact ? 5 : 10, sourceType: sourceType ?? null },
       { getNextPageParam: (lastPage) => lastPage.meta.cursor }
     )
   );
@@ -56,7 +75,7 @@ export function ImportsList() {
   const validateMutation = useMutation(
     trpc.poker.imports.validate.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["poker", "imports"] });
+        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
         toast({
           title: t("poker.import.validateSuccess"),
           variant: "success",
@@ -75,8 +94,8 @@ export function ImportsList() {
   const processMutation = useMutation(
     trpc.poker.imports.process.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["poker", "imports"] });
-        queryClient.invalidateQueries({ queryKey: ["poker", "players"] });
+        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.poker.players.get.queryKey() });
         toast({
           title: t("poker.import.processSuccess"),
           variant: "success",
@@ -95,7 +114,7 @@ export function ImportsList() {
   const cancelMutation = useMutation(
     trpc.poker.imports.cancel.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["poker", "imports"] });
+        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
         toast({
           title: t("poker.import.cancelSuccess"),
           variant: "success",
@@ -107,7 +126,7 @@ export function ImportsList() {
   const deleteMutation = useMutation(
     trpc.poker.imports.delete.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["poker", "imports"] });
+        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
         toast({
           title: t("poker.import.deleteSuccess"),
           variant: "success",
@@ -120,28 +139,40 @@ export function ImportsList() {
 
   if (imports.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Icons.Files className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>{t("poker.import.noImports")}</p>
+      <div className={cn(
+        "text-center text-muted-foreground",
+        compact ? "py-6" : "py-12"
+      )}>
+        <Icons.Files className={cn(
+          "mx-auto mb-3 opacity-50",
+          compact ? "h-8 w-8" : "h-12 w-12 mb-4"
+        )} />
+        <p className={compact ? "text-sm" : ""}>
+          {sourceType
+            ? `Nenhuma importação de ${SOURCE_TYPE_LABELS[sourceType]}`
+            : t("poker.import.noImports")
+          }
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {imports.map((imp) => (
         <div
           key={imp.id}
-          className="border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+          className="border rounded-lg p-3 hover:bg-accent/50 transition-colors"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Icons.Files className="h-8 w-8 text-muted-foreground" />
-              <div>
-                <p className="font-medium">{imp.fileName}</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {/* Row 1: File info + Badges */}
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Icons.Files className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{imp.fileName}</p>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span>{formatFileSize(imp.fileSize)}</span>
-                  <span>-</span>
+                  <span className="text-border">·</span>
                   <span>
                     {formatDistanceToNow(new Date(imp.createdAt), {
                       addSuffix: true,
@@ -150,21 +181,34 @@ export function ImportsList() {
                 </div>
               </div>
             </div>
-
-            <div className="flex items-center gap-4">
-              <Badge variant={getStatusVariant(imp.status as ImportStatus)}>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {!sourceType && (
+                <span
+                  className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                    SOURCE_TYPE_COLORS[(imp.sourceType as SourceType) ?? "club"]
+                  )}
+                >
+                  {SOURCE_TYPE_LABELS[(imp.sourceType as SourceType) ?? "club"]}
+                </span>
+              )}
+              <Badge variant={getStatusVariant(imp.status as ImportStatus)} className="text-[10px]">
                 {t(`poker.import.status.${imp.status}`)}
               </Badge>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-2">
+          {/* Row 2: Action buttons */}
+          <div className="flex items-center justify-end gap-1">
                 {imp.status === "validating" && (
                   <Button
                     size="sm"
+                    className="h-7 text-xs"
                     onClick={() => validateMutation.mutate({ id: imp.id })}
                     disabled={validateMutation.isPending}
                   >
                     {validateMutation.isPending ? (
-                      <Spinner size={16} />
+                      <Spinner size={14} />
                     ) : (
                       t("poker.import.validate")
                     )}
@@ -174,11 +218,12 @@ export function ImportsList() {
                 {imp.status === "validated" && (
                   <Button
                     size="sm"
+                    className="h-7 text-xs"
                     onClick={() => processMutation.mutate({ id: imp.id })}
                     disabled={processMutation.isPending}
                   >
                     {processMutation.isPending ? (
-                      <Spinner size={16} />
+                      <Spinner size={14} />
                     ) : (
                       t("poker.import.process")
                     )}
@@ -189,17 +234,19 @@ export function ImportsList() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="h-7 w-7 p-0"
                     onClick={() => cancelMutation.mutate({ id: imp.id })}
                     disabled={cancelMutation.isPending}
                     title="Cancelar"
                   >
-                    <Icons.Close className="h-4 w-4" />
+                    <Icons.Close className="h-3.5 w-3.5" />
                   </Button>
                 )}
 
                 <Button
                   size="sm"
                   variant="ghost"
+                  className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() => {
                     if (window.confirm("Tem certeza que deseja excluir esta importação?")) {
                       deleteMutation.mutate({ id: imp.id });
@@ -207,57 +254,169 @@ export function ImportsList() {
                   }}
                   disabled={deleteMutation.isPending || imp.status === "processing"}
                   title="Excluir"
-                  className="text-destructive hover:text-destructive"
                 >
-                  <Icons.Delete className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
 
                 <Button
                   size="sm"
                   variant="ghost"
+                  className="h-7 w-7 p-0"
                   onClick={() => setExpandedId(expandedId === imp.id ? null : imp.id)}
                 >
                   <Icons.ChevronDown
                     className={cn(
-                      "h-4 w-4 transition-transform",
+                      "h-3.5 w-3.5 transition-transform",
                       expandedId === imp.id && "rotate-180"
                     )}
                   />
                 </Button>
-              </div>
-            </div>
           </div>
 
           {expandedId === imp.id && (
             <div className="mt-4 pt-4 border-t space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("poker.import.totalPlayers")}</p>
-                  <p className="text-lg font-medium">{imp.totalPlayers}</p>
+              {/* Metadata: Club ID, Union ID, Period */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                {(imp as any).clubId && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Clube:</span>
+                    <span className="font-mono font-medium">{(imp as any).clubId}</span>
+                  </div>
+                )}
+                {(imp as any).unionId && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">União:</span>
+                    <span className="font-mono font-medium">{(imp as any).unionId}</span>
+                  </div>
+                )}
+                {imp.periodStart && imp.periodEnd && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Período:</span>
+                    <span className="font-medium">
+                      {new Date(imp.periodStart).toLocaleDateString()} - {new Date(imp.periodEnd).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Stats Cards Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Jogadores Card */}
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Icons.AccountCircle className="h-3.5 w-3.5" />
+                    <span>Jogadores</span>
+                  </div>
+                  <p className="text-xl font-semibold">{imp.totalPlayers}</p>
+                  {(imp as any).stats && (
+                    <div className="text-[11px] text-muted-foreground space-y-0.5">
+                      <div className="flex justify-between">
+                        <span>Com agente</span>
+                        <span className="font-medium text-foreground">{(imp as any).stats.playersWithAgent}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Sem agente</span>
+                        <span className="font-medium text-foreground">{(imp as any).stats.playersWithoutAgent}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("poker.import.newPlayers")}</p>
-                  <p className="text-lg font-medium">{imp.newPlayers}</p>
+
+                {/* Hierarquia Card */}
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Icons.Category className="h-3.5 w-3.5" />
+                    <span>Hierarquia</span>
+                  </div>
+                  <p className="text-xl font-semibold">{(imp as any).stats?.agentsCount ?? 0}</p>
+                  {(imp as any).stats && (
+                    <div className="text-[11px] text-muted-foreground space-y-0.5">
+                      <div className="flex justify-between">
+                        <span>Agentes</span>
+                        <span className="font-medium text-foreground">{(imp as any).stats.agentsCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Super agentes</span>
+                        <span className="font-medium text-foreground">{(imp as any).stats.superAgentsCount}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("poker.import.updatedPlayers")}</p>
-                  <p className="text-lg font-medium">{imp.updatedPlayers}</p>
+
+                {/* Partidas Card */}
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Icons.Speed className="h-3.5 w-3.5" />
+                    <span>Partidas</span>
+                  </div>
+                  <p className="text-xl font-semibold">{imp.totalSessions}</p>
+                  {(imp as any).stats?.sessionsByType && (
+                    <div className="text-[11px] text-muted-foreground space-y-0.5">
+                      {(imp as any).stats.sessionsByType.cash_game > 0 && (
+                        <div className="flex justify-between">
+                          <span>Cash Games</span>
+                          <span className="font-medium text-foreground">{(imp as any).stats.sessionsByType.cash_game}</span>
+                        </div>
+                      )}
+                      {(imp as any).stats.sessionsByType.mtt > 0 && (
+                        <div className="flex justify-between">
+                          <span>MTT</span>
+                          <span className="font-medium text-foreground">{(imp as any).stats.sessionsByType.mtt}</span>
+                        </div>
+                      )}
+                      {(imp as any).stats.sessionsByType.spin > 0 && (
+                        <div className="flex justify-between">
+                          <span>SPIN</span>
+                          <span className="font-medium text-foreground">{(imp as any).stats.sessionsByType.spin}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("poker.import.totalTransactions")}</p>
-                  <p className="text-lg font-medium">{imp.totalTransactions}</p>
+
+                {/* Ganhos/Perdas Card */}
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Icons.Currency className="h-3.5 w-3.5" />
+                    <span>Resultado</span>
+                  </div>
+                  <p className={cn(
+                    "text-xl font-semibold",
+                    ((imp as any).stats?.totalWinnings ?? 0) >= 0 ? "text-green-500" : "text-red-500"
+                  )}>
+                    {((imp as any).stats?.totalWinnings ?? 0) >= 0 ? "" : "-"}
+                    R$ {Math.abs((imp as any).stats?.totalWinnings ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </p>
+                  {(imp as any).stats && (
+                    <div className="text-[11px] text-muted-foreground space-y-0.5">
+                      <div className="flex justify-between">
+                        <span>Winners</span>
+                        <span className="font-medium text-green-500">{(imp as any).stats.winners}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Losers</span>
+                        <span className="font-medium text-red-500">{(imp as any).stats.losers}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {imp.periodStart && imp.periodEnd && (
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("poker.import.period")}</p>
-                  <p className="font-medium">
-                    {new Date(imp.periodStart).toLocaleDateString()} -{" "}
-                    {new Date(imp.periodEnd).toLocaleDateString()}
-                  </p>
+              {/* Secondary stats row */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="border rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Transações</div>
+                  <p className="text-lg font-semibold">{imp.totalTransactions.toLocaleString()}</p>
                 </div>
-              )}
+                <div className="border rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Novos jogadores</div>
+                  <p className="text-lg font-semibold text-green-500">+{imp.newPlayers}</p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Atualizados</div>
+                  <p className="text-lg font-semibold">{imp.updatedPlayers}</p>
+                </div>
+              </div>
 
               {imp.validationErrors && imp.validationErrors.length > 0 && (
                 <div>

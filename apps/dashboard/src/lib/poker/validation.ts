@@ -137,6 +137,76 @@ const STRUCTURE_RULES: ValidationRule[] = [
     },
   },
   {
+    id: "detalhado_columns_complete",
+    category: "structure",
+    severity: "critical",
+    label: "Colunas da aba Detalhado completas (137 cols)",
+    description: "A aba Detalhado deve ter os campos críticos das 137 colunas (A-EG)",
+    validate: (data) => {
+      const detailed = data.detailed || [];
+      if (detailed.length === 0) {
+        return {
+          passed: false,
+          details: "Sem dados para validar",
+          debug: {
+            logic: "Verifica se os campos críticos do Detalhado existem no primeiro registro",
+            expected: "40+ campos obrigatórios presentes",
+            actual: "Nenhum registro para validar",
+          },
+        };
+      }
+
+      const sample = detailed[0];
+      // Campos críticos do Detalhado baseado na documentação (137 colunas A-EG)
+      const requiredFields = [
+        // Identificação (A-I)
+        "ppPokerId", "nickname",
+        // Ganhos NLH (J-R)
+        "nlhRegular", "nlhThreeOne", "nlhSixPlus", "nlhAof", "nlhSitNGo", "nlhSpinUp", "nlhMtt",
+        // Ganhos PLO (S-AB)
+        "plo4", "plo5", "plo6", "plo4Hilo", "plo5Hilo", "ploSitNGo", "ploMttPlo4",
+        // Cassino (AP-AU)
+        "caribbean", "colorGame", "crash", "luckyDraw", "jackpot", "evSplitWinnings",
+        // Totais (AV)
+        "totalWinnings",
+        // Classificações (AW-AZ)
+        "classificationPpsr", "classificationRing", "classificationMtt",
+        // Taxa Total (CJ)
+        "feeTotal",
+        // SPINUP (CK-CL)
+        "spinUpBuyIn", "spinUpPrize",
+        // Jackpot (CM-CN)
+        "jackpotFee", "jackpotPrize",
+        // EV Split (CO-CQ)
+        "evSplitNlh", "evSplitPlo", "evSplitTotal",
+        // Fichas (CT, CY)
+        "chipSent", "chipRedeemed",
+        // Crédito (CZ-DB)
+        "creditLeftClub", "creditSent", "creditRedeemed",
+        // Mãos Total (EG)
+        "handsTotal",
+      ];
+
+      const presentFields = requiredFields.filter((f) => f in sample);
+      const missingFields = requiredFields.filter((f) => !(f in sample));
+      const allPresent = presentFields.length >= 35; // 35 de 40 campos críticos
+
+      return {
+        passed: allPresent,
+        details: allPresent
+          ? `${presentFields.length}/${requiredFields.length} campos críticos`
+          : `Faltando ${missingFields.length} campos`,
+        count: presentFields.length,
+        debug: {
+          logic: "Verifica se o primeiro registro tem pelo menos 35 dos 40 campos críticos mapeados",
+          expected: `≥35 de ${requiredFields.length} campos presentes`,
+          actual: `${presentFields.length} campos encontrados`,
+          failedItems: missingFields.slice(0, 10),
+        },
+      };
+    },
+  },
+  {
     id: "transactions_sheet_present",
     category: "structure",
     severity: "critical",
@@ -250,6 +320,91 @@ const STRUCTURE_RULES: ValidationRule[] = [
     },
   },
   {
+    id: "partidas_structure_valid",
+    category: "structure",
+    severity: "critical",
+    label: "Estrutura das Partidas válida",
+    description: "Cada sessão deve ter estrutura correta por tipo (CASH 14 cols, MTT/SITNG 8 cols, SPIN 7 cols)",
+    validate: (data) => {
+      const sessions = data.sessions || [];
+      if (sessions.length === 0) {
+        return {
+          passed: false,
+          details: "Sem sessões para validar",
+          debug: {
+            logic: "Verifica se cada sessão tem os campos obrigatórios por tipo",
+            expected: "Todas as sessões com estrutura válida",
+            actual: "Nenhuma sessão para validar",
+          },
+        };
+      }
+
+      const invalidSessions: string[] = [];
+      let validCount = 0;
+
+      for (const session of sessions) {
+        const type = session.sessionType?.toLowerCase() || "";
+        const hasPlayers = session.players && session.players.length > 0;
+
+        // Campos obrigatórios para todos os tipos
+        const hasBasicFields = session.externalId && session.startedAt;
+
+        if (!hasBasicFields) {
+          invalidSessions.push(`${session.externalId || "?"}: falta externalId ou startedAt`);
+          continue;
+        }
+
+        // Validar estrutura dos jogadores por tipo de sessão
+        if (hasPlayers) {
+          const player = session.players![0];
+
+          if (type === "cash_game" || type === "ring" || type.includes("ppsr")) {
+            // CASH/PPSR: precisa de 14 colunas - buyIn, hands, winnings, rake
+            const hasCashFields = "buyIn" in player && "hands" in player;
+            if (!hasCashFields) {
+              invalidSessions.push(`${session.externalId}: CASH sem buyIn/hands`);
+              continue;
+            }
+          } else if (type === "mtt" || type === "sit_n_go" || type === "sng") {
+            // MTT/SITNG: precisa de 8 colunas - ranking, buyInChips, buyInTicket, winnings, rake
+            const hasMttFields = "ranking" in player || "buyInChips" in player || "buyInTicket" in player;
+            if (!hasMttFields) {
+              invalidSessions.push(`${session.externalId}: MTT/SITNG sem ranking/buyIn`);
+              continue;
+            }
+          } else if (type === "spin" || type.includes("spinup")) {
+            // SPIN: precisa de 7 colunas - ranking, buyInChips, prize (sem rake)
+            const hasSpinFields = "ranking" in player || "buyInChips" in player || "prize" in player;
+            if (!hasSpinFields) {
+              invalidSessions.push(`${session.externalId}: SPIN sem ranking/prize`);
+              continue;
+            }
+          }
+        }
+
+        validCount++;
+      }
+
+      const passed = invalidSessions.length === 0;
+
+      return {
+        passed,
+        details: passed
+          ? `${validCount} sessões com estrutura válida`
+          : `${invalidSessions.length} sessões com estrutura inválida`,
+        count: validCount,
+        debug: {
+          logic: "Verifica estrutura por tipo: CASH (14 cols com buyIn/hands), MTT/SITNG (8 cols com ranking), SPIN (7 cols com prize)",
+          expected: "Todas as sessões com campos corretos por tipo",
+          actual: passed
+            ? `${validCount} sessões válidas`
+            : `${invalidSessions.length} inválidas de ${sessions.length}`,
+          failedItems: invalidSessions.slice(0, 10),
+        },
+      };
+    },
+  },
+  {
     id: "rakeback_sheet_present",
     category: "structure",
     severity: "warning",
@@ -265,6 +420,57 @@ const STRUCTURE_RULES: ValidationRule[] = [
           logic: "Verifica se parsedData.rakebacks tem pelo menos 1 registro",
           expected: "rakebacks.length > 0",
           actual: `rakebacks.length = ${count}`,
+        },
+      };
+    },
+  },
+  {
+    id: "rakeback_columns_complete",
+    category: "structure",
+    severity: "warning",
+    label: "Colunas da aba Retorno de taxa completas (7 cols)",
+    description: "A aba Retorno de taxa deve ter os 7 campos obrigatórios (B-H)",
+    validate: (data) => {
+      const rakebacks = data.rakebacks || [];
+      if (rakebacks.length === 0) {
+        return {
+          passed: true, // Warning - não bloqueia se ausente
+          details: "Sem dados de rakeback (opcional)",
+          debug: {
+            logic: "Verifica se os campos da aba Retorno de taxa existem",
+            expected: "7 campos presentes se a aba existir",
+            actual: "Nenhum registro para validar (OK - aba opcional)",
+          },
+        };
+      }
+
+      const sample = rakebacks[0];
+      // Campos obrigatórios do Retorno de taxa baseado na documentação (7 colunas B-H)
+      const requiredFields = [
+        "superAgentPpPokerId",  // B - ID do superagente
+        "agentPpPokerId",       // C - ID do agente
+        "country",              // D - País
+        "agentNickname",        // E - Apelido do agente
+        "memoName",             // F - Memorando
+        "averageRakebackPercent", // G - % médio de rakeback
+        "totalRt",              // H - Total RT
+      ];
+
+      const presentFields = requiredFields.filter((f) => f in sample);
+      const missingFields = requiredFields.filter((f) => !(f in sample));
+      const allPresent = presentFields.length >= 5; // 5 de 7 campos críticos
+
+      return {
+        passed: allPresent,
+        details: allPresent
+          ? `${rakebacks.length} agentes, ${presentFields.length}/7 colunas`
+          : `Faltando ${missingFields.length} campos`,
+        count: presentFields.length,
+        debug: {
+          logic: "Verifica se o primeiro registro tem pelo menos 5 dos 7 campos obrigatórios",
+          expected: "≥5 de 7 campos presentes",
+          actual: `${presentFields.length} campos encontrados`,
+          failedItems: missingFields.slice(0, 10),
         },
       };
     },
@@ -968,11 +1174,11 @@ function countDateErrorsWithDetails(data: ParsedImportData): { errors: number; d
   for (const s of sessions) {
     if (s.startedAt && isNaN(Date.parse(s.startedAt))) {
       errors++;
-      if (details.length < 10) details.push(`sessions[${s.gameId}].startedAt = "${s.startedAt}"`);
+      if (details.length < 10) details.push(`sessions[${s.externalId}].startedAt = "${s.startedAt}"`);
     }
     if (s.endedAt && isNaN(Date.parse(s.endedAt))) {
       errors++;
-      if (details.length < 10) details.push(`sessions[${s.gameId}].endedAt = "${s.endedAt}"`);
+      if (details.length < 10) details.push(`sessions[${s.externalId}].endedAt = "${s.endedAt}"`);
     }
   }
 

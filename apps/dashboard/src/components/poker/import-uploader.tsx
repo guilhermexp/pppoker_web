@@ -8,11 +8,12 @@ import { cn } from "@midday/ui/cn";
 import { Skeleton } from "@midday/ui/skeleton";
 import { useToast } from "@midday/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { ImportValidationModal } from "./import-validation-modal";
+import { ImportsList } from "./imports-list";
 
 // Parser for PPPoker Club Member export
 function parseClubMemberSheet(data: any[]): any[] {
@@ -1781,19 +1782,36 @@ export function ImportUploader() {
     if (!parsedDataForValidation) return;
 
     setIsImporting(true);
+    let currentStep = "Iniciando importação";
+
+    // Show progress toast
+    const { id: toastId, dismiss } = toast({
+      variant: "progress",
+      title: "Iniciando importação...",
+      description: currentFileName,
+      progress: 0,
+      duration: Number.POSITIVE_INFINITY,
+    });
+
     try {
       // Step 1: Create the import record
+      currentStep = "Criando registro de importação";
+      update(toastId, { title: `${currentStep}...`, progress: 10 });
       const { id: importId } = await createImportMutation.mutateAsync({
         fileName: currentFileName,
         fileSize: currentFileSize,
         fileType: currentFileType,
+        sourceType: "club",
         rawData: parsedDataForValidation,
       });
 
       // Step 2: Validate the import
+      currentStep = "Validando dados";
+      update(toastId, { title: `${currentStep}...`, progress: 25 });
       const validationResult = await validateImportMutation.mutateAsync({ id: importId });
 
       if (!validationResult.validationPassed) {
+        dismiss();
         toast({
           title: "Validação falhou",
           description: `${validationResult.errors.length} erro(s) encontrado(s)`,
@@ -1803,15 +1821,59 @@ export function ImportUploader() {
       }
 
       // Step 3: Process the import (save to database tables)
-      await processImportMutation.mutateAsync({ id: importId });
+      currentStep = "Cadastrando jogadores";
+      update(toastId, { title: `${currentStep}...`, progress: 40 });
 
-    } catch (error) {
-      // Errors are handled by individual mutation onError callbacks
+      await new Promise(r => setTimeout(r, 300));
+      currentStep = "Cadastrando agentes";
+      update(toastId, { title: `${currentStep}...`, progress: 55 });
+
+      await new Promise(r => setTimeout(r, 300));
+      currentStep = "Cadastrando sessões";
+      update(toastId, { title: `${currentStep}...`, progress: 70 });
+
+      await new Promise(r => setTimeout(r, 300));
+      currentStep = "Processando transações";
+      update(toastId, { title: `${currentStep}...`, progress: 85 });
+
+      const processResult = await processImportMutation.mutateAsync({ id: importId });
+
+      // Check if processing had errors
+      if (processResult.errors && processResult.errors.length > 0) {
+        dismiss();
+        toast({
+          title: "Importação com erros",
+          description: `Falha em: ${processResult.errors[0]}`,
+          variant: "error",
+          duration: 10000,
+        });
+        return;
+      }
+
+      // Success
+      update(toastId, { title: "Importação concluída!", progress: 100 });
+      await new Promise(r => setTimeout(r, 500));
+      dismiss();
+
+      toast({
+        title: "Importação concluída com sucesso!",
+        description: `${validationResult.totalPlayers} jogadores, ${validationResult.totalSessions} sessões`,
+        variant: "success",
+      });
+
+    } catch (error: any) {
+      dismiss();
       console.error("Import failed:", error);
+      toast({
+        title: `Erro em: ${currentStep}`,
+        description: error?.message || "Erro desconhecido",
+        variant: "error",
+        duration: 10000,
+      });
     } finally {
       setIsImporting(false);
     }
-  }, [parsedDataForValidation, currentFileName, currentFileSize, currentFileType, createImportMutation, validateImportMutation, processImportMutation, toast]);
+  }, [parsedDataForValidation, currentFileName, currentFileSize, currentFileType, createImportMutation, validateImportMutation, processImportMutation, toast, update]);
 
   const handleRejectImport = useCallback(() => {
     setValidationModalOpen(false);
@@ -1916,6 +1978,21 @@ export function ImportUploader() {
         parsedData.fileName = file.name;
         parsedData.fileSize = file.size;
 
+        // Extract clubId and unionId from filename pattern: clubId-unionId-startDate-endDate.xlsx
+        const fileNameMatch = file.name.match(/^(\d+)-(\d+)-(\d{8})-(\d{8})/);
+        if (fileNameMatch) {
+          parsedData.clubId = fileNameMatch[1];
+          parsedData.unionId = fileNameMatch[2];
+        }
+
+        // Also try to extract clubId from transactions if not in filename
+        if (!parsedData.clubId && parsedData.transactions?.length) {
+          const firstTxWithClub = parsedData.transactions.find((tx: any) => tx.clubId || tx.senderClubId);
+          if (firstTxWithClub) {
+            parsedData.clubId = String(firstTxWithClub.clubId || firstTxWithClub.senderClubId);
+          }
+        }
+
         update(id, { title: "Verificando dados...", progress: 80 });
         const hasData =
           (parsedData.players?.length ?? 0) > 0 ||
@@ -2004,9 +2081,10 @@ export function ImportUploader() {
           </div>
         </div>
 
-        {/* Empty state - Vault style */}
-        <div className="h-[calc(100vh-250px)] flex items-center justify-center">
-          <div className="relative z-20 m-auto flex w-full max-w-[380px] flex-col">
+        {/* Content area */}
+        <div className="space-y-6 py-4">
+          {/* Upload area */}
+          <div className="relative z-20 flex w-full flex-col">
             <div className="flex w-full flex-col relative text-center">
               <div className="pb-4">
                 <h2 className="font-medium text-lg">
@@ -2021,11 +2099,19 @@ export function ImportUploader() {
               <button
                 type="button"
                 onClick={() => document.getElementById("upload-club-file")?.click()}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mx-auto"
               >
                 {t("poker.import.upload")}
               </button>
             </div>
+          </div>
+
+          {/* Imports list for club type */}
+          <div className="border-t pt-6">
+            <h3 className="font-medium text-sm mb-4">Importações de Clube</h3>
+            <Suspense fallback={<ImportsList.Skeleton />}>
+              <ImportsList sourceType="club" compact />
+            </Suspense>
           </div>
         </div>
       </div>

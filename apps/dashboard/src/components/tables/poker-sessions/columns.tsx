@@ -259,6 +259,28 @@ export const columns: ColumnDef<PokerSession>[] = [
     ),
   },
   {
+    id: "result",
+    header: "Result",
+    meta: {
+      className: "w-[120px] text-right",
+    },
+    cell: ({ row }) => {
+      const result = row.original.totalCashOut - row.original.totalBuyIn;
+      if (result === 0) {
+        return <span className="font-mono text-sm text-muted-foreground">0,00</span>;
+      }
+      return (
+        <span className={`font-mono text-sm ${result > 0 ? "text-green-600" : "text-red-600"}`}>
+          {result > 0 ? "+" : ""}
+          {result.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </span>
+      );
+    },
+  },
+  {
     accessorKey: "guaranteedPrize",
     header: "GTD",
     meta: {

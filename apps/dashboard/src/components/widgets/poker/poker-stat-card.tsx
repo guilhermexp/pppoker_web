@@ -4,6 +4,12 @@ import { cn } from "@midday/ui/cn";
 import Link from "next/link";
 import type React from "react";
 
+export interface BreakdownItem {
+  label: string;
+  value: number | string;
+  color?: "default" | "green" | "red" | "orange" | "blue" | "purple";
+}
+
 interface PokerStatCardProps {
   title: string;
   description?: string;
@@ -12,6 +18,7 @@ interface PokerStatCardProps {
   action?: string;
   actionHref?: string;
   className?: string;
+  breakdown?: BreakdownItem[];
 }
 
 export function PokerStatCard({
@@ -22,6 +29,7 @@ export function PokerStatCard({
   action,
   actionHref,
   className,
+  breakdown,
 }: PokerStatCardProps) {
   const content = (
     <div
@@ -43,8 +51,28 @@ export function PokerStatCard({
 
       <div>
         {children}
+        {breakdown && breakdown.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {breakdown.map((item, idx) => (
+              <div key={idx} className="flex justify-between text-xs">
+                <span className="text-[#666666]">{item.label}</span>
+                <span className={cn(
+                  "font-medium",
+                  item.color === "green" && "text-green-500",
+                  item.color === "red" && "text-red-500",
+                  item.color === "orange" && "text-orange-500",
+                  item.color === "blue" && "text-blue-500",
+                  item.color === "purple" && "text-purple-500",
+                  (!item.color || item.color === "default") && "text-foreground"
+                )}>
+                  {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         {action && (
-          <span className="text-xs text-[#666666] group-hover:text-primary transition-colors duration-300">
+          <span className="text-xs text-[#666666] group-hover:text-primary transition-colors duration-300 mt-2 block">
             {action}
           </span>
         )}

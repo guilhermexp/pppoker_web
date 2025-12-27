@@ -595,6 +595,8 @@ export default {
     drag_drop: "arraste e solte para organizar seu painel perfeito.",
     customize: "Personalizar",
     save: "Salvar",
+    drag_to_show: "Arraste para cima para exibir",
+    drag_to_hide: "Arraste para baixo para ocultar",
   },
   widget_titles: {
     cash_runway: "Fluxo de Caixa",
@@ -879,7 +881,8 @@ export default {
     copied_clipboard: "Copiado para a area de transferencia.",
     link_copied: "Link copiado para a area de transferencia.",
     transaction_updated: "Transacao atualizada",
-    transaction_url_copied: "URL da transacao copiada para a area de transferencia",
+    transaction_url_copied:
+      "URL da transacao copiada para a area de transferencia",
     transaction_url_copy_failed:
       "Falha ao copiar URL da transacao para a area de transferencia",
     sync_success: "Sincronizacao concluida com sucesso",
@@ -956,8 +959,96 @@ export default {
     add_vat: "Adicionar IVA",
     add_discount: "Adicionar desconto",
     add_units: "Adicionar unidades",
-    add_qr_code: "Adicionar codigo QR",
+    add_qr_code: "Adicionar código QR",
     canceled: "Cancelada",
+  },
+
+  // Tabela de faturas
+  invoice_table: {
+    headers: {
+      invoice_no: "Nº da Fatura",
+      status: "Status",
+      due_date: "Vencimento",
+      customer: "Cliente",
+      amount: "Valor",
+      vat_rate: "Taxa IVA",
+      vat_amount: "Valor IVA",
+      tax_rate: "Taxa de Imposto",
+      tax_amount: "Valor do Imposto",
+      excl_vat: "Excl. IVA",
+      excl_tax: "Excl. Imposto",
+      internal_note: "Nota Interna",
+      issue_date: "Data de Emissão",
+      sent_at: "Enviada em",
+      actions: "Ações",
+    },
+    tooltips: {
+      scheduled_to_send: "Agendada para envio:",
+      viewed_ago: "Visualizada há {time}",
+    },
+    empty: {
+      no_invoices: "Nenhuma fatura",
+      no_invoices_description:
+        "Você ainda não criou nenhuma fatura. Vá em frente e crie a primeira.",
+      create_invoice: "Criar fatura",
+      no_results: "Sem resultados",
+      no_results_description: "Tente outra busca ou ajuste os filtros",
+      clear_filters: "Limpar filtros",
+    },
+    actions: {
+      edit_invoice: "Editar fatura",
+      open_invoice: "Abrir fatura",
+      copy_link: "Copiar link",
+      download: "Baixar",
+      duplicate: "Duplicar",
+      cancel_schedule: "Cancelar agendamento",
+      mark_as_unpaid: "Marcar como não paga",
+      mark_as_paid: "Marcar como paga",
+      cancel: "Cancelar",
+      delete: "Excluir",
+    },
+  },
+
+  // Detalhes da fatura
+  invoice_details: {
+    paid_on: "Paga em {date}",
+    marked_as_paid: "Marcada como paga",
+    canceled_on: "Cancelada em {date}",
+    marked_as_canceled: "Marcada como cancelada",
+    due_date: "Vencimento",
+    issue_date: "Data de emissão",
+    scheduled_at: "Agendada para",
+    sent_at: "Enviada em",
+    sent_to: "Enviada para",
+    invoice_no: "Nº da Fatura",
+    invoice_link: "Link da fatura",
+    activity: "Atividade",
+    internal_note: "Nota interna",
+  },
+
+  // Formulário de fatura
+  invoice_form: {
+    select_customer: "Selecionar cliente",
+    search_customer: "Buscar cliente...",
+    create_customer: "Criar cliente",
+    edit: "Editar",
+    add_item: "Adicionar item",
+    preview_invoice: "Visualizar fatura",
+    saving: "Salvando",
+    edited_ago: "Editado {time}",
+    create: "Criar",
+    update: "Atualizar",
+    create_and_send: "Criar e Enviar",
+    update_and_send: "Atualizar e Enviar",
+    schedule: "Agendar",
+    schedule_with_date: "Agendar ({date} {time})",
+    scheduling_failed: "Falha no Agendamento",
+    scheduling_failed_description:
+      "Por favor, tente novamente. Se o problema persistir, entre em contato com o suporte.",
+    creation_failed: "Falha ao Criar Fatura",
+    creation_failed_description:
+      "Ocorreu um erro inesperado. Por favor, tente novamente.",
+    invoice_number_exists: "Número da fatura já existe",
   },
 
   // Placeholders
@@ -1095,8 +1186,7 @@ export default {
     descriptions: {
       billing_email:
         "Este e um email adicional que sera usado para enviar faturas.",
-      expense_tags:
-        "Tags ajudam a categorizar e rastrear despesas do cliente.",
+      expense_tags: "Tags ajudam a categorizar e rastrear despesas do cliente.",
       exclude_reports:
         "Transacoes nesta categoria nao aparecerao em relatorios financeiros",
       category_not_available: "Descricao da categoria nao disponivel",
@@ -1294,8 +1384,7 @@ export default {
       title: "Agentes",
       description: "Gerencie agentes e suas comissões",
       no_agents: "Nenhum agente ainda",
-      no_agents_description:
-        "Comece adicionando seu primeiro agente ao clube.",
+      no_agents_description: "Comece adicionando seu primeiro agente ao clube.",
       create_agent: "Adicionar Agente",
       search_placeholder: "Buscar agentes...",
       table: {
@@ -1483,9 +1572,11 @@ export default {
     },
     import: {
       title: "Importar Planilha de Clube",
-      description: "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
+      description:
+        "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
       empty_title: "Importar dados do clube",
-      empty_description: "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
+      empty_description:
+        "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
       upload: "Upload",
       recentImports: "Importações Recentes",
       noImports: "Nenhuma importação ainda",
@@ -1531,9 +1622,11 @@ export default {
     },
     leagueImport: {
       title: "Importar Planilha de Liga",
-      description: "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
+      description:
+        "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
       empty_title: "Importar dados de liga",
-      empty_description: "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
+      empty_description:
+        "Arraste e solte ou faça upload da planilha exportada do PPPoker. Validaremos automaticamente os dados antes de processar.",
       upload: "Upload",
       recentImports: "Importações Recentes",
       noImports: "Nenhuma importação ainda",
@@ -1582,7 +1675,12 @@ export default {
       rake_total: "Rake Total",
       rake_ppst: "Rake PPST",
       rake_ppsr: "Rake PPSR",
-      estimated_commission: "Comissão Est.",
+      total_rakeback: "Retorno de Taxa",
+      game_types: "Tipos de Jogos",
+      players_by_region: "Jogadores por Região",
+      general_result: "Resultado Geral",
+      variants: "variantes",
+      regions: "regiões",
       // Card descriptions
       sessions_description: "Total de sessões importadas",
       players_description: "Jogadores registrados no clube",
@@ -1590,7 +1688,12 @@ export default {
       rake_total_description: "Rake total coletado",
       rake_ppst_description: "Rake de torneios (PPST)",
       rake_ppsr_description: "Rake de cash game (PPSR)",
-      commission_description: "Comissão estimada do período",
+      rakeback_description: "Rakeback estimado do período",
+      game_types_description: "Distribuição por variante de jogo",
+      players_by_region_description: "Jogadores agrupados por país",
+      general_result_description: "Ganhos/Perdas + Eventos - Taxa Total",
+      winnings_events: "Ganhos + Eventos",
+      minus_fee: "(-) Taxa Total",
       bank_result_description: "Resultado financeiro do clube",
       player_results: "Resultado Jogadores",
       player_results_description: "Ganhos e perdas dos jogadores",
@@ -1649,5 +1752,104 @@ export default {
       successDescription: "{count} acertos criados",
       error: "Falha ao fechar semana",
     },
+  },
+
+  // Conexão Gmail
+  gmail: {
+    connect_title: "Conecte seu Gmail",
+    connect_description:
+      "Conecte seu Gmail para importar automaticamente recibos e faturas. Extrairemos os dados e associaremos às suas transações de forma integrada.",
+    connect_button: "Conectar seu Gmail",
+    more_options: "Mais opções",
+    drag_drop_hint:
+      "Você também pode arrastar e soltar arquivos aqui para reconciliação automática.",
+  },
+
+  // Tabela de transações
+  transaction_table: {
+    headers: {
+      date: "Data",
+      description: "Descrição",
+      amount: "Valor",
+      tax_amount: "Valor do Imposto",
+      category: "Categoria",
+      from_to: "De / Para",
+      tags: "Tags",
+      account: "Conta",
+      method: "Método",
+      assigned: "Atribuído",
+      status: "Status",
+      actions: "Ações",
+    },
+    status: {
+      pending: "Pendente",
+      analyzing: "Analisando",
+      analyzing_tooltip:
+        "Analisando detalhes da transação para determinar a melhor categoria.",
+    },
+    actions: {
+      view_details: "Ver detalhes",
+      share_url: "Compartilhar URL",
+      mark_completed: "Marcar como concluído",
+      mark_uncompleted: "Marcar como não concluído",
+      include: "Incluir",
+      exclude: "Excluir",
+      delete: "Excluir",
+    },
+  },
+
+  // Edição de transação
+  transaction_edit: {
+    title: "Editar Transação",
+    expense: "Despesa",
+    income: "Receita",
+    type_description:
+      "Selecione se é dinheiro entrando (receita) ou saindo (despesa)",
+    description_label: "Descrição",
+    description_placeholder: "Ex: Material de escritório, Pagamento de fatura",
+    description_helper: "Uma breve descrição do que é esta transação",
+    amount_label: "Valor",
+    amount_placeholder: "0,00",
+    amount_helper: "Digite o valor da transação",
+    currency_label: "Moeda",
+    currency_helper: "A moeda desta transação",
+    account_label: "Conta",
+    account_placeholder: "Selecionar conta",
+    account_helper: "A conta à qual esta transação pertence",
+    date_label: "Data",
+    date_placeholder: "Selecionar data",
+    date_helper: "Quando esta transação ocorreu",
+    category_label: "Categoria",
+    category_placeholder: "Selecionar categoria",
+    category_helper: "Ajuda a organizar e acompanhar suas transações",
+    assign_label: "Atribuir",
+    assign_placeholder: "Selecionar",
+    assign_helper: "Atribuir esta transação a um membro da equipe",
+    attachment: "Anexo",
+    attachment_description:
+      "Envie recibos, faturas ou outros documentos relacionados a esta transação",
+    search_attachment: "Buscar anexo",
+    save_button: "Salvar",
+    exclude_analytics: "Excluir das análises",
+    exclude_analytics_description:
+      "Exclui esta transação de análises como lucro, despesa e receita. Útil para transferências internas entre contas para evitar contagem dupla.",
+    note: "Nota",
+    note_description:
+      "Adicione detalhes ou contexto adicional sobre esta transação",
+    note_placeholder: "Nota",
+  },
+
+  // Menu de visibilidade de colunas
+  column_visibility: {
+    date: "Data",
+    description: "Descrição",
+    amount: "Valor",
+    tax_amount: "Valor do Imposto",
+    category: "Categoria",
+    from_to: "De / Para",
+    tags: "Tags",
+    account: "Conta",
+    method: "Método",
+    assigned: "Atribuído",
   },
 } as const;

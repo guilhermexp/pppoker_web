@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransactionParams } from "@/hooks/use-transaction-params";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { ScrollArea } from "@midday/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@midday/ui/sheet";
@@ -8,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TransactionEditForm } from "../forms/transaction-edit-form";
 
 export function TransactionEditSheet() {
+  const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { editTransaction, setParams } = useTransactionParams();
@@ -42,7 +44,7 @@ export function TransactionEditSheet() {
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent>
         <SheetHeader className="mb-8">
-          <SheetTitle>Edit Transaction</SheetTitle>
+          <SheetTitle>{t("transaction_edit.title")}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="h-full p-0 pb-[50px]" hideScrollbar>

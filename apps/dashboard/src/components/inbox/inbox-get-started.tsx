@@ -2,6 +2,7 @@
 
 import { ConnectGmail } from "@/components/inbox/connect-gmail";
 import { useUserQuery } from "@/hooks/use-user";
+import { useI18n } from "@/locales/client";
 import { getInboxEmail } from "@midday/inbox";
 import {
   Accordion,
@@ -14,6 +15,7 @@ import { CopyInput } from "../copy-input";
 import { UploadZone } from "./inbox-upload-zone";
 
 export function InboxGetStarted() {
+  const t = useI18n();
   const { data: user } = useUserQuery();
   const router = useRouter();
 
@@ -27,11 +29,11 @@ export function InboxGetStarted() {
         <div className="relative z-20 m-auto flex w-full max-w-[380px] flex-col">
           <div className="flex w-full flex-col relative">
             <div className="pb-4 text-center">
-              <h2 className="font-medium text-lg">Connect Your Gmail</h2>
+              <h2 className="font-medium text-lg">
+                {t("gmail.connect_title")}
+              </h2>
               <p className="pb-6 text-sm text-[#878787]">
-                Connect your Gmail to automatically import receipts and
-                invoices. We'll extract the data and match it to your
-                transactions seamlessly.
+                {t("gmail.connect_description")}
               </p>
             </div>
 
@@ -46,7 +48,7 @@ export function InboxGetStarted() {
                 >
                   <AccordionItem value="item-1" className="border-0">
                     <AccordionTrigger className="justify-center space-x-2 flex text-sm">
-                      <span>More options</span>
+                      <span>{t("gmail.more_options")}</span>
                     </AccordionTrigger>
                     <AccordionContent className="mt-4">
                       <div className="flex flex-col space-y-4">
@@ -60,8 +62,7 @@ export function InboxGetStarted() {
 
             <div className="text-center mt-8">
               <p className="text-xs text-[#878787]">
-                You can also just drag and drop files here for automatic
-                reconciliation.
+                {t("gmail.drag_drop_hint")}
               </p>
             </div>
           </div>

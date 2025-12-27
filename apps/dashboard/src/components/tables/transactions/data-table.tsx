@@ -32,7 +32,7 @@ import { use, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useInView } from "react-intersection-observer";
 import { BottomBar } from "./bottom-bar";
-import { columns } from "./columns";
+import { useColumns } from "./columns";
 import { DataTableHeader } from "./data-table-header";
 import { NoResults, NoTransactions } from "./empty-states";
 import { ExportBar } from "./export-bar";
@@ -47,6 +47,7 @@ export function DataTable({
 }: Props) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const columns = useColumns();
   const { filter, hasFilters } = useTransactionFilterParamsWithPersistence();
   const { setRowSelection, rowSelection, setColumns, setCanDelete } =
     useTransactionsStore();

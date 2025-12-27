@@ -18,10 +18,13 @@ export const pokerImportStatusSchema = z.enum([
 // INPUT SCHEMAS
 // =============================================================================
 
+export const pokerImportSourceTypeSchema = z.enum(["club", "league", "su"]);
+
 export const getPokerImportsSchema = z.object({
   cursor: z.string().nullable().optional(),
   pageSize: z.coerce.number().min(1).max(100).optional(),
   status: pokerImportStatusSchema.nullable().optional(),
+  sourceType: pokerImportSourceTypeSchema.nullable().optional(),
 });
 
 export const getPokerImportByIdSchema = z.object({
@@ -32,6 +35,7 @@ export const createPokerImportSchema = z.object({
   fileName: z.string(),
   fileSize: z.number().optional(),
   fileType: z.string().optional(),
+  sourceType: pokerImportSourceTypeSchema.optional().default("club"),
   rawData: z.any(), // The parsed Excel/CSV data
 });
 

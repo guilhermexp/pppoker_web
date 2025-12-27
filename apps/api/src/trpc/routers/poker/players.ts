@@ -1,4 +1,5 @@
 import { createAdminClient } from "@api/services/supabase";
+import { calculateBatchActivityMetrics, calculatePlayerActivityMetrics } from "@api/utils/poker-activity";
 import { TRPCError } from "@trpc/server";
 import {
   bulkCreatePlayersSchema,
@@ -9,6 +10,7 @@ import {
   getPokerAgentsSchema,
   getPokerPlayerByIdSchema,
   getPokerPlayersSchema,
+  updatePokerPlayerRakebackSchema,
   updatePokerPlayerStatusSchema,
   upsertPokerPlayerSchema,
 } from "../../../schemas/poker/players";
@@ -33,6 +35,10 @@ export const pokerPlayersRouter = createTRPCRouter({
         agentId,
         isVip,
         isShark,
+        hasCreditLimit,
+        hasRake,
+        hasBalance,
+        hasAgent,
       } = input ?? {};
 
       // Build query
@@ -66,6 +72,52 @@ export const pokerPlayersRouter = createTRPCRouter({
 
       if (isShark !== null && isShark !== undefined) {
         query = query.eq("is_shark", isShark);
+      }
+
+      // Simple boolean filters
+      if (hasCreditLimit === true) {
+        query = query.gt("credit_limit", 0);
+      }
+
+      if (hasBalance === true) {
+        query = query.neq("current_balance", 0);
+      }
+
+      if (hasAgent === true) {
+        query = query.not("agent_id", "is", null);
+      }
+
+      // Filter by rake (requires aggregation from session_players)
+      let playerIdsWithRake: string[] | null = null;
+      if (hasRake === true) {
+        // Get player IDs that have rake > 0
+        const { data: sessionData } = await supabase
+          .from("poker_session_players")
+          .select("player_id, rake")
+          .eq("team_id", teamId)
+          .gt("rake", 0);
+
+        // Collect unique player IDs with positive rake
+        const playerIdsSet = new Set<string>();
+        for (const row of sessionData ?? []) {
+          playerIdsSet.add(row.player_id);
+        }
+        playerIdsWithRake = [...playerIdsSet];
+
+        if (playerIdsWithRake.length === 0) {
+          // No players have rake
+          return {
+            meta: {
+              cursor: null,
+              hasPreviousPage: false,
+              hasNextPage: false,
+              totalCount: 0,
+            },
+            data: [],
+          };
+        }
+
+        query = query.in("id", playerIdsWithRake);
       }
 
       // Apply sorting
@@ -124,6 +176,31 @@ export const pokerPlayersRouter = createTRPCRouter({
         );
       }
 
+      // Fetch rake/winnings stats for all players in current page
+      const playerIds = (data ?? []).map((p) => p.id);
+      let statsMap: Record<string, { totalRake: number; totalWinnings: number }> = {};
+      if (playerIds.length > 0) {
+        const { data: sessionStats, error: sessionError } = await supabase
+          .from("poker_session_players")
+          .select("player_id, rake, winnings")
+          .eq("team_id", teamId)
+          .in("player_id", playerIds);
+
+        // Aggregate by player
+        for (const row of sessionStats ?? []) {
+          const current = statsMap[row.player_id] ?? { totalRake: 0, totalWinnings: 0 };
+          statsMap[row.player_id] = {
+            totalRake: current.totalRake + Number(row.rake ?? 0),
+            totalWinnings: current.totalWinnings + Number(row.winnings ?? 0),
+          };
+        }
+      }
+
+      // Fetch activity metrics for all players in current page
+      const activityMetricsMap = playerIds.length > 0
+        ? await calculateBatchActivityMetrics(supabase, teamId, playerIds)
+        : new Map();
+
       // Transform snake_case to camelCase
       const transformedData = (data ?? []).map((player) => ({
         id: player.id,
@@ -152,6 +229,9 @@ export const pokerPlayersRouter = createTRPCRouter({
         customerId: player.customer_id,
         note: player.note,
         agent: player.agent_id ? agentsMap[player.agent_id] ?? null : null,
+        totalRake: statsMap[player.id]?.totalRake ?? 0,
+        totalWinnings: statsMap[player.id]?.totalWinnings ?? 0,
+        activityStatus: activityMetricsMap.get(player.id)?.activityStatus ?? "new",
       }));
 
       return {
@@ -198,18 +278,95 @@ export const pokerPlayersRouter = createTRPCRouter({
       if (data.agent_id) {
         const { data: agentData } = await supabase
           .from("poker_players")
-          .select("id, nickname, memo_name")
+          .select("id, pppoker_id, nickname, memo_name, rakeback_percent")
           .eq("id", data.agent_id)
           .single();
 
         if (agentData) {
           agent = {
             id: agentData.id,
+            ppPokerId: agentData.pppoker_id,
             nickname: agentData.nickname,
             memoName: agentData.memo_name,
+            rakebackPercent: agentData.rakeback_percent ?? 0,
           };
         }
       }
+
+      // Get rake stats for this player from session_players (partidas)
+      const { data: sessionStats } = await supabase
+        .from("poker_session_players")
+        .select("rake, winnings")
+        .eq("team_id", teamId)
+        .eq("player_id", data.id);
+
+      const totalRake = (sessionStats ?? []).reduce(
+        (sum, s) => sum + (s.rake ?? 0),
+        0
+      );
+      const totalWinnings = (sessionStats ?? []).reduce(
+        (sum, s) => sum + (s.winnings ?? 0),
+        0
+      );
+      const sessionsPlayed = sessionStats?.length ?? 0;
+      const rakebackPercent = data.rakeback_percent ?? 0;
+      const totalRakeback = totalRake * (rakebackPercent / 100);
+
+      const rakeStats = {
+        sessionsPlayed,
+        totalRake,
+        totalWinnings,
+        totalRakeback,
+      };
+
+      // If player is an agent, also get stats for managed players
+      let agentStats = null;
+      if (data.type === "agent") {
+        // Get all players managed by this agent
+        const { data: managedPlayers } = await supabase
+          .from("poker_players")
+          .select("id")
+          .eq("team_id", teamId)
+          .eq("agent_id", data.id)
+          .limit(50000);
+
+        const managedPlayerIds = (managedPlayers ?? []).map((p) => p.id);
+
+        if (managedPlayerIds.length > 0) {
+          // Get rake from session_players for managed players
+          const { data: managedSessionStats } = await supabase
+            .from("poker_session_players")
+            .select("rake")
+            .eq("team_id", teamId)
+            .in("player_id", managedPlayerIds);
+
+          const managedTotalRake = (managedSessionStats ?? []).reduce(
+            (sum, s) => sum + (s.rake ?? 0),
+            0
+          );
+          const managedRakeback = managedTotalRake * (rakebackPercent / 100);
+
+          agentStats = {
+            playerCount: managedPlayerIds.length,
+            totalRake: managedTotalRake,
+            totalRakeback: managedRakeback,
+          };
+        } else {
+          agentStats = {
+            playerCount: 0,
+            totalRake: 0,
+            totalRakeback: 0,
+          };
+        }
+      }
+
+      // Calculate activity metrics
+      const activityMetrics = await calculatePlayerActivityMetrics(
+        supabase,
+        teamId,
+        data.id,
+        data.last_active_at
+      );
 
       return {
         id: data.id,
@@ -238,6 +395,9 @@ export const pokerPlayersRouter = createTRPCRouter({
         customerId: data.customer_id,
         note: data.note,
         agent,
+        rakeStats,
+        agentStats,
+        activityMetrics,
       };
     }),
 
@@ -371,6 +531,35 @@ export const pokerPlayersRouter = createTRPCRouter({
     }),
 
   /**
+   * Update player rakeback percentage
+   */
+  updateRakeback: protectedProcedure
+    .input(updatePokerPlayerRakebackSchema)
+    .mutation(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      const { data, error } = await supabase
+        .from("poker_players")
+        .update({
+          rakeback_percent: input.rakebackPercent,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.id)
+        .eq("team_id", teamId)
+        .select("id, rakeback_percent")
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return { id: data.id, rakebackPercent: data.rakeback_percent };
+    }),
+
+  /**
    * Get only agents (type = 'agent')
    */
   getAgents: protectedProcedure
@@ -490,7 +679,8 @@ export const pokerPlayersRouter = createTRPCRouter({
     const { data: players, error } = await supabase
       .from("poker_players")
       .select("type, status, is_vip, is_shark, current_balance")
-      .eq("team_id", teamId);
+      .eq("team_id", teamId)
+      .limit(50000); // Avoid 1000 row limit
 
     if (error) {
       throw new TRPCError({
@@ -548,7 +738,8 @@ export const pokerPlayersRouter = createTRPCRouter({
         .from("poker_players")
         .select("id, nickname, status, rakeback_percent, super_agent_id")
         .eq("team_id", teamId)
-        .eq("type", "agent");
+        .eq("type", "agent")
+        .limit(10000); // Avoid 1000 row limit
 
       if (superAgentId) {
         agentsQuery = agentsQuery.eq("super_agent_id", superAgentId);
@@ -565,13 +756,13 @@ export const pokerPlayersRouter = createTRPCRouter({
 
       const agentIds = (agents ?? []).map((a) => a.id);
 
-      // Get all players managed by these agents
+      // Get all players managed by these agents (includes agents themselves since they self-reference)
       const { data: managedPlayers, error: playersError } = await supabase
         .from("poker_players")
         .select("id, agent_id")
         .eq("team_id", teamId)
-        .eq("type", "player")
-        .in("agent_id", agentIds.length > 0 ? agentIds : ["00000000-0000-0000-0000-000000000000"]);
+        .in("agent_id", agentIds.length > 0 ? agentIds : ["00000000-0000-0000-0000-000000000000"])
+        .limit(50000); // Avoid 1000 row limit
 
       if (playersError) {
         throw new TRPCError({
@@ -584,7 +775,8 @@ export const pokerPlayersRouter = createTRPCRouter({
       let summaryQuery = supabase
         .from("poker_player_summary")
         .select("player_id, rake_total, rake_ppst, rake_ppsr")
-        .eq("team_id", teamId);
+        .eq("team_id", teamId)
+        .limit(50000); // Avoid 1000 row limit
 
       if (dateFrom) {
         summaryQuery = summaryQuery.gte("period_start", dateFrom);

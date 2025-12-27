@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { Icons } from "@midday/ui/icons";
 import { SubmitButton } from "@midday/ui/submit-button";
@@ -7,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 export function ConnectGmail() {
+  const t = useI18n();
   const trpc = useTRPC();
   const router = useRouter();
 
@@ -29,7 +31,7 @@ export function ConnectGmail() {
     >
       <div className="flex items-center space-x-2">
         <Icons.Gmail />
-        <span>Connect your Gmail</span>
+        <span>{t("gmail.connect_button")}</span>
       </div>
     </SubmitButton>
   );

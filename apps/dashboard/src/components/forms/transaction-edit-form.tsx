@@ -7,6 +7,7 @@ import { SelectCurrency } from "@/components/select-currency";
 import { TransactionAttachments } from "@/components/transaction-attachments";
 import { useUpdateTransactionCategory } from "@/hooks/use-update-transaction-category";
 import { useUserQuery } from "@/hooks/use-user";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import { utc } from "@date-fns/utc";
@@ -38,6 +39,7 @@ type Props = {
 };
 
 export function TransactionEditForm({ transaction }: Props) {
+  const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -285,7 +287,7 @@ export function TransactionEditForm({ transaction }: Props) {
               });
             }}
           >
-            Expense
+            {t("transaction_edit.expense")}
           </Button>
           <Button
             type="button"
@@ -307,41 +309,41 @@ export function TransactionEditForm({ transaction }: Props) {
               });
             }}
           >
-            Income
+            {t("transaction_edit.income")}
           </Button>
         </div>
         <p className="text-[0.8rem] text-muted-foreground mt-2">
-          Select whether this is money coming in (income) or going out (expense)
+          {t("transaction_edit.type_description")}
         </p>
       </div>
 
       <div>
         <Label htmlFor="name" className="mb-2 block">
-          Description
+          {t("transaction_edit.description_label")}
         </Label>
         <Input
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g., Office supplies, Invoice payment"
+          placeholder={t("transaction_edit.description_placeholder")}
           autoComplete="off"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck="false"
         />
         <p className="text-[0.8rem] text-muted-foreground mt-2">
-          A brief description of what this transaction is for
+          {t("transaction_edit.description_helper")}
         </p>
       </div>
 
       <div className="flex space-x-4">
         <div className="w-full">
           <Label htmlFor="amount" className="mb-2 block">
-            Amount
+            {t("transaction_edit.amount_label")}
           </Label>
           <CurrencyInput
             value={amount}
-            placeholder="0.00"
+            placeholder={t("transaction_edit.amount_placeholder")}
             allowNegative={false}
             onValueChange={(values) => {
               if (values.floatValue !== undefined) {
@@ -366,13 +368,13 @@ export function TransactionEditForm({ transaction }: Props) {
             }}
           />
           <p className="text-[0.8rem] text-muted-foreground mt-2">
-            Enter the transaction amount
+            {t("transaction_edit.amount_helper")}
           </p>
         </div>
 
         <div className="w-full">
           <Label htmlFor="currency" className="mb-2 block">
-            Currency
+            {t("transaction_edit.currency_label")}
           </Label>
           <SelectCurrency
             className="w-full"
@@ -386,7 +388,7 @@ export function TransactionEditForm({ transaction }: Props) {
             value={transaction.currency}
           />
           <p className="text-[0.8rem] text-muted-foreground mt-2">
-            The currency for this transaction
+            {t("transaction_edit.currency_helper")}
           </p>
         </div>
       </div>
@@ -394,7 +396,7 @@ export function TransactionEditForm({ transaction }: Props) {
       <div className="flex space-x-4">
         <div className="w-full">
           <Label htmlFor="account" className="mb-2 block">
-            Account
+            {t("transaction_edit.account_label")}
           </Label>
           <SelectAccount
             onChange={(value) => {
@@ -411,16 +413,16 @@ export function TransactionEditForm({ transaction }: Props) {
               }
             }}
             value={transaction.account?.id ?? accounts?.at(0)?.id ?? ""}
-            placeholder="Select account"
+            placeholder={t("transaction_edit.account_placeholder")}
           />
           <p className="text-[0.8rem] text-muted-foreground mt-2">
-            The account this transaction belongs to
+            {t("transaction_edit.account_helper")}
           </p>
         </div>
 
         <div className="w-full">
           <Label htmlFor="date" className="mb-2 block">
-            Date
+            {t("transaction_edit.date_label")}
           </Label>
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
@@ -433,7 +435,7 @@ export function TransactionEditForm({ transaction }: Props) {
                 {transaction.date ? (
                   format(utc(transaction.date), user?.dateFormat ?? "PPP")
                 ) : (
-                  <span>Select date</span>
+                  <span>{t("transaction_edit.date_placeholder")}</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -461,7 +463,7 @@ export function TransactionEditForm({ transaction }: Props) {
             </PopoverContent>
           </Popover>
           <p className="text-[0.8rem] text-muted-foreground mt-2">
-            When this transaction occurred
+            {t("transaction_edit.date_helper")}
           </p>
         </div>
       </div>
@@ -469,7 +471,7 @@ export function TransactionEditForm({ transaction }: Props) {
       <div className="flex space-x-4">
         <div className="w-full">
           <Label htmlFor="category" className="mb-2 block">
-            Category
+            {t("transaction_edit.category_label")}
           </Label>
           <SelectCategory
             onChange={async (value) => {
@@ -491,13 +493,13 @@ export function TransactionEditForm({ transaction }: Props) {
             selected={selectedCategory}
           />
           <p className="text-[0.8rem] text-muted-foreground mt-2">
-            Help organize and track your transactions
+            {t("transaction_edit.category_helper")}
           </p>
         </div>
 
         <div className="w-full">
           <Label htmlFor="assign" className="mb-2 block">
-            Assign
+            {t("transaction_edit.assign_label")}
           </Label>
           <AssignUser
             selectedId={transaction.assigned?.id ?? undefined}
@@ -509,19 +511,20 @@ export function TransactionEditForm({ transaction }: Props) {
             }}
           />
           <p className="text-[0.8rem] text-muted-foreground mt-2">
-            Assign this transaction to a team member
+            {t("transaction_edit.assign_helper")}
           </p>
         </div>
       </div>
 
       <Accordion type="multiple" defaultValue={["attachment"]}>
         <AccordionItem value="attachment">
-          <AccordionTrigger>Attachment</AccordionTrigger>
+          <AccordionTrigger>
+            {t("transaction_edit.attachment")}
+          </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">
-                Upload receipts, invoices, or other documents related to this
-                transaction
+                {t("transaction_edit.attachment_description")}
               </p>
               <TransactionAttachments
                 id={transaction.id}
@@ -537,14 +540,12 @@ export function TransactionEditForm({ transaction }: Props) {
 
         <div className="mt-6 mb-4">
           <Label htmlFor="settings" className="mb-2 block font-medium text-md">
-            Exclude from analytics
+            {t("transaction_edit.exclude_analytics")}
           </Label>
           <div className="flex flex-row items-center justify-between">
             <div className="space-y-0.5 pr-4">
               <p className="text-xs text-muted-foreground">
-                Exclude this transaction from analytics like profit, expense and
-                revenue. This is useful for internal transfers between accounts
-                to avoid double-counting.
+                {t("transaction_edit.exclude_analytics_description")}
               </p>
             </div>
 
@@ -561,14 +562,14 @@ export function TransactionEditForm({ transaction }: Props) {
         </div>
 
         <AccordionItem value="note">
-          <AccordionTrigger>Note</AccordionTrigger>
+          <AccordionTrigger>{t("transaction_edit.note")}</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">
-                Add any additional details or context about this transaction
+                {t("transaction_edit.note_description")}
               </p>
               <Textarea
-                placeholder="Note"
+                placeholder={t("transaction_edit.note_placeholder")}
                 className="min-h-[100px] resize-none"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}

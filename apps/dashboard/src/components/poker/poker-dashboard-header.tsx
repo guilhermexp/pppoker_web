@@ -2,6 +2,7 @@
 
 import { usePokerDashboardParams } from "@/hooks/use-poker-dashboard-params";
 import { useI18n } from "@/locales/client";
+import { PokerCustomize } from "@/components/widgets/poker/poker-customize";
 import { Button } from "@midday/ui/button";
 import { Calendar } from "@midday/ui/calendar";
 import { Icons } from "@midday/ui/icons";
@@ -81,7 +82,11 @@ export function PokerDashboardHeader() {
         {/* Date Range Picker */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="min-w-[140px] justify-start">
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-w-[140px] justify-start"
+            >
               <Icons.CalendarMonth className="mr-2 h-4 w-4" />
               <span className="text-sm">{formatDateLabel()}</span>
             </Button>
@@ -140,6 +145,9 @@ export function PokerDashboardHeader() {
             {t("poker.dashboard.import")}
           </Link>
         </Button>
+
+        {/* Customize Widgets */}
+        <PokerCustomize />
       </div>
     </div>
   );

@@ -14,13 +14,15 @@ import {
   CardTitle,
 } from "@midday/ui/card";
 import { Icons } from "@midday/ui/icons";
+import { Input } from "@midday/ui/input";
 import { Progress } from "@midday/ui/progress";
 import { ScrollArea } from "@midday/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
 import { Skeleton } from "@midday/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useState } from "react";
 
 function AgentInfoSkeleton() {
   return (
@@ -356,160 +358,186 @@ function PlayersTab({ agentId }: { agentId: string }) {
 }
 
 function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [rakebackValue, setRakebackValue] = useState<string>(
+    String(agent.rakebackPercent ?? 0)
+  );
+  const [isEditingRakeback, setIsEditingRakeback] = useState(false);
+
+  const updateRakebackMutation = useMutation(
+    trpc.poker.players.updateRakeback.mutationOptions({
+      onSuccess: () => {
+        // Invalidate both player and agent queries so both update
+        queryClient.invalidateQueries({
+          queryKey: trpc.poker.players.getById.queryKey({ id: agent.id }),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.poker.players.getAgentStats.queryKey({}),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.poker.players.get.queryKey({}),
+        });
+        setIsEditingRakeback(false);
+      },
+    })
+  );
+
+  const handleRakebackSave = () => {
+    const value = parseFloat(rakebackValue);
+    if (!isNaN(value) && value >= 0 && value <= 100) {
+      updateRakebackMutation.mutate({
+        id: agent.id,
+        rakebackPercent: value,
+      });
+    }
+  };
+
+  const handleRakebackCancel = () => {
+    setRakebackValue(String(agent.rakebackPercent ?? 0));
+    setIsEditingRakeback(false);
+  };
+
   const rakeTotal = metrics?.totalRake ?? 0;
-  const rakePpst = metrics?.rakePpst ?? 0;
-  const rakePpsr = metrics?.rakePpsr ?? 0;
   const rakebackPercent = agent.rakebackPercent ?? 0;
   const estimatedCommission = rakeTotal * (rakebackPercent / 100);
 
-  const ppstPercent = rakeTotal > 0 ? (rakePpst / rakeTotal) * 100 : 0;
-  const ppsrPercent = rakeTotal > 0 ? (rakePpsr / rakeTotal) * 100 : 0;
-
   return (
     <div className="space-y-6">
-      {/* Rake Breakdown */}
+      {/* Resumo Financeiro - All in one card like player sheet */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Rake Breakdown</CardTitle>
+          <CardTitle className="text-sm font-medium">Resumo Financeiro</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Rake Total</span>
-            <span className="text-lg font-bold text-green-600">
-              R$ {formatCurrency(rakeTotal)}
-            </span>
-          </div>
-
-          <div className="space-y-3">
+        <CardContent className="space-y-6">
+          {/* Saldos */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>PPST (Torneios)</span>
-                </div>
-                <span className="font-mono text-blue-600">
-                  {ppstPercent.toFixed(0)}%
-                </span>
-              </div>
-              <Progress value={ppstPercent} className="h-2" />
-              <p className="text-xs text-right text-muted-foreground mt-1">
-                R$ {formatCurrency(rakePpst)}
+              <p className="text-xs text-muted-foreground">Saldo Atual</p>
+              <p className={`text-xl font-bold ${agent.currentBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {formatCurrency(agent.currentBalance ?? 0)}
               </p>
             </div>
-
             <div>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span>PPSR (Cash)</span>
-                </div>
-                <span className="font-mono text-purple-600">
-                  {ppsrPercent.toFixed(0)}%
-                </span>
-              </div>
-              <Progress value={ppsrPercent} className="h-2" />
-              <p className="text-xs text-right text-muted-foreground mt-1">
-                R$ {formatCurrency(rakePpsr)}
+              <p className="text-xs text-muted-foreground">Saldo Fichas</p>
+              <p className="text-xl font-bold">
+                {formatCurrency(agent.chipBalance ?? 0)}
               </p>
+            </div>
+          </div>
+
+          {/* Credito */}
+          <div className="border-t pt-4">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Credito</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Limite de Credito</p>
+                <p className="text-sm font-medium">{formatCurrency(agent.creditLimit ?? 0)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Credito Agente</p>
+                <p className="text-sm font-medium">{formatCurrency(agent.agentCreditBalance ?? 0)}</p>
+              </div>
+            </div>
+            {agent.creditLimit > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">Utilizacao</span>
+                  <span className="font-medium">
+                    {Math.min(100, Math.round((Math.abs(agent.currentBalance) / agent.creditLimit) * 100))}%
+                  </span>
+                </div>
+                <Progress
+                  value={Math.min(100, (Math.abs(agent.currentBalance) / agent.creditLimit) * 100)}
+                  className="h-2"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Rakeback */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground">Rakeback</p>
+              {!isEditingRakeback && (
+                <Button variant="ghost" size="sm" onClick={() => setIsEditingRakeback(true)}>
+                  <Icons.Edit className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            {isEditingRakeback ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={rakebackValue}
+                    onChange={(e) => setRakebackValue(e.target.value)}
+                    className="w-24"
+                  />
+                  <span className="text-muted-foreground">%</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleRakebackSave} disabled={updateRakebackMutation.isPending}>
+                    {updateRakebackMutation.isPending ? "Salvando..." : "Salvar"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleRakebackCancel} disabled={updateRakebackMutation.isPending}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold">{rakebackPercent}%</span>
+                <span className="text-muted-foreground text-sm">de retorno</span>
+              </div>
+            )}
+          </div>
+
+          {/* Historico de Rake */}
+          <div className="border-t pt-4">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Historico de Rake</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Jogadores Gerenciados</p>
+                <p className="text-lg font-semibold">{metrics?.playerCount ?? 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Rake Gerado</p>
+                <p className="text-lg font-semibold text-blue-600">{formatCurrency(rakeTotal)}</p>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Commission */}
+      {/* Jogadores Gerenciados */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Comissao</CardTitle>
+          <CardTitle className="text-sm font-medium">Jogadores Gerenciados</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">
-                Rakeback Configurado
-              </p>
-              <p className="text-2xl font-bold">{rakebackPercent}%</p>
+              <p className="text-xs text-muted-foreground">Total de Jogadores</p>
+              <p className="text-lg font-semibold">{metrics?.playerCount ?? 0}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">
-                Comissao Estimada
-              </p>
-              <p className="text-2xl font-bold text-orange-600">
-                R$ {formatCurrency(estimatedCommission)}
-              </p>
+              <p className="text-xs text-muted-foreground">Rake dos Jogadores</p>
+              <p className="text-lg font-semibold text-blue-600">{formatCurrency(rakeTotal)}</p>
             </div>
           </div>
-
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">
-              Calculo: {rakebackPercent}% de R$ {formatCurrency(rakeTotal)} = R${" "}
-              {formatCurrency(estimatedCommission)}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Balance Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Saldo Atual</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p
-              className={`text-2xl font-bold ${
-                agent.currentBalance >= 0 ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              R$ {formatCurrency(agent.currentBalance ?? 0)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Credito Agente</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              R$ {formatCurrency(agent.agentCreditBalance ?? 0)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Credit Limit */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Limite de Credito</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <InfoItem
-            label="Limite Configurado"
-            value={`R$ ${formatCurrency(agent.creditLimit ?? 0)}`}
-          />
-          {agent.creditLimit > 0 && (
-            <div>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Utilizacao</span>
-                <span className="font-medium">
-                  {Math.min(
-                    100,
-                    Math.round(
-                      (Math.abs(agent.currentBalance) / agent.creditLimit) * 100
-                    )
-                  )}
-                  %
-                </span>
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Comissao do Agente</p>
+                <p className="text-xs text-muted-foreground">({rakebackPercent}% do rake)</p>
               </div>
-              <Progress
-                value={Math.min(
-                  100,
-                  (Math.abs(agent.currentBalance) / agent.creditLimit) * 100
-                )}
-                className="h-2"
-              />
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(estimatedCommission)}</p>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>

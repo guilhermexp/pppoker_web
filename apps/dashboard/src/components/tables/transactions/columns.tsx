@@ -7,6 +7,7 @@ import { InlineSelectTags } from "@/components/inline-select-tags";
 import { TransactionBankAccount } from "@/components/transaction-bank-account";
 import { TransactionMethod } from "@/components/transaction-method";
 import { TransactionStatus } from "@/components/transaction-status";
+import { useI18n } from "@/locales/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import { Badge } from "@midday/ui/badge";
 import { Button } from "@midday/ui/button";
@@ -32,9 +33,10 @@ const SelectCell = memo(
   ({
     checked,
     onChange,
-  }: { checked: boolean; onChange: (value: boolean) => void }) => (
-    <Checkbox checked={checked} onCheckedChange={onChange} />
-  ),
+  }: {
+    checked: boolean;
+    onChange: (value: boolean) => void;
+  }) => <Checkbox checked={checked} onCheckedChange={onChange} />,
 );
 
 SelectCell.displayName = "SelectCell";
@@ -44,8 +46,11 @@ const DateCell = memo(
     date,
     format,
     noSort,
-  }: { date: string; format?: string | null; noSort?: boolean }) =>
-    formatDate(date, format, noSort),
+  }: {
+    date: string;
+    format?: string | null;
+    noSort?: boolean;
+  }) => formatDate(date, format, noSort),
 );
 
 DateCell.displayName = "DateCell";
@@ -56,11 +61,13 @@ const DescriptionCell = memo(
     description,
     status,
     amount,
+    pendingLabel,
   }: {
     name: string;
     description?: string;
     status?: string;
     amount: number;
+    pendingLabel: string;
   }) => (
     <div className="flex items-center space-x-2">
       <Tooltip>
@@ -73,7 +80,7 @@ const DescriptionCell = memo(
 
               {status === "pending" && (
                 <div className="flex space-x-1 items-center border rounded-md text-[10px] py-1 px-2 h-[22px] text-[#878787]">
-                  <span>Pending</span>
+                  <span>{pendingLabel}</span>
                 </div>
               )}
             </div>
@@ -97,13 +104,7 @@ const DescriptionCell = memo(
 DescriptionCell.displayName = "DescriptionCell";
 
 const AmountCell = memo(
-  ({
-    amount,
-    currency,
-  }: {
-    amount: number;
-    currency: string;
-  }) => (
+  ({ amount, currency }: { amount: number; currency: string }) => (
     <span className={cn("text-sm", amount > 0 && "text-[#00C969]")}>
       <FormatAmount amount={amount} currency={currency} />
     </span>
@@ -141,6 +142,7 @@ const ActionsCell = memo(
     onUpdateTransaction,
     onDeleteTransaction,
     onEditTransaction,
+    translations,
   }: {
     transaction: Transaction;
     onViewDetails?: (id: string) => void;
@@ -153,6 +155,15 @@ const ActionsCell = memo(
     }) => void;
     onDeleteTransaction?: (id: string) => void;
     onEditTransaction?: (id: string) => void;
+    translations: {
+      viewDetails: string;
+      shareUrl: string;
+      markCompleted: string;
+      markUncompleted: string;
+      include: string;
+      exclude: string;
+      delete: string;
+    };
   }) => {
     const handleViewDetails = useCallback(() => {
       if (transaction.manual) {
@@ -192,31 +203,33 @@ const ActionsCell = memo(
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleViewDetails}>
-            View details
+            {translations.viewDetails}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleCopyUrl}>Share URL</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleCopyUrl}>
+            {translations.shareUrl}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           {!transaction.manual && transaction.status === "excluded" && (
             <DropdownMenuItem onClick={handleUpdateToPosted}>
-              Include
+              {translations.include}
             </DropdownMenuItem>
           )}
 
           {!transaction.isFulfilled && (
             <DropdownMenuItem onClick={handleUpdateToCompleted}>
-              Mark as completed
+              {translations.markCompleted}
             </DropdownMenuItem>
           )}
 
           {transaction.isFulfilled && transaction.status === "completed" && (
             <DropdownMenuItem onClick={handleUpdateToPosted}>
-              Mark as uncompleted
+              {translations.markUncompleted}
             </DropdownMenuItem>
           )}
 
           {!transaction.manual && transaction.status !== "excluded" && (
             <DropdownMenuItem onClick={handleUpdateToExcluded}>
-              Exclude
+              {translations.exclude}
             </DropdownMenuItem>
           )}
 
@@ -225,7 +238,7 @@ const ActionsCell = memo(
               className="text-destructive"
               onClick={handleDeleteTransaction}
             >
-              Delete
+              {translations.delete}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -236,219 +249,236 @@ const ActionsCell = memo(
 
 ActionsCell.displayName = "ActionsCell";
 
-export const columns: ColumnDef<Transaction>[] = [
-  {
-    id: "select",
-    meta: {
-      className:
-        "md:sticky bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 border-r border-border before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:right-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-l after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
+export function useColumns(): ColumnDef<Transaction>[] {
+  const t = useI18n();
+
+  return [
+    {
+      id: "select",
+      meta: {
+        className:
+          "md:sticky bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 border-r border-border before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:right-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-l after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
+      },
+      cell: ({ row }) => (
+        <SelectCell
+          checked={row.getIsSelected()}
+          onChange={(value) => row.toggleSelected(!!value)}
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
     },
-    cell: ({ row }) => (
-      <SelectCell
-        checked={row.getIsSelected()}
-        onChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "date",
-    header: "Date",
-    meta: {
-      className:
-        "md:sticky bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 border-r border-border before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:right-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-l after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
+    {
+      accessorKey: "date",
+      header: t("transaction_table.headers.date"),
+      meta: {
+        className:
+          "md:sticky bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 border-r border-border before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:right-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-l after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
+      },
+      cell: ({ row, table }) => (
+        <DateCell
+          date={row.original.date}
+          format={table.options.meta?.dateFormat}
+          noSort={!table.options.meta?.hasSorting}
+        />
+      ),
     },
-    cell: ({ row, table }) => (
-      <DateCell
-        date={row.original.date}
-        format={table.options.meta?.dateFormat}
-        noSort={!table.options.meta?.hasSorting}
-      />
-    ),
-  },
-  {
-    accessorKey: "description",
-    header: "Description",
-    meta: {
-      className:
-        "md:sticky bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 border-r border-border before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:right-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-l after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
+    {
+      accessorKey: "description",
+      header: t("transaction_table.headers.description"),
+      meta: {
+        className:
+          "md:sticky bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 border-r border-border before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:right-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-l after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
+      },
+      cell: ({ row }) => (
+        <DescriptionCell
+          name={row.original.name}
+          description={row.original.description ?? undefined}
+          status={row.original.status ?? undefined}
+          amount={row.original.amount}
+          pendingLabel={t("transaction_table.status.pending")}
+        />
+      ),
     },
-    cell: ({ row }) => (
-      <DescriptionCell
-        name={row.original.name}
-        description={row.original.description ?? undefined}
-        status={row.original.status ?? undefined}
-        amount={row.original.amount}
-      />
-    ),
-  },
-  {
-    accessorKey: "amount",
-    header: "Amount",
-    meta: {
-      className: "border-l border-border",
+    {
+      accessorKey: "amount",
+      header: t("transaction_table.headers.amount"),
+      meta: {
+        className: "border-l border-border",
+      },
+      cell: ({ row }) => (
+        <AmountCell
+          amount={row.original.amount}
+          currency={row.original.currency}
+        />
+      ),
     },
-    cell: ({ row }) => (
-      <AmountCell
-        amount={row.original.amount}
-        currency={row.original.currency}
-      />
-    ),
-  },
-  {
-    accessorKey: "taxAmount",
-    header: "Tax Amount",
-    cell: ({ row }) => (
-      <FormatAmount
-        amount={row.original.taxAmount ?? 0}
-        currency={row.original.currency}
-        maximumFractionDigits={2}
-      />
-    ),
-  },
-  {
-    accessorKey: "category",
-    header: "Category",
-    cell: ({ row, table }) => {
-      // Show analyzing state when enrichment is not completed
-      if (!row.original.enrichmentCompleted) {
+    {
+      accessorKey: "taxAmount",
+      header: t("transaction_table.headers.tax_amount"),
+      cell: ({ row }) => (
+        <FormatAmount
+          amount={row.original.taxAmount ?? 0}
+          currency={row.original.currency}
+          maximumFractionDigits={2}
+        />
+      ),
+    },
+    {
+      accessorKey: "category",
+      header: t("transaction_table.headers.category"),
+      cell: ({ row, table }) => {
+        // Show analyzing state when enrichment is not completed
+        if (!row.original.enrichmentCompleted) {
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-2 cursor-help">
+                  <Spinner size={14} className="stroke-primary" />
+                  <span className="text-[#878787] text-sm">
+                    {t("transaction_table.status.analyzing")}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent
+                className="px-3 py-1.5 text-xs max-w-[280px]"
+                side="top"
+                sideOffset={5}
+              >
+                {t("transaction_table.status.analyzing_tooltip")}
+              </TooltipContent>
+            </Tooltip>
+          );
+        }
+
+        const meta = table.options.meta;
+
         return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center space-x-2 cursor-help">
-                <Spinner size={14} className="stroke-primary" />
-                <span className="text-[#878787] text-sm">Analyzing</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent
-              className="px-3 py-1.5 text-xs max-w-[280px]"
-              side="top"
-              sideOffset={5}
-            >
-              Analyzing transaction details to determine the best category.
-            </TooltipContent>
-          </Tooltip>
+          <InlineSelectCategory
+            selected={
+              row.original.category
+                ? {
+                    id: row.original.category.id,
+                    name: row.original.category.name,
+                    color: row.original.category.color,
+                    slug: row.original.category.slug ?? "",
+                  }
+                : undefined
+            }
+            onChange={(category) => {
+              meta?.updateTransaction?.({
+                id: row.original.id,
+                categorySlug: category.slug,
+                categoryName: category.name,
+              });
+            }}
+          />
         );
-      }
-
-      const meta = table.options.meta;
-
-      return (
-        <InlineSelectCategory
-          selected={
-            row.original.category
-              ? {
-                  id: row.original.category.id,
-                  name: row.original.category.name,
-                  color: row.original.category.color,
-                  slug: row.original.category.slug ?? "",
-                }
-              : undefined
-          }
-          onChange={(category) => {
-            meta?.updateTransaction?.({
-              id: row.original.id,
-              categorySlug: category.slug,
-              categoryName: category.name,
-            });
-          }}
+      },
+    },
+    {
+      accessorKey: "counterparty",
+      header: t("transaction_table.headers.from_to"),
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.original.counterpartyName ?? "-"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "tags",
+      header: t("transaction_table.headers.tags"),
+      meta: {
+        className: "w-[280px] min-w-[280px] max-w-[280px]",
+      },
+      cell: ({ row }) => (
+        <InlineSelectTags
+          transactionId={row.original.id}
+          tags={row.original.tags}
         />
-      );
+      ),
     },
-  },
-  {
-    accessorKey: "counterparty",
-    header: "From / To",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground">
-        {row.original.counterpartyName ?? "-"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "tags",
-    header: "Tags",
-    meta: {
-      className: "w-[280px] min-w-[280px] max-w-[280px]",
-    },
-    cell: ({ row }) => (
-      <InlineSelectTags
-        transactionId={row.original.id}
-        tags={row.original.tags}
-      />
-    ),
-  },
-  {
-    accessorKey: "bank_account",
-    header: "Account",
-    cell: ({ row }) => (
-      <TransactionBankAccount
-        name={row.original?.account?.name ?? undefined}
-        logoUrl={row.original?.account?.connection?.logoUrl ?? undefined}
-      />
-    ),
-  },
-  {
-    accessorKey: "method",
-    header: "Method",
-    cell: ({ row }) => <TransactionMethod method={row.original.method} />,
-  },
-  {
-    accessorKey: "assigned",
-    header: "Assigned",
-    cell: ({ row, table }) => {
-      const meta = table.options.meta;
-
-      return (
-        <InlineAssignUser
-          selectedId={row.original.assigned?.id ?? undefined}
-          onSelect={(user) => {
-            meta?.updateTransaction?.({
-              id: row.original.id,
-              assignedId: user.id,
-            });
-          }}
+    {
+      accessorKey: "bank_account",
+      header: t("transaction_table.headers.account"),
+      cell: ({ row }) => (
+        <TransactionBankAccount
+          name={row.original?.account?.name ?? undefined}
+          logoUrl={row.original?.account?.connection?.logoUrl ?? undefined}
         />
-      );
+      ),
     },
-  },
-  {
-    accessorKey: "status",
-    cell: ({ row }) => {
-      const fullfilled =
-        row.original.status === "completed" || row.original.isFulfilled;
-      const hasPendingSuggestion = row.original.hasPendingSuggestion;
+    {
+      accessorKey: "method",
+      header: t("transaction_table.headers.method"),
+      cell: ({ row }) => <TransactionMethod method={row.original.method} />,
+    },
+    {
+      accessorKey: "assigned",
+      header: t("transaction_table.headers.assigned"),
+      cell: ({ row, table }) => {
+        const meta = table.options.meta;
 
-      return (
-        <TransactionStatus
-          fullfilled={fullfilled}
-          hasPendingSuggestion={hasPendingSuggestion}
-        />
-      );
+        return (
+          <InlineAssignUser
+            selectedId={row.original.assigned?.id ?? undefined}
+            onSelect={(user) => {
+              meta?.updateTransaction?.({
+                id: row.original.id,
+                assignedId: user.id,
+              });
+            }}
+          />
+        );
+      },
     },
-  },
-  {
-    id: "actions",
-    enableSorting: false,
-    enableHiding: false,
-    meta: {
-      className:
-        "text-right md:sticky md:right-0 bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:left-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-r after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
-    },
-    cell: ({ row, table }) => {
-      const meta = table.options.meta;
+    {
+      accessorKey: "status",
+      header: t("transaction_table.headers.status"),
+      cell: ({ row }) => {
+        const fullfilled =
+          row.original.status === "completed" || row.original.isFulfilled;
+        const hasPendingSuggestion = row.original.hasPendingSuggestion;
 
-      return (
-        <ActionsCell
-          transaction={row.original}
-          onViewDetails={meta?.setOpen}
-          onCopyUrl={meta?.copyUrl}
-          onUpdateTransaction={meta?.updateTransaction}
-          onDeleteTransaction={meta?.onDeleteTransaction}
-          onEditTransaction={meta?.editTransaction}
-        />
-      );
+        return (
+          <TransactionStatus
+            fullfilled={fullfilled}
+            hasPendingSuggestion={hasPendingSuggestion}
+          />
+        );
+      },
     },
-  },
-];
+    {
+      id: "actions",
+      enableSorting: false,
+      enableHiding: false,
+      meta: {
+        className:
+          "text-right md:sticky md:right-0 bg-background group-hover:bg-[#F2F1EF] group-hover:dark:bg-[#0f0f0f] z-10 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-border after:absolute after:left-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-r after:from-transparent after:to-background group-hover:after:opacity-0 after:z-[-1]",
+      },
+      cell: ({ row, table }) => {
+        const meta = table.options.meta;
+
+        return (
+          <ActionsCell
+            transaction={row.original}
+            onViewDetails={meta?.setOpen}
+            onCopyUrl={meta?.copyUrl}
+            onUpdateTransaction={meta?.updateTransaction}
+            onDeleteTransaction={meta?.onDeleteTransaction}
+            onEditTransaction={meta?.editTransaction}
+            translations={{
+              viewDetails: t("transaction_table.actions.view_details"),
+              shareUrl: t("transaction_table.actions.share_url"),
+              markCompleted: t("transaction_table.actions.mark_completed"),
+              markUncompleted: t("transaction_table.actions.mark_uncompleted"),
+              include: t("transaction_table.actions.include"),
+              exclude: t("transaction_table.actions.exclude"),
+              delete: t("transaction_table.actions.delete"),
+            }}
+          />
+        );
+      },
+    },
+  ];
+}

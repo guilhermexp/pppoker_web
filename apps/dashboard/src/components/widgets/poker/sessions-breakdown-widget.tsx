@@ -46,10 +46,12 @@ const GAME_VARIANT_CONFIG: Record<string, { label: string; color: string }> = {
 };
 
 function formatCurrency(value: number) {
-  if (value >= 1000) {
-    return `R$ ${(value / 1000).toFixed(1)}K`;
-  }
-  return `R$ ${value.toFixed(0)}`;
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 export function SessionsBreakdownWidget() {

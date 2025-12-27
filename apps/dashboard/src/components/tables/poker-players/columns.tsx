@@ -27,6 +27,7 @@ export type PokerPlayer = {
   country: string | null;
   type: "player" | "agent";
   status: "active" | "inactive" | "suspended" | "blacklisted";
+  activityStatus: "active" | "at_risk" | "inactive" | "new";
   agentId: string | null;
   email: string | null;
   phone: string | null;
@@ -36,6 +37,8 @@ export type PokerPlayer = {
   isVip: boolean;
   isShark: boolean;
   lastActiveAt: string | null;
+  totalRake?: number;
+  totalWinnings?: number;
   agent: {
     id: string;
     nickname: string;
@@ -44,24 +47,25 @@ export type PokerPlayer = {
 };
 
 const StatusBadge = memo(
-  ({ status }: { status: PokerPlayer["status"] }) => {
+  ({ activityStatus }: { activityStatus: PokerPlayer["activityStatus"] | undefined }) => {
     const variants: Record<
-      PokerPlayer["status"],
+      PokerPlayer["activityStatus"],
       "default" | "secondary" | "destructive" | "outline"
     > = {
       active: "default",
-      inactive: "secondary",
-      suspended: "outline",
-      blacklisted: "destructive",
+      at_risk: "outline",
+      inactive: "destructive",
+      new: "secondary",
     };
 
-    const labels: Record<PokerPlayer["status"], string> = {
-      active: "Active",
-      inactive: "Inactive",
-      suspended: "Suspended",
-      blacklisted: "Blacklisted",
+    const labels: Record<PokerPlayer["activityStatus"], string> = {
+      active: "Ativo",
+      at_risk: "Em risco",
+      inactive: "Inativo",
+      new: "Novo",
     };
 
+    const status = activityStatus ?? "new";
     return <Badge variant={variants[status]}>{labels[status]}</Badge>;
   },
 );
@@ -183,12 +187,12 @@ export const columns: ColumnDef<PokerPlayer>[] = [
     ),
   },
   {
-    accessorKey: "status",
+    accessorKey: "activityStatus",
     header: "Status",
     meta: {
       className: "w-[100px]",
     },
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    cell: ({ row }) => <StatusBadge activityStatus={row.original.activityStatus} />,
   },
   {
     accessorKey: "agent",
@@ -265,6 +269,50 @@ export const columns: ColumnDef<PokerPlayer>[] = [
         })}
       </span>
     ),
+  },
+  {
+    accessorKey: "totalRake",
+    header: "Taxa",
+    meta: {
+      className: "w-[100px] text-right",
+    },
+    cell: ({ row }) => {
+      const rake = row.original.totalRake ?? 0;
+      return (
+        <span className={cn("font-mono text-sm", rake > 0 ? "text-green-600" : "text-muted-foreground")}>
+          {rake.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "totalWinnings",
+    header: "Ganhos",
+    meta: {
+      className: "w-[100px] text-right",
+    },
+    cell: ({ row }) => {
+      const winnings = row.original.totalWinnings ?? 0;
+      return (
+        <span
+          className={cn(
+            "font-mono text-sm",
+            winnings > 0 && "text-green-600",
+            winnings < 0 && "text-red-600",
+            winnings === 0 && "text-muted-foreground",
+          )}
+        >
+          {winnings >= 0 ? "+" : ""}
+          {winnings.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "email",

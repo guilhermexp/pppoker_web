@@ -578,6 +578,8 @@ export default {
     drag_drop: "drag and drop to arrange your perfect dashboard.",
     customize: "Customize",
     save: "Save",
+    drag_to_show: "Drag up to show",
+    drag_to_hide: "Drag down to hide",
   },
   widget_titles: {
     cash_runway: "Cash Runway",
@@ -942,6 +944,94 @@ export default {
     canceled: "Canceled",
   },
 
+  // Invoice table
+  invoice_table: {
+    headers: {
+      invoice_no: "Invoice no.",
+      status: "Status",
+      due_date: "Due date",
+      customer: "Customer",
+      amount: "Amount",
+      vat_rate: "VAT Rate",
+      vat_amount: "VAT Amount",
+      tax_rate: "Tax Rate",
+      tax_amount: "Tax Amount",
+      excl_vat: "Excl. VAT",
+      excl_tax: "Excl. Tax",
+      internal_note: "Internal Note",
+      issue_date: "Issue date",
+      sent_at: "Sent at",
+      actions: "Actions",
+    },
+    tooltips: {
+      scheduled_to_send: "Scheduled to send:",
+      viewed_ago: "Viewed {time} ago",
+    },
+    empty: {
+      no_invoices: "No invoices",
+      no_invoices_description:
+        "You haven't created any invoices yet. Go ahead and create your first one.",
+      create_invoice: "Create invoice",
+      no_results: "No results",
+      no_results_description: "Try another search, or adjusting the filters",
+      clear_filters: "Clear filters",
+    },
+    actions: {
+      edit_invoice: "Edit invoice",
+      open_invoice: "Open invoice",
+      copy_link: "Copy link",
+      download: "Download",
+      duplicate: "Duplicate",
+      cancel_schedule: "Cancel schedule",
+      mark_as_unpaid: "Mark as unpaid",
+      mark_as_paid: "Mark as paid",
+      cancel: "Cancel",
+      delete: "Delete",
+    },
+  },
+
+  // Invoice details
+  invoice_details: {
+    paid_on: "Paid on {date}",
+    marked_as_paid: "Marked as paid",
+    canceled_on: "Canceled on {date}",
+    marked_as_canceled: "Marked as canceled",
+    due_date: "Due date",
+    issue_date: "Issue date",
+    scheduled_at: "Scheduled at",
+    sent_at: "Sent at",
+    sent_to: "Sent to",
+    invoice_no: "Invoice no.",
+    invoice_link: "Invoice link",
+    activity: "Activity",
+    internal_note: "Internal note",
+  },
+
+  // Invoice form
+  invoice_form: {
+    select_customer: "Select customer",
+    search_customer: "Search customer...",
+    create_customer: "Create customer",
+    edit: "Edit",
+    add_item: "Add item",
+    preview_invoice: "Preview invoice",
+    saving: "Saving",
+    edited_ago: "Edited {time}",
+    create: "Create",
+    update: "Update",
+    create_and_send: "Create & Send",
+    update_and_send: "Update & Send",
+    schedule: "Schedule",
+    schedule_with_date: "Schedule ({date} {time})",
+    scheduling_failed: "Scheduling Failed",
+    scheduling_failed_description:
+      "Please try again. If the issue persists, contact support.",
+    creation_failed: "Invoice Creation Failed",
+    creation_failed_description:
+      "An unexpected error occurred. Please try again.",
+    invoice_number_exists: "Invoice number already exists",
+  },
+
   // Placeholders
   placeholders: {
     note: "Note",
@@ -1160,8 +1250,7 @@ export default {
         "This will update the base currency for all transactions and account balances.",
       update_button: "Update",
       updating: "Updating...",
-      updating_description:
-        "We're updating your base currency, please wait.",
+      updating_description: "We're updating your base currency, please wait.",
       success: "Transactions and account balances updated.",
       error: "Something went wrong please try again.",
     },
@@ -1184,8 +1273,7 @@ export default {
       title: "Players",
       description: "Manage your poker club players and agents",
       no_players: "No players yet",
-      no_players_description:
-        "Start by adding your first player to the club.",
+      no_players_description: "Start by adding your first player to the club.",
       create_player: "Add Player",
       search_placeholder: "Search players...",
       filter: {
@@ -1275,8 +1363,7 @@ export default {
       title: "Agents",
       description: "Manage agents and their commissions",
       no_agents: "No agents yet",
-      no_agents_description:
-        "Start by adding your first agent to the club.",
+      no_agents_description: "Start by adding your first agent to the club.",
       create_agent: "Add Agent",
       search_placeholder: "Search agents...",
       table: {
@@ -1464,9 +1551,11 @@ export default {
     },
     import: {
       title: "Import Club Spreadsheet",
-      description: "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
+      description:
+        "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
       empty_title: "Import club data",
-      empty_description: "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
+      empty_description:
+        "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
       upload: "Upload",
       recentImports: "Recent Imports",
       noImports: "No imports yet",
@@ -1512,9 +1601,11 @@ export default {
     },
     leagueImport: {
       title: "Import League Spreadsheet",
-      description: "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
+      description:
+        "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
       empty_title: "Import league data",
-      empty_description: "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
+      empty_description:
+        "Drag and drop or upload the spreadsheet exported from PPPoker. We'll automatically validate the data before processing.",
       upload: "Upload",
       recentImports: "Recent Imports",
       noImports: "No imports yet",
@@ -1552,7 +1643,12 @@ export default {
       rake_total: "Total Rake",
       rake_ppst: "PPST Rake",
       rake_ppsr: "PPSR Rake",
-      estimated_commission: "Est. Commission",
+      total_rakeback: "Total Rakeback",
+      game_types: "Game Types",
+      players_by_region: "Players by Region",
+      general_result: "General Result",
+      variants: "variants",
+      regions: "regions",
       // Card descriptions
       sessions_description: "Total imported sessions",
       players_description: "Players registered in the club",
@@ -1560,7 +1656,12 @@ export default {
       rake_total_description: "Total rake collected",
       rake_ppst_description: "Tournament rake (PPST)",
       rake_ppsr_description: "Cash game rake (PPSR)",
-      commission_description: "Estimated commission for the period",
+      rakeback_description: "Estimated rakeback for the period",
+      game_types_description: "Distribution by game variant",
+      players_by_region_description: "Players grouped by country",
+      general_result_description: "Winnings/Losses + Events - Total Fee",
+      winnings_events: "Winnings + Events",
+      minus_fee: "(-) Total Fee",
       bank_result_description: "Club financial result",
       player_results: "Player Results",
       player_results_description: "Player winnings and losses",
@@ -1619,5 +1720,104 @@ export default {
       successDescription: "{count} settlements created",
       error: "Failed to close week",
     },
+  },
+
+  // Gmail connection
+  gmail: {
+    connect_title: "Connect Your Gmail",
+    connect_description:
+      "Connect your Gmail to automatically import receipts and invoices. We'll extract the data and match it to your transactions seamlessly.",
+    connect_button: "Connect your Gmail",
+    more_options: "More options",
+    drag_drop_hint:
+      "You can also just drag and drop files here for automatic reconciliation.",
+  },
+
+  // Transaction table
+  transaction_table: {
+    headers: {
+      date: "Date",
+      description: "Description",
+      amount: "Amount",
+      tax_amount: "Tax Amount",
+      category: "Category",
+      from_to: "From / To",
+      tags: "Tags",
+      account: "Account",
+      method: "Method",
+      assigned: "Assigned",
+      status: "Status",
+      actions: "Actions",
+    },
+    status: {
+      pending: "Pending",
+      analyzing: "Analyzing",
+      analyzing_tooltip:
+        "Analyzing transaction details to determine the best category.",
+    },
+    actions: {
+      view_details: "View details",
+      share_url: "Share URL",
+      mark_completed: "Mark as completed",
+      mark_uncompleted: "Mark as uncompleted",
+      include: "Include",
+      exclude: "Exclude",
+      delete: "Delete",
+    },
+  },
+
+  // Transaction edit
+  transaction_edit: {
+    title: "Edit Transaction",
+    expense: "Expense",
+    income: "Income",
+    type_description:
+      "Select whether this is money coming in (income) or going out (expense)",
+    description_label: "Description",
+    description_placeholder: "e.g., Office supplies, Invoice payment",
+    description_helper: "A brief description of what this transaction is for",
+    amount_label: "Amount",
+    amount_placeholder: "0.00",
+    amount_helper: "Enter the transaction amount",
+    currency_label: "Currency",
+    currency_helper: "The currency for this transaction",
+    account_label: "Account",
+    account_placeholder: "Select account",
+    account_helper: "The account this transaction belongs to",
+    date_label: "Date",
+    date_placeholder: "Select date",
+    date_helper: "When this transaction occurred",
+    category_label: "Category",
+    category_placeholder: "Select category",
+    category_helper: "Help organize and track your transactions",
+    assign_label: "Assign",
+    assign_placeholder: "Select",
+    assign_helper: "Assign this transaction to a team member",
+    attachment: "Attachment",
+    attachment_description:
+      "Upload receipts, invoices, or other documents related to this transaction",
+    search_attachment: "Search attachment",
+    save_button: "Save",
+    exclude_analytics: "Exclude from analytics",
+    exclude_analytics_description:
+      "Exclude this transaction from analytics like profit, expense and revenue. This is useful for internal transfers between accounts to avoid double-counting.",
+    note: "Note",
+    note_description:
+      "Add any additional details or context about this transaction",
+    note_placeholder: "Note",
+  },
+
+  // Column visibility menu
+  column_visibility: {
+    date: "Date",
+    description: "Description",
+    amount: "Amount",
+    tax_amount: "Tax Amount",
+    category: "Category",
+    from_to: "From / To",
+    tags: "Tags",
+    account: "Account",
+    method: "Method",
+    assigned: "Assigned",
   },
 } as const;

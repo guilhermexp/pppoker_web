@@ -89,6 +89,39 @@ export const getPokerPlayersSchema = z.object({
     .openapi({
       description: "Filter by shark status",
     }),
+  // Simple boolean filters (accept string "true"/"false" as well as boolean)
+  hasCreditLimit: z
+    .preprocess(
+      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
+      z.boolean().nullable().optional()
+    )
+    .openapi({
+      description: "Filter players with credit limit > 0",
+    }),
+  hasRake: z
+    .preprocess(
+      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
+      z.boolean().nullable().optional()
+    )
+    .openapi({
+      description: "Filter players with total rake > 0",
+    }),
+  hasBalance: z
+    .preprocess(
+      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
+      z.boolean().nullable().optional()
+    )
+    .openapi({
+      description: "Filter players with balance != 0",
+    }),
+  hasAgent: z
+    .preprocess(
+      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
+      z.boolean().nullable().optional()
+    )
+    .openapi({
+      description: "Filter players with an agent assigned",
+    }),
 });
 
 export const getPokerPlayerByIdSchema = z.object({
@@ -178,6 +211,15 @@ export const updatePokerPlayerStatusSchema = z.object({
   }),
   status: pokerPlayerStatusSchema.openapi({
     description: "New status",
+  }),
+});
+
+export const updatePokerPlayerRakebackSchema = z.object({
+  id: z.string().uuid().openapi({
+    description: "Player ID",
+  }),
+  rakebackPercent: z.number().min(0).max(100).openapi({
+    description: "Rakeback percentage (0-100)",
   }),
 });
 

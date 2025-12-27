@@ -92,17 +92,9 @@ export function TableHeader({ tableScroll }: Props) {
           </Button>
         </TableHead>
 
-        {/* Status */}
+        {/* Status (Activity) */}
         <TableHead className="w-[100px]">
-          <Button
-            className="p-0 hover:bg-transparent space-x-2"
-            variant="ghost"
-            onClick={() => createSortQuery("status")}
-          >
-            <span>{t("poker.players.table.status")}</span>
-            {"status" === column && value === "asc" && <ArrowDown size={16} />}
-            {"status" === column && value === "desc" && <ArrowUp size={16} />}
-          </Button>
+          <span>{t("poker.players.table.status")}</span>
         </TableHead>
 
         {/* Agent */}
@@ -167,6 +159,16 @@ export function TableHeader({ tableScroll }: Props) {
               <ArrowUp size={16} />
             )}
           </Button>
+        </TableHead>
+
+        {/* Taxa (Rake) */}
+        <TableHead className="w-[100px] text-right">
+          <span>Taxa</span>
+        </TableHead>
+
+        {/* Ganhos (Winnings) */}
+        <TableHead className="w-[100px] text-right">
+          <span>Ganhos</span>
         </TableHead>
 
         {/* Contact */}

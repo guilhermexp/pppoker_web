@@ -11,3 +11,5 @@ export { SessionsOverviewWidget } from "./sessions-overview-widget";
 export { SessionsBreakdownWidget } from "./sessions-breakdown-widget";
 export { PokerStatCard } from "./poker-stat-card";
 export { PokerWidgetsGrid } from "./poker-widgets-grid";
+export { PokerWidgetProvider } from "./poker-widget-provider";
+export { PokerCustomize } from "./poker-customize";

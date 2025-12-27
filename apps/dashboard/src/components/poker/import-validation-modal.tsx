@@ -53,7 +53,7 @@ function getWeekFromDateString(dateStr: string): number | null {
 const TAB_COLUMNS: Record<string, { name: string; cols: number }> = {
   resumo: { name: "Resumo", cols: 0 },
   general: { name: "Geral", cols: 48 },
-  detailed: { name: "Detalhado", cols: 51 },
+  detailed: { name: "Detalhado", cols: 137 },
   sessions: { name: "Partidas", cols: 12 },
   transactions: { name: "Transações", cols: 21 },
   demonstrativo: { name: "Demonstrativo", cols: 8 },

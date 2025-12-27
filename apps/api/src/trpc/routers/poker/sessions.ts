@@ -323,10 +323,44 @@ export const pokerSessionsRouter = createTRPCRouter({
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
+      // Build base filter conditions
+      const baseFilters: Record<string, any> = { team_id: teamId };
+
+      // First, get total count using count query (avoids Supabase 1000 row limit)
+      let countQuery = supabase
+        .from("poker_sessions")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId);
+
+      if (input?.dateFrom) {
+        countQuery = countQuery.gte("started_at", input.dateFrom);
+      }
+      if (input?.dateTo) {
+        countQuery = countQuery.lte("started_at", input.dateTo);
+      }
+      if (input?.sessionType) {
+        countQuery = countQuery.eq("session_type", input.sessionType);
+      }
+      if (input?.gameVariant) {
+        countQuery = countQuery.eq("game_variant", input.gameVariant);
+      }
+
+      const { count: totalSessions, error: countError } = await countQuery;
+
+      if (countError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: countError.message,
+        });
+      }
+
+      // Get aggregated stats using raw SQL for accuracy
+      // This avoids the 1000 row limit issue
       let query = supabase
         .from("poker_sessions")
         .select("session_type, game_variant, total_rake, total_buy_in, player_count, hands_played, guaranteed_prize, raw_data")
-        .eq("team_id", teamId);
+        .eq("team_id", teamId)
+        .limit(10000); // Increase limit to handle large datasets
 
       if (input?.dateFrom) {
         query = query.gte("started_at", input.dateFrom);
@@ -354,7 +388,7 @@ export const pokerSessionsRouter = createTRPCRouter({
       }
 
       const stats = {
-        totalSessions: sessions?.length ?? 0,
+        totalSessions: totalSessions ?? 0, // Use count from count query
         totalRake: 0,
         totalBuyIn: 0,
         totalPlayers: 0,
@@ -397,11 +431,12 @@ export const pokerSessionsRouter = createTRPCRouter({
         stats.byOrganizer[organizer].rake += session.total_rake ?? 0;
       }
 
-      // Get unique player count
+      // Get unique player count with increased limit
       const { data: uniquePlayers } = await supabase
         .from("poker_session_players")
         .select("player_id")
-        .eq("team_id", teamId);
+        .eq("team_id", teamId)
+        .limit(50000);
 
       const uniquePlayerIds = new Set((uniquePlayers ?? []).map((p) => p.player_id));
       const uniquePlayerCount = uniquePlayerIds.size;
@@ -409,6 +444,142 @@ export const pokerSessionsRouter = createTRPCRouter({
       return {
         ...stats,
         uniquePlayerCount,
+      };
+    }),
+
+  /**
+   * Get sessions for a specific player
+   */
+  getByPlayer: protectedProcedure
+    .input(
+      getPokerSessionsSchema
+        .pick({ cursor: true, pageSize: true, dateFrom: true, dateTo: true })
+        .extend({
+          playerId: getPokerSessionByIdSchema.shape.id,
+        })
+    )
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      const { cursor, pageSize = 50, playerId, dateFrom, dateTo } = input;
+
+      // First get session_players for this player to get session IDs and player-specific data
+      let sessionPlayersQuery = supabase
+        .from("poker_session_players")
+        .select(
+          `
+          session_id,
+          ranking,
+          buy_in_chips,
+          buy_in_ticket,
+          cash_out,
+          winnings,
+          rake,
+          hands
+        `
+        )
+        .eq("team_id", teamId)
+        .eq("player_id", playerId);
+
+      const { data: sessionPlayers, error: spError } = await sessionPlayersQuery;
+
+      if (spError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: spError.message,
+        });
+      }
+
+      if (!sessionPlayers || sessionPlayers.length === 0) {
+        return {
+          meta: {
+            cursor: null,
+            hasPreviousPage: false,
+            hasNextPage: false,
+            totalCount: 0,
+          },
+          data: [],
+        };
+      }
+
+      // Create a map of session_id -> player data
+      const playerDataMap = new Map<string, any>();
+      for (const sp of sessionPlayers) {
+        playerDataMap.set(sp.session_id, {
+          ranking: sp.ranking,
+          buyInChips: sp.buy_in_chips ?? 0,
+          buyInTicket: sp.buy_in_ticket ?? 0,
+          cashOut: sp.cash_out ?? 0,
+          winnings: sp.winnings ?? 0,
+          rake: sp.rake ?? 0,
+          hands: sp.hands ?? 0,
+        });
+      }
+
+      const sessionIds = sessionPlayers.map((sp) => sp.session_id);
+
+      // Now get the sessions with pagination
+      let query = supabase
+        .from("poker_sessions")
+        .select("*", { count: "exact" })
+        .eq("team_id", teamId)
+        .in("id", sessionIds)
+        .order("started_at", { ascending: false });
+
+      if (dateFrom) {
+        query = query.gte("started_at", dateFrom);
+      }
+
+      if (dateTo) {
+        query = query.lte("started_at", dateTo);
+      }
+
+      // Apply pagination
+      const currentCursor = cursor ? Number.parseInt(cursor, 10) : 0;
+      const offset = currentCursor * pageSize;
+      query = query.range(offset, offset + pageSize - 1);
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      const hasNextPage = offset + pageSize < (count ?? 0);
+      const nextCursor = hasNextPage ? String(currentCursor + 1) : null;
+
+      // Transform and include player-specific data
+      const transformedData = (data ?? []).map((session) => ({
+        id: session.id,
+        createdAt: session.created_at,
+        externalId: session.external_id,
+        tableName: session.table_name,
+        sessionType: session.session_type,
+        gameVariant: session.game_variant,
+        startedAt: session.started_at,
+        endedAt: session.ended_at,
+        blinds: session.blinds,
+        buyInAmount: session.buy_in_amount,
+        guaranteedPrize: session.guaranteed_prize,
+        totalRake: session.total_rake ?? 0,
+        totalBuyIn: session.total_buy_in ?? 0,
+        playerCount: session.player_count ?? 0,
+        handsPlayed: session.hands_played ?? 0,
+        // Player-specific data for this session
+        playerData: playerDataMap.get(session.id) ?? null,
+      }));
+
+      return {
+        meta: {
+          cursor: nextCursor,
+          hasPreviousPage: currentCursor > 0,
+          hasNextPage,
+          totalCount: count ?? 0,
+        },
+        data: transformedData,
       };
     }),
 });

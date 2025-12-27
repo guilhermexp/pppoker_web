@@ -8,25 +8,15 @@ import { Skeleton } from "@midday/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 
 function formatCurrency(value: number) {
-  if (value >= 1000000) {
-    return `R$ ${(value / 1000000).toFixed(2)}M`;
-  }
-  if (value >= 1000) {
-    return `R$ ${(value / 1000).toFixed(1)}K`;
-  }
   return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
 
 function formatNumber(value: number) {
-  if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(1)}M`;
-  }
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`;
-  }
   return value.toLocaleString("pt-BR");
 }
 

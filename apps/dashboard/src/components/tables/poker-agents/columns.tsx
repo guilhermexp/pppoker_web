@@ -70,15 +70,11 @@ const StatusBadge = memo(
 StatusBadge.displayName = "StatusBadge";
 
 function formatCurrency(value: number) {
-  if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(2)}M`;
-  }
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`;
-  }
   return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 
@@ -222,6 +218,18 @@ export const columns: ColumnDef<PokerAgent>[] = [
     cell: ({ row }) => (
       <span className="font-mono text-sm">
         {row.original.rakebackPercent.toFixed(0)}%
+      </span>
+    ),
+  },
+  {
+    accessorKey: "totalRake",
+    header: "Rake Total",
+    meta: {
+      className: "w-[110px] text-right",
+    },
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-green-600 font-medium">
+        {formatCurrency(row.original.totalRake ?? 0)}
       </span>
     ),
   },
