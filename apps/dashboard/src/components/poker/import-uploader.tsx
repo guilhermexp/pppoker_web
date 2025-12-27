@@ -1715,7 +1715,7 @@ export function ImportUploader() {
   const t = useI18n();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { toast, update } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -1827,11 +1827,12 @@ export function ImportUploader() {
     async (file: File) => {
       setIsProcessing(true);
 
-      // Show processing toast (Vault style)
-      const { dismiss } = toast({
-        variant: "spinner",
-        title: t("poker.import.processing"),
+      // Show processing toast with progress bar (like SU uploader)
+      const { id, dismiss } = toast({
+        variant: "progress",
+        title: "Lendo arquivo...",
         description: file.name,
+        progress: 0,
         duration: Number.POSITIVE_INFINITY,
       });
 
@@ -1840,7 +1841,10 @@ export function ImportUploader() {
         let parsedData: ParsedImportData = {};
 
         if (fileType === "csv") {
+          update(id, { title: "Lendo CSV...", progress: 10 });
           const text = await file.text();
+
+          update(id, { title: "Parseando dados...", progress: 30 });
           const result = Papa.parse(text, {
             header: true,
             skipEmptyLines: true,
@@ -1851,15 +1855,17 @@ export function ImportUploader() {
             throw new Error(result.errors[0].message);
           }
 
+          update(id, { title: "Processando dados...", progress: 60 });
           parsedData = detectAndParseData(result.data as any[]);
         } else {
           // Parse Excel file
-          // cellFormula: true preserva fórmulas, cellStyles: true ajuda com valores calculados
+          update(id, { title: "Lendo arquivo Excel...", progress: 10 });
           const arrayBuffer = await file.arrayBuffer();
 
           // Micro-delay para permitir UI atualizar antes do parse pesado
           await new Promise((resolve) => setTimeout(resolve, 0));
 
+          update(id, { title: "Parseando planilha...", progress: 25 });
           const workbook = XLSX.read(arrayBuffer, {
             type: "array",
             cellFormula: true,
@@ -1870,6 +1876,7 @@ export function ImportUploader() {
           // Micro-delay após parse para UI continuar responsiva
           await new Promise((resolve) => setTimeout(resolve, 0));
 
+          update(id, { title: "Extraindo período...", progress: 40 });
           // Extract period from Geral sheet header if available
           const geralSheet = workbook.Sheets["Geral"] || workbook.Sheets["General"];
           if (geralSheet) {
@@ -1883,6 +1890,7 @@ export function ImportUploader() {
             }
           }
 
+          update(id, { title: "Processando abas...", progress: 55 });
           // Parse all sheets from PPPoker export
           const sheetData = parseExcelWorkbook(workbook);
           parsedData = { ...parsedData, ...sheetData };
@@ -1897,6 +1905,7 @@ export function ImportUploader() {
             !parsedData.summaries?.length &&
             !parsedData.rakebacks?.length
           ) {
+            update(id, { title: "Detectando formato...", progress: 70 });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const data = XLSX.utils.sheet_to_json(firstSheet, { defval: null });
             parsedData = { ...parsedData, ...detectAndParseData(data as any[]) };
@@ -1907,6 +1916,7 @@ export function ImportUploader() {
         parsedData.fileName = file.name;
         parsedData.fileSize = file.size;
 
+        update(id, { title: "Verificando dados...", progress: 80 });
         const hasData =
           (parsedData.players?.length ?? 0) > 0 ||
           (parsedData.transactions?.length ?? 0) > 0 ||
@@ -1920,6 +1930,7 @@ export function ImportUploader() {
           throw new Error(t("poker.import.noDataFound"));
         }
 
+        update(id, { title: "Validando dados...", progress: 90 });
         // Validate the data
         const validation = validateImportData(parsedData);
 
@@ -1944,7 +1955,7 @@ export function ImportUploader() {
         setIsProcessing(false);
       }
     },
-    [toast, t]
+    [toast, update, t]
   );
 
   const onDrop = useCallback(

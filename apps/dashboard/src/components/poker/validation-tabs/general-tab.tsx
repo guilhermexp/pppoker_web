@@ -135,6 +135,18 @@ const SUMMARY_COLUMNS = ALL_COLUMNS.filter((col) =>
   ["ppPokerId", "nickname", "memoName", "agentNickname", "playerWinningsTotal", "generalTotal", "feeGeneral", "fee"].includes(col.key)
 );
 
+// Tipos de jogo para exibição com dots coloridos
+const GAME_TYPE_CATEGORIES = [
+  { key: "nlholdem", label: "NLHoldem", color: "bg-green-500" },
+  { key: "plo", label: "PLO", color: "bg-blue-500" },
+  { key: "flash", label: "FLASH", color: "bg-yellow-500" },
+  { key: "outros", label: "Outros", color: "bg-orange-500" },
+  { key: "seka", label: "SEKA", color: "bg-purple-500" },
+  { key: "teenPatti", label: "TEEN PATTI", color: "bg-pink-500" },
+  { key: "filipinos", label: "Filipinos", color: "bg-cyan-500" },
+  { key: "cassino", label: "Cassino", color: "bg-red-500" },
+] as const;
+
 function formatValue(
   value: string | number | null | undefined,
   type: string
@@ -155,14 +167,13 @@ function formatValue(
   }
 }
 
+function formatCurrency(value: number): string {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export function GeneralTab({ summaries }: GeneralTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
-
-  const toggleCard = (cardId: string) => {
-    setExpandedCards((prev) => ({ ...prev, [cardId]: !prev[cardId] }));
-  };
 
   const filteredData = summaries.filter((s) => {
     if (!searchQuery) return true;
@@ -184,13 +195,31 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
   const totalAgents = uniqueAgents.size;
   const uniqueSuperAgents = new Set(summaries.map((s) => s.superAgentPpPokerId).filter(isValidId));
   const totalSuperAgents = uniqueSuperAgents.size;
-  // Totais por grupo
+
+  // Totais financeiros
   const totalWinnings = summaries.reduce((sum, s) => sum + (s.playerWinningsTotal || 0), 0);
   const totalGeneral = summaries.reduce((sum, s) => sum + (s.generalTotal || 0), 0);
   const totalRingGames = summaries.reduce((sum, s) => sum + (s.ringGamesTotal || 0), 0);
   const totalMttSng = summaries.reduce((sum, s) => sum + (s.mttSitNGoTotal || 0), 0);
+  const totalSpinUp = summaries.reduce((sum, s) => sum + (s.spinUpTotal || 0), 0);
+  const totalCaribbean = summaries.reduce((sum, s) => sum + (s.caribbeanTotal || 0), 0);
   const totalFeeGeral = summaries.reduce((sum, s) => sum + (s.feeGeneral || 0), 0);
   const totalFeeJogos = summaries.reduce((sum, s) => sum + (s.fee || 0), 0);
+  const totalJackpot = summaries.reduce((sum, s) => sum + (s.jackpotTotal || 0), 0);
+  const totalEvSplit = summaries.reduce((sum, s) => sum + (s.evSplitTotal || 0), 0);
+  const totalMaos = summaries.reduce((sum, s) => sum + (s.handsTotal || 0), 0);
+
+  // Contagem de tipos de jogo ativos (simulado - ajustar conforme dados reais)
+  const gameTypeCounts = {
+    nlholdem: summaries.filter(s => (s.ringGamesTotal || 0) !== 0).length,
+    plo: summaries.filter(s => (s.mttSitNGoTotal || 0) !== 0).length,
+    flash: 0,
+    outros: 0,
+    seka: 0,
+    teenPatti: 0,
+    filipinos: 0,
+    cassino: summaries.filter(s => (s.caribbeanTotal || 0) !== 0).length,
+  };
 
   if (summaries.length === 0) {
     return (
@@ -204,113 +233,124 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
   const groupOrder = ["identificacao", "classificacoes", "ganhosJogador", "tickets", "taxas", "spinupCaribbean", "ganhosClubeJogos", "jackpotFinal"] as const;
 
   return (
-    <div className="space-y-4 pb-4">
-      {/* Row 1: Cards simples */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground">Jogadores</p>
-          <p className="text-lg font-semibold">{totalPlayers}</p>
-        </div>
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground">Agentes</p>
-          <p className="text-lg font-semibold">{totalAgents}</p>
-        </div>
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground">Superagentes</p>
-          <p className="text-lg font-semibold">{totalSuperAgents}</p>
-        </div>
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground">Ring Games</p>
-          <p className={`text-lg font-semibold font-mono ${totalRingGames >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-            {totalRingGames.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-        </div>
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground">MTT/SitNGo</p>
-          <p className={`text-lg font-semibold font-mono ${totalMttSng >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-            {totalMttSng.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
+    <div className="space-y-3 pb-4">
+      {/* Row 1: Contadores simples - estilo minimalista */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm py-2">
+        <span className="text-muted-foreground">
+          Clubes: <span className="text-foreground font-medium">1</span>
+        </span>
+        <span className="text-muted-foreground">
+          Jogadores (B): <span className="text-foreground font-semibold">{totalPlayers}</span>
+        </span>
+        <span className="text-muted-foreground">
+          Agentes (G): <span className="text-foreground font-semibold">{totalAgents}</span>
+        </span>
+        <span className="text-muted-foreground">
+          Superag. (I): <span className="text-foreground font-semibold">{totalSuperAgents}</span>
+        </span>
+      </div>
+
+      {/* Separador sutil */}
+      <div className="border-t border-border/40" />
+
+      {/* Row 2: Valores financeiros principais */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm py-2">
+        <span className="text-muted-foreground">
+          Total Ganhos (AV):{" "}
+          <span className={`font-semibold ${totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalWinnings)}
+          </span>
+        </span>
+        <span className="text-muted-foreground">
+          Ganhos+Ev (BA):{" "}
+          <span className={`font-semibold ${totalGeneral >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalGeneral)}
+          </span>
+        </span>
+        <span className="text-muted-foreground">
+          Jackpot (AT):{" "}
+          <span className={`font-semibold ${totalJackpot >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalJackpot)}
+          </span>
+        </span>
+        <span className="text-muted-foreground">
+          Dividir EV (AU):{" "}
+          <span className={`font-semibold ${totalEvSplit >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalEvSplit)}
+          </span>
+        </span>
+        <span className="text-muted-foreground">
+          Taxa (CJ):{" "}
+          <span className="text-foreground font-semibold">{formatCurrency(totalFeeGeral)}</span>
+        </span>
+        <span className="text-muted-foreground">
+          Mãos (EG):{" "}
+          <span className="text-foreground font-semibold">{totalMaos.toLocaleString("pt-BR")}</span>
+        </span>
+      </div>
+
+      {/* Separador sutil */}
+      <div className="border-t border-border/40" />
+
+      {/* Row 3: Tipos de jogo com dots coloridos */}
+      <div className="py-2">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">TIPOS DE JOGO</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          {GAME_TYPE_CATEGORIES.map((cat) => {
+            const count = gameTypeCounts[cat.key as keyof typeof gameTypeCounts] || 0;
+            return (
+              <span key={cat.key} className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${cat.color}`} />
+                <span className="text-muted-foreground">{cat.label}</span>
+                <span className="text-foreground font-medium">{count}</span>
+              </span>
+            );
+          })}
         </div>
       </div>
 
-      {/* Row 2: Cards expansíveis */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
-        <div
-          className="p-3 border rounded-lg bg-amber-500/10 border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition-colors"
-          onClick={() => toggleCard("eventos")}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-amber-600 dark:text-amber-400">Ganhos + Eventos (I)</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-amber-600 transition-transform ${expandedCards.eventos ? "rotate-180" : ""}`} />
-          </div>
-          <p className={`text-lg font-semibold font-mono ${totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-            {totalWinnings.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-          {expandedCards.eventos && (
-            <div className="mt-2 pt-2 border-t border-amber-500/30 space-y-1 text-[9px]">
-              <p className="text-muted-foreground">Soma das classificações (J-M) + Geral (N)</p>
-            </div>
-          )}
-        </div>
-
-        <div
-          className="p-3 border rounded-lg bg-red-500/10 border-red-500/20 cursor-pointer hover:bg-red-500/20 transition-colors"
-          onClick={() => toggleCard("geral")}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-red-600 dark:text-red-400">Geral - Jogador (N)</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-red-600 transition-transform ${expandedCards.geral ? "rotate-180" : ""}`} />
-          </div>
-          <p className={`text-lg font-semibold font-mono ${totalGeneral >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-            {totalGeneral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-          {expandedCards.geral && (
-            <div className="mt-2 pt-2 border-t border-red-500/30 space-y-1 text-[9px]">
-              <p className="text-muted-foreground">Soma de Ring, MTT, SPINUP, Caribbean, etc. (O-W)</p>
-            </div>
-          )}
-        </div>
-
-        <div
-          className="p-3 border rounded-lg bg-green-500/10 border-green-500/20 cursor-pointer hover:bg-green-500/20 transition-colors"
-          onClick={() => toggleCard("taxaGeral")}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-green-600 dark:text-green-400">Taxa Geral (AA)</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-green-600 transition-transform ${expandedCards.taxaGeral ? "rotate-180" : ""}`} />
-          </div>
-          <p className="text-lg font-semibold font-mono text-green-600">
-            {totalFeeGeral.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-          {expandedCards.taxaGeral && (
-            <div className="mt-2 pt-2 border-t border-green-500/30 space-y-1 text-[9px]">
-              <p className="text-muted-foreground">Soma de todas as taxas (AC-AF)</p>
-            </div>
-          )}
-        </div>
-
-        <div
-          className="p-3 border rounded-lg bg-green-500/10 border-green-500/20 cursor-pointer hover:bg-green-500/20 transition-colors"
-          onClick={() => toggleCard("taxaJogos")}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-green-600 dark:text-green-400">Taxa Jogos (AB)</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-green-600 transition-transform ${expandedCards.taxaJogos ? "rotate-180" : ""}`} />
-          </div>
-          <p className="text-lg font-semibold font-mono text-green-600">
-            {totalFeeJogos.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-          {expandedCards.taxaJogos && (
-            <div className="mt-2 pt-2 border-t border-green-500/30 space-y-1 text-[9px]">
-              <p className="text-muted-foreground">Taxa PPST + não-PPST + PPSR + não-PPSR</p>
-            </div>
-          )}
-        </div>
+      {/* Row 4: Detalhado por categoria */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground py-1">
+        <span>Detalhado:</span>
+        <span>
+          NLHoldem/J-R:{" "}
+          <span className={`font-mono ${totalRingGames >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalRingGames)}
+          </span>
+        </span>
+        <span>
+          PLO/S-AB:{" "}
+          <span className={`font-mono ${totalMttSng >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalMttSng)}
+          </span>
+        </span>
+        <span>
+          FLASH/AC-AD:{" "}
+          <span className={`font-mono ${totalSpinUp >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalSpinUp)}
+          </span>
+        </span>
+        <span>
+          Outros/AE-AF:{" "}
+          <span className={`font-mono ${totalCaribbean >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalCaribbean)}
+          </span>
+        </span>
+        <span>
+          Cassino/AP-AU:{" "}
+          <span className={`font-mono ${totalFeeJogos >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            {formatCurrency(totalFeeJogos)}
+          </span>
+        </span>
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Separador antes da tabela */}
+      <div className="border-t border-border/40" />
+
+      {/* Controls */}
+      <div className="flex items-center justify-between pt-2">
         <div className="flex items-center gap-4">
-          <p className="text-sm text-[#878787]">{summaries.length} registros</p>
+          <p className="text-sm text-[#878787]">{summaries.length} clubes</p>
           <Button
             variant="outline"
             size="sm"
@@ -319,11 +359,11 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
             {expanded ? (
               <>
                 <Icons.ChevronLeft className="w-4 h-4 mr-1" />
-                Resumido ({SUMMARY_COLUMNS.length} cols)
+                Colapsar todos
               </>
             ) : (
               <>
-                Expandir ({ALL_COLUMNS.length} cols)
+                Expandir colunas
                 <Icons.ChevronRight className="w-4 h-4 ml-1" />
               </>
             )}
@@ -332,7 +372,7 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
         <div className="relative w-64">
           <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#878787]" />
           <Input
-            placeholder="Buscar jogador..."
+            placeholder="Buscar clube ou jogador..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -340,6 +380,7 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
         </div>
       </div>
 
+      {/* Tabela */}
       <div className="border rounded-lg overflow-hidden pb-2">
         <div className="overflow-x-auto">
           <Table className={expanded ? "min-w-[4000px]" : "min-w-[1000px]"}>

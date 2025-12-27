@@ -4,6 +4,7 @@ import type { ParsedTransaction } from "@/lib/poker/types";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
 import { Input } from "@midday/ui/input";
+import { cn } from "@midday/ui/cn";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -12,7 +13,14 @@ type TransactionsTabProps = {
   transactions: ParsedTransaction[];
 };
 
-// Colunas resumidas (mais importantes)
+// Transaction categories with colors
+const TRANSACTION_CATEGORIES = [
+  { key: "credito", name: "Crédito", color: "#3B82F6", colRange: "I-K" },
+  { key: "fichas", name: "Fichas", color: "#8B5CF6", colRange: "L-R" },
+  { key: "ticket", name: "Ticket", color: "#10B981", colRange: "S-U" },
+] as const;
+
+// Summary columns
 const SUMMARY_COLUMNS = [
   { key: "occurredAt", label: "Tempo", type: "datetime" },
   { key: "senderNickname", label: "Remetente", type: "text" },
@@ -23,24 +31,19 @@ const SUMMARY_COLUMNS = [
   { key: "ticketSent", label: "Ticket Env.", type: "currency" },
 ] as const;
 
-// Todas as colunas (21 campos - A até U)
+// All columns (21 fields)
 const ALL_COLUMNS = [
-  // Tempo (A)
   { key: "occurredAt", label: "Tempo", type: "datetime", group: "Geral" },
-  // Remetente (B-E)
   { key: "senderClubId", label: "ID Clube Rem.", type: "id", group: "Remetente" },
   { key: "senderPlayerId", label: "ID Jogador Rem.", type: "id", group: "Remetente" },
   { key: "senderNickname", label: "Apelido Rem.", type: "text", group: "Remetente" },
   { key: "senderMemoName", label: "Memo Rem.", type: "text", group: "Remetente" },
-  // Destinatário (F-H)
   { key: "recipientPlayerId", label: "ID Jogador Dest.", type: "id", group: "Destinatário" },
   { key: "recipientNickname", label: "Apelido Dest.", type: "text", group: "Destinatário" },
   { key: "recipientMemoName", label: "Memo Dest.", type: "text", group: "Destinatário" },
-  // Dar crédito (I-K)
   { key: "creditSent", label: "Créd. Enviado", type: "currency", group: "Crédito" },
   { key: "creditRedeemed", label: "Créd. Resgatado", type: "currency", group: "Crédito" },
   { key: "creditLeftClub", label: "Créd. Saiu", type: "currency", group: "Crédito" },
-  // Fichas (L-R)
   { key: "chipsSent", label: "Fichas Enviadas", type: "currency", group: "Fichas" },
   { key: "classificationPpsr", label: "Class. PPSR", type: "number", group: "Fichas" },
   { key: "classificationRing", label: "Class. Ring", type: "number", group: "Fichas" },
@@ -48,20 +51,24 @@ const ALL_COLUMNS = [
   { key: "classificationMtt", label: "Class. MTT", type: "number", group: "Fichas" },
   { key: "chipsRedeemed", label: "Fichas Resg.", type: "currency", group: "Fichas" },
   { key: "chipsLeftClub", label: "Fichas Saiu", type: "currency", group: "Fichas" },
-  // Ticket (S-U)
   { key: "ticketSent", label: "Ticket Enviado", type: "currency", group: "Ticket" },
   { key: "ticketRedeemed", label: "Ticket Resgatado", type: "currency", group: "Ticket" },
   { key: "ticketExpired", label: "Ticket Expirado", type: "currency", group: "Ticket" },
 ] as const;
 
+function formatCurrency(value: number): string {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatNumber(value: number): string {
+  return value.toLocaleString("pt-BR");
+}
+
 export function TransactionsTab({ transactions }: TransactionsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
-
-  const toggleCard = (cardId: string) => {
-    setExpandedCards((prev) => ({ ...prev, [cardId]: !prev[cardId] }));
-  };
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showSenders, setShowSenders] = useState(false);
 
   const filteredData = transactions.filter((t) => {
     if (!searchQuery) return true;
@@ -79,11 +86,10 @@ export function TransactionsTab({ transactions }: TransactionsTabProps) {
 
   // Calculate totals
   const totalTransactions = transactions.length;
-  // Unique senders and recipients
   const uniqueSenders = new Set(transactions.map((t) => t.senderPlayerId).filter(Boolean));
   const uniqueRecipients = new Set(transactions.map((t) => t.recipientPlayerId).filter(Boolean));
 
-  // Chips sent per sender (aggregated by sender ID)
+  // Chips sent per sender (aggregated)
   const chipsBySender = transactions.reduce((acc, t) => {
     if (t.senderPlayerId && t.chipsSent) {
       const id = t.senderPlayerId;
@@ -95,249 +101,285 @@ export function TransactionsTab({ transactions }: TransactionsTabProps) {
     return acc;
   }, {} as Record<string, { id: string; nickname: string; total: number }>);
   const sendersList = Object.values(chipsBySender).sort((a, b) => b.total - a.total);
-  // Crédito (I-K)
+
+  // Credit totals (I-K)
   const totalCreditSent = transactions.reduce((sum, t) => sum + (t.creditSent || 0), 0);
   const totalCreditRedeemed = transactions.reduce((sum, t) => sum + (t.creditRedeemed || 0), 0);
   const totalCreditLeftClub = transactions.reduce((sum, t) => sum + (t.creditLeftClub || 0), 0);
-  // Fichas (L, Q, R)
+  const creditNet = totalCreditSent - totalCreditRedeemed;
+
+  // Chips totals (L-R)
   const totalChipsSent = transactions.reduce((sum, t) => sum + (t.chipsSent || 0), 0);
   const totalChipsRedeemed = transactions.reduce((sum, t) => sum + (t.chipsRedeemed || 0), 0);
   const totalChipsLeftClub = transactions.reduce((sum, t) => sum + (t.chipsLeftClub || 0), 0);
-  // Classificações (M-P)
+  const chipsNet = totalChipsSent - totalChipsRedeemed;
+
+  // Classifications (M-P)
   const totalClassPpsr = transactions.reduce((sum, t) => sum + (t.classificationPpsr || 0), 0);
   const totalClassRing = transactions.reduce((sum, t) => sum + (t.classificationRing || 0), 0);
   const totalClassCustomRing = transactions.reduce((sum, t) => sum + (t.classificationCustomRing || 0), 0);
   const totalClassMtt = transactions.reduce((sum, t) => sum + (t.classificationMtt || 0), 0);
-  // Ticket (S-U)
+
+  // Ticket totals (S-U)
   const totalTicketSent = transactions.reduce((sum, t) => sum + (t.ticketSent || 0), 0);
   const totalTicketRedeemed = transactions.reduce((sum, t) => sum + (t.ticketRedeemed || 0), 0);
   const totalTicketExpired = transactions.reduce((sum, t) => sum + (t.ticketExpired || 0), 0);
+  const ticketNet = totalTicketSent - totalTicketRedeemed - totalTicketExpired;
 
   if (transactions.length === 0) {
     return (
-      <p className="text-center text-[#878787] py-8">
+      <p className="text-center text-muted-foreground py-8">
         Nenhuma transação encontrada
       </p>
     );
   }
 
   return (
-    <div className="space-y-4 pb-4">
-      {/* Summary Cards - Row 1 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground">Transações</p>
-          <p className="text-lg font-semibold">{totalTransactions}</p>
-        </div>
-        <div
-          className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-          onClick={() => toggleCard("remetentes")}
+    <div className="space-y-3 pb-4">
+      {/* Row 1: Counters */}
+      <div className="flex items-center gap-4 text-xs py-2">
+        <span className="text-muted-foreground">
+          Transações <span className="text-foreground font-medium">{totalTransactions}</span>
+        </span>
+        <span className="text-border/60">·</span>
+        <button
+          type="button"
+          onClick={() => setShowSenders(!showSenders)}
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Remetentes</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.remetentes ? "rotate-180" : ""}`} />
+          Remetentes <span className="text-foreground font-medium">{uniqueSenders.size}</span>
+          <Icons.ChevronDown className={cn("w-3 h-3 inline ml-1 transition-transform", showSenders && "rotate-180")} />
+        </button>
+        <span className="text-border/60">·</span>
+        <span className="text-muted-foreground">
+          Destinatários <span className="text-foreground font-medium">{uniqueRecipients.size}</span>
+        </span>
+      </div>
+
+      {/* Expanded senders list */}
+      {showSenders && sendersList.length > 0 && (
+        <div className="border-t border-border/40 py-2">
+          <div className="flex items-center gap-4 flex-wrap text-xs">
+            <span className="text-muted-foreground text-[10px] font-medium">Top remetentes:</span>
+            {sendersList.slice(0, 8).map((sender) => (
+              <span key={sender.id} className="text-muted-foreground">
+                {sender.nickname}{" "}
+                <span className="font-mono text-[#00C969]">{formatNumber(sender.total)}</span>
+              </span>
+            ))}
+            {sendersList.length > 8 && (
+              <span className="text-[10px] text-muted-foreground">+{sendersList.length - 8} mais</span>
+            )}
           </div>
-          <p className="text-lg font-semibold">{uniqueSenders.size}</p>
-          {expandedCards.remetentes ? (
-            <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5 max-h-32 overflow-y-auto">
-              {sendersList.slice(0, 10).map((sender) => (
-                <div key={sender.id} className="flex items-center justify-between text-[8px] gap-1">
-                  <span className="truncate text-muted-foreground" title={`${sender.nickname} (${sender.id})`}>
-                    {sender.nickname}
-                  </span>
-                  <span className="font-mono text-[#00C969] shrink-0 text-right" style={{ minWidth: '70px' }}>
-                    {sender.total.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-              ))}
-              {sendersList.length > 10 && (
-                <p className="text-[8px] text-muted-foreground text-center pt-1">+{sendersList.length - 10} mais</p>
-              )}
-            </div>
-          ) : (
-            <p className="text-[9px] text-muted-foreground mt-0.5">Clique para ver detalhes</p>
-          )}
         </div>
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <p className="text-xs text-muted-foreground">Destinatários</p>
-          <p className="text-lg font-semibold">{uniqueRecipients.size}</p>
-        </div>
-        <div
-          className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-          onClick={() => toggleCard("credito")}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Crédito (I-K)</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.credito ? "rotate-180" : ""}`} />
-          </div>
-          <p className="text-lg font-semibold font-mono">
-            {(totalCreditSent - totalCreditRedeemed).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-          {expandedCards.credito ? (
-            <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Enviado (I)</span>
-                <span className="font-mono">{totalCreditSent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Resgatado (J)</span>
-                <span className="font-mono">{totalCreditRedeemed.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Saiu do clube (K)</span>
-                <span className="font-mono">{totalCreditLeftClub.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-[9px] text-muted-foreground mt-0.5">Clique para ver detalhes</p>
-          )}
-        </div>
-        <div
-          className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-          onClick={() => toggleCard("fichas")}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Fichas (L-R)</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.fichas ? "rotate-180" : ""}`} />
-          </div>
-          <p className="text-lg font-semibold font-mono">
-            {(totalChipsSent - totalChipsRedeemed).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-          {expandedCards.fichas ? (
-            <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Enviadas (L)</span>
-                <span className="font-mono">{totalChipsSent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Class. PPSR (M)</span>
-                <span className="font-mono">{totalClassPpsr.toLocaleString("pt-BR")}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Class. Ring (N)</span>
-                <span className="font-mono">{totalClassRing.toLocaleString("pt-BR")}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Class. RG Pers. (O)</span>
-                <span className="font-mono">{totalClassCustomRing.toLocaleString("pt-BR")}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Class. MTT (P)</span>
-                <span className="font-mono">{totalClassMtt.toLocaleString("pt-BR")}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Resgatadas (Q)</span>
-                <span className="font-mono">{totalChipsRedeemed.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Saiu do clube (R)</span>
-                <span className="font-mono">{totalChipsLeftClub.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-[9px] text-muted-foreground mt-0.5">Clique para ver detalhes</p>
-          )}
-        </div>
-        <div
-          className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-          onClick={() => toggleCard("ticket")}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Ticket (S-U)</p>
-            <Icons.ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${expandedCards.ticket ? "rotate-180" : ""}`} />
-          </div>
-          <p className="text-lg font-semibold font-mono">
-            {(totalTicketSent - totalTicketRedeemed - totalTicketExpired).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-          </p>
-          {expandedCards.ticket ? (
-            <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Enviado (S)</span>
-                <span className="font-mono">{totalTicketSent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Resgatado (T)</span>
-                <span className="font-mono">{totalTicketRedeemed.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-              <div className="flex justify-between text-[9px]">
-                <span className="text-muted-foreground">Expirado (U)</span>
-                <span className="font-mono">{totalTicketExpired.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-[9px] text-muted-foreground mt-0.5">Clique para ver detalhes</p>
-          )}
+      )}
+
+      {/* Row 2: Category totals with colored dots */}
+      <div className="border-t border-border/40 py-2">
+        <div className="flex items-center gap-3 flex-wrap text-xs">
+          {/* Credit */}
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(selectedCategory === "credito" ? null : "credito")}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-muted/50",
+              selectedCategory === "credito" && "bg-muted/50"
+            )}
+          >
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#3B82F6" }} />
+            <span className="text-muted-foreground">Crédito</span>
+            <span className={cn("font-mono", creditNet >= 0 ? "text-[#00C969]" : "text-[#FF3638]")}>
+              {formatCurrency(creditNet)}
+            </span>
+          </button>
+
+          {/* Chips */}
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(selectedCategory === "fichas" ? null : "fichas")}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-muted/50",
+              selectedCategory === "fichas" && "bg-muted/50"
+            )}
+          >
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#8B5CF6" }} />
+            <span className="text-muted-foreground">Fichas</span>
+            <span className={cn("font-mono", chipsNet >= 0 ? "text-[#00C969]" : "text-[#FF3638]")}>
+              {formatCurrency(chipsNet)}
+            </span>
+          </button>
+
+          {/* Ticket */}
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(selectedCategory === "ticket" ? null : "ticket")}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-muted/50",
+              selectedCategory === "ticket" && "bg-muted/50"
+            )}
+          >
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#10B981" }} />
+            <span className="text-muted-foreground">Ticket</span>
+            <span className={cn("font-mono", ticketNet >= 0 ? "text-[#00C969]" : "text-[#FF3638]")}>
+              {formatCurrency(ticketNet)}
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <p className="text-sm text-[#878787]">{transactions.length} transações</p>
+      {/* Expanded category details */}
+      {selectedCategory === "credito" && (
+        <div className="border-t border-border/40 py-2">
+          <div className="flex items-center gap-4 flex-wrap text-xs">
+            <span className="text-muted-foreground text-[10px] font-medium">Crédito (I-K):</span>
+            <span className="text-muted-foreground">
+              Enviado (I) <span className="font-mono text-foreground">{formatCurrency(totalCreditSent)}</span>
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="text-muted-foreground">
+              Resgatado (J) <span className="font-mono text-foreground">{formatCurrency(totalCreditRedeemed)}</span>
+            </span>
+            {totalCreditLeftClub !== 0 && (
+              <>
+                <span className="text-border/60">·</span>
+                <span className="text-muted-foreground">
+                  Saiu (K) <span className={cn("font-mono", totalCreditLeftClub < 0 ? "text-[#FF3638]" : "text-[#00C969]")}>{formatCurrency(totalCreditLeftClub)}</span>
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {selectedCategory === "fichas" && (
+        <div className="border-t border-border/40 py-2">
+          <div className="flex items-center gap-4 flex-wrap text-xs">
+            <span className="text-muted-foreground text-[10px] font-medium">Fichas (L-R):</span>
+            <span className="text-muted-foreground">
+              Enviadas (L) <span className="font-mono text-foreground">{formatCurrency(totalChipsSent)}</span>
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="text-muted-foreground">
+              Resgatadas (Q) <span className="font-mono text-foreground">{formatCurrency(totalChipsRedeemed)}</span>
+            </span>
+            {totalChipsLeftClub !== 0 && (
+              <>
+                <span className="text-border/60">·</span>
+                <span className="text-muted-foreground">
+                  Saiu (R) <span className={cn("font-mono", totalChipsLeftClub < 0 ? "text-[#FF3638]" : "text-[#00C969]")}>{formatCurrency(totalChipsLeftClub)}</span>
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-4 flex-wrap text-xs mt-1">
+            <span className="text-muted-foreground text-[10px] font-medium">Classificações:</span>
+            <span className="text-muted-foreground">
+              PPSR (M) <span className="font-mono text-foreground">{formatNumber(totalClassPpsr)}</span>
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="text-muted-foreground">
+              Ring (N) <span className="font-mono text-foreground">{formatNumber(totalClassRing)}</span>
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="text-muted-foreground">
+              RG Pers. (O) <span className="font-mono text-foreground">{formatNumber(totalClassCustomRing)}</span>
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="text-muted-foreground">
+              MTT (P) <span className="font-mono text-foreground">{formatNumber(totalClassMtt)}</span>
+            </span>
+          </div>
+        </div>
+      )}
+
+      {selectedCategory === "ticket" && (
+        <div className="border-t border-border/40 py-2">
+          <div className="flex items-center gap-4 flex-wrap text-xs">
+            <span className="text-muted-foreground text-[10px] font-medium">Ticket (S-U):</span>
+            <span className="text-muted-foreground">
+              Enviado (S) <span className="font-mono text-foreground">{formatCurrency(totalTicketSent)}</span>
+            </span>
+            <span className="text-border/60">·</span>
+            <span className="text-muted-foreground">
+              Resgatado (T) <span className="font-mono text-foreground">{formatCurrency(totalTicketRedeemed)}</span>
+            </span>
+            {totalTicketExpired !== 0 && (
+              <>
+                <span className="text-border/60">·</span>
+                <span className="text-muted-foreground">
+                  Expirado (U) <span className="font-mono text-[#FF3638]">{formatCurrency(totalTicketExpired)}</span>
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Search and controls */}
+      <div className="border-t border-border/40 flex items-center justify-between py-2">
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">{transactions.length} transações</span>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setExpanded(!expanded)}
+            className="h-6 px-2 text-xs"
           >
             {expanded ? (
               <>
-                <Icons.ChevronLeft className="w-4 h-4 mr-1" />
-                Resumido ({SUMMARY_COLUMNS.length} cols)
+                <Icons.ChevronLeft className="w-3 h-3 mr-1" />
+                Resumido ({SUMMARY_COLUMNS.length})
               </>
             ) : (
               <>
-                Expandir ({ALL_COLUMNS.length} cols)
-                <Icons.ChevronRight className="w-4 h-4 ml-1" />
+                Expandir ({ALL_COLUMNS.length})
+                <Icons.ChevronRight className="w-3 h-3 ml-1" />
               </>
             )}
           </Button>
         </div>
-        <div className="relative w-64">
-          <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#878787]" />
+        <div className="relative w-48">
+          <Icons.Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Buscar transação..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-7 h-7 text-xs"
           />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
+      {/* Data table */}
+      <div className="border-t border-border/40 pt-2 pb-4">
         <div className="overflow-x-auto">
-          <table className={`w-full text-xs ${expanded ? "min-w-[2200px]" : "min-w-[900px]"}`}>
+          <table className={cn("w-full text-xs", expanded ? "min-w-[2200px]" : "min-w-[800px]")}>
             <thead>
-              <tr className="border-b bg-muted/50">
+              <tr className="text-muted-foreground border-b border-border/40">
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className={`p-2 font-medium whitespace-nowrap ${
-                      col.type === "currency" || col.type === "number"
-                        ? "text-right"
-                        : "text-left"
-                    }`}
+                    className={cn(
+                      "py-1.5 px-2 font-medium whitespace-nowrap",
+                      (col.type === "currency" || col.type === "number") ? "text-right" : "text-left"
+                    )}
                   >
                     {col.label}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border/30">
               {filteredData.map((row, idx) => (
                 <tr key={`${row.occurredAt}-${idx}`} className="hover:bg-muted/30">
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`p-2 whitespace-nowrap ${
-                        col.type === "currency" || col.type === "number"
-                          ? "text-right font-mono"
-                          : col.type === "id"
-                          ? "font-mono text-[#878787]"
-                          : col.type === "datetime"
-                          ? "text-[#878787]"
-                          : ""
-                      }`}
+                      className={cn(
+                        "py-1.5 px-2 whitespace-nowrap",
+                        (col.type === "currency" || col.type === "number") ? "text-right font-mono" : "",
+                        col.type === "id" && "font-mono text-muted-foreground text-[10px]",
+                        col.type === "datetime" && "text-muted-foreground"
+                      )}
                     >
                       {formatValue(row[col.key as keyof ParsedTransaction], col.type)}
                     </td>

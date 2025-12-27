@@ -2440,7 +2440,7 @@ function validateLeagueImportData(data: ParsedLeagueImportData): LeagueValidatio
 
 export function LeagueImportUploader() {
   const t = useI18n();
-  const { toast } = useToast();
+  const { toast, update } = useToast();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -2486,16 +2486,20 @@ export function LeagueImportUploader() {
     async (file: File) => {
       setIsProcessing(true);
 
-      // Show processing toast (Vault style)
-      const { dismiss } = toast({
-        variant: "spinner",
-        title: t("poker.leagueImport.processing"),
+      // Show processing toast with progress bar
+      const { id, dismiss } = toast({
+        variant: "progress",
+        title: "Lendo arquivo...",
         description: file.name,
+        progress: 0,
         duration: Number.POSITIVE_INFINITY,
       });
 
       try {
+        update(id, { title: "Lendo arquivo Excel...", progress: 10 });
         const arrayBuffer = await file.arrayBuffer();
+
+        update(id, { title: "Parseando planilha...", progress: 25 });
         const workbook = XLSX.read(arrayBuffer, {
           type: "array",
           cellFormula: true,
@@ -2508,6 +2512,7 @@ export function LeagueImportUploader() {
 
         let parsedData: ParsedLeagueImportData = {};
 
+        update(id, { title: "Extraindo período...", progress: 40 });
         // Extract period from Geral sheet header
         const geralSheet =
           workbook.Sheets["Geral"] ||
@@ -2526,6 +2531,7 @@ export function LeagueImportUploader() {
           }
         }
 
+        update(id, { title: "Processando abas...", progress: 55 });
         // Parse all sheets
         const sheetData = parseLeagueExcelWorkbook(workbook);
         parsedData = { ...parsedData, ...sheetData };
@@ -2534,6 +2540,7 @@ export function LeagueImportUploader() {
         parsedData.fileName = file.name;
         parsedData.fileSize = file.size;
 
+        update(id, { title: "Verificando dados...", progress: 80 });
         const hasData =
           (parsedData.players?.length ?? 0) > 0 ||
           (parsedData.transactions?.length ?? 0) > 0 ||
@@ -2543,6 +2550,7 @@ export function LeagueImportUploader() {
           throw new Error(t("poker.leagueImport.noDataFound"));
         }
 
+        update(id, { title: "Validando dados...", progress: 90 });
         // Validate the data
         const validation = validateLeagueImportData(parsedData);
 
@@ -2566,7 +2574,7 @@ export function LeagueImportUploader() {
         setIsProcessing(false);
       }
     },
-    [toast, t]
+    [toast, update, t]
   );
 
   const onDrop = useCallback(
