@@ -6,12 +6,7 @@ import { GlobalSheets } from "@/components/sheets/global-sheets";
 import { Sidebar } from "@/components/sidebar";
 import { TimezoneDetector } from "@/components/timezone-detector";
 import { UpgradeContent } from "@/components/upgrade-content";
-import {
-  HydrateClient,
-  batchPrefetch,
-  getQueryClient,
-  trpc,
-} from "@/trpc/server";
+import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import { shouldShowUpgradeContent } from "@/utils/trial";
 import { createClient } from "@midday/supabase/server";
 import { headers } from "next/headers";
@@ -60,17 +55,12 @@ export default async function Layout({
   }
 
   // NOTE: These are used in the global sheets - only prefetch after auth checks
-  // Wrapped in try-catch to prevent SSR crashes on auth errors
-  try {
-    batchPrefetch([
-      trpc.team.current.queryOptions(),
-      trpc.invoice.defaultSettings.queryOptions(),
-      trpc.search.global.queryOptions({ searchTerm: "" }),
-    ]);
-  } catch (error) {
-    // Silently fail - client will refetch if needed
-    console.error("[Layout] Prefetch error:", error);
-  }
+  // Disabled SSR prefetch to avoid auth timing issues - client will fetch via Suspense
+  // batchPrefetch([
+  //   trpc.team.current.queryOptions(),
+  //   trpc.invoice.defaultSettings.queryOptions(),
+  //   trpc.search.global.queryOptions({ searchTerm: "" }),
+  // ]);
 
   // Check if trial has expired - render upgrade content directly instead of redirecting
   const headersList = await headers();

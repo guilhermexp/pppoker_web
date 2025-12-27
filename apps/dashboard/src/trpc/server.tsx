@@ -28,9 +28,11 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
         async headers() {
           const supabase = await createClient();
 
-          // Use getSession() to get the access token
-          // Note: getUser() validates the token but doesn't return access_token directly
-          // The middleware should have already refreshed the session if needed
+          // First validate/refresh the token with getUser()
+          // This ensures we have a fresh token if the current one expired
+          await supabase.auth.getUser();
+
+          // Then get the session which now has the refreshed token
           const {
             data: { session },
           } = await supabase.auth.getSession();

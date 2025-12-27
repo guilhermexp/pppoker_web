@@ -27,13 +27,17 @@ export default async function PokerTransactionsPage(props: Props) {
   const filter = loadPokerTransactionFilterParams(searchParams);
   const { sort } = loadSortParams(searchParams);
 
-  // Prefetch transactions data
-  await queryClient.fetchInfiniteQuery(
-    trpc.poker.transactions.get.infiniteQueryOptions({
-      ...filter,
-      sort: sort as [string, string] | null,
-    })
-  );
+  // Prefetch transactions data - wrapped in try-catch to handle SSR auth errors gracefully
+  try {
+    await queryClient.fetchInfiniteQuery(
+      trpc.poker.transactions.get.infiniteQueryOptions({
+        ...filter,
+        sort: sort as [string, string] | null,
+      })
+    );
+  } catch {
+    // SSR prefetch failed, client will fetch via Suspense
+  }
 
   return (
     <HydrateClient>

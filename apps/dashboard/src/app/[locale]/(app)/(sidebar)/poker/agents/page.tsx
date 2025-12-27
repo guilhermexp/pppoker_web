@@ -30,14 +30,18 @@ export default async function PokerAgentsPage(props: Props) {
   const filter = loadPokerPlayerFilterParams(searchParams);
   const { sort } = loadSortParams(searchParams);
 
-  // Prefetch agents data (players with type='agent')
-  await queryClient.fetchInfiniteQuery(
-    trpc.poker.players.get.infiniteQueryOptions({
-      ...filter,
-      type: "agent", // Force filter to agents only
-      sort: sort as [string, string] | null,
-    })
-  );
+  // Prefetch agents data (players with type='agent') - wrapped in try-catch to handle SSR auth errors gracefully
+  try {
+    await queryClient.fetchInfiniteQuery(
+      trpc.poker.players.get.infiniteQueryOptions({
+        ...filter,
+        type: "agent", // Force filter to agents only
+        sort: sort as [string, string] | null,
+      })
+    );
+  } catch {
+    // SSR prefetch failed, client will fetch via Suspense
+  }
 
   return (
     <HydrateClient>

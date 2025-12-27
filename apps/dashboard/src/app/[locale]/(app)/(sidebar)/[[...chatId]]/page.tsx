@@ -1,7 +1,8 @@
+import { AIDevtoolsWrapper } from "@/components/ai-devtools-wrapper";
 import { ChatInterface } from "@/components/chat/chat-interface";
+import { ClientOnly } from "@/components/client-only";
 import { Widgets } from "@/components/widgets";
-import { HydrateClient, getQueryClient, prefetch, trpc } from "@/trpc/server";
-import { AIDevtools } from "@ai-sdk-tools/devtools";
+import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import { Provider as ChatProvider } from "@ai-sdk-tools/store";
 import { createClient } from "@midday/supabase/server";
 import { geolocation } from "@vercel/functions";
@@ -54,7 +55,8 @@ export default async function Overview(props: Props) {
     redirect("/login");
   }
 
-  prefetch(trpc.suggestedActions.list.queryOptions({ limit: 6 }));
+  // SuggestedActions will fetch on client via Suspense - no SSR prefetch needed
+  // This avoids auth timing issues during SSR
 
   let chat = null;
   if (currentChatId) {
@@ -74,13 +76,11 @@ export default async function Overview(props: Props) {
 
   return (
     <HydrateClient>
-      <ChatProvider initialMessages={chat ?? []} key={currentChatId || "home"}>
-        <Widgets initialPreferences={widgetPreferences} />
-
-        <ChatInterface geo={geo} />
-
-        {process.env.NODE_ENV === "development" && (
-          <AIDevtools
+      <ClientOnly>
+        <ChatProvider initialMessages={chat ?? []} key={currentChatId || "home"}>
+          <Widgets initialPreferences={widgetPreferences} />
+          <ChatInterface geo={geo} />
+          <AIDevtoolsWrapper
             config={{
               streamCapture: {
                 enabled: true,
@@ -89,8 +89,8 @@ export default async function Overview(props: Props) {
               },
             }}
           />
-        )}
-      </ChatProvider>
+        </ChatProvider>
+      </ClientOnly>
     </HydrateClient>
   );
 }

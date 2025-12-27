@@ -13,6 +13,7 @@ export const pokerPlayerFilterSchema = {
   dateFrom: parseAsString,
   dateTo: parseAsString,
   viewAgentId: parseAsString, // For agent detail sheet
+  viewSuperAgentId: parseAsString, // For super agent detail sheet
   // Simple boolean filters
   hasCreditLimit: parseAsString, // "true" or null
   hasRake: parseAsString, // "true" or null
@@ -31,6 +32,7 @@ type SetParamsInput = {
   dateFrom?: string | null;
   dateTo?: string | null;
   viewAgentId?: string | null;
+  viewSuperAgentId?: string | null;
   // Simple boolean filters
   hasCreditLimit?: boolean | null;
   hasRake?: boolean | null;
@@ -57,6 +59,7 @@ export function usePokerPlayerParams() {
         dateFrom: null,
         dateTo: null,
         viewAgentId: null,
+        viewSuperAgentId: null,
         hasCreditLimit: null,
         hasRake: null,
         hasBalance: null,
@@ -95,6 +98,9 @@ export function usePokerPlayerParams() {
       }
       if ("viewAgentId" in newParams) {
         updates.viewAgentId = newParams.viewAgentId ?? null;
+      }
+      if ("viewSuperAgentId" in newParams) {
+        updates.viewSuperAgentId = newParams.viewSuperAgentId ?? null;
       }
       if ("hasCreditLimit" in newParams) {
         updates.hasCreditLimit = newParams.hasCreditLimit ? "true" : null;

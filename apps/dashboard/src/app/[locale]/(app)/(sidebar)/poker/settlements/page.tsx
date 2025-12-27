@@ -27,13 +27,17 @@ export default async function PokerSettlementsPage(props: Props) {
   const filter = loadPokerSettlementFilterParams(searchParams);
   const { sort } = loadSortParams(searchParams);
 
-  // Prefetch settlements data
-  await queryClient.fetchInfiniteQuery(
-    trpc.poker.settlements.get.infiniteQueryOptions({
-      ...filter,
-      sort: sort as [string, string] | null,
-    })
-  );
+  // Prefetch settlements data - wrapped in try-catch to handle SSR auth errors gracefully
+  try {
+    await queryClient.fetchInfiniteQuery(
+      trpc.poker.settlements.get.infiniteQueryOptions({
+        ...filter,
+        sort: sort as [string, string] | null,
+      })
+    );
+  } catch {
+    // SSR prefetch failed, client will fetch via Suspense
+  }
 
   return (
     <HydrateClient>

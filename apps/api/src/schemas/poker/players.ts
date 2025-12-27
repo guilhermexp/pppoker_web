@@ -11,7 +11,7 @@ export const pokerPlayerStatusSchema = z.enum([
   "blacklisted",
 ]);
 
-export const pokerPlayerTypeSchema = z.enum(["player", "agent"]);
+export const pokerPlayerTypeSchema = z.enum(["player", "agent", "super_agent"]);
 
 // =============================================================================
 // INPUT SCHEMAS

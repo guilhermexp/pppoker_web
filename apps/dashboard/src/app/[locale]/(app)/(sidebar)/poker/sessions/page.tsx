@@ -31,23 +31,27 @@ export default async function PokerSessionsPage(props: Props) {
   const filter = loadPokerSessionFilterParams(searchParams);
   const { sort } = loadSortParams(searchParams);
 
-  // Prefetch sessions data
-  await queryClient.fetchInfiniteQuery(
-    trpc.poker.sessions.get.infiniteQueryOptions({
-      ...filter,
-      sort: sort as [string, string] | null,
-    })
-  );
+  // Prefetch sessions data - wrapped in try-catch to handle SSR auth errors gracefully
+  try {
+    await queryClient.fetchInfiniteQuery(
+      trpc.poker.sessions.get.infiniteQueryOptions({
+        ...filter,
+        sort: sort as [string, string] | null,
+      })
+    );
 
-  // Prefetch stats for widgets
-  await queryClient.fetchQuery(
-    trpc.poker.sessions.getStats.queryOptions({
-      dateFrom: filter.dateFrom ?? undefined,
-      dateTo: filter.dateTo ?? undefined,
-      sessionType: filter.sessionType ?? undefined,
-      gameVariant: filter.gameVariant ?? undefined,
-    })
-  );
+    // Prefetch stats for widgets
+    await queryClient.fetchQuery(
+      trpc.poker.sessions.getStats.queryOptions({
+        dateFrom: filter.dateFrom ?? undefined,
+        dateTo: filter.dateTo ?? undefined,
+        sessionType: filter.sessionType ?? undefined,
+        gameVariant: filter.gameVariant ?? undefined,
+      })
+    );
+  } catch {
+    // SSR prefetch failed, client will fetch via Suspense
+  }
 
   return (
     <HydrateClient>

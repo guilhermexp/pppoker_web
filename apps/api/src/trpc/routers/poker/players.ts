@@ -143,11 +143,19 @@ export const pokerPlayersRouter = createTRPCRouter({
       const hasNextPage = offset + pageSize < (count ?? 0);
       const nextCursor = hasNextPage ? String(currentCursor + 1) : null;
 
-      // Get unique agent IDs to fetch agent info separately
+      // Get unique agent IDs and super_agent IDs to fetch info separately
       const agentIds = [
         ...new Set(
           (data ?? [])
             .map((p) => p.agent_id)
+            .filter((id): id is string => id !== null)
+        ),
+      ];
+
+      const superAgentIds = [
+        ...new Set(
+          (data ?? [])
+            .map((p) => p.super_agent_id)
             .filter((id): id is string => id !== null)
         ),
       ];
@@ -173,6 +181,30 @@ export const pokerPlayersRouter = createTRPCRouter({
             return acc;
           },
           {} as typeof agentsMap
+        );
+      }
+
+      // Fetch super agents if any exist
+      let superAgentsMap: Record<
+        string,
+        { id: string; nickname: string; memoName: string | null }
+      > = {};
+      if (superAgentIds.length > 0) {
+        const { data: superAgents } = await supabase
+          .from("poker_players")
+          .select("id, nickname, memo_name")
+          .in("id", superAgentIds);
+
+        superAgentsMap = (superAgents ?? []).reduce(
+          (acc, sa) => {
+            acc[sa.id] = {
+              id: sa.id,
+              nickname: sa.nickname,
+              memoName: sa.memo_name,
+            };
+            return acc;
+          },
+          {} as typeof superAgentsMap
         );
       }
 
@@ -229,6 +261,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         customerId: player.customer_id,
         note: player.note,
         agent: player.agent_id ? agentsMap[player.agent_id] ?? null : null,
+        superAgent: player.super_agent_id ? superAgentsMap[player.super_agent_id] ?? null : null,
         totalRake: statsMap[player.id]?.totalRake ?? 0,
         totalWinnings: statsMap[player.id]?.totalWinnings ?? 0,
         activityStatus: activityMetricsMap.get(player.id)?.activityStatus ?? "new",

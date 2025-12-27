@@ -5,6 +5,7 @@ import type { AppRouter } from "@midday/api/trpc/routers/_app";
 import { Skeleton } from "@midday/ui/skeleton";
 import type { inferRouterOutputs } from "@trpc/server";
 import { Suspense } from "react";
+import { ClientOnly } from "../client-only";
 import { SuggestedActions } from "../suggested-actions";
 import { WidgetsHeader } from "./header";
 import { WidgetProvider, useIsCustomizing } from "./widget-provider";
@@ -43,9 +44,11 @@ function WidgetsContent() {
       <WidgetsHeader />
       <WidgetsGrid />
       {!isCustomizing && (
-        <Suspense fallback={<SuggestedActionsSkeleton />}>
-          <SuggestedActions />
-        </Suspense>
+        <ClientOnly fallback={<SuggestedActionsSkeleton />}>
+          <Suspense fallback={<SuggestedActionsSkeleton />}>
+            <SuggestedActions />
+          </Suspense>
+        </ClientOnly>
       )}
     </div>
   );

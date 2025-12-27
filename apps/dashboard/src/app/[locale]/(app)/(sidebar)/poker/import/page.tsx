@@ -19,12 +19,16 @@ export default async function PokerImportPage() {
   const queryClient = getQueryClient();
   const t = await getI18n();
 
-  // Prefetch recent imports
-  await queryClient.fetchInfiniteQuery(
-    trpc.poker.imports.get.infiniteQueryOptions({
-      pageSize: 10,
-    })
-  );
+  // Prefetch recent imports - wrapped in try-catch to handle SSR auth errors gracefully
+  try {
+    await queryClient.fetchInfiniteQuery(
+      trpc.poker.imports.get.infiniteQueryOptions({
+        pageSize: 10,
+      })
+    );
+  } catch {
+    // SSR prefetch failed, client will fetch via Suspense
+  }
 
   return (
     <HydrateClient>

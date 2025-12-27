@@ -25,13 +25,14 @@ export type PokerAgent = {
   nickname: string;
   memoName: string | null;
   country: string | null;
-  type: "player" | "agent";
+  type: "player" | "agent" | "super_agent";
   status: "active" | "inactive" | "suspended" | "blacklisted";
   email: string | null;
   phone: string | null;
   rakebackPercent: number;
   currentBalance: number;
   chipBalance: number;
+  superAgentId?: string | null;
   superAgent: {
     id: string;
     nickname: string;
@@ -39,10 +40,14 @@ export type PokerAgent = {
   } | null;
   // Metrics (from agentStats)
   playerCount?: number;
+  agentCount?: number; // For super_agents: number of agents under them
   totalRake?: number;
   rakePpst?: number;
   rakePpsr?: number;
   estimatedCommission?: number;
+  // For hierarchical display
+  isExpanded?: boolean;
+  childAgents?: PokerAgent[];
 };
 
 const StatusBadge = memo(
@@ -147,13 +152,29 @@ function AgentActions({
   );
 }
 
+const TypeBadge = memo(({ type, agentCount }: { type: PokerAgent["type"]; agentCount?: number }) => {
+  if (type === "super_agent") {
+    return (
+      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs border-amber-500/30">
+        Super Agent {agentCount ? `(${agentCount})` : ""}
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
+      Agent
+    </Badge>
+  );
+});
+TypeBadge.displayName = "TypeBadge";
+
 export const columns: ColumnDef<PokerAgent>[] = [
   {
     accessorKey: "nickname",
     header: "Agent",
     meta: {
       className:
-        "w-[240px] min-w-[240px] md:sticky md:left-0 z-20 bg-background",
+        "w-[280px] min-w-[280px] md:sticky md:left-0 z-20 bg-background",
     },
     cell: ({ row }) => {
       const agent = row.original;
@@ -169,9 +190,7 @@ export const columns: ColumnDef<PokerAgent>[] = [
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-medium">{agent.nickname}</span>
-              <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
-                Agent
-              </Badge>
+              <TypeBadge type={agent.type} agentCount={agent.agentCount} />
             </div>
             {agent.memoName && (
               <span className="text-xs text-muted-foreground">

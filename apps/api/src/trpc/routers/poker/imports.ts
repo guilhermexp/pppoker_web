@@ -405,26 +405,46 @@ export const pokerImportsRouter = createTRPCRouter({
 
       try {
         // ============================================
+        // PRE-SCAN: Identify all agents and super_agents from summaries
+        // ============================================
+        // We need to know who the agents are BEFORE upserting players
+        // to avoid setting their type as "player" in STEP 1
+        const preScannedAgents = new Set<string>();
+        if (rawData?.summaries?.length > 0) {
+          for (const summary of rawData.summaries) {
+            if (summary.superAgentPpPokerId) {
+              preScannedAgents.add(summary.superAgentPpPokerId);
+            }
+            if (summary.agentPpPokerId) {
+              preScannedAgents.add(summary.agentPpPokerId);
+            }
+          }
+        }
+
+        // ============================================
         // STEP 1: Batch upsert ALL players from "Detalhes do usuário"
         // ============================================
         // This sheet contains ALL club members - important for historical record.
         // Stats/widgets should count from poker_player_summary (players with activity)
         // not from poker_players (all club members).
+        // Skip agents/super_agents to let STEP 2 create them with correct type.
         if (rawData?.players?.length > 0) {
-          const playersRaw = rawData.players.map((player: any) => ({
-            team_id: teamId,
-            pppoker_id: player.ppPokerId,
-            nickname: player.nickname,
-            memo_name: player.memoName ?? null,
-            country: player.country ?? null,
-            type: "player",
-            status: "active",
-            chip_balance: player.chipBalance ?? 0,
-            agent_credit_balance: player.agentCreditBalance ?? 0,
-            super_agent_credit_balance: player.superAgentCreditBalance ?? 0,
-            last_active_at: player.lastActiveAt ?? null,
-            updated_at: new Date().toISOString(),
-          }));
+          const playersRaw = rawData.players
+            .filter((player: any) => !preScannedAgents.has(player.ppPokerId)) // Skip agents/super_agents
+            .map((player: any) => ({
+              team_id: teamId,
+              pppoker_id: player.ppPokerId,
+              nickname: player.nickname,
+              memo_name: player.memoName ?? null,
+              country: player.country ?? null,
+              type: "player",
+              status: "active",
+              chip_balance: player.chipBalance ?? 0,
+              agent_credit_balance: player.agentCreditBalance ?? 0,
+              super_agent_credit_balance: player.superAgentCreditBalance ?? 0,
+              last_active_at: player.lastActiveAt ?? null,
+              updated_at: new Date().toISOString(),
+            }));
 
           // Deduplicate by pppoker_id to avoid "ON CONFLICT DO UPDATE cannot affect row a second time"
           const playersToUpsert = deduplicateByKey(playersRaw, (p) => p.pppoker_id);
@@ -446,11 +466,12 @@ export const pokerImportsRouter = createTRPCRouter({
         // ============================================
         // Map to store pppoker_id -> agent relationships for later linking
         const playerAgentMap = new Map<string, { agentPpPokerId: string | null; superAgentPpPokerId: string | null }>();
+        // Set to track agent/super_agent ppPokerIds (used to avoid overwriting their type in later steps)
+        const seenAgents = new Set<string>();
 
         if (rawData?.summaries?.length > 0) {
           // Extract unique agents and super agents
           const agentsRaw: any[] = [];
-          const seenAgents = new Set<string>();
 
           for (const summary of rawData.summaries) {
             // Store the agent relationship for this player
@@ -506,18 +527,21 @@ export const pokerImportsRouter = createTRPCRouter({
 
         // ============================================
         // STEP 2.5: Batch upsert players from summaries (Geral sheet)
+        // Skip agents/super_agents to avoid overwriting their type
         // ============================================
         if (rawData?.summaries?.length > 0) {
-          const summaryPlayersRaw = rawData.summaries.map((summary: any) => ({
-            team_id: teamId,
-            pppoker_id: summary.ppPokerId,
-            nickname: summary.nickname,
-            memo_name: summary.memoName ?? null,
-            country: summary.country ?? null,
-            type: "player",
-            status: "active",
-            updated_at: new Date().toISOString(),
-          }));
+          const summaryPlayersRaw = rawData.summaries
+            .filter((summary: any) => !seenAgents.has(summary.ppPokerId)) // Don't overwrite agents/super_agents
+            .map((summary: any) => ({
+              team_id: teamId,
+              pppoker_id: summary.ppPokerId,
+              nickname: summary.nickname,
+              memo_name: summary.memoName ?? null,
+              country: summary.country ?? null,
+              type: "player",
+              status: "active",
+              updated_at: new Date().toISOString(),
+            }));
 
           // Deduplicate by pppoker_id
           const summaryPlayersToUpsert = deduplicateByKey(summaryPlayersRaw, (p) => p.pppoker_id);
@@ -536,6 +560,7 @@ export const pokerImportsRouter = createTRPCRouter({
         // ============================================
         // STEP 2.6: Batch upsert players from sessions (Partidas sheet)
         // These players may not be in Geral sheet but are in individual game results
+        // Skip agents/super_agents to avoid overwriting their type
         // ============================================
         if (rawData?.sessions?.length > 0) {
           const sessionPlayersRaw: any[] = [];
@@ -545,6 +570,8 @@ export const pokerImportsRouter = createTRPCRouter({
 
             for (const player of session.players) {
               if (!player.ppPokerId) continue;
+              // Skip if this is an agent or super_agent
+              if (seenAgents.has(player.ppPokerId)) continue;
 
               sessionPlayersRaw.push({
                 team_id: teamId,
