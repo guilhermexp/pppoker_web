@@ -1728,8 +1728,27 @@ export function ImportUploader() {
   const [currentFileSize, setCurrentFileSize] = useState<number>(0);
   const [currentFileType, setCurrentFileType] = useState<string>("");
 
+  // Helper to refetch all import queries regardless of params
+  const invalidateImportQueries = () => {
+    queryClient.refetchQueries({
+      predicate: (query) => {
+        const key = query.queryKey;
+        // tRPC v11 queryKey structure: [["poker", "imports", "get"], { input: {...} }]
+        if (Array.isArray(key) && Array.isArray(key[0])) {
+          const routeKey = key[0] as string[];
+          return routeKey[0] === "poker" && routeKey[1] === "imports";
+        }
+        return false;
+      }
+    });
+  };
+
   const createImportMutation = useMutation(
     trpc.poker.imports.create.mutationOptions({
+      onSuccess: () => {
+        // Invalidate immediately so the list updates
+        invalidateImportQueries();
+      },
       onError: (error) => {
         toast({
           title: t("poker.import.uploadError"),
@@ -1742,6 +1761,9 @@ export function ImportUploader() {
 
   const validateImportMutation = useMutation(
     trpc.poker.imports.validate.mutationOptions({
+      onSuccess: () => {
+        invalidateImportQueries();
+      },
       onError: (error) => {
         toast({
           title: "Erro na validação",
@@ -1755,10 +1777,19 @@ export function ImportUploader() {
   const processImportMutation = useMutation(
     trpc.poker.imports.process.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["poker", "imports"] });
-        queryClient.invalidateQueries({ queryKey: ["poker", "players"] });
-        queryClient.invalidateQueries({ queryKey: ["poker", "sessions"] });
-        queryClient.invalidateQueries({ queryKey: ["poker", "agents"] });
+        invalidateImportQueries();
+        // Also refetch poker data queries
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (Array.isArray(key) && Array.isArray(key[0])) {
+              const routeKey = key[0] as string[];
+              return routeKey[0] === "poker" &&
+                (routeKey[1] === "players" || routeKey[1] === "sessions" || routeKey[1] === "analytics");
+            }
+            return false;
+          }
+        });
         toast({
           title: t("poker.import.uploadSuccess"),
           variant: "success",

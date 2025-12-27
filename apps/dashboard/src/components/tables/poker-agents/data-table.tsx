@@ -103,9 +103,9 @@ export function AgentsDataTable() {
 
   const setOpen = (id?: string) => {
     if (id) {
-      setParams({ playerId: id });
+      setParams({ viewAgentId: id });
     } else {
-      setParams({ playerId: null });
+      setParams({ viewAgentId: null });
     }
   };
 

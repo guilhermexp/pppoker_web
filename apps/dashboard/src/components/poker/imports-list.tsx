@@ -72,10 +72,25 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
     )
   );
 
+  const invalidateImports = () => {
+    // Force refetch of all import queries - use refetchQueries for immediate update
+    queryClient.refetchQueries({
+      predicate: (query) => {
+        const key = query.queryKey;
+        // tRPC v11 queryKey structure: [["poker", "imports", "get"], { input: {...} }]
+        if (Array.isArray(key) && Array.isArray(key[0])) {
+          const routeKey = key[0] as string[];
+          return routeKey[0] === "poker" && routeKey[1] === "imports";
+        }
+        return false;
+      }
+    });
+  };
+
   const validateMutation = useMutation(
     trpc.poker.imports.validate.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
+        invalidateImports();
         toast({
           title: t("poker.import.validateSuccess"),
           variant: "success",
@@ -94,8 +109,19 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
   const processMutation = useMutation(
     trpc.poker.imports.process.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.poker.players.get.queryKey() });
+        invalidateImports();
+        // Also refetch poker data queries
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (Array.isArray(key) && Array.isArray(key[0])) {
+              const routeKey = key[0] as string[];
+              return routeKey[0] === "poker" &&
+                (routeKey[1] === "players" || routeKey[1] === "sessions" || routeKey[1] === "analytics");
+            }
+            return false;
+          }
+        });
         toast({
           title: t("poker.import.processSuccess"),
           variant: "success",
@@ -114,7 +140,7 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
   const cancelMutation = useMutation(
     trpc.poker.imports.cancel.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
+        invalidateImports();
         toast({
           title: t("poker.import.cancelSuccess"),
           variant: "success",
@@ -126,7 +152,7 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
   const deleteMutation = useMutation(
     trpc.poker.imports.delete.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
+        invalidateImports();
         toast({
           title: t("poker.import.deleteSuccess"),
           variant: "success",

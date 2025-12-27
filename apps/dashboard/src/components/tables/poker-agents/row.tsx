@@ -14,7 +14,8 @@ export function PokerAgentRow({ row, setOpen }: Props) {
   return (
     <TableRow
       key={row.id}
-      className="h-[57px] cursor-default hover:bg-accent/50"
+      className="h-[57px] cursor-pointer hover:bg-accent/50"
+      onClick={() => setOpen(row.original.id)}
     >
       {row.getVisibleCells().map((cell) => {
         const meta = cell.column.columnDef.meta as { className?: string } | undefined;

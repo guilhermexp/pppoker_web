@@ -329,7 +329,6 @@ export function MainMenu({ onSelect, isExpanded = false }: Props) {
   const { isChatPage } = useChatInterface();
   const t = useI18n();
   const items = getItems(t);
-  const part = pathname?.split("/")[1];
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   // Check if current pathname is a known menu path (including sub-paths)
@@ -346,6 +345,21 @@ export function MainMenu({ onSelect, isExpanded = false }: Props) {
     setExpandedItem(null);
   }, [isExpanded]);
 
+  // Find the best matching item (longest path that is a prefix of pathname)
+  const findBestMatchPath = (currentPath: string) => {
+    let bestMatch = "";
+    for (const item of items) {
+      if (currentPath === item.path || currentPath.startsWith(`${item.path}/`)) {
+        if (item.path.length > bestMatch.length) {
+          bestMatch = item.path;
+        }
+      }
+    }
+    return bestMatch;
+  };
+
+  const bestMatchPath = findBestMatchPath(pathnameWithoutQuery);
+
   return (
     <div className="mt-6 w-full">
       <nav className="w-full">
@@ -354,7 +368,7 @@ export function MainMenu({ onSelect, isExpanded = false }: Props) {
             const isActive =
               (pathname === "/" && item.path === "/") ||
               (item.path === "/" && isValidChatPage) ||
-              (pathname !== "/" && item.path.startsWith(`/${part}`));
+              (item.path === bestMatchPath);
 
             return (
               <Item
