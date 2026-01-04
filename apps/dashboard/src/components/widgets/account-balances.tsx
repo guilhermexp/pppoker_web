@@ -63,7 +63,9 @@ export function AccountBalancesWidget() {
       return t("widget_descriptions.combined_balance_one");
     }
 
-    return t("widget_descriptions.combined_balance_other", { count: accountCount });
+    return t("widget_descriptions.combined_balance_other", {
+      count: accountCount,
+    });
   };
 
   return (

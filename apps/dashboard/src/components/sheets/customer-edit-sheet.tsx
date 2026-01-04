@@ -96,7 +96,9 @@ export function CustomerEditSheet() {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
+                      <AlertDialogCancel>
+                        {t("actions.cancel")}
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() =>
                           deleteCustomerMutation.mutate({ id: customerId })

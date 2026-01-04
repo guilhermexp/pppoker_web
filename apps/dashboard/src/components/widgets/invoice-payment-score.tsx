@@ -66,7 +66,11 @@ export function InvoicePaymentScoreWidget() {
       description={
         <div>
           <h2 className="text-sm text-[#666] mb-4">
-            {t(`payment_status_description.${paymentStatus}` as Parameters<typeof t>[0])}
+            {t(
+              `payment_status_description.${paymentStatus}` as Parameters<
+                typeof t
+              >[0],
+            )}
           </h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">

@@ -67,16 +67,22 @@ export const pokerImportsRouter = createTRPCRouter({
           const rakebacks = rawData?.rakebacks ?? [];
 
           // Players breakdown
-          const playersWithAgent = summaries.filter((s: any) => s.agentPpPokerId).length;
+          const playersWithAgent = summaries.filter(
+            (s: any) => s.agentPpPokerId,
+          ).length;
           const playersWithoutAgent = summaries.length - playersWithAgent;
 
           // Unique agents and super agents from summaries
-          const agentIds = new Set(summaries.map((s: any) => s.agentPpPokerId).filter(Boolean));
-          const superAgentIds = new Set(summaries.map((s: any) => s.superAgentPpPokerId).filter(Boolean));
+          const agentIds = new Set(
+            summaries.map((s: any) => s.agentPpPokerId).filter(Boolean),
+          );
+          const superAgentIds = new Set(
+            summaries.map((s: any) => s.superAgentPpPokerId).filter(Boolean),
+          );
 
           // Sessions breakdown by type
           const sessionsByType = sessions.reduce((acc: any, s: any) => {
-            const type = s.sessionType || 'unknown';
+            const type = s.sessionType || "unknown";
             acc[type] = (acc[type] || 0) + 1;
             return acc;
           }, {});
@@ -91,8 +97,12 @@ export const pokerImportsRouter = createTRPCRouter({
           }, 0);
 
           // Winners vs Losers
-          const winners = summaries.filter((s: any) => (s.generalTotal ?? s.winningsTotal ?? 0) > 0).length;
-          const losers = summaries.filter((s: any) => (s.generalTotal ?? s.winningsTotal ?? 0) < 0).length;
+          const winners = summaries.filter(
+            (s: any) => (s.generalTotal ?? s.winningsTotal ?? 0) > 0,
+          ).length;
+          const losers = summaries.filter(
+            (s: any) => (s.generalTotal ?? s.winningsTotal ?? 0) < 0,
+          ).length;
 
           return {
             id: imp.id,
@@ -103,6 +113,8 @@ export const pokerImportsRouter = createTRPCRouter({
             fileType: imp.file_type,
             sourceType: imp.source_type ?? "club",
             status: imp.status,
+            committed: imp.committed ?? false,
+            committedAt: imp.committed_at,
             periodStart: imp.period_start,
             periodEnd: imp.period_end,
             totalPlayers: imp.total_players ?? 0,
@@ -116,8 +128,8 @@ export const pokerImportsRouter = createTRPCRouter({
             processingErrors: imp.processing_errors,
             processedAt: imp.processed_at,
             // Metadata from raw_data
+            leagueId: rawData?.leagueId ?? null,
             clubId: rawData?.clubId ?? null,
-            unionId: rawData?.unionId ?? null,
             // Detailed stats
             stats: {
               playersWithAgent,
@@ -172,6 +184,8 @@ export const pokerImportsRouter = createTRPCRouter({
         fileSize: data.file_size,
         fileType: data.file_type,
         status: data.status,
+        committed: data.committed ?? false,
+        committedAt: data.committed_at,
         periodStart: data.period_start,
         periodEnd: data.period_end,
         totalPlayers: data.total_players ?? 0,
@@ -251,16 +265,32 @@ export const pokerImportsRouter = createTRPCRouter({
       const totalSessions = rawData?.sessions?.length ?? 0;
       const totalTransactions = rawData?.transactions?.length ?? 0;
 
-      // Get existing players to determine new vs update
-      const { data: existingPlayers } = await supabase
-        .from("poker_players")
-        .select("pppoker_id")
-        .eq("team_id", teamId)
-        .limit(50000); // Avoid 1000 row limit
+      // Get existing players to determine new vs update using pagination (Supabase API defaults to 1000 rows max)
+      const existingIds = new Set<string>();
+      let existingOffset = 0;
+      const EXISTING_PAGE_SIZE = 1000;
 
-      const existingIds = new Set(
-        (existingPlayers ?? []).map((p) => p.pppoker_id)
-      );
+      while (true) {
+        const { data: existingBatch } = await supabase
+          .from("poker_players")
+          .select("pppoker_id")
+          .eq("team_id", teamId)
+          .range(existingOffset, existingOffset + EXISTING_PAGE_SIZE - 1);
+
+        if (!existingBatch || existingBatch.length === 0) {
+          break;
+        }
+
+        for (const p of existingBatch) {
+          existingIds.add(p.pppoker_id);
+        }
+
+        if (existingBatch.length < EXISTING_PAGE_SIZE) {
+          break;
+        }
+
+        existingOffset += EXISTING_PAGE_SIZE;
+      }
 
       let newPlayers = 0;
       let updatedPlayers = 0;
@@ -287,7 +317,11 @@ export const pokerImportsRouter = createTRPCRouter({
       }
 
       // Validation checks
-      if (totalPlayers === 0 && totalTransactions === 0 && totalSessions === 0) {
+      if (
+        totalPlayers === 0 &&
+        totalTransactions === 0 &&
+        totalSessions === 0
+      ) {
         errors.push("No data found in the import file");
       }
 
@@ -387,7 +421,9 @@ export const pokerImportsRouter = createTRPCRouter({
       };
 
       // Helper to convert empty strings to null for timestamps
-      const parseTimestamp = (value: string | null | undefined): string | null => {
+      const parseTimestamp = (
+        value: string | null | undefined,
+      ): string | null => {
         if (!value || value === "") return null;
         return value;
       };
@@ -395,7 +431,10 @@ export const pokerImportsRouter = createTRPCRouter({
       const BATCH_SIZE = 500; // Supabase recommends max 1000, using 500 for safety
 
       // Helper to deduplicate array by key (keeps last occurrence)
-      const deduplicateByKey = <T>(array: T[], keyFn: (item: T) => string): T[] => {
+      const deduplicateByKey = <T>(
+        array: T[],
+        keyFn: (item: T) => string,
+      ): T[] => {
         const map = new Map<string, T>();
         for (const item of array) {
           map.set(keyFn(item), item);
@@ -404,6 +443,37 @@ export const pokerImportsRouter = createTRPCRouter({
       };
 
       try {
+        // ============================================
+        // STEP 0: Create/upsert week period from import dates
+        // ============================================
+        // This ensures the dashboard shows the imported week, not calculated from today
+        const importPeriodStart = importRecord.period_start;
+        const importPeriodEnd = importRecord.period_end;
+
+        const importId = importRecord.id;
+
+        if (importPeriodStart && importPeriodEnd) {
+          const { error: weekPeriodError } = await supabase
+            .from("poker_week_periods")
+            .upsert(
+              {
+                team_id: teamId,
+                week_start: importPeriodStart,
+                week_end: importPeriodEnd,
+                status: "open",
+                import_id: importId,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "team_id,week_start" },
+            );
+
+          if (weekPeriodError) {
+            processingErrors.push(
+              `Failed to create week period: ${weekPeriodError.message}`,
+            );
+          }
+        }
+
         // ============================================
         // PRE-SCAN: Identify all agents and super_agents from summaries
         // ============================================
@@ -433,6 +503,7 @@ export const pokerImportsRouter = createTRPCRouter({
             .filter((player: any) => !preScannedAgents.has(player.ppPokerId)) // Skip agents/super_agents
             .map((player: any) => ({
               team_id: teamId,
+              import_id: importId,
               pppoker_id: player.ppPokerId,
               nickname: player.nickname,
               memo_name: player.memoName ?? null,
@@ -447,7 +518,10 @@ export const pokerImportsRouter = createTRPCRouter({
             }));
 
           // Deduplicate by pppoker_id to avoid "ON CONFLICT DO UPDATE cannot affect row a second time"
-          const playersToUpsert = deduplicateByKey(playersRaw, (p) => p.pppoker_id);
+          const playersToUpsert = deduplicateByKey(
+            playersRaw,
+            (p) => p.pppoker_id,
+          );
 
           // Process in batches
           for (const batch of chunkArray(playersToUpsert, BATCH_SIZE)) {
@@ -456,7 +530,9 @@ export const pokerImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "pppoker_id,team_id" });
 
             if (error) {
-              processingErrors.push(`Failed to upsert players batch: ${error.message}`);
+              processingErrors.push(
+                `Failed to upsert players batch: ${error.message}`,
+              );
             }
           }
         }
@@ -465,7 +541,10 @@ export const pokerImportsRouter = createTRPCRouter({
         // STEP 2: Extract and upsert agents/super agents from summaries FIRST
         // ============================================
         // Map to store pppoker_id -> agent relationships for later linking
-        const playerAgentMap = new Map<string, { agentPpPokerId: string | null; superAgentPpPokerId: string | null }>();
+        const playerAgentMap = new Map<
+          string,
+          { agentPpPokerId: string | null; superAgentPpPokerId: string | null }
+        >();
         // Set to track agent/super_agent ppPokerIds (used to avoid overwriting their type in later steps)
         const seenAgents = new Set<string>();
 
@@ -483,12 +562,18 @@ export const pokerImportsRouter = createTRPCRouter({
             }
 
             // Extract super agent FIRST (so they exist before agents reference them)
-            if (summary.superAgentPpPokerId && !seenAgents.has(summary.superAgentPpPokerId)) {
+            if (
+              summary.superAgentPpPokerId &&
+              !seenAgents.has(summary.superAgentPpPokerId)
+            ) {
               seenAgents.add(summary.superAgentPpPokerId);
               agentsRaw.push({
                 team_id: teamId,
+                import_id: importId,
                 pppoker_id: summary.superAgentPpPokerId,
-                nickname: summary.superAgentNickname || `Super Agent ${summary.superAgentPpPokerId}`,
+                nickname:
+                  summary.superAgentNickname ||
+                  `Super Agent ${summary.superAgentPpPokerId}`,
                 type: "super_agent",
                 status: "active",
                 updated_at: new Date().toISOString(),
@@ -496,12 +581,17 @@ export const pokerImportsRouter = createTRPCRouter({
             }
 
             // Extract agent
-            if (summary.agentPpPokerId && !seenAgents.has(summary.agentPpPokerId)) {
+            if (
+              summary.agentPpPokerId &&
+              !seenAgents.has(summary.agentPpPokerId)
+            ) {
               seenAgents.add(summary.agentPpPokerId);
               agentsRaw.push({
                 team_id: teamId,
+                import_id: importId,
                 pppoker_id: summary.agentPpPokerId,
-                nickname: summary.agentNickname || `Agent ${summary.agentPpPokerId}`,
+                nickname:
+                  summary.agentNickname || `Agent ${summary.agentPpPokerId}`,
                 type: "agent",
                 status: "active",
                 updated_at: new Date().toISOString(),
@@ -511,7 +601,10 @@ export const pokerImportsRouter = createTRPCRouter({
 
           if (agentsRaw.length > 0) {
             // Deduplicate by pppoker_id
-            const agentsToUpsert = deduplicateByKey(agentsRaw, (a) => a.pppoker_id);
+            const agentsToUpsert = deduplicateByKey(
+              agentsRaw,
+              (a) => a.pppoker_id,
+            );
 
             for (const batch of chunkArray(agentsToUpsert, BATCH_SIZE)) {
               const { error } = await supabase
@@ -519,7 +612,9 @@ export const pokerImportsRouter = createTRPCRouter({
                 .upsert(batch, { onConflict: "pppoker_id,team_id" });
 
               if (error) {
-                processingErrors.push(`Failed to upsert agents batch: ${error.message}`);
+                processingErrors.push(
+                  `Failed to upsert agents batch: ${error.message}`,
+                );
               }
             }
           }
@@ -534,6 +629,7 @@ export const pokerImportsRouter = createTRPCRouter({
             .filter((summary: any) => !seenAgents.has(summary.ppPokerId)) // Don't overwrite agents/super_agents
             .map((summary: any) => ({
               team_id: teamId,
+              import_id: importId,
               pppoker_id: summary.ppPokerId,
               nickname: summary.nickname,
               memo_name: summary.memoName ?? null,
@@ -544,7 +640,10 @@ export const pokerImportsRouter = createTRPCRouter({
             }));
 
           // Deduplicate by pppoker_id
-          const summaryPlayersToUpsert = deduplicateByKey(summaryPlayersRaw, (p) => p.pppoker_id);
+          const summaryPlayersToUpsert = deduplicateByKey(
+            summaryPlayersRaw,
+            (p) => p.pppoker_id,
+          );
 
           for (const batch of chunkArray(summaryPlayersToUpsert, BATCH_SIZE)) {
             const { error } = await supabase
@@ -552,7 +651,9 @@ export const pokerImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "pppoker_id,team_id" });
 
             if (error) {
-              processingErrors.push(`Failed to upsert summary players batch: ${error.message}`);
+              processingErrors.push(
+                `Failed to upsert summary players batch: ${error.message}`,
+              );
             }
           }
         }
@@ -575,6 +676,7 @@ export const pokerImportsRouter = createTRPCRouter({
 
               sessionPlayersRaw.push({
                 team_id: teamId,
+                import_id: importId,
                 pppoker_id: player.ppPokerId,
                 nickname: player.nickname || `Player ${player.ppPokerId}`,
                 memo_name: player.memoName ?? null,
@@ -587,15 +689,23 @@ export const pokerImportsRouter = createTRPCRouter({
 
           if (sessionPlayersRaw.length > 0) {
             // Deduplicate by pppoker_id
-            const sessionPlayersToUpsert = deduplicateByKey(sessionPlayersRaw, (p) => p.pppoker_id);
+            const sessionPlayersToUpsert = deduplicateByKey(
+              sessionPlayersRaw,
+              (p) => p.pppoker_id,
+            );
 
-            for (const batch of chunkArray(sessionPlayersToUpsert, BATCH_SIZE)) {
+            for (const batch of chunkArray(
+              sessionPlayersToUpsert,
+              BATCH_SIZE,
+            )) {
               const { error } = await supabase
                 .from("poker_players")
                 .upsert(batch, { onConflict: "pppoker_id,team_id" });
 
               if (error) {
-                processingErrors.push(`Failed to upsert session players batch: ${error.message}`);
+                processingErrors.push(
+                  `Failed to upsert session players batch: ${error.message}`,
+                );
               }
             }
           }
@@ -604,15 +714,40 @@ export const pokerImportsRouter = createTRPCRouter({
         // ============================================
         // STEP 3: Get player ID map (needed for transactions and sessions)
         // ============================================
-        const { data: allPlayers } = await supabase
-          .from("poker_players")
-          .select("id, pppoker_id")
-          .eq("team_id", teamId)
-          .limit(50000); // Avoid 1000 row limit
+        // Use pagination to fetch ALL players (Supabase API defaults to 1000 rows max)
+        const playerIdMap = new Map<string, string>();
+        let playerOffset = 0;
+        const PLAYER_PAGE_SIZE = 1000;
 
-        const playerIdMap = new Map(
-          (allPlayers ?? []).map((p) => [p.pppoker_id, p.id])
-        );
+        while (true) {
+          const { data: playerBatch, error: playerError } = await supabase
+            .from("poker_players")
+            .select("id, pppoker_id")
+            .eq("team_id", teamId)
+            .range(playerOffset, playerOffset + PLAYER_PAGE_SIZE - 1);
+
+          if (playerError) {
+            processingErrors.push(
+              `Failed to fetch players for map: ${playerError.message}`,
+            );
+            break;
+          }
+
+          if (!playerBatch || playerBatch.length === 0) {
+            break;
+          }
+
+          for (const p of playerBatch) {
+            playerIdMap.set(p.pppoker_id, p.id);
+          }
+
+          // If we got less than a full page, we've reached the end
+          if (playerBatch.length < PLAYER_PAGE_SIZE) {
+            break;
+          }
+
+          playerOffset += PLAYER_PAGE_SIZE;
+        }
 
         // ============================================
         // STEP 3.5: Link players to their agents (update agent_id and super_agent_id)
@@ -624,16 +759,27 @@ export const pokerImportsRouter = createTRPCRouter({
           // Build agent -> super_agent relationships from summaries
           for (const summary of rawData?.summaries ?? []) {
             if (summary.agentPpPokerId && summary.superAgentPpPokerId) {
-              agentToSuperAgentMap.set(summary.agentPpPokerId, summary.superAgentPpPokerId);
+              agentToSuperAgentMap.set(
+                summary.agentPpPokerId,
+                summary.superAgentPpPokerId,
+              );
             }
           }
 
           // Update players with their agent_id and super_agent_id
-          const playerUpdates: Array<{ pppoker_id: string; agent_id: string | null; super_agent_id: string | null }> = [];
+          const playerUpdates: Array<{
+            pppoker_id: string;
+            agent_id: string | null;
+            super_agent_id: string | null;
+          }> = [];
 
           for (const [playerPpPokerId, relations] of playerAgentMap) {
-            const agentId = relations.agentPpPokerId ? playerIdMap.get(relations.agentPpPokerId) : null;
-            const superAgentId = relations.superAgentPpPokerId ? playerIdMap.get(relations.superAgentPpPokerId) : null;
+            const agentId = relations.agentPpPokerId
+              ? playerIdMap.get(relations.agentPpPokerId)
+              : null;
+            const superAgentId = relations.superAgentPpPokerId
+              ? playerIdMap.get(relations.superAgentPpPokerId)
+              : null;
 
             if (agentId || superAgentId) {
               playerUpdates.push({
@@ -645,9 +791,15 @@ export const pokerImportsRouter = createTRPCRouter({
           }
 
           // Update agents with their super_agent_id
-          const agentUpdates: Array<{ pppoker_id: string; super_agent_id: string | null }> = [];
+          const agentUpdates: Array<{
+            pppoker_id: string;
+            super_agent_id: string | null;
+          }> = [];
 
-          for (const [agentPpPokerId, superAgentPpPokerId] of agentToSuperAgentMap) {
+          for (const [
+            agentPpPokerId,
+            superAgentPpPokerId,
+          ] of agentToSuperAgentMap) {
             const superAgentId = playerIdMap.get(superAgentPpPokerId);
             if (superAgentId) {
               agentUpdates.push({
@@ -671,7 +823,9 @@ export const pokerImportsRouter = createTRPCRouter({
                 .eq("team_id", teamId);
 
               if (error) {
-                processingErrors.push(`Failed to link player ${update.pppoker_id} to agent: ${error.message}`);
+                processingErrors.push(
+                  `Failed to link player ${update.pppoker_id} to agent: ${error.message}`,
+                );
               }
             }
           }
@@ -689,7 +843,9 @@ export const pokerImportsRouter = createTRPCRouter({
                 .eq("team_id", teamId);
 
               if (error) {
-                processingErrors.push(`Failed to link agent ${update.pppoker_id} to super_agent: ${error.message}`);
+                processingErrors.push(
+                  `Failed to link agent ${update.pppoker_id} to super_agent: ${error.message}`,
+                );
               }
             }
           }
@@ -706,11 +862,16 @@ export const pokerImportsRouter = createTRPCRouter({
 
               return {
                 team_id: teamId,
+                import_id: importId,
                 occurred_at: occurredAt,
                 type: tx.creditSent ? "credit_given" : "transfer_in",
                 sender_club_id: tx.senderClubId ?? null,
-                sender_player_id: tx.senderPlayerId ? playerIdMap.get(tx.senderPlayerId) : null,
-                recipient_player_id: tx.recipientPlayerId ? playerIdMap.get(tx.recipientPlayerId) : null,
+                sender_player_id: tx.senderPlayerId
+                  ? playerIdMap.get(tx.senderPlayerId)
+                  : null,
+                recipient_player_id: tx.recipientPlayerId
+                  ? playerIdMap.get(tx.recipientPlayerId)
+                  : null,
                 // Identificação completa - sender (100% coverage)
                 sender_nickname: tx.senderNickname ?? null,
                 sender_memo_name: tx.senderMemoName ?? null,
@@ -741,9 +902,12 @@ export const pokerImportsRouter = createTRPCRouter({
             })
             .filter(Boolean);
 
-          const skippedTxCount = rawData.transactions.length - transactionsToInsert.length;
+          const skippedTxCount =
+            rawData.transactions.length - transactionsToInsert.length;
           if (skippedTxCount > 0) {
-            processingErrors.push(`Skipped ${skippedTxCount} transactions with invalid timestamps`);
+            processingErrors.push(
+              `Skipped ${skippedTxCount} transactions with invalid timestamps`,
+            );
           }
 
           for (const batch of chunkArray(transactionsToInsert, BATCH_SIZE)) {
@@ -752,7 +916,9 @@ export const pokerImportsRouter = createTRPCRouter({
               .insert(batch);
 
             if (error) {
-              processingErrors.push(`Failed to insert transactions batch: ${error.message}`);
+              processingErrors.push(
+                `Failed to insert transactions batch: ${error.message}`,
+              );
             }
           }
         }
@@ -768,6 +934,7 @@ export const pokerImportsRouter = createTRPCRouter({
 
               return {
                 team_id: teamId,
+                import_id: importId,
                 external_id: session.externalId,
                 table_name: session.tableName ?? null,
                 session_type: session.sessionType ?? "cash_game",
@@ -780,20 +947,30 @@ export const pokerImportsRouter = createTRPCRouter({
                 total_rake: session.totalRake ?? 0,
                 total_buy_in: session.totalBuyIn ?? 0,
                 // totalWinnings is net result (can be negative), so cash_out = buy_in + winnings
-                total_cash_out: (session.totalBuyIn ?? 0) + (session.totalWinnings ?? 0),
-                player_count: session.playerCount ?? session.players?.length ?? 0,
+                total_cash_out:
+                  (session.totalBuyIn ?? 0) + (session.totalWinnings ?? 0),
+                player_count:
+                  session.playerCount ?? session.players?.length ?? 0,
                 hands_played: session.handsPlayed ?? 0,
-                created_by_id: session.createdByPpPokerId ? playerIdMap.get(session.createdByPpPokerId) : null,
+                created_by_id: session.createdByPpPokerId
+                  ? playerIdMap.get(session.createdByPpPokerId)
+                  : null,
               };
             })
             .filter(Boolean);
 
           // Deduplicate by external_id
-          const sessionsToUpsert = deduplicateByKey(sessionsRaw as any[], (s) => s.external_id);
+          const sessionsToUpsert = deduplicateByKey(
+            sessionsRaw as any[],
+            (s) => s.external_id,
+          );
 
-          const skippedSessionCount = rawData.sessions.length - sessionsToUpsert.length;
+          const skippedSessionCount =
+            rawData.sessions.length - sessionsToUpsert.length;
           if (skippedSessionCount > 0) {
-            processingErrors.push(`Skipped ${skippedSessionCount} sessions with invalid timestamps or duplicates`);
+            processingErrors.push(
+              `Skipped ${skippedSessionCount} sessions with invalid timestamps or duplicates`,
+            );
           }
 
           for (const batch of chunkArray(sessionsToUpsert, BATCH_SIZE)) {
@@ -802,7 +979,9 @@ export const pokerImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "external_id,team_id" });
 
             if (error) {
-              processingErrors.push(`Failed to upsert sessions batch: ${error.message}`);
+              processingErrors.push(
+                `Failed to upsert sessions batch: ${error.message}`,
+              );
             }
           }
         }
@@ -810,16 +989,40 @@ export const pokerImportsRouter = createTRPCRouter({
         // ============================================
         // STEP 6: Get session IDs for session_players (if needed)
         // ============================================
-        // Get all sessions we just created/updated
-        const { data: allSessions } = await supabase
-          .from("poker_sessions")
-          .select("id, external_id")
-          .eq("team_id", teamId)
-          .limit(50000); // Avoid 1000 row limit
+        // Get all sessions we just created/updated using pagination (Supabase API defaults to 1000 rows max)
+        const sessionIdMap = new Map<string, string>();
+        let sessionOffset = 0;
+        const SESSION_PAGE_SIZE = 1000;
 
-        const sessionIdMap = new Map(
-          (allSessions ?? []).map((s) => [s.external_id, s.id])
-        );
+        while (true) {
+          const { data: sessionBatch, error: sessionError } = await supabase
+            .from("poker_sessions")
+            .select("id, external_id")
+            .eq("team_id", teamId)
+            .range(sessionOffset, sessionOffset + SESSION_PAGE_SIZE - 1);
+
+          if (sessionError) {
+            processingErrors.push(
+              `Failed to fetch sessions for map: ${sessionError.message}`,
+            );
+            break;
+          }
+
+          if (!sessionBatch || sessionBatch.length === 0) {
+            break;
+          }
+
+          for (const s of sessionBatch) {
+            sessionIdMap.set(s.external_id, s.id);
+          }
+
+          // If we got less than a full page, we've reached the end
+          if (sessionBatch.length < SESSION_PAGE_SIZE) {
+            break;
+          }
+
+          sessionOffset += SESSION_PAGE_SIZE;
+        }
 
         // ============================================
         // STEP 7: Batch upsert session players
@@ -856,8 +1059,10 @@ export const pokerImportsRouter = createTRPCRouter({
                 winnings_jackpot: player.winningsJackpot ?? null,
                 winnings_ev_split: player.winningsEvSplit ?? null,
                 // Club winnings details
-                club_winnings_jackpot_fee: player.clubWinningsJackpotFee ?? null,
-                club_winnings_jackpot_prize: player.clubWinningsJackpotPrize ?? null,
+                club_winnings_jackpot_fee:
+                  player.clubWinningsJackpotFee ?? null,
+                club_winnings_jackpot_prize:
+                  player.clubWinningsJackpotPrize ?? null,
                 club_winnings_ev_split: player.clubWinningsEvSplit ?? null,
                 // Tournament specific
                 bounty: player.bounty ?? null,
@@ -869,7 +1074,7 @@ export const pokerImportsRouter = createTRPCRouter({
           // Deduplicate by session_id + player_id combination
           const sessionPlayersToUpsert = deduplicateByKey(
             sessionPlayersRaw,
-            (sp) => `${sp.session_id}-${sp.player_id}`
+            (sp) => `${sp.session_id}-${sp.player_id}`,
           );
 
           for (const batch of chunkArray(sessionPlayersToUpsert, BATCH_SIZE)) {
@@ -878,7 +1083,9 @@ export const pokerImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "session_id,player_id" });
 
             if (error) {
-              processingErrors.push(`Failed to upsert session players batch: ${error.message}`);
+              processingErrors.push(
+                `Failed to upsert session players batch: ${error.message}`,
+              );
             }
           }
         }
@@ -892,11 +1099,14 @@ export const pokerImportsRouter = createTRPCRouter({
 
           // Build a map of ppPokerId -> balance data from "Detalhes do usuário"
           // This captures the player's balance state at the time of the report
-          const playerBalanceMap = new Map<string, {
-            chipBalance: number;
-            agentCreditBalance: number;
-            superAgentCreditBalance: number;
-          }>();
+          const playerBalanceMap = new Map<
+            string,
+            {
+              chipBalance: number;
+              agentCreditBalance: number;
+              superAgentCreditBalance: number;
+            }
+          >();
 
           for (const player of rawData?.players ?? []) {
             if (player.ppPokerId) {
@@ -915,17 +1125,21 @@ export const pokerImportsRouter = createTRPCRouter({
                 if (!playerId) return null;
 
                 // Get balance snapshot from "Detalhes do usuário" sheet
-                const balanceData = playerBalanceMap.get(String(summary.ppPokerId));
+                const balanceData = playerBalanceMap.get(
+                  String(summary.ppPokerId),
+                );
 
                 return {
                   team_id: teamId,
+                  import_id: importId,
                   player_id: playerId,
                   period_start: periodStart,
                   period_end: periodEnd,
                   // Balance snapshot at period end (from "Detalhes do usuário")
                   chip_balance: balanceData?.chipBalance ?? 0,
                   agent_credit_balance: balanceData?.agentCreditBalance ?? 0,
-                  super_agent_credit_balance: balanceData?.superAgentCreditBalance ?? 0,
+                  super_agent_credit_balance:
+                    balanceData?.superAgentCreditBalance ?? 0,
                   winnings_total: summary.generalTotal ?? 0,
                   winnings_general: summary.generalTotal ?? 0,
                   winnings_ring: summary.ringGamesTotal ?? 0,
@@ -935,7 +1149,8 @@ export const pokerImportsRouter = createTRPCRouter({
                   winnings_color_game: summary.colorGameTotal ?? 0,
                   winnings_crash: summary.crashTotal ?? 0,
                   winnings_lucky_draw: summary.luckyDrawTotal ?? 0,
-                  winnings_jackpot: summary.jackpotTotal ?? summary.jackpotPrize ?? 0,
+                  winnings_jackpot:
+                    summary.jackpotTotal ?? summary.jackpotPrize ?? 0,
                   winnings_ev_split: summary.evSplitTotal ?? 0,
                   club_earnings_general: summary.feeGeneral ?? 0,
                   rake_total: summary.feeGeneral ?? summary.fee ?? 0,
@@ -947,7 +1162,8 @@ export const pokerImportsRouter = createTRPCRouter({
                   // Classifications (K-N)
                   classification_ppsr: summary.classificationPpsr ?? 0,
                   classification_ring: summary.classificationRing ?? 0,
-                  classification_custom_ring: summary.classificationCustomRing ?? 0,
+                  classification_custom_ring:
+                    summary.classificationCustomRing ?? 0,
                   classification_mtt: summary.classificationMtt ?? 0,
                   // Tickets (Y-AA)
                   ticket_value_won: summary.ticketValueWon ?? 0,
@@ -978,15 +1194,22 @@ export const pokerImportsRouter = createTRPCRouter({
               .filter(Boolean);
 
             // Deduplicate by player_id (since period_start and period_end are the same for all)
-            const summariesToUpsert = deduplicateByKey(summariesRaw as any[], (s) => s.player_id);
+            const summariesToUpsert = deduplicateByKey(
+              summariesRaw as any[],
+              (s) => s.player_id,
+            );
 
             for (const batch of chunkArray(summariesToUpsert, BATCH_SIZE)) {
               const { error } = await supabase
                 .from("poker_player_summary")
-                .upsert(batch, { onConflict: "player_id,period_start,period_end" });
+                .upsert(batch, {
+                  onConflict: "player_id,period_start,period_end",
+                });
 
               if (error) {
-                processingErrors.push(`Failed to upsert summaries batch: ${error.message}`);
+                processingErrors.push(
+                  `Failed to upsert summaries batch: ${error.message}`,
+                );
               }
             }
           }
@@ -1007,6 +1230,7 @@ export const pokerImportsRouter = createTRPCRouter({
 
                 return {
                   team_id: teamId,
+                  import_id: importId,
                   player_id: playerId,
                   period_start: periodStart,
                   period_end: periodEnd,
@@ -1183,16 +1407,20 @@ export const pokerImportsRouter = createTRPCRouter({
             // Deduplicate by player_id + date
             const detailedToUpsert = deduplicateByKey(
               detailedRaw as any[],
-              (d) => `${d.player_id}-${d.date || 'null'}`
+              (d) => `${d.player_id}-${d.date || "null"}`,
             );
 
             for (const batch of chunkArray(detailedToUpsert, BATCH_SIZE)) {
               const { error } = await supabase
                 .from("poker_player_detailed")
-                .upsert(batch, { onConflict: "player_id,period_start,period_end,date" });
+                .upsert(batch, {
+                  onConflict: "player_id,period_start,period_end,date",
+                });
 
               if (error) {
-                processingErrors.push(`Failed to upsert detailed batch: ${error.message}`);
+                processingErrors.push(
+                  `Failed to upsert detailed batch: ${error.message}`,
+                );
               }
             }
           }
@@ -1214,6 +1442,7 @@ export const pokerImportsRouter = createTRPCRouter({
 
               return {
                 team_id: teamId,
+                import_id: importId,
                 period_start: periodStart,
                 period_end: periodEnd,
                 agent_id: agentId ?? null,
@@ -1231,16 +1460,21 @@ export const pokerImportsRouter = createTRPCRouter({
             // Deduplicate by agent_pppoker_id
             const rakebacksToUpsert = deduplicateByKey(
               rakebacksRaw,
-              (rb) => rb.agent_pppoker_id
+              (rb) => rb.agent_pppoker_id,
             );
 
             for (const batch of chunkArray(rakebacksToUpsert, BATCH_SIZE)) {
               const { error } = await supabase
                 .from("poker_agent_rakeback")
-                .upsert(batch, { onConflict: "team_id,agent_pppoker_id,period_start,period_end" });
+                .upsert(batch, {
+                  onConflict:
+                    "team_id,agent_pppoker_id,period_start,period_end",
+                });
 
               if (error) {
-                processingErrors.push(`Failed to upsert rakebacks batch: ${error.message}`);
+                processingErrors.push(
+                  `Failed to upsert rakebacks batch: ${error.message}`,
+                );
               }
             }
           }
@@ -1253,7 +1487,9 @@ export const pokerImportsRouter = createTRPCRouter({
           const demonstrativoToInsert = rawData.demonstrativo
             .map((d: any) => {
               const occurredAt = parseTimestamp(d.occurredAt);
-              const playerId = d.ppPokerId ? playerIdMap.get(d.ppPokerId) : null;
+              const playerId = d.ppPokerId
+                ? playerIdMap.get(d.ppPokerId)
+                : null;
 
               return {
                 team_id: teamId,
@@ -1275,7 +1511,9 @@ export const pokerImportsRouter = createTRPCRouter({
               .insert(batch);
 
             if (error) {
-              processingErrors.push(`Failed to insert demonstrativo batch: ${error.message}`);
+              processingErrors.push(
+                `Failed to insert demonstrativo batch: ${error.message}`,
+              );
             }
           }
         }
@@ -1290,9 +1528,20 @@ export const pokerImportsRouter = createTRPCRouter({
           if (affectedPlayerIds.length > 0) {
             // Calculate activity metrics in batches
             const activityBatchSize = 100;
-            for (let i = 0; i < affectedPlayerIds.length; i += activityBatchSize) {
-              const batchIds = affectedPlayerIds.slice(i, i + activityBatchSize);
-              const metricsMap = await calculateBatchActivityMetrics(supabase, teamId, batchIds);
+            for (
+              let i = 0;
+              i < affectedPlayerIds.length;
+              i += activityBatchSize
+            ) {
+              const batchIds = affectedPlayerIds.slice(
+                i,
+                i + activityBatchSize,
+              );
+              const metricsMap = await calculateBatchActivityMetrics(
+                supabase,
+                teamId,
+                batchIds,
+              );
 
               // Update each player with their activity metrics
               for (const [playerId, metrics] of metricsMap) {
@@ -1302,7 +1551,8 @@ export const pokerImportsRouter = createTRPCRouter({
                     last_session_at: metrics.lastSessionAt ?? null,
                     sessions_last_4_weeks: metrics.sessionsLast4Weeks ?? 0,
                     weeks_active_last_4: metrics.weeksActiveLast4 ?? 0,
-                    days_since_last_session: metrics.daysSinceLastSession ?? null,
+                    days_since_last_session:
+                      metrics.daysSinceLastSession ?? null,
                     updated_at: new Date().toISOString(),
                   })
                   .eq("id", playerId)
@@ -1310,15 +1560,21 @@ export const pokerImportsRouter = createTRPCRouter({
 
                 if (error) {
                   // Don't fail the import for activity metrics errors
-                  console.error(`Failed to update activity metrics for player ${playerId}: ${error.message}`);
+                  console.error(
+                    `Failed to update activity metrics for player ${playerId}: ${error.message}`,
+                  );
                 }
               }
             }
           }
         } catch (activityError: any) {
           // Don't fail the import for activity calculation errors
-          console.error(`Activity metrics calculation error: ${activityError.message}`);
-          processingErrors.push(`Warning: Failed to calculate activity metrics: ${activityError.message}`);
+          console.error(
+            `Activity metrics calculation error: ${activityError.message}`,
+          );
+          processingErrors.push(
+            `Warning: Failed to calculate activity metrics: ${activityError.message}`,
+          );
         }
 
         // Update status to completed

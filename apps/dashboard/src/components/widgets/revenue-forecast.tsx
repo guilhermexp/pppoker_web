@@ -132,7 +132,9 @@ export function RevenueForecastWidget() {
         onConfigure={() => setIsConfiguring(true)}
         description={
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-[#878787]">{t("widget_descriptions.revenue_projection")}</p>
+            <p className="text-sm text-[#878787]">
+              {t("widget_descriptions.revenue_projection")}
+            </p>
 
             {/* Simple trend line chart */}
             {chartData.length > 0 ? (

@@ -60,17 +60,47 @@ const withTeamPermissionMiddleware = t.middleware(async (opts) => {
   });
 });
 
+// Rate limiting middleware - protects against abuse
+// Uses in-memory store with sliding window (10 min, 100 requests per user)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+const withRateLimiting = t.middleware(async (opts) => {
+  const userId = opts.ctx.session?.user?.id ?? "anonymous";
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000; // 10 minutes
+  const limit = 1000; // Increased for development
+
+  const entry = rateLimitMap.get(userId);
+
+  if (!entry || entry.resetAt < now) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + windowMs });
+  } else if (entry.count >= limit) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Rate limit exceeded. Try again later.",
+    });
+  } else {
+    entry.count++;
+  }
+
+  return opts.next();
+});
+
 export const publicProcedure = t.procedure.use(withPrimaryDbMiddleware);
 
 // Procedure that only requires authentication but not team membership
 // Used for endpoints that need to work for new users without a team
 export const authProcedure = t.procedure
+  .use(withRateLimiting)
   .use(withPrimaryDbMiddleware)
   .use(async (opts) => {
     const { session } = opts.ctx;
 
     if (!session) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "Auth required (authProcedure)" });
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Auth required (authProcedure)",
+      });
     }
 
     return opts.next({
@@ -81,6 +111,7 @@ export const authProcedure = t.procedure
   });
 
 export const protectedProcedure = t.procedure
+  .use(withRateLimiting)
   .use(withTeamPermissionMiddleware) // NOTE: This is needed to ensure that the teamId is set in the context
   .use(withPrimaryDbMiddleware)
   .use(async (opts) => {

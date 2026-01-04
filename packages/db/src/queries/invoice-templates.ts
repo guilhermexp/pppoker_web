@@ -26,6 +26,7 @@ type DraftInvoiceTemplateParams = {
   currency?: string;
   paymentDetails?: string | null; // Stringified JSON
   fromDetails?: string | null; // Stringified JSON
+  noteDetails?: string | null; // Stringified JSON
   dateFormat?: string;
   includeVat?: boolean;
   includeTax?: boolean;
@@ -33,6 +34,7 @@ type DraftInvoiceTemplateParams = {
   includeDecimals?: boolean;
   includeUnits?: boolean;
   includeQr?: boolean;
+  includePdf?: boolean;
   taxRate?: number;
   vatRate?: number;
   size?: "a4" | "letter";

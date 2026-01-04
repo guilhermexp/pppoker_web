@@ -164,8 +164,12 @@ function GeneralTab({ player }: { player: any }) {
             {/* Activity Score */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-muted-foreground">Score de Atividade</span>
-                <span className="text-sm font-medium">{player.activityMetrics.activityScore}/100</span>
+                <span className="text-xs text-muted-foreground">
+                  Score de Atividade
+                </span>
+                <span className="text-sm font-medium">
+                  {player.activityMetrics.activityScore}/100
+                </span>
               </div>
               <Progress
                 value={player.activityMetrics.activityScore}
@@ -182,12 +186,18 @@ function GeneralTab({ player }: { player: any }) {
             {/* Activity Metrics Grid */}
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground">Sessões (4 semanas)</p>
-                <p className="text-xl font-bold">{player.activityMetrics.sessionsLast4Weeks}</p>
+                <p className="text-xs text-muted-foreground">
+                  Sessões (4 semanas)
+                </p>
+                <p className="text-xl font-bold">
+                  {player.activityMetrics.sessionsLast4Weeks}
+                </p>
               </div>
               <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-xs text-muted-foreground">Semanas Ativas</p>
-                <p className="text-xl font-bold">{player.activityMetrics.weeksActiveLast4}/4</p>
+                <p className="text-xl font-bold">
+                  {player.activityMetrics.weeksActiveLast4}/4
+                </p>
               </div>
               <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-xs text-muted-foreground">Última Sessão</p>
@@ -212,7 +222,8 @@ function GeneralTab({ player }: { player: any }) {
                         ? "Quinzenal"
                         : player.activityMetrics.sessionFrequency === "monthly"
                           ? "Mensal"
-                          : player.activityMetrics.sessionFrequency === "sporadic"
+                          : player.activityMetrics.sessionFrequency ===
+                              "sporadic"
                             ? "Esporádica"
                             : "Desconhecida"}
                 </p>
@@ -223,7 +234,9 @@ function GeneralTab({ player }: { player: any }) {
             {player.activityMetrics.daysSinceLastAppActivity !== null && (
               <div className="border-t pt-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Última vez no App</span>
+                  <span className="text-xs text-muted-foreground">
+                    Última vez no App
+                  </span>
                   <span className="text-sm font-medium">
                     {player.activityMetrics.daysSinceLastAppActivity === 0
                       ? "Hoje"
@@ -247,7 +260,10 @@ function GeneralTab({ player }: { player: any }) {
           <div className="grid grid-cols-2 gap-4">
             <InfoItem label="PPPoker ID" value={player.ppPokerId} />
             <InfoItem label="Pais" value={player.country} />
-            <InfoItem label="Tipo" value={player.type === "agent" ? "Agente" : "Jogador"} />
+            <InfoItem
+              label="Tipo"
+              value={player.type === "agent" ? "Agente" : "Jogador"}
+            />
             <InfoItem
               label="Cadastro"
               value={
@@ -334,7 +350,7 @@ function FinancialTab({ player }: { player: any }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [rakebackValue, setRakebackValue] = useState<string>(
-    String(player.rakebackPercent ?? 0)
+    String(player.rakebackPercent ?? 0),
   );
   const [isEditingRakeback, setIsEditingRakeback] = useState(false);
 
@@ -353,11 +369,11 @@ function FinancialTab({ player }: { player: any }) {
         });
         setIsEditingRakeback(false);
       },
-    })
+    }),
   );
 
   const handleRakebackSave = () => {
-    const value = parseFloat(rakebackValue);
+    const value = Number.parseFloat(rakebackValue);
     if (!isNaN(value) && value >= 0 && value <= 100) {
       updateRakebackMutation.mutate({
         id: player.id,
@@ -377,7 +393,9 @@ function FinancialTab({ player }: { player: any }) {
       {player.agent && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Agente Vinculado</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Agente Vinculado
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
@@ -407,14 +425,18 @@ function FinancialTab({ player }: { player: any }) {
       {/* All Financial Info in One Card */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Resumo Financeiro</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Resumo Financeiro
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Saldos */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-muted-foreground">Saldo Atual</p>
-              <p className={`text-xl font-bold ${player.currentBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <p
+                className={`text-xl font-bold ${player.currentBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
                 {formatCurrency(player.currentBalance ?? 0)}
               </p>
             </div>
@@ -428,15 +450,23 @@ function FinancialTab({ player }: { player: any }) {
 
           {/* Credito */}
           <div className="border-t pt-4">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Credito</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">
+              Credito
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Limite de Credito</p>
-                <p className="text-sm font-medium">{formatCurrency(player.creditLimit ?? 0)}</p>
+                <p className="text-xs text-muted-foreground">
+                  Limite de Credito
+                </p>
+                <p className="text-sm font-medium">
+                  {formatCurrency(player.creditLimit ?? 0)}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Credito Agente</p>
-                <p className="text-sm font-medium">{formatCurrency(player.agentCreditBalance ?? 0)}</p>
+                <p className="text-sm font-medium">
+                  {formatCurrency(player.agentCreditBalance ?? 0)}
+                </p>
               </div>
             </div>
             {player.creditLimit > 0 && (
@@ -444,11 +474,22 @@ function FinancialTab({ player }: { player: any }) {
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-muted-foreground">Utilizacao</span>
                   <span className="font-medium">
-                    {Math.min(100, Math.round((Math.abs(player.currentBalance) / player.creditLimit) * 100))}%
+                    {Math.min(
+                      100,
+                      Math.round(
+                        (Math.abs(player.currentBalance) / player.creditLimit) *
+                          100,
+                      ),
+                    )}
+                    %
                   </span>
                 </div>
                 <Progress
-                  value={Math.min(100, (Math.abs(player.currentBalance) / player.creditLimit) * 100)}
+                  value={Math.min(
+                    100,
+                    (Math.abs(player.currentBalance) / player.creditLimit) *
+                      100,
+                  )}
                   className="h-2"
                 />
               </div>
@@ -458,9 +499,15 @@ function FinancialTab({ player }: { player: any }) {
           {/* Rakeback */}
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground">Rakeback</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Rakeback
+              </p>
               {!isEditingRakeback && (
-                <Button variant="ghost" size="sm" onClick={() => setIsEditingRakeback(true)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingRakeback(true)}
+                >
                   <Icons.Edit className="h-3 w-3" />
                 </Button>
               )}
@@ -480,18 +527,33 @@ function FinancialTab({ player }: { player: any }) {
                   <span className="text-muted-foreground">%</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={handleRakebackSave} disabled={updateRakebackMutation.isPending}>
-                    {updateRakebackMutation.isPending ? "Salvando..." : "Salvar"}
+                  <Button
+                    size="sm"
+                    onClick={handleRakebackSave}
+                    disabled={updateRakebackMutation.isPending}
+                  >
+                    {updateRakebackMutation.isPending
+                      ? "Salvando..."
+                      : "Salvar"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleRakebackCancel} disabled={updateRakebackMutation.isPending}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRakebackCancel}
+                    disabled={updateRakebackMutation.isPending}
+                  >
                     Cancelar
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">{player.rakebackPercent ?? 0}%</span>
-                <span className="text-muted-foreground text-sm">de retorno</span>
+                <span className="text-2xl font-bold">
+                  {player.rakebackPercent ?? 0}%
+                </span>
+                <span className="text-muted-foreground text-sm">
+                  de retorno
+                </span>
               </div>
             )}
           </div>
@@ -499,28 +561,47 @@ function FinancialTab({ player }: { player: any }) {
           {/* Historico de Rake */}
           {player.rakeStats && (
             <div className="border-t pt-4">
-              <p className="text-xs font-medium text-muted-foreground mb-3">Historico de Rake</p>
+              <p className="text-xs font-medium text-muted-foreground mb-3">
+                Historico de Rake
+              </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Partidas Jogadas</p>
-                  <p className="text-lg font-semibold">{player.rakeStats.sessionsPlayed}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Partidas Jogadas
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {player.rakeStats.sessionsPlayed}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Total Rake Gerado</p>
-                  <p className="text-lg font-semibold text-blue-600">{formatCurrency(player.rakeStats.totalRake)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Total Rake Gerado
+                  </p>
+                  <p className="text-lg font-semibold text-blue-600">
+                    {formatCurrency(player.rakeStats.totalRake)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Resultado Total</p>
-                  <p className={`text-lg font-semibold ${player.rakeStats.totalWinnings >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <p className="text-xs text-muted-foreground">
+                    Resultado Total
+                  </p>
+                  <p
+                    className={`text-lg font-semibold ${player.rakeStats.totalWinnings >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
                     {formatCurrency(player.rakeStats.totalWinnings)}
                   </p>
                 </div>
                 {player.rakebackPercent > 0 && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Retorno de Taxa</p>
-                    <p className="text-lg font-semibold text-green-600">{formatCurrency(player.rakeStats.totalRakeback)}</p>
                     <p className="text-xs text-muted-foreground">
-                      ({player.rakebackPercent}% de {formatCurrency(player.rakeStats.totalRake)})
+                      Retorno de Taxa
+                    </p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {formatCurrency(player.rakeStats.totalRakeback)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      ({player.rakebackPercent}% de{" "}
+                      {formatCurrency(player.rakeStats.totalRake)})
                     </p>
                   </div>
                 )}
@@ -534,26 +615,42 @@ function FinancialTab({ player }: { player: any }) {
       {player.type === "agent" && player.agentStats && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Jogadores Gerenciados</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Jogadores Gerenciados
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Total de Jogadores</p>
-                <p className="text-lg font-semibold">{player.agentStats.playerCount}</p>
+                <p className="text-xs text-muted-foreground">
+                  Total de Jogadores
+                </p>
+                <p className="text-lg font-semibold">
+                  {player.agentStats.playerCount}
+                </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Rake dos Jogadores</p>
-                <p className="text-lg font-semibold text-blue-600">{formatCurrency(player.agentStats.totalRake)}</p>
+                <p className="text-xs text-muted-foreground">
+                  Rake dos Jogadores
+                </p>
+                <p className="text-lg font-semibold text-blue-600">
+                  {formatCurrency(player.agentStats.totalRake)}
+                </p>
               </div>
             </div>
             <div className="border-t pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Comissao do Agente</p>
-                  <p className="text-xs text-muted-foreground">({player.rakebackPercent ?? 0}% do rake)</p>
+                  <p className="text-xs text-muted-foreground">
+                    Comissao do Agente
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    ({player.rakebackPercent ?? 0}% do rake)
+                  </p>
                 </div>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(player.agentStats.totalRakeback)}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(player.agentStats.totalRakeback)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -571,7 +668,7 @@ function TransactionsTab({ playerId }: { playerId: string }) {
       playerId,
       pageSize: 50,
       sort: ["occurred_at", "desc"],
-    })
+    }),
   );
 
   if (isLoading) {
@@ -639,7 +736,9 @@ function TransactionsTab({ playerId }: { playerId: string }) {
                       <p className="text-sm font-medium truncate">
                         {isSender ? "Enviou para" : "Recebeu de"}{" "}
                         <span className="text-muted-foreground">
-                          {otherParty?.nickname || otherParty?.memoName || "Clube"}
+                          {otherParty?.nickname ||
+                            otherParty?.memoName ||
+                            "Clube"}
                         </span>
                       </p>
                     </div>
@@ -691,7 +790,7 @@ function SessionsTab({ playerId }: { playerId: string }) {
     trpc.poker.sessions.getByPlayer.queryOptions({
       playerId,
       pageSize: 50,
-    })
+    }),
   );
 
   if (isLoading) {
@@ -766,11 +865,13 @@ function SessionsTab({ playerId }: { playerId: string }) {
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>
-                        {sessionTypeLabels[session.sessionType] || session.sessionType}
+                        {sessionTypeLabels[session.sessionType] ||
+                          session.sessionType}
                       </span>
                       <span>•</span>
                       <span>
-                        {gameTypeLabels[session.gameVariant] || session.gameVariant}
+                        {gameTypeLabels[session.gameVariant] ||
+                          session.gameVariant}
                       </span>
                       {session.blinds && (
                         <>
@@ -781,7 +882,10 @@ function SessionsTab({ playerId }: { playerId: string }) {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {session.startedAt
-                        ? format(new Date(session.startedAt), "dd/MM/yyyy HH:mm")
+                        ? format(
+                            new Date(session.startedAt),
+                            "dd/MM/yyyy HH:mm",
+                          )
                         : "Data não disponível"}
                     </p>
                   </div>
@@ -833,8 +937,8 @@ export function PokerPlayerDetailSheet() {
       {
         enabled: isOpen,
         staleTime: 0,
-      }
-    )
+      },
+    ),
   );
 
   return (
@@ -846,9 +950,7 @@ export function PokerPlayerDetailSheet() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() =>
-                setParams({ playerId: null, createPlayer: null })
-              }
+              onClick={() => setParams({ playerId: null, createPlayer: null })}
             >
               <Icons.Close className="h-4 w-4" />
             </Button>

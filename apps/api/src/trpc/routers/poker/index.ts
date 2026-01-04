@@ -5,6 +5,7 @@ import { pokerPlayersRouter } from "./players";
 import { pokerSessionsRouter } from "./sessions";
 import { pokerSettlementsRouter } from "./settlements";
 import { pokerTransactionsRouter } from "./transactions";
+import { pokerWeekPeriodsRouter } from "./week-periods";
 
 export const pokerRouter = createTRPCRouter({
   players: pokerPlayersRouter,
@@ -13,4 +14,5 @@ export const pokerRouter = createTRPCRouter({
   imports: pokerImportsRouter,
   analytics: pokerAnalyticsRouter,
   transactions: pokerTransactionsRouter,
+  weekPeriods: pokerWeekPeriodsRouter,
 });

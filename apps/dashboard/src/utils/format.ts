@@ -173,6 +173,15 @@ export function formatRelativeTime(date: Date): string {
   return "just now";
 }
 
+export function formatNumber(
+  value: number,
+  locale?: string | null,
+  options?: Intl.NumberFormatOptions,
+): string {
+  const safeLocale = locale ?? "en-US";
+  return value.toLocaleString(safeLocale, options);
+}
+
 export function formatCompactAmount(
   amount: number,
   locale?: string | null,

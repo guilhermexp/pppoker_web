@@ -3,6 +3,9 @@ import type { InvoiceFormValues } from "./form-context";
 export const transformFormValuesToDraft = (values: InvoiceFormValues) => {
   return {
     ...values,
+    // Ensure invoiceNumber is always a string
+    invoiceNumber:
+      values.invoiceNumber != null ? String(values.invoiceNumber) : undefined,
     template: {
       ...values.template,
       ...(values.paymentDetails && {

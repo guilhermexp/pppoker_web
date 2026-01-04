@@ -45,7 +45,9 @@ const formSchema = z.object({
   }),
   memoName: z.string().optional().nullable(),
   type: z.enum(["player", "agent"]).default("player"),
-  status: z.enum(["active", "inactive", "suspended", "blacklisted"]).default("active"),
+  status: z
+    .enum(["active", "inactive", "suspended", "blacklisted"])
+    .default("active"),
   agentId: z.string().uuid().optional().nullable(),
   email: z.string().email().optional().nullable().or(z.literal("")),
   phone: z.string().optional().nullable(),
@@ -69,7 +71,7 @@ export function PokerPlayerForm({ data }: Props) {
 
   // Fetch agents for the dropdown
   const { data: agentsData } = useQuery(
-    trpc.poker.players.getAgents.queryOptions()
+    trpc.poker.players.getAgents.queryOptions(),
   );
   const agents = agentsData ?? [];
 
@@ -91,7 +93,7 @@ export function PokerPlayerForm({ data }: Props) {
         // Close the form
         setParams(null);
       },
-    })
+    }),
   );
 
   const form = useZodForm(formSchema, {
@@ -157,7 +159,9 @@ export function PokerPlayerForm({ data }: Props) {
                               {...field}
                               value={field.value ?? ""}
                               autoFocus
-                              placeholder={t("poker.players.form.pppoker_id_placeholder")}
+                              placeholder={t(
+                                "poker.players.form.pppoker_id_placeholder",
+                              )}
                               autoComplete="off"
                             />
                           </FormControl>
@@ -181,7 +185,9 @@ export function PokerPlayerForm({ data }: Props) {
                             <Input
                               {...field}
                               value={field.value ?? ""}
-                              placeholder={t("poker.players.form.nickname_placeholder")}
+                              placeholder={t(
+                                "poker.players.form.nickname_placeholder",
+                              )}
                               autoComplete="off"
                             />
                           </FormControl>
@@ -205,7 +211,9 @@ export function PokerPlayerForm({ data }: Props) {
                             <Input
                               {...field}
                               value={field.value ?? ""}
-                              placeholder={t("poker.players.form.memo_name_placeholder")}
+                              placeholder={t(
+                                "poker.players.form.memo_name_placeholder",
+                              )}
                               autoComplete="off"
                             />
                           </FormControl>
@@ -311,7 +319,9 @@ export function PokerPlayerForm({ data }: Props) {
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue
-                                    placeholder={t("poker.players.form.agent_placeholder")}
+                                    placeholder={t(
+                                      "poker.players.form.agent_placeholder",
+                                    )}
                                   />
                                 </SelectTrigger>
                               </FormControl>
@@ -355,7 +365,9 @@ export function PokerPlayerForm({ data }: Props) {
                             <Input
                               {...field}
                               value={field.value ?? ""}
-                              placeholder={t("poker.players.form.email_placeholder")}
+                              placeholder={t(
+                                "poker.players.form.email_placeholder",
+                              )}
                               type="email"
                               autoComplete="off"
                             />
@@ -377,7 +389,9 @@ export function PokerPlayerForm({ data }: Props) {
                             <Input
                               {...field}
                               value={field.value ?? ""}
-                              placeholder={t("poker.players.form.phone_placeholder")}
+                              placeholder={t(
+                                "poker.players.form.phone_placeholder",
+                              )}
                               type="tel"
                               autoComplete="off"
                             />
@@ -408,7 +422,9 @@ export function PokerPlayerForm({ data }: Props) {
                               type="number"
                               step="0.01"
                               min="0"
-                              placeholder={t("poker.players.form.credit_limit_placeholder")}
+                              placeholder={t(
+                                "poker.players.form.credit_limit_placeholder",
+                              )}
                               autoComplete="off"
                             />
                           </FormControl>
@@ -487,7 +503,9 @@ export function PokerPlayerForm({ data }: Props) {
                             {...field}
                             value={field.value ?? ""}
                             className="flex min-h-[80px] resize-none"
-                            placeholder={t("poker.players.form.note_placeholder")}
+                            placeholder={t(
+                              "poker.players.form.note_placeholder",
+                            )}
                             autoComplete="off"
                           />
                         </FormControl>

@@ -92,7 +92,10 @@ export function GrowthRateWidget() {
     `widget_period.${config?.period ?? "current_quarter"}` as "widget_period.fiscal_ytd",
   );
 
-  const revenueTypeLabel = config?.revenueType === "gross" ? t("revenue_type.gross") : t("revenue_type.net");
+  const revenueTypeLabel =
+    config?.revenueType === "gross"
+      ? t("revenue_type.gross")
+      : t("revenue_type.net");
 
   return (
     <ConfigurableWidget
@@ -113,7 +116,10 @@ export function GrowthRateWidget() {
         description={
           <div className="flex flex-col gap-1">
             <p className="text-sm text-[#666666]">
-              {t("widget_descriptions.revenue_growth", { type: revenueTypeLabel })} · {periodLabel}
+              {t("widget_descriptions.revenue_growth", {
+                type: revenueTypeLabel,
+              })}{" "}
+              · {periodLabel}
             </p>
           </div>
         }

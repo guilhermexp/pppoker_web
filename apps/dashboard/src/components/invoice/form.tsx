@@ -1,4 +1,5 @@
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { getUrl } from "@/utils/environment";
 import { formatRelativeTime } from "@/utils/format";
@@ -24,6 +25,7 @@ import { Summary } from "./summary";
 import { transformFormValuesToDraft } from "./utils";
 
 export function Form() {
+  const t = useI18n();
   const { invoiceId, setParams } = useInvoiceParams();
   const [lastUpdated, setLastUpdated] = useState<Date | undefined>();
   const [lastEditedText, setLastEditedText] = useState("");
@@ -86,15 +88,14 @@ export function Form() {
         // Check if this is a scheduling error using the specific error code
         if (error.data?.code === "SERVICE_UNAVAILABLE") {
           toast({
-            title: "Scheduling Failed",
-            description:
-              "Please try again. If the issue persists, contact support.",
+            title: t("invoice_form.scheduling_failed"),
+            description: t("invoice_form.scheduling_failed_description"),
           });
         } else {
           // Generic error handling for other invoice creation errors
           toast({
-            title: "Invoice Creation Failed",
-            description: "An unexpected error occurred. Please try again.",
+            title: t("invoice_form.creation_failed"),
+            description: t("invoice_form.creation_failed_description"),
           });
         }
       },
@@ -147,14 +148,16 @@ export function Form() {
         return;
       }
 
-      setLastEditedText(`Edited ${formatRelativeTime(lastUpdated)}`);
+      setLastEditedText(
+        t("invoice_form.edited_ago", { time: formatRelativeTime(lastUpdated) }),
+      );
     };
 
     updateLastEditedText();
     const intervalId = setInterval(updateLastEditedText, 1000);
 
     return () => clearInterval(intervalId);
-  }, [lastUpdated]);
+  }, [lastUpdated, t]);
 
   // Submit the form and the draft invoice
   const handleSubmit = (values: InvoiceFormValues) => {
@@ -229,7 +232,7 @@ export function Form() {
                   className="flex items-center gap-1"
                 >
                   <Icons.ExternalLink className="size-3" />
-                  <span>Preview invoice</span>
+                  <span>{t("invoice_form.preview_invoice")}</span>
                 </OpenURL>
 
                 {(draftInvoiceMutation.isPending || lastEditedText) && (
@@ -240,7 +243,9 @@ export function Form() {
 
             {(draftInvoiceMutation.isPending || lastEditedText) && (
               <span>
-                {draftInvoiceMutation.isPending ? "Saving" : lastEditedText}
+                {draftInvoiceMutation.isPending
+                  ? t("invoice_form.saving")
+                  : lastEditedText}
               </span>
             )}
           </div>

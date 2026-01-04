@@ -50,8 +50,8 @@ export function PokerPlayerEditSheet() {
 
           return pages.find((d) => d.id === playerId);
         },
-      }
-    )
+      },
+    ),
   );
 
   const deletePlayerMutation = useMutation(
@@ -62,7 +62,7 @@ export function PokerPlayerEditSheet() {
         });
         setParams(null);
       },
-    })
+    }),
   );
 
   return (
@@ -98,7 +98,9 @@ export function PokerPlayerEditSheet() {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
+                      <AlertDialogCancel>
+                        {t("actions.cancel")}
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() =>
                           deletePlayerMutation.mutate({ id: playerId })

@@ -837,9 +837,53 @@ function parseJogosPPSTSheet(
     jogos.push(currentJogo);
   }
 
-  // Limpa flags temporárias - totais já foram lidos da planilha
+  // Limpa flags temporárias e calcula fallback para totalGeral se valores estão zerados
   for (const jogo of jogos) {
     delete jogo._totalFromSpreadsheet;
+
+    // Fallback: se totalGeral não existe ou tem valores zerados, calcular a partir dos jogadores
+    if (jogo.jogadores && jogo.jogadores.length > 0) {
+      if (!jogo.totalGeral) {
+        jogo.totalGeral = {
+          buyinFichas: 0,
+          ganhos: 0,
+          taxa: 0,
+        };
+      }
+
+      // Calcular totais a partir dos jogadores se os valores estão zerados
+      const needsGanhosCalc = jogo.totalGeral.ganhos === 0;
+      const needsTaxaCalc = jogo.totalGeral.taxa === 0 || jogo.totalGeral.taxa === undefined;
+      const needsBuyinCalc = jogo.totalGeral.buyinFichas === 0;
+
+      if (needsGanhosCalc || needsTaxaCalc || needsBuyinCalc) {
+        let totalGanhos = 0;
+        let totalTaxa = 0;
+        let totalBuyin = 0;
+
+        for (const jogador of jogo.jogadores) {
+          if (needsGanhosCalc) {
+            totalGanhos += jogador.ganhos || 0;
+          }
+          if (needsTaxaCalc) {
+            totalTaxa += jogador.taxa || 0;
+          }
+          if (needsBuyinCalc) {
+            totalBuyin += jogador.buyinFichas || 0;
+          }
+        }
+
+        if (needsGanhosCalc) {
+          jogo.totalGeral.ganhos = totalGanhos;
+        }
+        if (needsTaxaCalc) {
+          jogo.totalGeral.taxa = totalTaxa;
+        }
+        if (needsBuyinCalc) {
+          jogo.totalGeral.buyinFichas = totalBuyin;
+        }
+      }
+    }
   }
 
   return { jogos, inicioCount, unknownGameFormats };
@@ -1069,6 +1113,19 @@ function parseJogosPPSRSheet(
         premiosJackpot: toNumber(row[17]),
         dividirEV: toNumber(row[18]),
       };
+
+      // Fallback: se ganhosJogadorGeral é 0 mas tem valores em componentes, calcular
+      if (
+        jogador.ganhosJogadorGeral === 0 &&
+        (jogador.ganhosDeAdversarios !== 0 ||
+          jogador.ganhosDeJackpot !== 0 ||
+          jogador.ganhosDeDividirEV !== 0)
+      ) {
+        jogador.ganhosJogadorGeral =
+          jogador.ganhosDeAdversarios +
+          jogador.ganhosDeJackpot +
+          jogador.ganhosDeDividirEV;
+      }
 
       currentJogo.jogadores.push(jogador);
     }

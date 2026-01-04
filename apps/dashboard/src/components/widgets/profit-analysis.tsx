@@ -122,7 +122,10 @@ export function ProfitAnalysisWidget() {
     `widget_period.${config?.period ?? "trailing_12"}` as "widget_period.fiscal_ytd",
   );
 
-  const revenueTypeLabel = config?.revenueType === "gross" ? t("revenue_type.gross") : t("revenue_type.net");
+  const revenueTypeLabel =
+    config?.revenueType === "gross"
+      ? t("revenue_type.gross")
+      : t("revenue_type.net");
 
   return (
     <ConfigurableWidget
@@ -145,23 +148,32 @@ export function ProfitAnalysisWidget() {
           <div className="flex flex-col gap-2">
             {chartData.length > 0 && data?.summary ? (
               <p className="text-sm text-[#666666]">
-                {t("widget_descriptions.average_profit", { type: revenueTypeLabel.toLowerCase() })} ·{" "}
-                {periodLabel}{" "}
+                {t("widget_descriptions.average_profit", {
+                  type: revenueTypeLabel.toLowerCase(),
+                })}{" "}
+                · {periodLabel}{" "}
                 <span className="font-medium text-foreground">
                   {formatCurrency(averageProfit)}
                 </span>
               </p>
             ) : (
               <p className="text-sm text-[#666666]">
-                {t("widget_descriptions.average_profit", { type: revenueTypeLabel.toLowerCase() })} ·{" "}
-                {periodLabel}
+                {t("widget_descriptions.average_profit", {
+                  type: revenueTypeLabel.toLowerCase(),
+                })}{" "}
+                · {periodLabel}
               </p>
             )}
 
             {/* Chart */}
             {chartData.length > 0 ? (
               <div className="h-16 w-full mt-3">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={64}>
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                  minWidth={0}
+                  minHeight={64}
+                >
                   <ComposedChart
                     data={chartData}
                     margin={{ top: 0, right: 0, left: 0, bottom: 0 }}

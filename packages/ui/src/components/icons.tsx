@@ -26,6 +26,7 @@ import {
   MdFolderZip,
   MdInventory2,
   MdIosShare,
+  MdLeaderboard,
   MdMenu,
   MdMoreHoriz,
   MdOutlineAccountBalance,
@@ -599,4 +600,5 @@ export const Icons = {
   ShowChart: MdOutlineShowChart,
   PieChart: MdOutlinePieChart,
   ArrowDropDown: MdArrowDropDown,
+  Leaderboard: MdLeaderboard,
 };

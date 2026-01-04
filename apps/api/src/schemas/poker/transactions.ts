@@ -115,6 +115,13 @@ export const getPokerTransactionsSchema = z.object({
     .openapi({
       description: "Maximum transaction amount",
     }),
+  includeDraft: z
+    .boolean()
+    .optional()
+    .openapi({
+      description:
+        "Include draft (non-committed) data. Default is false (only committed data shown).",
+    }),
 });
 
 export const getPokerTransactionByIdSchema = z.object({

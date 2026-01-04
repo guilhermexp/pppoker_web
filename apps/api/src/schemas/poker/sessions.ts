@@ -91,6 +91,13 @@ export const getPokerSessionsSchema = z.object({
     .openapi({
       description: "Filter sessions until this date (ISO string)",
     }),
+  includeDraft: z
+    .boolean()
+    .optional()
+    .openapi({
+      description:
+        "Include draft (non-committed) data. Default is false (only committed data shown).",
+    }),
 });
 
 export const getPokerSessionByIdSchema = z.object({

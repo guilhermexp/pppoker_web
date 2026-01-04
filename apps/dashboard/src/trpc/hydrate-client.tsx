@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  HydrationBoundary,
   type DehydratedState,
+  HydrationBoundary,
   isServer,
 } from "@tanstack/react-query";
 import type { ReactNode } from "react";

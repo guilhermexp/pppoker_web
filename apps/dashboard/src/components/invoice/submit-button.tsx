@@ -1,6 +1,7 @@
 "use client";
 
 import { useUserQuery } from "@/hooks/use-user";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { Button } from "@midday/ui/button";
 import { Calendar } from "@midday/ui/calendar";
@@ -40,6 +41,7 @@ type Props = {
 };
 
 export function SubmitButton({ isSubmitting, disabled }: Props) {
+  const t = useI18n();
   const { watch, setValue, formState } = useFormContext();
   const { data: user } = useUserQuery();
 
@@ -219,15 +221,17 @@ export function SubmitButton({ isSubmitting, disabled }: Props) {
 
   const options = [
     {
-      label: canUpdate ? "Update" : "Create",
+      label: canUpdate ? t("invoice_form.update") : t("invoice_form.create"),
       value: "create",
     },
     {
-      label: canUpdate ? "Update & Send" : "Create & Send",
+      label: canUpdate
+        ? t("invoice_form.update_and_send")
+        : t("invoice_form.create_and_send"),
       value: "create_and_send",
     },
     {
-      label: canUpdate ? "Update" : "Schedule",
+      label: canUpdate ? t("invoice_form.update") : t("invoice_form.schedule"),
       value: "scheduled",
     },
   ];
@@ -240,7 +244,10 @@ export function SubmitButton({ isSubmitting, disabled }: Props) {
           disabled={!isValid || disabled}
         >
           {selectedOption === "scheduled" && scheduleDate && scheduleTime
-            ? `Schedule (${format(scheduleDate, "MMM d")} ${scheduleTime})`
+            ? t("invoice_form.schedule_with_date", {
+                date: format(scheduleDate, "MMM d"),
+                time: scheduleTime,
+              })
             : options.find((o) => o.value === selectedOption)?.label}
         </BaseSubmitButton>
 

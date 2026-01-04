@@ -24,7 +24,9 @@ export function Customize() {
       className="space-x-2 px-3"
       onClick={() => setIsCustomizing(!isCustomizing)}
     >
-      <span>{isCustomizing ? t("dashboard.save") : t("dashboard.customize")}</span>
+      <span>
+        {isCustomizing ? t("dashboard.save") : t("dashboard.customize")}
+      </span>
       {isCustomizing ? (
         <Icons.Check size={16} />
       ) : (

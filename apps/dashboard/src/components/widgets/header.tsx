@@ -8,7 +8,9 @@ import { TZDate } from "@date-fns/tz";
 import { useEffect, useState } from "react";
 import { useIsCustomizing } from "./widget-provider";
 
-function getTimeBasedGreetingKey(timezone?: string): "morning" | "afternoon" | "evening" | "night" {
+function getTimeBasedGreetingKey(
+  timezone?: string,
+): "morning" | "afternoon" | "evening" | "night" {
   const userTimezone =
     timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const now = new TZDate(new Date(), userTimezone);
@@ -43,7 +45,9 @@ export function WidgetsHeader() {
     // This ensures the greeting changes naturally as time passes
     const interval = setInterval(
       () => {
-        const newGreetingKey = getTimeBasedGreetingKey(user?.timezone ?? undefined);
+        const newGreetingKey = getTimeBasedGreetingKey(
+          user?.timezone ?? undefined,
+        );
         setGreetingKey(newGreetingKey);
       },
       5 * 60 * 1000,
@@ -62,9 +66,7 @@ export function WidgetsHeader() {
           </span>
         </h1>
         <p className="text-[#666666] text-[14px]">
-          {isCustomizing
-            ? t("dashboard.drag_drop")
-            : t("dashboard.quick_look")}
+          {isCustomizing ? t("dashboard.drag_drop") : t("dashboard.quick_look")}
         </p>
       </div>
 

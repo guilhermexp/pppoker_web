@@ -8,6 +8,28 @@ import {
 } from "../../../schemas/poker/sessions";
 import { createTRPCRouter, protectedProcedure } from "../../init";
 
+/**
+ * Helper to get valid import_ids based on committed status
+ */
+async function getCommittedImportIds(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  teamId: string,
+  includeDraft: boolean,
+): Promise<string[] | null> {
+  if (includeDraft) {
+    return null;
+  }
+
+  const { data: imports } = await supabase
+    .from("poker_imports")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("status", "completed")
+    .eq("committed", true);
+
+  return imports?.map((i) => i.id) ?? [];
+}
+
 export const pokerSessionsRouter = createTRPCRouter({
   /**
    * Get poker sessions with pagination and filtering
@@ -26,7 +48,28 @@ export const pokerSessionsRouter = createTRPCRouter({
         gameVariant,
         dateFrom,
         dateTo,
+        includeDraft,
       } = input ?? {};
+
+      // Get committed import IDs (only show committed data by default)
+      const committedImportIds = await getCommittedImportIds(
+        supabase,
+        teamId!,
+        includeDraft ?? false,
+      );
+
+      // If no committed imports and not including draft, return empty
+      if (committedImportIds !== null && committedImportIds.length === 0) {
+        return {
+          meta: {
+            cursor: null,
+            hasPreviousPage: false,
+            hasNextPage: false,
+            totalCount: 0,
+          },
+          data: [],
+        };
+      }
 
       // Build query
       let query = supabase
@@ -39,6 +82,11 @@ export const pokerSessionsRouter = createTRPCRouter({
           { count: "exact" },
         )
         .eq("team_id", teamId);
+
+      // Filter by committed imports if needed
+      if (committedImportIds !== null) {
+        query = query.in("import_id", committedImportIds);
+      }
 
       // Apply filters
       if (q) {
@@ -317,20 +365,43 @@ export const pokerSessionsRouter = createTRPCRouter({
   getStats: protectedProcedure
     .input(
       getPokerSessionsSchema
-        .pick({ dateFrom: true, dateTo: true, sessionType: true, gameVariant: true })
+        .pick({ dateFrom: true, dateTo: true, sessionType: true, gameVariant: true, includeDraft: true })
         .optional()
     )
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
-      // Build base filter conditions
-      const baseFilters: Record<string, any> = { team_id: teamId };
+      // Get committed import IDs (only show committed data by default)
+      const committedImportIds = await getCommittedImportIds(
+        supabase,
+        teamId!,
+        input?.includeDraft ?? false,
+      );
+
+      // If no committed imports and not including draft, return zeros
+      if (committedImportIds !== null && committedImportIds.length === 0) {
+        return {
+          totalSessions: 0,
+          totalRake: 0,
+          totalBuyIn: 0,
+          totalGtd: 0,
+          uniquePlayers: 0,
+          totalHandsPlayed: 0,
+          byType: {},
+          byVariant: {},
+        };
+      }
 
       // First, get total count using count query (avoids Supabase 1000 row limit)
       let countQuery = supabase
         .from("poker_sessions")
         .select("*", { count: "exact", head: true })
         .eq("team_id", teamId);
+
+      // Filter by committed imports if needed
+      if (committedImportIds !== null) {
+        countQuery = countQuery.in("import_id", committedImportIds);
+      }
 
       if (input?.dateFrom) {
         countQuery = countQuery.gte("started_at", input.dateFrom);
@@ -361,6 +432,11 @@ export const pokerSessionsRouter = createTRPCRouter({
         .select("session_type, game_variant, total_rake, total_buy_in, player_count, hands_played, guaranteed_prize, raw_data")
         .eq("team_id", teamId)
         .limit(10000); // Increase limit to handle large datasets
+
+      // Filter by committed imports if needed
+      if (committedImportIds !== null) {
+        query = query.in("import_id", committedImportIds);
+      }
 
       if (input?.dateFrom) {
         query = query.gte("started_at", input.dateFrom);

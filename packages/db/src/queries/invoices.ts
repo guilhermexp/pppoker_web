@@ -358,7 +358,7 @@ export async function getPaymentStatus(
 ): Promise<PaymentStatusResult> {
   const invoiceData = await db.executeOnReplica(
     sql`
-      SELECT 
+      SELECT
         i.id,
         i.due_date,
         i.paid_at,
@@ -582,16 +582,16 @@ type DraftInvoiceTemplateParams = {
 
 type DraftInvoiceParams = {
   id: string;
-  template: DraftInvoiceTemplateParams;
+  template?: DraftInvoiceTemplateParams;
   fromDetails?: string | null;
   customerDetails?: string | null;
   customerId?: string | null;
   customerName?: string | null;
   paymentDetails?: string | null;
   noteDetails?: string | null;
-  dueDate: string;
-  issueDate: string;
-  invoiceNumber: string;
+  dueDate?: string | null;
+  issueDate?: string | null;
+  invoiceNumber?: string | null;
   logoUrl?: string | null;
   vat?: number | null;
   tax?: number | null;
@@ -622,7 +622,12 @@ export async function draftInvoice(db: Database, params: DraftInvoiceParams) {
 
   const useToken = token ?? (await generateToken(id));
 
-  const { paymentDetails: _, fromDetails: __, ...restTemplate } = template;
+  // Handle optional template
+  const {
+    paymentDetails: _,
+    fromDetails: __,
+    ...restTemplate
+  } = template ?? {};
 
   const [result] = await db
     .insert(invoices)
@@ -632,8 +637,8 @@ export async function draftInvoice(db: Database, params: DraftInvoiceParams) {
       userId,
       token: useToken,
       ...restInput,
-      currency: template.currency?.toUpperCase(),
-      template: restTemplate,
+      currency: template?.currency?.toUpperCase(),
+      template: Object.keys(restTemplate).length > 0 ? restTemplate : undefined,
       paymentDetails: paymentDetails,
       fromDetails: fromDetails,
       customerDetails: customerDetails,
@@ -646,8 +651,10 @@ export async function draftInvoice(db: Database, params: DraftInvoiceParams) {
         userId,
         token: useToken,
         ...restInput,
-        currency: template.currency?.toUpperCase(),
-        template: camelcaseKeys(restTemplate, { deep: true }),
+        currency: template?.currency?.toUpperCase(),
+        ...(Object.keys(restTemplate).length > 0 && {
+          template: camelcaseKeys(restTemplate, { deep: true }),
+        }),
         paymentDetails: paymentDetails,
         fromDetails: fromDetails,
         customerDetails: customerDetails,

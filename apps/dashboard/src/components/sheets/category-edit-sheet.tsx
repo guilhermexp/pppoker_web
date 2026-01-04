@@ -97,7 +97,9 @@ export function CategoryEditSheet() {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
+                      <AlertDialogCancel>
+                        {t("actions.cancel")}
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() =>
                           deleteCategoryMutation.mutate({ id: categoryId })

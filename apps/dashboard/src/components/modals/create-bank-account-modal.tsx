@@ -47,11 +47,11 @@ export function CreateBankAccountModal() {
   const trpc = useTRPC();
   const [isOpen, setIsOpen] = useQueryState(
     "createAccount",
-    parseAsBoolean.withDefault(false)
+    parseAsBoolean.withDefault(false),
   );
   const [_, setCreateTransaction] = useQueryState(
     "createTransaction",
-    parseAsBoolean.withDefault(false)
+    parseAsBoolean.withDefault(false),
   );
 
   const form = useZodForm(formSchema, {
@@ -82,7 +82,7 @@ export function CreateBankAccountModal() {
         console.error("Error creating bank account:", error);
         alert(`Erro ao criar conta: ${error.message}`);
       },
-    })
+    }),
   );
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -150,7 +150,9 @@ export function CreateBankAccountModal() {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={t("bank_account.currency_placeholder")} />
+                          <SelectValue
+                            placeholder={t("bank_account.currency_placeholder")}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -161,7 +163,9 @@ export function CreateBankAccountModal() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>{t("bank_account.currency_description")}</FormDescription>
+                    <FormDescription>
+                      {t("bank_account.currency_description")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

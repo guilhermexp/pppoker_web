@@ -130,7 +130,9 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
         className="w-full mt-6 border-t-[1px] border-border"
       >
         <AccordionItem value="settings">
-          <AccordionTrigger className="text-sm">{t("import_modal.settings")}</AccordionTrigger>
+          <AccordionTrigger className="text-sm">
+            {t("import_modal.settings")}
+          </AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-col gap-4">
               <Controller
@@ -138,7 +140,9 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
                 name="inverted"
                 render={({ field: { onChange, value } }) => (
                   <div className="space-y-1">
-                    <Label htmlFor="inverted">{t("import_modal.inverted_amount")}</Label>
+                    <Label htmlFor="inverted">
+                      {t("import_modal.inverted_amount")}
+                    </Label>
                     <p className="text-sm text-[#606060]">
                       {t("import_modal.inverted_description")}
                     </p>
@@ -197,7 +201,9 @@ export function FieldMapping({ currencies }: { currencies: string[] }) {
 
       {showCurrency && (
         <>
-          <Label className="mb-2 mt-4 block">{t("import_modal.currency")}</Label>
+          <Label className="mb-2 mt-4 block">
+            {t("import_modal.currency")}
+          </Label>
           <Controller
             control={control}
             name="currency"

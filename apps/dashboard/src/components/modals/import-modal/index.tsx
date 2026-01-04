@@ -214,7 +214,8 @@ export function ImportModal() {
             </div>
             <DialogDescription>
               {page === "select-file" && t("import_modal.upload_description")}
-              {page === "confirm-import" && t("import_modal.mapping_description")}
+              {page === "confirm-import" &&
+                t("import_modal.mapping_description")}
             </DialogDescription>
           </DialogHeader>
 

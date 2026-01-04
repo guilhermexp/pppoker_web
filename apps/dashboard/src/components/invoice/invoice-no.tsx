@@ -1,6 +1,7 @@
 "use client";
 
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { cn } from "@midday/ui/cn";
 import {
@@ -16,6 +17,7 @@ import { Input } from "./input";
 import { LabelInput } from "./label-input";
 
 export function InvoiceNo() {
+  const t = useI18n();
   const {
     watch,
     setError,
@@ -48,7 +50,7 @@ export function InvoiceNo() {
     if (data) {
       setError("invoiceNumber", {
         type: "manual",
-        message: "Invoice number already exists",
+        message: t("invoice_form.invoice_number_exists"),
       });
     } else {
       clearErrors("invoiceNumber");
@@ -83,7 +85,7 @@ export function InvoiceNo() {
           </TooltipTrigger>
           {errors.invoiceNumber && (
             <TooltipContent className="text-xs px-3 py-1.5">
-              <p>Invoice number already exists</p>
+              <p>{t("invoice_form.invoice_number_exists")}</p>
             </TooltipContent>
           )}
         </Tooltip>

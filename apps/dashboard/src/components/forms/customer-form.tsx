@@ -224,7 +224,9 @@ export function CustomerForm({ data }: Props) {
               className="space-y-6"
             >
               <AccordionItem value="general">
-                <AccordionTrigger>{t("forms.sections.general")}</AccordionTrigger>
+                <AccordionTrigger>
+                  {t("forms.sections.general")}
+                </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4">
                     <FormField
@@ -372,7 +374,9 @@ export function CustomerForm({ data }: Props) {
               </AccordionItem>
 
               <AccordionItem value="details">
-                <AccordionTrigger>{t("forms.sections.details")}</AccordionTrigger>
+                <AccordionTrigger>
+                  {t("forms.sections.details")}
+                </AccordionTrigger>
 
                 <AccordionContent>
                   <div className="space-y-4">

@@ -33,6 +33,7 @@ import { transactionsRouter } from "./transactions";
 import { userRouter } from "./user";
 import { widgetsRouter } from "./widgets";
 import { pokerRouter } from "./poker";
+import { suRouter } from "./su";
 
 export const appRouter = createTRPCRouter({
   notifications: notificationsRouter,
@@ -68,6 +69,7 @@ export const appRouter = createTRPCRouter({
   apiKeys: apiKeysRouter,
   widgets: widgetsRouter,
   poker: pokerRouter,
+  su: suRouter,
 });
 
 // export type definition of API

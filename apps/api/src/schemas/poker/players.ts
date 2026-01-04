@@ -122,6 +122,13 @@ export const getPokerPlayersSchema = z.object({
     .openapi({
       description: "Filter players with an agent assigned",
     }),
+  includeDraft: z
+    .boolean()
+    .optional()
+    .openapi({
+      description:
+        "Include draft (non-committed) data. Default is false (only committed data shown).",
+    }),
 });
 
 export const getPokerPlayerByIdSchema = z.object({
@@ -246,6 +253,10 @@ export const getAgentStatsSchema = z.object({
   }),
   superAgentId: z.string().uuid().nullable().optional().openapi({
     description: "Filter by super agent ID",
+  }),
+  includeDraft: z.boolean().optional().openapi({
+    description:
+      "Include draft (non-committed) data. Default is false (only committed data shown).",
   }),
 });
 

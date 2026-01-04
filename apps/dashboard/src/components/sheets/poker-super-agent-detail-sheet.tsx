@@ -90,11 +90,26 @@ function OverviewTab({
   childAgents: any[];
 }) {
   // Aggregate metrics from all child agents
-  const totalPlayers = agentMetrics.reduce((sum, m) => sum + (m.playerCount ?? 0), 0);
-  const totalRake = agentMetrics.reduce((sum, m) => sum + (m.totalRake ?? 0), 0);
-  const totalRakePpst = agentMetrics.reduce((sum, m) => sum + (m.rakePpst ?? 0), 0);
-  const totalRakePpsr = agentMetrics.reduce((sum, m) => sum + (m.rakePpsr ?? 0), 0);
-  const totalCommission = agentMetrics.reduce((sum, m) => sum + (m.estimatedCommission ?? 0), 0);
+  const totalPlayers = agentMetrics.reduce(
+    (sum, m) => sum + (m.playerCount ?? 0),
+    0,
+  );
+  const totalRake = agentMetrics.reduce(
+    (sum, m) => sum + (m.totalRake ?? 0),
+    0,
+  );
+  const totalRakePpst = agentMetrics.reduce(
+    (sum, m) => sum + (m.rakePpst ?? 0),
+    0,
+  );
+  const totalRakePpsr = agentMetrics.reduce(
+    (sum, m) => sum + (m.rakePpsr ?? 0),
+    0,
+  );
+  const totalCommission = agentMetrics.reduce(
+    (sum, m) => sum + (m.estimatedCommission ?? 0),
+    0,
+  );
 
   return (
     <div className="space-y-6">
@@ -108,7 +123,9 @@ function OverviewTab({
         <div>
           <h3 className="text-xl font-semibold">{superAgent.nickname}</h3>
           {superAgent.memoName && (
-            <p className="text-sm text-muted-foreground">{superAgent.memoName}</p>
+            <p className="text-sm text-muted-foreground">
+              {superAgent.memoName}
+            </p>
           )}
           <div className="flex items-center gap-2 mt-1">
             <Badge
@@ -160,7 +177,9 @@ function OverviewTab({
 
         <Card>
           <CardHeader className="pb-1 pt-3 px-3">
-            <CardDescription className="text-xs">Comissao Total</CardDescription>
+            <CardDescription className="text-xs">
+              Comissao Total
+            </CardDescription>
           </CardHeader>
           <CardContent className="pb-3 px-3">
             <p className="text-2xl font-bold text-orange-600">
@@ -215,7 +234,10 @@ function OverviewTab({
               label="Ultima atividade"
               value={
                 superAgent.lastActiveAt
-                  ? format(new Date(superAgent.lastActiveAt), "dd/MM/yyyy HH:mm")
+                  ? format(
+                      new Date(superAgent.lastActiveAt),
+                      "dd/MM/yyyy HH:mm",
+                    )
                   : "Nunca"
               }
             />
@@ -230,7 +252,11 @@ function OverviewTab({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4">
-            <InfoItem label="Email" value={superAgent.email} icon={Icons.Email} />
+            <InfoItem
+              label="Email"
+              value={superAgent.email}
+              icon={Icons.Email}
+            />
             <InfoItem label="Telefone" value={superAgent.phone} />
             {superAgent.whatsappNumber && (
               <div className="flex items-center gap-2">
@@ -384,7 +410,7 @@ function FinancialTab({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [rakebackValue, setRakebackValue] = useState<string>(
-    String(superAgent.rakebackPercent ?? 0)
+    String(superAgent.rakebackPercent ?? 0),
   );
   const [isEditingRakeback, setIsEditingRakeback] = useState(false);
 
@@ -402,11 +428,11 @@ function FinancialTab({
         });
         setIsEditingRakeback(false);
       },
-    })
+    }),
   );
 
   const handleRakebackSave = () => {
-    const value = parseFloat(rakebackValue);
+    const value = Number.parseFloat(rakebackValue);
     if (!isNaN(value) && value >= 0 && value <= 100) {
       updateRakebackMutation.mutate({
         id: superAgent.id,
@@ -421,11 +447,26 @@ function FinancialTab({
   };
 
   // Aggregate metrics from all child agents
-  const totalPlayers = agentMetrics.reduce((sum, m) => sum + (m.playerCount ?? 0), 0);
-  const totalRake = agentMetrics.reduce((sum, m) => sum + (m.totalRake ?? 0), 0);
-  const totalRakePpst = agentMetrics.reduce((sum, m) => sum + (m.rakePpst ?? 0), 0);
-  const totalRakePpsr = agentMetrics.reduce((sum, m) => sum + (m.rakePpsr ?? 0), 0);
-  const totalCommission = agentMetrics.reduce((sum, m) => sum + (m.estimatedCommission ?? 0), 0);
+  const totalPlayers = agentMetrics.reduce(
+    (sum, m) => sum + (m.playerCount ?? 0),
+    0,
+  );
+  const totalRake = agentMetrics.reduce(
+    (sum, m) => sum + (m.totalRake ?? 0),
+    0,
+  );
+  const totalRakePpst = agentMetrics.reduce(
+    (sum, m) => sum + (m.rakePpst ?? 0),
+    0,
+  );
+  const totalRakePpsr = agentMetrics.reduce(
+    (sum, m) => sum + (m.rakePpsr ?? 0),
+    0,
+  );
+  const totalCommission = agentMetrics.reduce(
+    (sum, m) => sum + (m.estimatedCommission ?? 0),
+    0,
+  );
 
   const rakebackPercent = superAgent.rakebackPercent ?? 0;
   const estimatedOwnCommission = totalRake * (rakebackPercent / 100);
@@ -435,7 +476,9 @@ function FinancialTab({
       {/* Resumo Financeiro */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Resumo Financeiro</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Resumo Financeiro
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Saldos */}
@@ -458,10 +501,14 @@ function FinancialTab({
 
           {/* Credito */}
           <div className="border-t pt-4">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Credito</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">
+              Credito
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Limite de Credito</p>
+                <p className="text-xs text-muted-foreground">
+                  Limite de Credito
+                </p>
                 <p className="text-sm font-medium">
                   {formatCurrency(superAgent.creditLimit ?? 0)}
                 </p>
@@ -478,9 +525,15 @@ function FinancialTab({
           {/* Rakeback */}
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground">Rakeback</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Rakeback
+              </p>
               {!isEditingRakeback && (
-                <Button variant="ghost" size="sm" onClick={() => setIsEditingRakeback(true)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingRakeback(true)}
+                >
                   <Icons.Edit className="h-3 w-3" />
                 </Button>
               )}
@@ -500,10 +553,21 @@ function FinancialTab({
                   <span className="text-muted-foreground">%</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={handleRakebackSave} disabled={updateRakebackMutation.isPending}>
-                    {updateRakebackMutation.isPending ? "Salvando..." : "Salvar"}
+                  <Button
+                    size="sm"
+                    onClick={handleRakebackSave}
+                    disabled={updateRakebackMutation.isPending}
+                  >
+                    {updateRakebackMutation.isPending
+                      ? "Salvando..."
+                      : "Salvar"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleRakebackCancel} disabled={updateRakebackMutation.isPending}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRakebackCancel}
+                    disabled={updateRakebackMutation.isPending}
+                  >
                     Cancelar
                   </Button>
                 </div>
@@ -511,7 +575,9 @@ function FinancialTab({
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">{rakebackPercent}%</span>
-                <span className="text-muted-foreground text-sm">de retorno</span>
+                <span className="text-muted-foreground text-sm">
+                  de retorno
+                </span>
               </div>
             )}
           </div>
@@ -520,8 +586,12 @@ function FinancialTab({
           <div className="border-t pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Comissao Estimada</p>
-                <p className="text-xs text-muted-foreground">({rakebackPercent}% do rake total)</p>
+                <p className="text-xs text-muted-foreground">
+                  Comissao Estimada
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  ({rakebackPercent}% do rake total)
+                </p>
               </div>
               <p className="text-2xl font-bold text-green-600">
                 R$ {formatCurrency(estimatedOwnCommission)}
@@ -543,14 +613,18 @@ function FinancialTab({
               <p className="text-lg font-semibold">{childAgents.length}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Total de Jogadores</p>
+              <p className="text-xs text-muted-foreground">
+                Total de Jogadores
+              </p>
               <p className="text-lg font-semibold">{totalPlayers}</p>
             </div>
           </div>
 
           <div className="border-t pt-4 grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Rake Total da Rede</p>
+              <p className="text-xs text-muted-foreground">
+                Rake Total da Rede
+              </p>
               <p className="text-lg font-semibold text-green-600">
                 R$ {formatCurrency(totalRake)}
               </p>
@@ -583,7 +657,9 @@ function FinancialTab({
       {/* Breakdown por Agente */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Breakdown por Agente</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Breakdown por Agente
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -596,7 +672,9 @@ function FinancialTab({
                 <div key={agent.id} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{agent.nickname}</span>
-                    <span className="text-green-600">R$ {formatCurrency(rake)}</span>
+                    <span className="text-green-600">
+                      R$ {formatCurrency(rake)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
@@ -621,7 +699,8 @@ function FinancialTab({
 
 export function PokerSuperAgentDetailSheet() {
   const trpc = useTRPC();
-  const { setParams, viewSuperAgentId, dateFrom, dateTo } = usePokerPlayerParams();
+  const { setParams, viewSuperAgentId, dateFrom, dateTo } =
+    usePokerPlayerParams();
 
   const isOpen = Boolean(viewSuperAgentId);
 
@@ -632,8 +711,8 @@ export function PokerSuperAgentDetailSheet() {
       {
         enabled: isOpen,
         staleTime: 0,
-      }
-    )
+      },
+    ),
   );
 
   // Fetch all agents under this super agent
@@ -646,8 +725,8 @@ export function PokerSuperAgentDetailSheet() {
       {
         enabled: isOpen,
         staleTime: 0,
-      }
-    )
+      },
+    ),
   );
 
   // Filter child agents that belong to this super agent
@@ -655,7 +734,7 @@ export function PokerSuperAgentDetailSheet() {
     childAgentsData?.data?.filter(
       (agent: any) =>
         agent.superAgentId === viewSuperAgentId ||
-        agent.superAgent?.id === viewSuperAgentId
+        agent.superAgent?.id === viewSuperAgentId,
     ) ?? [];
 
   // Fetch agent stats/metrics
@@ -669,8 +748,8 @@ export function PokerSuperAgentDetailSheet() {
       {
         enabled: isOpen,
         staleTime: 0,
-      }
-    )
+      },
+    ),
   );
 
   // Filter metrics for child agents
@@ -686,7 +765,10 @@ export function PokerSuperAgentDetailSheet() {
   const isLoading = isLoadingSuperAgent || isLoadingAgents;
 
   return (
-    <Sheet open={isOpen} onOpenChange={() => setParams({ viewSuperAgentId: null })}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={() => setParams({ viewSuperAgentId: null })}
+    >
       <SheetContent className="w-full sm:max-w-lg p-0">
         <SheetHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
@@ -756,7 +838,9 @@ export function PokerSuperAgentDetailSheet() {
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Icons.Error className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Super Agente nao encontrado</p>
+              <p className="text-muted-foreground">
+                Super Agente nao encontrado
+              </p>
             </div>
           )}
         </ScrollArea>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { formatAmount } from "@/utils/format";
 import { calculateLineItemTotal } from "@midday/invoice/calculate";
@@ -16,6 +17,7 @@ import { ProductAwareUnitInput } from "./product-aware-unit-input";
 import { QuantityInput } from "./quantity-input";
 
 export function LineItems() {
+  const t = useI18n();
   const { control } = useFormContext();
   const currency = useWatch({ control, name: "template.currency" });
 
@@ -143,7 +145,7 @@ export function LineItems() {
         className="flex items-center space-x-2 text-xs text-[#878787] font-mono"
       >
         <Icons.Add />
-        <span className="text-[11px]">Add item</span>
+        <span className="text-[11px]">{t("invoice_form.add_item")}</span>
       </button>
     </div>
   );
@@ -249,7 +251,7 @@ function LineItemRow({
             }),
             currency,
             locale,
-            maximumFractionDigits,
+            maximumFractionDigits: 2,
           })}
         </span>
       </div>

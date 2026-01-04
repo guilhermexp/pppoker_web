@@ -203,7 +203,9 @@ function OverviewTab({ agent, metrics }: { agent: any; metrics: any }) {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">{agent.superAgent.nickname}</p>
+                <p className="text-sm font-medium">
+                  {agent.superAgent.nickname}
+                </p>
                 {agent.superAgent.memoName && (
                   <p className="text-xs text-muted-foreground">
                     {agent.superAgent.memoName}
@@ -266,7 +268,7 @@ function PlayersTab({ agentId }: { agentId: string }) {
     trpc.poker.players.get.queryOptions({
       agentId,
       pageSize: 50,
-    })
+    }),
   );
 
   if (isLoading) {
@@ -357,11 +359,105 @@ function PlayersTab({ agentId }: { agentId: string }) {
   );
 }
 
+function SettlementsHistory({
+  agentId,
+  currentRakebackPercent,
+}: { agentId: string; currentRakebackPercent: number }) {
+  const trpc = useTRPC();
+
+  // Fetch settlements for this agent's players
+  const { data, isLoading } = useQuery(
+    trpc.poker.settlements.get.queryOptions({
+      agentId,
+      pageSize: 10,
+    }),
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  const settlements = data?.data ?? [];
+
+  if (settlements.length === 0) {
+    return (
+      <div className="text-center py-4 text-muted-foreground text-sm">
+        Nenhum acerto encontrado
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {settlements.map((settlement: any) => {
+        const percentUsed = settlement.rakebackPercentUsed;
+        const isDifferent =
+          percentUsed !== null && percentUsed !== currentRakebackPercent;
+
+        return (
+          <div
+            key={settlement.id}
+            className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-muted/10"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">
+                  {settlement.player?.nickname ??
+                    settlement.agent?.nickname ??
+                    "N/A"}
+                </span>
+                {isDifferent && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] text-orange-500 border-orange-500/30 px-1.5 py-0"
+                  >
+                    % diferente
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {format(new Date(settlement.periodStart), "dd/MM")} -{" "}
+                {format(new Date(settlement.periodEnd), "dd/MM/yyyy")}
+              </p>
+            </div>
+            <div className="text-right">
+              <p
+                className={`text-sm font-mono font-medium ${settlement.netAmount >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                {formatCurrency(settlement.netAmount)}
+              </p>
+              {percentUsed !== null && (
+                <p
+                  className={`text-xs font-mono ${isDifferent ? "text-orange-500" : "text-muted-foreground"}`}
+                >
+                  {percentUsed.toFixed(2)}%
+                  {isDifferent && (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      (atual: {currentRakebackPercent}%)
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [rakebackValue, setRakebackValue] = useState<string>(
-    String(agent.rakebackPercent ?? 0)
+    String(agent.rakebackPercent ?? 0),
   );
   const [isEditingRakeback, setIsEditingRakeback] = useState(false);
 
@@ -380,11 +476,11 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
         });
         setIsEditingRakeback(false);
       },
-    })
+    }),
   );
 
   const handleRakebackSave = () => {
-    const value = parseFloat(rakebackValue);
+    const value = Number.parseFloat(rakebackValue);
     if (!isNaN(value) && value >= 0 && value <= 100) {
       updateRakebackMutation.mutate({
         id: agent.id,
@@ -407,14 +503,18 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
       {/* Resumo Financeiro - All in one card like player sheet */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Resumo Financeiro</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Resumo Financeiro
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Saldos */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-muted-foreground">Saldo Atual</p>
-              <p className={`text-xl font-bold ${agent.currentBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <p
+                className={`text-xl font-bold ${agent.currentBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
                 {formatCurrency(agent.currentBalance ?? 0)}
               </p>
             </div>
@@ -428,15 +528,23 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
 
           {/* Credito */}
           <div className="border-t pt-4">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Credito</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">
+              Credito
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Limite de Credito</p>
-                <p className="text-sm font-medium">{formatCurrency(agent.creditLimit ?? 0)}</p>
+                <p className="text-xs text-muted-foreground">
+                  Limite de Credito
+                </p>
+                <p className="text-sm font-medium">
+                  {formatCurrency(agent.creditLimit ?? 0)}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Credito Agente</p>
-                <p className="text-sm font-medium">{formatCurrency(agent.agentCreditBalance ?? 0)}</p>
+                <p className="text-sm font-medium">
+                  {formatCurrency(agent.agentCreditBalance ?? 0)}
+                </p>
               </div>
             </div>
             {agent.creditLimit > 0 && (
@@ -444,11 +552,21 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-muted-foreground">Utilizacao</span>
                   <span className="font-medium">
-                    {Math.min(100, Math.round((Math.abs(agent.currentBalance) / agent.creditLimit) * 100))}%
+                    {Math.min(
+                      100,
+                      Math.round(
+                        (Math.abs(agent.currentBalance) / agent.creditLimit) *
+                          100,
+                      ),
+                    )}
+                    %
                   </span>
                 </div>
                 <Progress
-                  value={Math.min(100, (Math.abs(agent.currentBalance) / agent.creditLimit) * 100)}
+                  value={Math.min(
+                    100,
+                    (Math.abs(agent.currentBalance) / agent.creditLimit) * 100,
+                  )}
                   className="h-2"
                 />
               </div>
@@ -458,9 +576,15 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
           {/* Rakeback */}
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground">Rakeback</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Rakeback
+              </p>
               {!isEditingRakeback && (
-                <Button variant="ghost" size="sm" onClick={() => setIsEditingRakeback(true)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingRakeback(true)}
+                >
                   <Icons.Edit className="h-3 w-3" />
                 </Button>
               )}
@@ -480,10 +604,21 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
                   <span className="text-muted-foreground">%</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={handleRakebackSave} disabled={updateRakebackMutation.isPending}>
-                    {updateRakebackMutation.isPending ? "Salvando..." : "Salvar"}
+                  <Button
+                    size="sm"
+                    onClick={handleRakebackSave}
+                    disabled={updateRakebackMutation.isPending}
+                  >
+                    {updateRakebackMutation.isPending
+                      ? "Salvando..."
+                      : "Salvar"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleRakebackCancel} disabled={updateRakebackMutation.isPending}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRakebackCancel}
+                    disabled={updateRakebackMutation.isPending}
+                  >
                     Cancelar
                   </Button>
                 </div>
@@ -491,22 +626,34 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">{rakebackPercent}%</span>
-                <span className="text-muted-foreground text-sm">de retorno</span>
+                <span className="text-muted-foreground text-sm">
+                  de retorno
+                </span>
               </div>
             )}
           </div>
 
           {/* Historico de Rake */}
           <div className="border-t pt-4">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Historico de Rake</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">
+              Historico de Rake
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Jogadores Gerenciados</p>
-                <p className="text-lg font-semibold">{metrics?.playerCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground">
+                  Jogadores Gerenciados
+                </p>
+                <p className="text-lg font-semibold">
+                  {metrics?.playerCount ?? 0}
+                </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Total Rake Gerado</p>
-                <p className="text-lg font-semibold text-blue-600">{formatCurrency(rakeTotal)}</p>
+                <p className="text-xs text-muted-foreground">
+                  Total Rake Gerado
+                </p>
+                <p className="text-lg font-semibold text-blue-600">
+                  {formatCurrency(rakeTotal)}
+                </p>
               </div>
             </div>
           </div>
@@ -516,28 +663,66 @@ function FinancialTab({ agent, metrics }: { agent: any; metrics: any }) {
       {/* Jogadores Gerenciados */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Jogadores Gerenciados</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Jogadores Gerenciados
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Total de Jogadores</p>
-              <p className="text-lg font-semibold">{metrics?.playerCount ?? 0}</p>
+              <p className="text-xs text-muted-foreground">
+                Total de Jogadores
+              </p>
+              <p className="text-lg font-semibold">
+                {metrics?.playerCount ?? 0}
+              </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Rake dos Jogadores</p>
-              <p className="text-lg font-semibold text-blue-600">{formatCurrency(rakeTotal)}</p>
+              <p className="text-xs text-muted-foreground">
+                Rake dos Jogadores
+              </p>
+              <p className="text-lg font-semibold text-blue-600">
+                {formatCurrency(rakeTotal)}
+              </p>
             </div>
           </div>
           <div className="border-t pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Comissao do Agente</p>
-                <p className="text-xs text-muted-foreground">({rakebackPercent}% do rake)</p>
+                <p className="text-xs text-muted-foreground">
+                  Comissao do Agente
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  ({rakebackPercent}% do rake)
+                </p>
               </div>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(estimatedCommission)}</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(estimatedCommission)}
+              </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Historico de Acertos */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            Historico de Acertos
+            <Badge variant="outline" className="text-[10px] font-normal">
+              Ultimos 10
+            </Badge>
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Acertos dos jogadores deste agente. Destaque para % diferente do
+            atual.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SettlementsHistory
+            agentId={agent.id}
+            currentRakebackPercent={rakebackPercent}
+          />
         </CardContent>
       </Card>
     </div>
@@ -558,8 +743,8 @@ export function PokerAgentDetailSheet() {
       {
         enabled: isOpen,
         staleTime: 0,
-      }
-    )
+      },
+    ),
   );
 
   // Fetch agent stats/metrics
@@ -572,13 +757,13 @@ export function PokerAgentDetailSheet() {
       {
         enabled: isOpen,
         staleTime: 0,
-      }
-    )
+      },
+    ),
   );
 
   // Find metrics for this specific agent
   const metrics = allStats?.agentMetrics?.find(
-    (m: any) => m.id === viewAgentId
+    (m: any) => m.id === viewAgentId,
   );
 
   return (

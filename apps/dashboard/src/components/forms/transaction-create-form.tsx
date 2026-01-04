@@ -266,7 +266,9 @@ export function TransactionCreateForm() {
                     }}
                   />
                 </FormControl>
-                <FormDescription>{t("transaction_create.amount_helper")}</FormDescription>
+                <FormDescription>
+                  {t("transaction_create.amount_helper")}
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -342,7 +344,9 @@ export function TransactionCreateForm() {
                         {field.value ? (
                           format(utc(field.value), user?.dateFormat ?? "PPP")
                         ) : (
-                          <span>{t("transaction_create.date_placeholder")}</span>
+                          <span>
+                            {t("transaction_create.date_placeholder")}
+                          </span>
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -441,7 +445,9 @@ export function TransactionCreateForm() {
 
         <Accordion type="multiple" defaultValue={["attachment"]}>
           <AccordionItem value="attachment">
-            <AccordionTrigger>{t("transaction_create.attachment")}</AccordionTrigger>
+            <AccordionTrigger>
+              {t("transaction_create.attachment")}
+            </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">

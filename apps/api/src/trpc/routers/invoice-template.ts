@@ -12,6 +12,7 @@ export const invoiceTemplateRouter = createTRPCRouter({
         teamId: teamId!,
         fromDetails: parseInputValue(input.fromDetails),
         paymentDetails: parseInputValue(input.paymentDetails),
+        noteDetails: parseInputValue(input.noteDetails),
       });
     }),
 });

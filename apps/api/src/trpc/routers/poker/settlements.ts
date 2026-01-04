@@ -37,8 +37,8 @@ export const pokerSettlementsRouter = createTRPCRouter({
         .select(
           `
           *,
-          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name),
-          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name)
+          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name, rakeback_percentage),
+          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name, rakeback_percentage)
         `,
           { count: "exact" },
         )
@@ -97,6 +97,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         status: settlement.status,
         grossAmount: settlement.gross_amount,
         rakebackAmount: settlement.rakeback_amount ?? 0,
+        rakebackPercentUsed: settlement.rakeback_percent_used ?? null,
         commissionAmount: settlement.commission_amount ?? 0,
         adjustmentAmount: settlement.adjustment_amount ?? 0,
         netAmount: settlement.net_amount,
@@ -108,6 +109,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               id: settlement.player.id,
               nickname: settlement.player.nickname,
               memoName: settlement.player.memo_name,
+              rakebackPercent: settlement.player.rakeback_percentage ?? 0,
             }
           : null,
         agent: settlement.agent
@@ -115,6 +117,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               id: settlement.agent.id,
               nickname: settlement.agent.nickname,
               memoName: settlement.agent.memo_name,
+              rakebackPercent: settlement.agent.rakeback_percentage ?? 0,
             }
           : null,
       }));
@@ -143,8 +146,8 @@ export const pokerSettlementsRouter = createTRPCRouter({
         .select(
           `
           *,
-          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name, pppoker_id),
-          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name, pppoker_id)
+          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name, pppoker_id, rakeback_percentage),
+          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name, pppoker_id, rakeback_percentage)
         `,
         )
         .eq("id", input.id)
@@ -173,6 +176,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         status: data.status,
         grossAmount: data.gross_amount,
         rakebackAmount: data.rakeback_amount ?? 0,
+        rakebackPercentUsed: data.rakeback_percent_used ?? null,
         commissionAmount: data.commission_amount ?? 0,
         adjustmentAmount: data.adjustment_amount ?? 0,
         netAmount: data.net_amount,
@@ -185,6 +189,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               nickname: data.player.nickname,
               memoName: data.player.memo_name,
               ppPokerId: data.player.pppoker_id,
+              rakebackPercent: data.player.rakeback_percentage ?? 0,
             }
           : null,
         agent: data.agent
@@ -193,6 +198,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               nickname: data.agent.nickname,
               memoName: data.agent.memo_name,
               ppPokerId: data.agent.pppoker_id,
+              rakebackPercent: data.agent.rakeback_percentage ?? 0,
             }
           : null,
       };

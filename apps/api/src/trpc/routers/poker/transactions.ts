@@ -7,6 +7,28 @@ import {
 } from "../../../schemas/poker/transactions";
 import { createTRPCRouter, protectedProcedure } from "../../init";
 
+/**
+ * Helper to get valid import_ids based on committed status
+ */
+async function getCommittedImportIds(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  teamId: string,
+  includeDraft: boolean,
+): Promise<string[] | null> {
+  if (includeDraft) {
+    return null;
+  }
+
+  const { data: imports } = await supabase
+    .from("poker_imports")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("status", "completed")
+    .eq("committed", true);
+
+  return imports?.map((i) => i.id) ?? [];
+}
+
 export const pokerTransactionsRouter = createTRPCRouter({
   /**
    * Get poker transactions with pagination and filtering
@@ -29,7 +51,28 @@ export const pokerTransactionsRouter = createTRPCRouter({
         dateTo,
         amountMin,
         amountMax,
+        includeDraft,
       } = input ?? {};
+
+      // Get committed import IDs (only show committed data by default)
+      const committedImportIds = await getCommittedImportIds(
+        supabase,
+        teamId!,
+        includeDraft ?? false,
+      );
+
+      // If no committed imports and not including draft, return empty
+      if (committedImportIds !== null && committedImportIds.length === 0) {
+        return {
+          meta: {
+            cursor: null,
+            hasPreviousPage: false,
+            hasNextPage: false,
+            totalCount: 0,
+          },
+          data: [],
+        };
+      }
 
       // Build query with joins to get player info
       let query = supabase
@@ -44,6 +87,11 @@ export const pokerTransactionsRouter = createTRPCRouter({
           { count: "exact" }
         )
         .eq("team_id", teamId);
+
+      // Filter by committed imports if needed
+      if (committedImportIds !== null) {
+        query = query.in("import_id", committedImportIds);
+      }
 
       // Apply filters
       if (q) {
@@ -250,16 +298,41 @@ export const pokerTransactionsRouter = createTRPCRouter({
   getStats: protectedProcedure
     .input(
       getPokerTransactionsSchema
-        .pick({ dateFrom: true, dateTo: true, playerId: true })
+        .pick({ dateFrom: true, dateTo: true, playerId: true, includeDraft: true })
         .optional()
     )
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
+      // Get committed import IDs (only show committed data by default)
+      const committedImportIds = await getCommittedImportIds(
+        supabase,
+        teamId!,
+        input?.includeDraft ?? false,
+      );
+
+      // If no committed imports and not including draft, return empty stats
+      if (committedImportIds !== null && committedImportIds.length === 0) {
+        return {
+          totalTransactions: 0,
+          totalCreditSent: 0,
+          totalCreditRedeemed: 0,
+          totalChipsSent: 0,
+          totalChipsRedeemed: 0,
+          netAmount: 0,
+          byType: {} as Record<string, { count: number; amount: number }>,
+        };
+      }
+
       let query = supabase
         .from("poker_chip_transactions")
         .select("type, credit_sent, credit_redeemed, chips_sent, chips_redeemed, amount")
         .eq("team_id", teamId);
+
+      // Filter by committed imports if needed
+      if (committedImportIds !== null) {
+        query = query.in("import_id", committedImportIds);
+      }
 
       if (input?.dateFrom) {
         query = query.gte("occurred_at", input.dateFrom);

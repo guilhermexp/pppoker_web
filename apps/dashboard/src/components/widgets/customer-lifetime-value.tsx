@@ -86,7 +86,9 @@ export function CustomerLifetimeValueWidget() {
                     currency={currency}
                   />
                 </p>
-                <span className="text-xs text-[#878787]">{t("widget_descriptions.avg_clv")}</span>
+                <span className="text-xs text-[#878787]">
+                  {t("widget_descriptions.avg_clv")}
+                </span>
               </div>
 
               {/* Summary Stats */}
@@ -98,7 +100,9 @@ export function CustomerLifetimeValueWidget() {
                   <span className="font-medium">{summary.totalCustomers}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#878787] text-xs">{t("widget_descriptions.active_30d")}</span>
+                  <span className="text-[#878787] text-xs">
+                    {t("widget_descriptions.active_30d")}
+                  </span>
                   <span className="font-medium">
                     {summary.activeCustomers}{" "}
                     <span className="text-[#878787]">
@@ -107,9 +111,12 @@ export function CustomerLifetimeValueWidget() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#878787] text-xs">{t("widget_descriptions.avg_lifespan")}</span>
+                  <span className="text-[#878787] text-xs">
+                    {t("widget_descriptions.avg_lifespan")}
+                  </span>
                   <span className="font-medium">
-                    {summary.averageLifespanDays} {t("widget_descriptions.days")}
+                    {summary.averageLifespanDays}{" "}
+                    {t("widget_descriptions.days")}
                   </span>
                 </div>
               </div>

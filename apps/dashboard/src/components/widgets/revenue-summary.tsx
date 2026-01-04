@@ -84,7 +84,10 @@ export function RevenueSummaryWidget() {
     `widget_period.${config?.period ?? "fiscal_year"}` as "widget_period.fiscal_ytd",
   );
 
-  const revenueTypeLabel = config?.revenueType === "gross" ? t("revenue_type.gross") : t("revenue_type.net");
+  const revenueTypeLabel =
+    config?.revenueType === "gross"
+      ? t("revenue_type.gross")
+      : t("revenue_type.net");
 
   return (
     <ConfigurableWidget

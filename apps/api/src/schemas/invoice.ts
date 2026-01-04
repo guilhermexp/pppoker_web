@@ -175,7 +175,7 @@ export const restDraftLineItemSchema = baseDraftLineItemSchema.extend({
 
 // Base draft invoice schema with common fields
 const baseDraftInvoiceSchema = z.object({
-  id: z.string().uuid().openapi({
+  id: z.string().uuid().optional().openapi({
     description: "Unique identifier for the draft invoice",
     example: "b3b7e6e2-8c2a-4e2a-9b1a-2e4b5c6d7f8a",
   }),
@@ -195,19 +195,23 @@ const baseDraftInvoiceSchema = z.object({
     description: "Additional notes for the invoice",
     example: "Thank you for your business.",
   }),
-  dueDate: z.string().openapi({
+  dueDate: z.string().optional().openapi({
     description: "Due date of the invoice in ISO 8601 format",
     example: "2024-06-30T23:59:59.000Z",
   }),
-  issueDate: z.string().openapi({
+  issueDate: z.string().optional().openapi({
     description: "Issue date of the invoice in ISO 8601 format",
     example: "2024-06-01T00:00:00.000Z",
   }),
-  invoiceNumber: z.string().optional().openapi({
-    description:
-      "Invoice number as shown to the customer (auto-generated if not provided)",
-    example: "INV-2024-001",
-  }),
+  invoiceNumber: z
+    .union([z.string(), z.number()])
+    .transform((val) => (val != null ? String(val) : undefined))
+    .optional()
+    .openapi({
+      description:
+        "Invoice number as shown to the customer (auto-generated if not provided)",
+      example: "INV-2024-001",
+    }),
   logoUrl: z.string().optional().nullable().openapi({
     description: "URL of the logo to display on the invoice",
     example: "https://example.com/logo.png",
@@ -228,6 +232,14 @@ const baseDraftInvoiceSchema = z.object({
     description: "Total amount of the invoice",
     example: 1500.75,
   }),
+  subtotal: z.number().nullable().optional().openapi({
+    description: "Subtotal of the invoice before taxes and discounts",
+    example: 1300.0,
+  }),
+  status: z.string().optional().openapi({
+    description: "Status of the invoice",
+    example: "draft",
+  }),
   token: z.string().optional().openapi({
     description:
       "Unique token for the draft invoice (for sharing or public access)",
@@ -245,7 +257,7 @@ const baseDraftInvoiceSchema = z.object({
 
 // tRPC-compatible draft invoice schema (uses z.any() for editor fields)
 export const draftInvoiceSchema = baseDraftInvoiceSchema.extend({
-  template: upsertInvoiceTemplateSchema.openapi({
+  template: upsertInvoiceTemplateSchema.optional().openapi({
     description: "Invoice template details for the draft invoice",
   }),
   paymentDetails: z.string().optional().nullable(),
@@ -583,7 +595,7 @@ export const getInvoiceByIdSchema = z.object({
 });
 
 export const searchInvoiceNumberSchema = z.object({
-  query: z.string(),
+  query: z.union([z.string(), z.number()]).transform((val) => String(val)),
 });
 
 export const invoiceSummarySchema = z
@@ -743,11 +755,15 @@ export const createInvoiceRequestSchema = z
       description: "Issue date of the invoice in ISO 8601 format",
       example: "2024-06-01T00:00:00.000Z",
     }),
-    invoiceNumber: z.string().optional().openapi({
-      description:
-        "Invoice number as shown to the customer (auto-generated if not provided)",
-      example: "INV-2024-001",
-    }),
+    invoiceNumber: z
+      .union([z.string(), z.number()])
+      .transform((val) => (val != null ? String(val) : undefined))
+      .optional()
+      .openapi({
+        description:
+          "Invoice number as shown to the customer (auto-generated if not provided)",
+        example: "INV-2024-001",
+      }),
     logoUrl: z.string().optional().nullable().openapi({
       description: "URL of the logo to display on the invoice",
       example: "https://example.com/logo.png",
@@ -1176,11 +1192,15 @@ export const invoiceResponseSchema = z
       description: "Issue date of the invoice in ISO 8601 format",
       example: "2024-06-01T00:00:00.000Z",
     }),
-    invoiceNumber: z.string().optional().openapi({
-      description:
-        "Invoice number as shown to the customer (auto-generated if not provided)",
-      example: "INV-2024-001",
-    }),
+    invoiceNumber: z
+      .union([z.string(), z.number()])
+      .transform((val) => (val != null ? String(val) : undefined))
+      .optional()
+      .openapi({
+        description:
+          "Invoice number as shown to the customer (auto-generated if not provided)",
+        example: "INV-2024-001",
+      }),
     amount: z.number().openapi({
       description: "Total amount of the invoice",
       example: 1500.75,
