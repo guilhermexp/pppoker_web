@@ -63,7 +63,7 @@ export function CloseWeekButton() {
           variant: "destructive",
         });
       },
-    })
+    }),
   );
 
   return (
