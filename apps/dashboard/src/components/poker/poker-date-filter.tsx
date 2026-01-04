@@ -5,7 +5,7 @@ import { Button } from "@midday/ui/button";
 import { Calendar } from "@midday/ui/calendar";
 import { Icons } from "@midday/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
-import { format, subDays, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { endOfMonth, format, startOfMonth, subDays, subMonths } from "date-fns";
 import type { DateRange } from "react-day-picker";
 
 const quickSelections = [
@@ -78,7 +78,11 @@ export function PokerDateFilter({ from, to, onChange }: PokerDateFilterProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="min-w-[140px] justify-start">
+        <Button
+          variant="outline"
+          size="sm"
+          className="min-w-[140px] justify-start"
+        >
           <Icons.CalendarMonth className="mr-2 h-4 w-4" />
           <span className="text-sm">{formatDateLabel()}</span>
         </Button>

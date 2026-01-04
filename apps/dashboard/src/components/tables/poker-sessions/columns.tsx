@@ -12,7 +12,7 @@ import {
 } from "@midday/ui/dropdown-menu";
 import { Icons } from "@midday/ui/icons";
 import type { ColumnDef } from "@tanstack/react-table";
-import { formatDistanceToNow, format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { memo } from "react";
 
 export type PokerSession = {
@@ -201,9 +201,7 @@ export const columns: ColumnDef<PokerSession>[] = [
       className: "w-[80px]",
     },
     cell: ({ row }) => (
-      <span className="text-sm font-mono">
-        {row.original.blinds || "-"}
-      </span>
+      <span className="text-sm font-mono">{row.original.blinds || "-"}</span>
     ),
   },
   {
@@ -224,7 +222,9 @@ export const columns: ColumnDef<PokerSession>[] = [
     },
     cell: ({ row }) => (
       <span className="font-mono text-muted-foreground">
-        {row.original.handsPlayed > 0 ? row.original.handsPlayed.toLocaleString("pt-BR") : "-"}
+        {row.original.handsPlayed > 0
+          ? row.original.handsPlayed.toLocaleString("pt-BR")
+          : "-"}
       </span>
     ),
   },
@@ -267,10 +267,14 @@ export const columns: ColumnDef<PokerSession>[] = [
     cell: ({ row }) => {
       const result = row.original.totalCashOut - row.original.totalBuyIn;
       if (result === 0) {
-        return <span className="font-mono text-sm text-muted-foreground">0,00</span>;
+        return (
+          <span className="font-mono text-sm text-muted-foreground">0,00</span>
+        );
       }
       return (
-        <span className={`font-mono text-sm ${result > 0 ? "text-green-600" : "text-red-600"}`}>
+        <span
+          className={`font-mono text-sm ${result > 0 ? "text-green-600" : "text-red-600"}`}
+        >
           {result > 0 ? "+" : ""}
           {result.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
@@ -288,7 +292,9 @@ export const columns: ColumnDef<PokerSession>[] = [
     },
     cell: ({ row }) => {
       const gtd = row.original.guaranteedPrize;
-      const isTournament = ["mtt", "sit_n_go", "spin"].includes(row.original.sessionType);
+      const isTournament = ["mtt", "sit_n_go", "spin"].includes(
+        row.original.sessionType,
+      );
       if (!isTournament || !gtd || gtd === 0) {
         return <span className="text-muted-foreground">-</span>;
       }
@@ -334,11 +340,7 @@ export const columns: ColumnDef<PokerSession>[] = [
     cell: ({ row }) => {
       const createdBy = row.original.createdBy;
       if (!createdBy) return <span className="text-muted-foreground">-</span>;
-      return (
-        <span className="text-sm">
-          {createdBy.nickname}
-        </span>
-      );
+      return <span className="text-sm">{createdBy.nickname}</span>;
     },
   },
   {

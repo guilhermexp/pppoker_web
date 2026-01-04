@@ -16,7 +16,8 @@ import { Icons } from "@midday/ui/icons";
 
 export function PokerSettlementFilters() {
   const t = useI18n();
-  const { status, periodStart, periodEnd, setParams, hasFilters } = usePokerSettlementParams();
+  const { status, periodStart, periodEnd, setParams, hasFilters } =
+    usePokerSettlementParams();
 
   return (
     <div className="flex items-center gap-2">
@@ -24,7 +25,9 @@ export function PokerSettlementFilters() {
       <PokerDateFilter
         from={periodStart}
         to={periodEnd}
-        onChange={(params) => setParams({ periodStart: params.from, periodEnd: params.to })}
+        onChange={(params) =>
+          setParams({ periodStart: params.from, periodEnd: params.to })
+        }
       />
 
       {/* Status Filter */}

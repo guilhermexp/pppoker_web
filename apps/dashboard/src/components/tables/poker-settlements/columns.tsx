@@ -23,6 +23,7 @@ export type PokerSettlement = {
   status: "pending" | "partial" | "completed" | "disputed" | "cancelled";
   grossAmount: number;
   rakebackAmount: number;
+  rakebackPercentUsed: number | null;
   commissionAmount: number;
   adjustmentAmount: number;
   netAmount: number;
@@ -32,11 +33,13 @@ export type PokerSettlement = {
     id: string;
     nickname: string;
     memoName: string | null;
+    rakebackPercent: number;
   } | null;
   agent: {
     id: string;
     nickname: string;
     memoName: string | null;
+    rakebackPercent: number;
   } | null;
 };
 
@@ -111,7 +114,8 @@ export const columns: ColumnDef<PokerSettlement>[] = [
     accessorKey: "period",
     header: "Period",
     meta: {
-      className: "w-[180px] min-w-[180px] md:sticky md:left-0 z-20 bg-background",
+      className:
+        "w-[180px] min-w-[180px] md:sticky md:left-0 z-20 bg-background",
     },
     cell: ({ row }) => {
       const settlement = row.original;
@@ -173,6 +177,41 @@ export const columns: ColumnDef<PokerSettlement>[] = [
     ),
   },
   {
+    accessorKey: "rakebackPercentUsed",
+    header: "% Usado",
+    meta: {
+      className: "w-[90px] text-right",
+    },
+    cell: ({ row }) => {
+      const settlement = row.original;
+      const percentUsed = settlement.rakebackPercentUsed;
+      const entity = settlement.player || settlement.agent;
+      const currentPercent = entity?.rakebackPercent ?? null;
+
+      if (percentUsed === null) {
+        return <span className="text-muted-foreground text-sm">-</span>;
+      }
+
+      const isDifferent =
+        currentPercent !== null && percentUsed !== currentPercent;
+
+      return (
+        <div className="flex flex-col items-end">
+          <span
+            className={`font-mono text-sm ${isDifferent ? "text-orange-500" : ""}`}
+          >
+            {percentUsed.toFixed(2)}%
+          </span>
+          {isDifferent && (
+            <span className="text-[10px] text-muted-foreground">
+              atual: {currentPercent?.toFixed(2)}%
+            </span>
+          )}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "netAmount",
     header: "Net",
     meta: {
@@ -215,7 +254,8 @@ export const columns: ColumnDef<PokerSettlement>[] = [
           </span>
           {remaining > 0 && settlement.status !== "completed" && (
             <span className="text-xs text-muted-foreground">
-              -{remaining.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} remaining
+              -{remaining.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{" "}
+              remaining
             </span>
           )}
         </div>

@@ -59,7 +59,7 @@ export function DataTable() {
     },
     {
       getNextPageParam: ({ meta }) => meta?.cursor,
-    }
+    },
   );
 
   const { data, fetchNextPage, hasNextPage, refetch } =
@@ -70,7 +70,7 @@ export function DataTable() {
       onSuccess: () => {
         refetch();
       },
-    })
+    }),
   );
 
   const handleDeletePlayer = (id: string) => {

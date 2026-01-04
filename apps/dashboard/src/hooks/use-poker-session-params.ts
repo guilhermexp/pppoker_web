@@ -66,7 +66,12 @@ export function usePokerSessionParams() {
   return {
     ...params,
     // Cast to expected types
-    sessionType: params.sessionType as "cash_game" | "mtt" | "sit_n_go" | "spin" | null,
+    sessionType: params.sessionType as
+      | "cash_game"
+      | "mtt"
+      | "sit_n_go"
+      | "spin"
+      | null,
     setParams,
     hasFilters:
       params.q !== null ||
@@ -77,4 +82,6 @@ export function usePokerSessionParams() {
   };
 }
 
-export const loadPokerSessionFilterParams = createLoader(pokerSessionFilterSchema);
+export const loadPokerSessionFilterParams = createLoader(
+  pokerSessionFilterSchema,
+);

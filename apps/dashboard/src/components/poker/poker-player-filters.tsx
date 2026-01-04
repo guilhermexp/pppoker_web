@@ -32,14 +32,19 @@ export function PokerPlayerFilters() {
 
   // Fetch agents for the agent filter dropdown
   const { data: agentsData } = useQuery(
-    trpc.poker.players.getAgents.queryOptions({ pageSize: 100 })
+    trpc.poker.players.getAgents.queryOptions({ pageSize: 100 }),
   );
 
   const agents = agentsData?.data ?? [];
   const selectedAgent = agents.find((a) => a.id === agentId);
 
   // Count active boolean filters
-  const activeBooleanFilters = [hasCreditLimit, hasRake, hasBalance, hasAgent].filter(Boolean).length;
+  const activeBooleanFilters = [
+    hasCreditLimit,
+    hasRake,
+    hasBalance,
+    hasAgent,
+  ].filter(Boolean).length;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -182,25 +187,33 @@ export function PokerPlayerFilters() {
           <DropdownMenuSeparator />
           <DropdownMenuCheckboxItem
             checked={hasCreditLimit}
-            onCheckedChange={(checked) => setParams({ hasCreditLimit: checked ? true : null })}
+            onCheckedChange={(checked) =>
+              setParams({ hasCreditLimit: checked ? true : null })
+            }
           >
             Com Limite de Crédito
           </DropdownMenuCheckboxItem>
           <DropdownMenuCheckboxItem
             checked={hasBalance}
-            onCheckedChange={(checked) => setParams({ hasBalance: checked ? true : null })}
+            onCheckedChange={(checked) =>
+              setParams({ hasBalance: checked ? true : null })
+            }
           >
             Com Saldo
           </DropdownMenuCheckboxItem>
           <DropdownMenuCheckboxItem
             checked={hasRake}
-            onCheckedChange={(checked) => setParams({ hasRake: checked ? true : null })}
+            onCheckedChange={(checked) =>
+              setParams({ hasRake: checked ? true : null })
+            }
           >
             Com Taxa
           </DropdownMenuCheckboxItem>
           <DropdownMenuCheckboxItem
             checked={hasAgent}
-            onCheckedChange={(checked) => setParams({ hasAgent: checked ? true : null })}
+            onCheckedChange={(checked) =>
+              setParams({ hasAgent: checked ? true : null })
+            }
           >
             Com Agente
           </DropdownMenuCheckboxItem>

@@ -21,8 +21,17 @@ import { TableHeader } from "./table-header";
 
 export function TransactionsDataTable() {
   const { ref, inView } = useInView();
-  const { setParams, q, type, playerId, sessionId, clubId, dateFrom, dateTo, hasFilters } =
-    usePokerTransactionParams();
+  const {
+    setParams,
+    q,
+    type,
+    playerId,
+    sessionId,
+    clubId,
+    dateFrom,
+    dateTo,
+    hasFilters,
+  } = usePokerTransactionParams();
   const trpc = useTRPC();
   const { params: sortParams } = useSortParams();
 
@@ -48,7 +57,7 @@ export function TransactionsDataTable() {
     },
     {
       getNextPageParam: ({ meta }) => meta?.cursor,
-    }
+    },
   );
 
   const { data, fetchNextPage, hasNextPage, refetch } =
@@ -59,7 +68,7 @@ export function TransactionsDataTable() {
       onSuccess: () => {
         refetch();
       },
-    })
+    }),
   );
 
   const handleDeleteTransaction = (id: string) => {

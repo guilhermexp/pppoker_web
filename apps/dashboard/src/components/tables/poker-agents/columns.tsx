@@ -50,28 +50,26 @@ export type PokerAgent = {
   childAgents?: PokerAgent[];
 };
 
-const StatusBadge = memo(
-  ({ status }: { status: PokerAgent["status"] }) => {
-    const variants: Record<
-      PokerAgent["status"],
-      "default" | "secondary" | "destructive" | "outline"
-    > = {
-      active: "default",
-      inactive: "secondary",
-      suspended: "outline",
-      blacklisted: "destructive",
-    };
+const StatusBadge = memo(({ status }: { status: PokerAgent["status"] }) => {
+  const variants: Record<
+    PokerAgent["status"],
+    "default" | "secondary" | "destructive" | "outline"
+  > = {
+    active: "default",
+    inactive: "secondary",
+    suspended: "outline",
+    blacklisted: "destructive",
+  };
 
-    const labels: Record<PokerAgent["status"], string> = {
-      active: "Active",
-      inactive: "Inactive",
-      suspended: "Suspended",
-      blacklisted: "Blacklisted",
-    };
+  const labels: Record<PokerAgent["status"], string> = {
+    active: "Active",
+    inactive: "Inactive",
+    suspended: "Suspended",
+    blacklisted: "Blacklisted",
+  };
 
-    return <Badge variant={variants[status]}>{labels[status]}</Badge>;
-  },
-);
+  return <Badge variant={variants[status]}>{labels[status]}</Badge>;
+});
 StatusBadge.displayName = "StatusBadge";
 
 function formatCurrency(value: number) {
@@ -152,20 +150,25 @@ function AgentActions({
   );
 }
 
-const TypeBadge = memo(({ type, agentCount }: { type: PokerAgent["type"]; agentCount?: number }) => {
-  if (type === "super_agent") {
+const TypeBadge = memo(
+  ({ type, agentCount }: { type: PokerAgent["type"]; agentCount?: number }) => {
+    if (type === "super_agent") {
+      return (
+        <Badge
+          variant="outline"
+          className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs border-amber-500/30"
+        >
+          Super Agent {agentCount ? `(${agentCount})` : ""}
+        </Badge>
+      );
+    }
     return (
-      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs border-amber-500/30">
-        Super Agent {agentCount ? `(${agentCount})` : ""}
+      <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
+        Agent
       </Badge>
     );
-  }
-  return (
-    <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
-      Agent
-    </Badge>
-  );
-});
+  },
+);
 TypeBadge.displayName = "TypeBadge";
 
 export const columns: ColumnDef<PokerAgent>[] = [
@@ -301,11 +304,7 @@ export const columns: ColumnDef<PokerAgent>[] = [
     cell: ({ row }) => {
       const superAgent = row.original.superAgent;
       if (!superAgent) return <span className="text-muted-foreground">-</span>;
-      return (
-        <span className="text-sm truncate">
-          {superAgent.nickname}
-        </span>
-      );
+      return <span className="text-sm truncate">{superAgent.nickname}</span>;
     },
   },
   {

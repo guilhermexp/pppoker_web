@@ -12,7 +12,13 @@ export const pokerSettlementFilterSchema = {
 
 type SetParamsInput = {
   settlementId?: string | null;
-  status?: "pending" | "partial" | "completed" | "disputed" | "cancelled" | null;
+  status?:
+    | "pending"
+    | "partial"
+    | "completed"
+    | "disputed"
+    | "cancelled"
+    | null;
   playerId?: string | null;
   agentId?: string | null;
   periodStart?: string | null;
@@ -20,9 +26,12 @@ type SetParamsInput = {
 } | null;
 
 export function usePokerSettlementParams() {
-  const [params, setParamsInternal] = useQueryStates(pokerSettlementFilterSchema, {
-    clearOnDefault: true,
-  });
+  const [params, setParamsInternal] = useQueryStates(
+    pokerSettlementFilterSchema,
+    {
+      clearOnDefault: true,
+    },
+  );
 
   const setParams = (newParams: SetParamsInput) => {
     if (newParams === null) {
@@ -37,12 +46,16 @@ export function usePokerSettlementParams() {
     } else {
       const updates: Record<string, string | null> = {};
 
-      if ("settlementId" in newParams) updates.settlementId = newParams.settlementId ?? null;
+      if ("settlementId" in newParams)
+        updates.settlementId = newParams.settlementId ?? null;
       if ("status" in newParams) updates.status = newParams.status ?? null;
-      if ("playerId" in newParams) updates.playerId = newParams.playerId ?? null;
+      if ("playerId" in newParams)
+        updates.playerId = newParams.playerId ?? null;
       if ("agentId" in newParams) updates.agentId = newParams.agentId ?? null;
-      if ("periodStart" in newParams) updates.periodStart = newParams.periodStart ?? null;
-      if ("periodEnd" in newParams) updates.periodEnd = newParams.periodEnd ?? null;
+      if ("periodStart" in newParams)
+        updates.periodStart = newParams.periodStart ?? null;
+      if ("periodEnd" in newParams)
+        updates.periodEnd = newParams.periodEnd ?? null;
 
       setParamsInternal(updates);
     }
@@ -50,7 +63,13 @@ export function usePokerSettlementParams() {
 
   return {
     ...params,
-    status: params.status as "pending" | "partial" | "completed" | "disputed" | "cancelled" | null,
+    status: params.status as
+      | "pending"
+      | "partial"
+      | "completed"
+      | "disputed"
+      | "cancelled"
+      | null,
     setParams,
     hasFilters:
       params.status !== null ||
@@ -61,4 +80,6 @@ export function usePokerSettlementParams() {
   };
 }
 
-export const loadPokerSettlementFilterParams = createLoader(pokerSettlementFilterSchema);
+export const loadPokerSettlementFilterParams = createLoader(
+  pokerSettlementFilterSchema,
+);

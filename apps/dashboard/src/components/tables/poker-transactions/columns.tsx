@@ -67,7 +67,10 @@ const TransactionTypeBadge = memo(({ type }: { type: string }) => {
     transfer_out: "Transferência Out",
   };
 
-  const variants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  const variants: Record<
+    string,
+    "default" | "secondary" | "outline" | "destructive"
+  > = {
     buy_in: "default",
     cash_out: "secondary",
     credit_given: "default",
@@ -83,7 +86,10 @@ const TransactionTypeBadge = memo(({ type }: { type: string }) => {
   };
 
   return (
-    <Badge variant={variants[type] ?? "outline"} className="text-xs whitespace-nowrap">
+    <Badge
+      variant={variants[type] ?? "outline"}
+      className="text-xs whitespace-nowrap"
+    >
       {labels[type] ?? type}
     </Badge>
   );
@@ -121,7 +127,9 @@ function TransactionActions({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => table.options.meta?.deleteTransaction?.(transaction.id)}
+          onClick={() =>
+            table.options.meta?.deleteTransaction?.(transaction.id)
+          }
           className="text-destructive"
         >
           <Icons.Delete className="mr-2 h-4 w-4" />
@@ -137,7 +145,8 @@ export const columns: ColumnDef<PokerTransaction>[] = [
     accessorKey: "occurredAt",
     header: "Data",
     meta: {
-      className: "w-[160px] min-w-[160px] md:sticky md:left-0 z-20 bg-background",
+      className:
+        "w-[160px] min-w-[160px] md:sticky md:left-0 z-20 bg-background",
     },
     cell: ({ row }) => {
       const tx = row.original;
@@ -173,7 +182,9 @@ export const columns: ColumnDef<PokerTransaction>[] = [
         return (
           <div className="flex flex-col">
             <span className="text-sm font-medium">Clube</span>
-            <span className="text-xs text-muted-foreground">{tx.senderClubId}</span>
+            <span className="text-xs text-muted-foreground">
+              {tx.senderClubId}
+            </span>
           </div>
         );
       }
@@ -182,7 +193,9 @@ export const columns: ColumnDef<PokerTransaction>[] = [
           <div className="flex flex-col">
             <span className="text-sm font-medium">{tx.sender.nickname}</span>
             {tx.sender.memoName && (
-              <span className="text-xs text-muted-foreground">{tx.sender.memoName}</span>
+              <span className="text-xs text-muted-foreground">
+                {tx.sender.memoName}
+              </span>
             )}
           </div>
         );
@@ -203,7 +216,9 @@ export const columns: ColumnDef<PokerTransaction>[] = [
           <div className="flex flex-col">
             <span className="text-sm font-medium">{tx.recipient.nickname}</span>
             {tx.recipient.memoName && (
-              <span className="text-xs text-muted-foreground">{tx.recipient.memoName}</span>
+              <span className="text-xs text-muted-foreground">
+                {tx.recipient.memoName}
+              </span>
             )}
           </div>
         );
@@ -222,7 +237,9 @@ export const columns: ColumnDef<PokerTransaction>[] = [
       const net = tx.creditSent - tx.creditRedeemed;
       if (net === 0) return <span className="text-muted-foreground">-</span>;
       return (
-        <span className={`font-mono text-sm ${net > 0 ? "text-green-600" : "text-red-600"}`}>
+        <span
+          className={`font-mono text-sm ${net > 0 ? "text-green-600" : "text-red-600"}`}
+        >
           {net > 0 ? "+" : ""}
           {net.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
@@ -243,7 +260,9 @@ export const columns: ColumnDef<PokerTransaction>[] = [
       const net = tx.chipsSent - tx.chipsRedeemed;
       if (net === 0) return <span className="text-muted-foreground">-</span>;
       return (
-        <span className={`font-mono text-sm ${net > 0 ? "text-green-600" : "text-red-600"}`}>
+        <span
+          className={`font-mono text-sm ${net > 0 ? "text-green-600" : "text-red-600"}`}
+        >
           {net > 0 ? "+" : ""}
           {net.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
@@ -263,7 +282,9 @@ export const columns: ColumnDef<PokerTransaction>[] = [
       const amount = row.original.amount;
       if (amount === 0) return <span className="text-muted-foreground">-</span>;
       return (
-        <span className={`font-mono text-sm font-medium ${amount > 0 ? "text-green-600" : "text-red-600"}`}>
+        <span
+          className={`font-mono text-sm font-medium ${amount > 0 ? "text-green-600" : "text-red-600"}`}
+        >
           {amount > 0 ? "+" : ""}
           {amount.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,

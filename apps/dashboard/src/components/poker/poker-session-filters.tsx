@@ -16,7 +16,10 @@ import { Icons } from "@midday/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
 import { format, parseISO } from "date-fns";
 
-function formatDateRange(dateFrom: string | null, dateTo: string | null): string {
+function formatDateRange(
+  dateFrom: string | null,
+  dateTo: string | null,
+): string {
   if (!dateFrom && !dateTo) return "Período";
 
   const fromDate = dateFrom ? parseISO(dateFrom) : null;
@@ -36,14 +39,16 @@ function formatDateRange(dateFrom: string | null, dateTo: string | null): string
 
 export function PokerSessionFilters() {
   const t = useI18n();
-  const { sessionType, gameVariant, dateFrom, dateTo, setParams, hasFilters } = usePokerSessionParams();
+  const { sessionType, gameVariant, dateFrom, dateTo, setParams, hasFilters } =
+    usePokerSessionParams();
 
-  const dateRange = dateFrom || dateTo
-    ? {
-        from: dateFrom ? parseISO(dateFrom) : undefined,
-        to: dateTo ? parseISO(dateTo) : undefined,
-      }
-    : undefined;
+  const dateRange =
+    dateFrom || dateTo
+      ? {
+          from: dateFrom ? parseISO(dateFrom) : undefined,
+          to: dateTo ? parseISO(dateTo) : undefined,
+        }
+      : undefined;
 
   const handleDateSelect = (range: { from?: Date; to?: Date } | undefined) => {
     setParams({
@@ -133,7 +138,9 @@ export function PokerSessionFilters() {
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="h-9">
             <Icons.Category className="mr-2 h-4 w-4" />
-            {gameVariant ? gameVariant.toUpperCase() : t("poker.sessions.filter.all_games")}
+            {gameVariant
+              ? gameVariant.toUpperCase()
+              : t("poker.sessions.filter.all_games")}
             <Icons.ChevronDown className="ml-2 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

@@ -1,10 +1,12 @@
-import { getI18n } from "@/locales/server";
-import { OpenAgentSheet } from "./open-agent-sheet";
+"use client";
+
+import { useI18n } from "@/locales/client";
 import { SearchField } from "../search-field";
+import { OpenAgentSheet } from "./open-agent-sheet";
 import { PokerAgentFilters } from "./poker-agent-filters";
 
-export async function PokerAgentsHeader() {
-  const t = await getI18n();
+export function PokerAgentsHeader() {
+  const t = useI18n();
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

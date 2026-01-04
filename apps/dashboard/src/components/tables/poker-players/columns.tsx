@@ -47,7 +47,9 @@ export type PokerPlayer = {
 };
 
 const StatusBadge = memo(
-  ({ activityStatus }: { activityStatus: PokerPlayer["activityStatus"] | undefined }) => {
+  ({
+    activityStatus,
+  }: { activityStatus: PokerPlayer["activityStatus"] | undefined }) => {
     const variants: Record<
       PokerPlayer["activityStatus"],
       "default" | "secondary" | "destructive" | "outline"
@@ -161,9 +163,7 @@ export const columns: ColumnDef<PokerPlayer>[] = [
               {player.isVip && (
                 <Icons.Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
               )}
-              {player.isShark && (
-                <span className="text-xs">🦈</span>
-              )}
+              {player.isShark && <span className="text-xs">🦈</span>}
               <TypeBadge type={player.type} />
             </div>
             {player.memoName && (
@@ -192,7 +192,9 @@ export const columns: ColumnDef<PokerPlayer>[] = [
     meta: {
       className: "w-[100px]",
     },
-    cell: ({ row }) => <StatusBadge activityStatus={row.original.activityStatus} />,
+    cell: ({ row }) => (
+      <StatusBadge activityStatus={row.original.activityStatus} />
+    ),
   },
   {
     accessorKey: "agent",
@@ -279,7 +281,12 @@ export const columns: ColumnDef<PokerPlayer>[] = [
     cell: ({ row }) => {
       const rake = row.original.totalRake ?? 0;
       return (
-        <span className={cn("font-mono text-sm", rake > 0 ? "text-green-600" : "text-muted-foreground")}>
+        <span
+          className={cn(
+            "font-mono text-sm",
+            rake > 0 ? "text-green-600" : "text-muted-foreground",
+          )}
+        >
           {rake.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -324,9 +331,7 @@ export const columns: ColumnDef<PokerPlayer>[] = [
       const player = row.original;
       return (
         <div className="flex flex-col text-sm">
-          {player.email && (
-            <span className="truncate">{player.email}</span>
-          )}
+          {player.email && <span className="truncate">{player.email}</span>}
           {player.phone && (
             <span className="text-muted-foreground">{player.phone}</span>
           )}

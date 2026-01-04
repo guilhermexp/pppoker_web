@@ -1,7 +1,11 @@
 "use client";
 
 import type { useTableScroll } from "@/hooks/use-table-scroll";
-import { TableHead, TableHeader as UITableHeader, TableRow } from "@midday/ui/table";
+import {
+  TableHead,
+  TableRow,
+  TableHeader as UITableHeader,
+} from "@midday/ui/table";
 import { columns } from "./columns";
 
 type Props = {

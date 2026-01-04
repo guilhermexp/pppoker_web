@@ -1,10 +1,12 @@
-import { getI18n } from "@/locales/server";
-import { OpenPlayerSheet } from "./open-player-sheet";
+"use client";
+
+import { useI18n } from "@/locales/client";
 import { SearchField } from "../search-field";
+import { OpenPlayerSheet } from "./open-player-sheet";
 import { PokerPlayerFilters } from "./poker-player-filters";
 
-export async function PokerPlayersHeader() {
-  const t = await getI18n();
+export function PokerPlayersHeader() {
+  const t = useI18n();
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

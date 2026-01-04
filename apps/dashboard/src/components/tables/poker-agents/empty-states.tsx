@@ -16,9 +16,7 @@ export function EmptyState() {
           <Icons.AccountCircle className="size-8 text-muted-foreground" />
         </div>
         <div className="text-center mb-6 space-y-2">
-          <h2 className="font-medium text-lg">
-            {t("poker.agents.no_agents")}
-          </h2>
+          <h2 className="font-medium text-lg">{t("poker.agents.no_agents")}</h2>
           <p className="text-[#606060] text-sm">
             {t("poker.agents.no_agents_description")}
           </p>
@@ -51,7 +49,9 @@ export function NoResults() {
           <Icons.Search className="size-8 text-muted-foreground" />
         </div>
         <div className="text-center mb-6 space-y-2">
-          <h2 className="font-medium text-lg">{t("transactions.no_results")}</h2>
+          <h2 className="font-medium text-lg">
+            {t("transactions.no_results")}
+          </h2>
           <p className="text-[#606060] text-sm">
             {t("transactions.no_results_description")}
           </p>

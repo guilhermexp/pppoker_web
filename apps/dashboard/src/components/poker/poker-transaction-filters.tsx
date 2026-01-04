@@ -31,10 +31,11 @@ const transactionTypes = [
 
 export function PokerTransactionFilters() {
   const t = useI18n();
-  const { type, dateFrom, dateTo, setParams, hasFilters } = usePokerTransactionParams();
+  const { type, dateFrom, dateTo, setParams, hasFilters } =
+    usePokerTransactionParams();
 
   const selectedTypeLabel = type
-    ? transactionTypes.find((t) => t.value === type)?.label ?? type
+    ? (transactionTypes.find((t) => t.value === type)?.label ?? type)
     : "Todos os Tipos";
 
   return (
@@ -43,7 +44,9 @@ export function PokerTransactionFilters() {
       <PokerDateFilter
         from={dateFrom}
         to={dateTo}
-        onChange={(params) => setParams({ dateFrom: params.from, dateTo: params.to })}
+        onChange={(params) =>
+          setParams({ dateFrom: params.from, dateTo: params.to })
+        }
       />
 
       {/* Transaction Type Filter */}
@@ -55,7 +58,10 @@ export function PokerTransactionFilters() {
             <Icons.ChevronDown className="ml-2 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+        <DropdownMenuContent
+          align="start"
+          className="max-h-[300px] overflow-y-auto"
+        >
           <DropdownMenuLabel>Tipo de Transação</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuCheckboxItem
@@ -68,7 +74,9 @@ export function PokerTransactionFilters() {
             <DropdownMenuCheckboxItem
               key={transType.value}
               checked={type === transType.value}
-              onCheckedChange={() => setParams({ type: transType.value as any })}
+              onCheckedChange={() =>
+                setParams({ type: transType.value as any })
+              }
             >
               {transType.label}
             </DropdownMenuCheckboxItem>

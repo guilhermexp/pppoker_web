@@ -8,10 +8,10 @@ import { useTRPC } from "@/trpc/client";
 import { Table, TableBody, TableCell, TableRow } from "@midday/ui/table";
 import { useMutation, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import {
+  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   useReactTable,
-  flexRender,
 } from "@tanstack/react-table";
 import { useDeferredValue, useEffect, useMemo } from "react";
 import { useInView } from "react-intersection-observer";
@@ -21,8 +21,15 @@ import { TableHeader } from "./table-header";
 
 export function SettlementsDataTable() {
   const { ref, inView } = useInView();
-  const { setParams, status, playerId, agentId, periodStart, periodEnd, hasFilters } =
-    usePokerSettlementParams();
+  const {
+    setParams,
+    status,
+    playerId,
+    agentId,
+    periodStart,
+    periodEnd,
+    hasFilters,
+  } = usePokerSettlementParams();
   const trpc = useTRPC();
   const { params: sortParams } = useSortParams();
 
@@ -44,7 +51,7 @@ export function SettlementsDataTable() {
     },
     {
       getNextPageParam: ({ meta }) => meta?.cursor,
-    }
+    },
   );
 
   const { data, fetchNextPage, hasNextPage, refetch } =
@@ -55,7 +62,7 @@ export function SettlementsDataTable() {
       onSuccess: () => {
         refetch();
       },
-    })
+    }),
   );
 
   const markPaidMutation = useMutation(
@@ -63,7 +70,7 @@ export function SettlementsDataTable() {
       onSuccess: () => {
         refetch();
       },
-    })
+    }),
   );
 
   const handleDeleteSettlement = (id: string) => {
@@ -122,12 +129,20 @@ export function SettlementsDataTable() {
 
           <TableBody className="border-l-0 border-r-0">
             {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="h-[57px] cursor-default hover:bg-accent/50">
+              <TableRow
+                key={row.id}
+                className="h-[57px] cursor-default hover:bg-accent/50"
+              >
                 {row.getVisibleCells().map((cell) => {
-                  const meta = cell.column.columnDef.meta as { className?: string } | undefined;
+                  const meta = cell.column.columnDef.meta as
+                    | { className?: string }
+                    | undefined;
                   return (
                     <TableCell key={cell.id} className={meta?.className}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </TableCell>
                   );
                 })}

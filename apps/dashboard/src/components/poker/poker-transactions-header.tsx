@@ -1,14 +1,16 @@
-import { getI18n } from "@/locales/server";
+"use client";
+
+import { useI18n } from "@/locales/client";
 import { SearchField } from "../search-field";
 import { PokerTransactionFilters } from "./poker-transaction-filters";
 
-export async function PokerTransactionsHeader() {
-  const t = await getI18n();
+export function PokerTransactionsHeader() {
+  const t = useI18n();
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4 flex-1">
-        <SearchField placeholder="Buscar transações..." />
+        <SearchField placeholder={t("poker.transactions.search_placeholder")} />
         <PokerTransactionFilters />
       </div>
     </div>

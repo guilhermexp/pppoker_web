@@ -18,7 +18,9 @@ export function PokerAgentRow({ row, setOpen }: Props) {
       onClick={() => setOpen(row.original.id)}
     >
       {row.getVisibleCells().map((cell) => {
-        const meta = cell.column.columnDef.meta as { className?: string } | undefined;
+        const meta = cell.column.columnDef.meta as
+          | { className?: string }
+          | undefined;
         return (
           <TableCell key={cell.id} className={meta?.className}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}

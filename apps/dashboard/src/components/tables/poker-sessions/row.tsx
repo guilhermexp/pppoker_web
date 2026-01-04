@@ -24,7 +24,7 @@ function ExpandedRowContent({ sessionId }: { sessionId: string }) {
   const trpc = useTRPC();
 
   const { data: session, isLoading } = useQuery(
-    trpc.poker.sessions.getById.queryOptions({ id: sessionId })
+    trpc.poker.sessions.getById.queryOptions({ id: sessionId }),
   );
 
   if (isLoading) {
@@ -55,8 +55,9 @@ function ExpandedRowContent({ sessionId }: { sessionId: string }) {
     );
   }
 
-  const players = session.sessionPlayers
-    .sort((a, b) => (a.ranking ?? 999) - (b.ranking ?? 999));
+  const players = session.sessionPlayers.sort(
+    (a, b) => (a.ranking ?? 999) - (b.ranking ?? 999),
+  );
 
   return (
     <div className="p-4 bg-muted/30">

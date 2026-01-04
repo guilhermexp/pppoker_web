@@ -124,7 +124,12 @@ export function usePokerPlayerParams() {
     // Cast to expected types
     createPlayer: params.createPlayer === "true",
     type: params.type as "player" | "agent" | null,
-    status: params.status as "active" | "inactive" | "suspended" | "blacklisted" | null,
+    status: params.status as
+      | "active"
+      | "inactive"
+      | "suspended"
+      | "blacklisted"
+      | null,
     hasCreditLimit: params.hasCreditLimit === "true",
     hasRake: params.hasRake === "true",
     hasBalance: params.hasBalance === "true",
@@ -143,4 +148,6 @@ export function usePokerPlayerParams() {
   };
 }
 
-export const loadPokerPlayerFilterParams = createLoader(pokerPlayerFilterSchema);
+export const loadPokerPlayerFilterParams = createLoader(
+  pokerPlayerFilterSchema,
+);

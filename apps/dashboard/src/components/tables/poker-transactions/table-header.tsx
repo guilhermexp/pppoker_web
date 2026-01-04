@@ -2,7 +2,11 @@
 
 import { HorizontalPagination } from "@/components/horizontal-pagination";
 import type { useTableScroll } from "@/hooks/use-table-scroll";
-import { TableHead, TableHeader as TableHeaderUI, TableRow } from "@midday/ui/table";
+import {
+  TableHead,
+  TableHeader as TableHeaderUI,
+  TableRow,
+} from "@midday/ui/table";
 import { columns } from "./columns";
 
 type Props = {
@@ -20,7 +24,11 @@ export function TableHeader({ tableScroll }: Props) {
           >
             {index === 0 && tableScroll?.isScrollable ? (
               <div className="flex items-center justify-between">
-                <span>{typeof column.header === "string" ? column.header : column.id}</span>
+                <span>
+                  {typeof column.header === "string"
+                    ? column.header
+                    : column.id}
+                </span>
                 <HorizontalPagination
                   canScrollLeft={tableScroll.canScrollLeft}
                   canScrollRight={tableScroll.canScrollRight}
@@ -29,8 +37,10 @@ export function TableHeader({ tableScroll }: Props) {
                   className="ml-auto hidden md:flex"
                 />
               </div>
+            ) : typeof column.header === "string" ? (
+              column.header
             ) : (
-              typeof column.header === "string" ? column.header : column.id
+              column.id
             )}
           </TableHead>
         ))}

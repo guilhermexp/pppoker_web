@@ -14,10 +14,10 @@ import {
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
 import {
+  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   useReactTable,
-  flexRender,
 } from "@tanstack/react-table";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -31,7 +31,9 @@ export function AgentsDataTable() {
     usePokerPlayerParams();
   const trpc = useTRPC();
   const { params: sortParams } = useSortParams();
-  const [expandedSuperAgents, setExpandedSuperAgents] = useState<Set<string>>(new Set());
+  const [expandedSuperAgents, setExpandedSuperAgents] = useState<Set<string>>(
+    new Set(),
+  );
 
   const deferredSearch = useDeferredValue(q);
 
@@ -52,11 +54,15 @@ export function AgentsDataTable() {
     },
     {
       getNextPageParam: ({ meta }) => meta?.cursor,
-    }
+    },
   );
 
-  const { data: agentsData, fetchNextPage, hasNextPage, refetch } =
-    useSuspenseInfiniteQuery(agentsQueryOptions);
+  const {
+    data: agentsData,
+    fetchNextPage,
+    hasNextPage,
+    refetch,
+  } = useSuspenseInfiniteQuery(agentsQueryOptions);
 
   // Fetch super_agents
   const { data: superAgentsData } = useQuery(
@@ -65,7 +71,7 @@ export function AgentsDataTable() {
       type: "super_agent" as any,
       status,
       pageSize: 100,
-    })
+    }),
   );
 
   // Fetch agent stats to get metrics
@@ -74,7 +80,7 @@ export function AgentsDataTable() {
       dateFrom: dateFrom ?? undefined,
       dateTo: dateTo ?? undefined,
       superAgentId: superAgentId ?? undefined,
-    })
+    }),
   );
 
   const deleteAgentMutation = useMutation(
@@ -82,7 +88,7 @@ export function AgentsDataTable() {
       onSuccess: () => {
         refetch();
       },
-    })
+    }),
   );
 
   const handleDeleteAgent = (id: string) => {
@@ -112,7 +118,7 @@ export function AgentsDataTable() {
     const agents = agentsData?.pages.flatMap((page) => page.data) ?? [];
     const superAgents = superAgentsData?.data ?? [];
     const metricsMap = new Map(
-      (statsData?.agentMetrics ?? []).map((m) => [m.id, m])
+      (statsData?.agentMetrics ?? []).map((m) => [m.id, m]),
     );
 
     // Map agents to PokerAgent type with metrics
@@ -151,9 +157,18 @@ export function AgentsDataTable() {
     // Add super agents with their child agents
     for (const sa of superAgents) {
       const childAgents = agentsBySuperAgent.get(sa.id) ?? [];
-      const totalRake = childAgents.reduce((sum, a) => sum + (a.totalRake ?? 0), 0);
-      const totalCommission = childAgents.reduce((sum, a) => sum + (a.estimatedCommission ?? 0), 0);
-      const totalPlayers = childAgents.reduce((sum, a) => sum + (a.playerCount ?? 0), 0);
+      const totalRake = childAgents.reduce(
+        (sum, a) => sum + (a.totalRake ?? 0),
+        0,
+      );
+      const totalCommission = childAgents.reduce(
+        (sum, a) => sum + (a.estimatedCommission ?? 0),
+        0,
+      );
+      const totalPlayers = childAgents.reduce(
+        (sum, a) => sum + (a.playerCount ?? 0),
+        0,
+      );
 
       hierarchy.push({
         ...sa,
@@ -174,7 +189,11 @@ export function AgentsDataTable() {
     const flat: PokerAgent[] = [];
     for (const item of hierarchy) {
       flat.push(item);
-      if (item.type === "super_agent" && expandedSuperAgents.has(item.id) && item.childAgents) {
+      if (
+        item.type === "super_agent" &&
+        expandedSuperAgents.has(item.id) &&
+        item.childAgents
+      ) {
         flat.push(...item.childAgents);
       }
     }
@@ -224,8 +243,10 @@ export function AgentsDataTable() {
             {table.getRowModel().rows.map((row) => {
               const agent = row.original;
               const isSuperAgent = agent.type === "super_agent";
-              const agentSuperAgentId = agent.superAgentId ?? agent.superAgent?.id;
-              const isChildAgent = agentSuperAgentId && expandedSuperAgents.has(agentSuperAgentId);
+              const agentSuperAgentId =
+                agent.superAgentId ?? agent.superAgent?.id;
+              const isChildAgent =
+                agentSuperAgentId && expandedSuperAgents.has(agentSuperAgentId);
               const isExpanded = expandedSuperAgents.has(agent.id);
 
               return (
@@ -241,7 +262,9 @@ export function AgentsDataTable() {
                   }}
                 >
                   {row.getVisibleCells().map((cell, index) => {
-                    const meta = cell.column.columnDef.meta as { className?: string } | undefined;
+                    const meta = cell.column.columnDef.meta as
+                      | { className?: string }
+                      | undefined;
 
                     // Add expand/collapse icon for super agents in the first column
                     if (index === 0 && isSuperAgent) {
@@ -263,7 +286,10 @@ export function AgentsDataTable() {
                                 <Icons.ChevronRight className="h-4 w-4" />
                               )}
                             </Button>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
                           </div>
                         </TableCell>
                       );
@@ -274,7 +300,10 @@ export function AgentsDataTable() {
                       return (
                         <TableCell key={cell.id} className={meta?.className}>
                           <div className="flex items-center gap-2 pl-8">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
                           </div>
                         </TableCell>
                       );
@@ -282,7 +311,10 @@ export function AgentsDataTable() {
 
                     return (
                       <TableCell key={cell.id} className={meta?.className}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
                       </TableCell>
                     );
                   })}

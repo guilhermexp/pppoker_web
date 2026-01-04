@@ -22,8 +22,15 @@ import { TableHeader } from "./table-header";
 
 export function SessionsDataTable() {
   const { ref, inView } = useInView();
-  const { setParams, q, sessionType, gameVariant, dateFrom, dateTo, hasFilters } =
-    usePokerSessionParams();
+  const {
+    setParams,
+    q,
+    sessionType,
+    gameVariant,
+    dateFrom,
+    dateTo,
+    hasFilters,
+  } = usePokerSessionParams();
   const trpc = useTRPC();
   const { params: sortParams } = useSortParams();
 
@@ -47,7 +54,7 @@ export function SessionsDataTable() {
     },
     {
       getNextPageParam: ({ meta }) => meta?.cursor,
-    }
+    },
   );
 
   const { data, fetchNextPage, hasNextPage, refetch } =
@@ -58,7 +65,7 @@ export function SessionsDataTable() {
       onSuccess: () => {
         refetch();
       },
-    })
+    }),
   );
 
   const handleDeleteSession = (id: string) => {

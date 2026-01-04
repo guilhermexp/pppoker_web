@@ -39,9 +39,12 @@ type SetParamsInput = {
 } | null;
 
 export function usePokerTransactionParams() {
-  const [params, setParamsInternal] = useQueryStates(pokerTransactionFilterSchema, {
-    clearOnDefault: true,
-  });
+  const [params, setParamsInternal] = useQueryStates(
+    pokerTransactionFilterSchema,
+    {
+      clearOnDefault: true,
+    },
+  );
 
   const setParams = (newParams: SetParamsInput) => {
     if (newParams === null) {
@@ -105,4 +108,6 @@ export function usePokerTransactionParams() {
   };
 }
 
-export const loadPokerTransactionFilterParams = createLoader(pokerTransactionFilterSchema);
+export const loadPokerTransactionFilterParams = createLoader(
+  pokerTransactionFilterSchema,
+);
