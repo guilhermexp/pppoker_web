@@ -10,10 +10,7 @@ export function OpenPlayerSheet() {
   const t = useI18n();
 
   return (
-    <Button
-      variant="outline"
-      onClick={() => setParams({ createPlayer: true })}
-    >
+    <Button variant="outline" onClick={() => setParams({ createPlayer: true })}>
       <Icons.Add className="mr-2 h-4 w-4" />
       {t("poker.players.create_player")}
     </Button>

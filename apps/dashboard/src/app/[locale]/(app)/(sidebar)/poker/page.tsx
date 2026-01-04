@@ -1,12 +1,11 @@
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { PokerDashboardHeader } from "@/components/poker/poker-dashboard-header";
-import { PokerWidgetsGrid } from "@/components/widgets/poker/poker-widgets-grid";
 import { PokerStatCard } from "@/components/widgets/poker/poker-stat-card";
 import { PokerWidgetProvider } from "@/components/widgets/poker/poker-widget-provider";
+import { PokerWidgetsGrid } from "@/components/widgets/poker/poker-widgets-grid";
 import { getI18n } from "@/locales/server";
 import { HydrateClient } from "@/trpc/server";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
@@ -51,7 +50,7 @@ export default async function PokerPage() {
           <PokerDashboardHeader />
 
           {/* Stats Grid - 2 rows x 4 columns */}
-          <ErrorBoundary errorComponent={ErrorFallback}>
+          <ErrorBoundary>
             <Suspense fallback={<PokerWidgetsGridSkeleton />}>
               <PokerWidgetsGrid />
             </Suspense>

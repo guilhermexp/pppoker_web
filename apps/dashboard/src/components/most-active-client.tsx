@@ -61,7 +61,8 @@ export function MostActiveClient() {
             )}
             {data.invoiceCount > 0 && (
               <>
-                {data.invoiceCount} {t("customers.invoice", { count: data.invoiceCount })}
+                {data.invoiceCount}{" "}
+                {t("customers.invoice", { count: data.invoiceCount })}
               </>
             )}
             {` ${t("customers.past_30_days")}`}

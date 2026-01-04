@@ -371,7 +371,6 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
                   )}
                 </Accordion>
               </ScrollArea>
-
             </div>
           </SheetHeader>
         </SheetContent>

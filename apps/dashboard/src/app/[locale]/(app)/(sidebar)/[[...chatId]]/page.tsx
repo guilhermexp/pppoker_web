@@ -77,7 +77,10 @@ export default async function Overview(props: Props) {
   return (
     <HydrateClient>
       <ClientOnly>
-        <ChatProvider initialMessages={chat ?? []} key={currentChatId || "home"}>
+        <ChatProvider
+          initialMessages={chat ?? []}
+          key={currentChatId || "home"}
+        >
           <Widgets initialPreferences={widgetPreferences} />
           <ChatInterface geo={geo} />
           <AIDevtoolsWrapper

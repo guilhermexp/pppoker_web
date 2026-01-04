@@ -1,16 +1,17 @@
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { PokerAgentsHeader } from "@/components/poker/poker-agents-header";
+import {
+  PokerAgentsStats,
+  PokerAgentsStatsSkeleton,
+} from "@/components/poker/poker-agents-stats";
 import { PokerAgentDetailSheet } from "@/components/sheets/poker-agent-detail-sheet";
 import { AgentsDataTable } from "@/components/tables/poker-agents/data-table";
 import { DataTableSkeleton } from "@/components/tables/poker-agents/skeleton";
-import { AgentsBreakdownWidget } from "@/components/widgets/poker/agents-breakdown-widget";
-import { AgentsOverviewWidget } from "@/components/widgets/poker/agents-overview-widget";
 import { loadPokerPlayerFilterParams } from "@/hooks/use-poker-player-params";
 import { loadSortParams } from "@/hooks/use-sort-params";
 import { getI18n } from "@/locales/server";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import type { SearchParams } from "nuqs";
 import { Suspense } from "react";
 
@@ -37,7 +38,7 @@ export default async function PokerAgentsPage(props: Props) {
         ...filter,
         type: "agent", // Force filter to agents only
         sort: sort as [string, string] | null,
-      })
+      }),
     );
   } catch {
     // SSR prefetch failed, client will fetch via Suspense
@@ -53,15 +54,13 @@ export default async function PokerAgentsPage(props: Props) {
           </p>
         </div>
 
+        <Suspense fallback={<PokerAgentsStatsSkeleton />}>
+          <PokerAgentsStats />
+        </Suspense>
+
         <PokerAgentsHeader />
 
-        {/* Widgets Section */}
-        <div className="space-y-4">
-          <AgentsOverviewWidget />
-          <AgentsBreakdownWidget />
-        </div>
-
-        <ErrorBoundary errorComponent={ErrorFallback}>
+        <ErrorBoundary>
           <Suspense fallback={<DataTableSkeleton />}>
             <AgentsDataTable />
           </Suspense>

@@ -245,7 +245,9 @@ export function VaultSearchFilter() {
                 ))}
 
                 {!tagsData?.length && (
-                  <DropdownMenuItem disabled>{t("vault.no_tags")}</DropdownMenuItem>
+                  <DropdownMenuItem disabled>
+                    {t("vault.no_tags")}
+                  </DropdownMenuItem>
                 )}
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

@@ -55,7 +55,8 @@ export function TopRevenueClient() {
               currency={data.currency || team?.baseCurrency || "USD"}
               locale={user?.locale ?? undefined}
             />{" "}
-            {t("customers.from")} {data.invoiceCount} {t("customers.invoice", { count: data.invoiceCount })}{" "}
+            {t("customers.from")} {data.invoiceCount}{" "}
+            {t("customers.invoice", { count: data.invoiceCount })}{" "}
             {t("customers.past_30_days")}
           </div>
         </div>

@@ -1,17 +1,16 @@
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { PokerSessionsHeader } from "@/components/poker/poker-sessions-header";
+import {
+  PokerSessionsStats,
+  PokerSessionsStatsSkeleton,
+} from "@/components/poker/poker-sessions-stats";
 import { SessionsDataTable } from "@/components/tables/poker-sessions/data-table";
 import { DataTableSkeleton } from "@/components/tables/poker-sessions/skeleton";
-import {
-  SessionsBreakdownWidget,
-  SessionsOverviewWidget,
-} from "@/components/widgets/poker";
 import { loadPokerSessionFilterParams } from "@/hooks/use-poker-session-params";
 import { loadSortParams } from "@/hooks/use-sort-params";
 import { getI18n } from "@/locales/server";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import type { SearchParams } from "nuqs";
 import { Suspense } from "react";
 
@@ -37,7 +36,7 @@ export default async function PokerSessionsPage(props: Props) {
       trpc.poker.sessions.get.infiniteQueryOptions({
         ...filter,
         sort: sort as [string, string] | null,
-      })
+      }),
     );
 
     // Prefetch stats for widgets
@@ -47,7 +46,7 @@ export default async function PokerSessionsPage(props: Props) {
         dateTo: filter.dateTo ?? undefined,
         sessionType: filter.sessionType ?? undefined,
         gameVariant: filter.gameVariant ?? undefined,
-      })
+      }),
     );
   } catch {
     // SSR prefetch failed, client will fetch via Suspense
@@ -63,23 +62,13 @@ export default async function PokerSessionsPage(props: Props) {
           </p>
         </div>
 
-        {/* Overview Widgets */}
-        <ErrorBoundary errorComponent={ErrorFallback}>
-          <Suspense fallback={<SessionsOverviewWidget.Skeleton />}>
-            <SessionsOverviewWidget />
-          </Suspense>
-        </ErrorBoundary>
-
-        {/* Breakdown Widgets */}
-        <ErrorBoundary errorComponent={ErrorFallback}>
-          <Suspense fallback={<SessionsBreakdownWidget.Skeleton />}>
-            <SessionsBreakdownWidget />
-          </Suspense>
-        </ErrorBoundary>
+        <Suspense fallback={<PokerSessionsStatsSkeleton />}>
+          <PokerSessionsStats />
+        </Suspense>
 
         <PokerSessionsHeader />
 
-        <ErrorBoundary errorComponent={ErrorFallback}>
+        <ErrorBoundary>
           <Suspense fallback={<DataTableSkeleton />}>
             <SessionsDataTable />
           </Suspense>

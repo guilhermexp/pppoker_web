@@ -3,15 +3,15 @@
 import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
-import { parseAsBoolean, useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
+import { parseAsBoolean, useQueryState } from "nuqs";
 
 export function ConnectBankMessage() {
   const t = useI18n();
   const router = useRouter();
   const [_, setCreateAccount] = useQueryState(
     "createAccount",
-    parseAsBoolean.withDefault(false)
+    parseAsBoolean.withDefault(false),
   );
 
   const handleCreateAccount = () => {
@@ -36,7 +36,9 @@ export function ConnectBankMessage() {
         </div>
       </div>
       <div className="flex gap-2 ml-11">
-        <Button onClick={handleCreateAccount}>{t("chat.create_account_button")}</Button>
+        <Button onClick={handleCreateAccount}>
+          {t("chat.create_account_button")}
+        </Button>
         <Button
           onClick={handleMaybeLater}
           variant="outline"

@@ -1,6 +1,9 @@
 "use client";
 
-import { usePokerSettingsMutation, usePokerSettingsQuery } from "@/hooks/use-team";
+import {
+  usePokerSettingsMutation,
+  usePokerSettingsQuery,
+} from "@/hooks/use-team";
 import { useZodForm } from "@/hooks/use-zod-form";
 import {
   Card,
@@ -42,15 +45,37 @@ const PLATFORMS = [
 ] as const;
 
 const ENTITY_TYPES = [
-  { value: "clube_privado", label: "Clube Privado", description: "Clube independente com lobby próprio" },
-  { value: "clube_liga", label: "Clube em Liga", description: "Clube filiado a uma liga" },
-  { value: "liga", label: "Liga", description: "Gerencia vários clubes (você é o Clube Master/Botão)" },
-  { value: "ambos", label: "Liga + Clube", description: "Opera como liga e clube master" },
+  {
+    value: "clube_privado",
+    label: "Clube Privado",
+    description: "Clube independente com lobby próprio",
+  },
+  {
+    value: "clube_liga",
+    label: "Clube em Liga",
+    description: "Clube filiado a uma liga",
+  },
+  {
+    value: "liga",
+    label: "Liga",
+    description: "Gerencia vários clubes (você é o Clube Master/Botão)",
+  },
+  {
+    value: "ambos",
+    label: "Liga + Clube",
+    description: "Opera como liga e clube master",
+  },
 ] as const;
 
 const formSchema = z.object({
-  pokerPlatform: z.enum(["pppoker", "suprema", "pokerbros", "fishpoker", "xpoker", "other"]).nullable().optional(),
-  pokerEntityType: z.enum(["clube_privado", "clube_liga", "liga", "ambos"]).nullable().optional(),
+  pokerPlatform: z
+    .enum(["pppoker", "suprema", "pokerbros", "fishpoker", "xpoker", "other"])
+    .nullable()
+    .optional(),
+  pokerEntityType: z
+    .enum(["clube_privado", "clube_liga", "liga", "ambos"])
+    .nullable()
+    .optional(),
   pokerClubId: z.string().nullable().optional(),
   pokerClubName: z.string().nullable().optional(),
   pokerLigaId: z.string().nullable().optional(),
@@ -77,7 +102,10 @@ function PokerSettingsForm() {
   });
 
   const entityType = form.watch("pokerEntityType");
-  const isClube = entityType === "clube_privado" || entityType === "clube_liga" || entityType === "ambos";
+  const isClube =
+    entityType === "clube_privado" ||
+    entityType === "clube_liga" ||
+    entityType === "ambos";
   const isLiga = entityType === "liga" || entityType === "ambos";
   const isClubeInLiga = entityType === "clube_liga";
 
@@ -126,7 +154,10 @@ function PokerSettingsForm() {
                         </FormControl>
                         <SelectContent>
                           {PLATFORMS.map((platform) => (
-                            <SelectItem key={platform.value} value={platform.value}>
+                            <SelectItem
+                              key={platform.value}
+                              value={platform.value}
+                            >
                               {platform.label}
                             </SelectItem>
                           ))}
@@ -157,7 +188,9 @@ function PokerSettingsForm() {
                             <SelectItem key={type.value} value={type.value}>
                               <div>
                                 <div>{type.label}</div>
-                                <div className="text-xs text-muted-foreground">{type.description}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {type.description}
+                                </div>
                               </div>
                             </SelectItem>
                           ))}
@@ -172,7 +205,9 @@ function PokerSettingsForm() {
               {/* Club Fields - Show if clube or ambos */}
               {isClube && (
                 <div className="space-y-4 pt-4 border-t">
-                  <h4 className="text-sm font-medium text-muted-foreground">Dados do Clube</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Dados do Clube
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -263,7 +298,9 @@ function PokerSettingsForm() {
               {/* Liga Fields - Show if liga or ambos */}
               {isLiga && (
                 <div className="space-y-4 pt-4 border-t">
-                  <h4 className="text-sm font-medium text-muted-foreground">Dados da Liga</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Dados da Liga
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -308,7 +345,9 @@ function PokerSettingsForm() {
                   {/* Super Union (PPST/PPSR) */}
                   <div className="space-y-4 p-4 rounded-lg bg-muted/30">
                     <div>
-                      <h5 className="text-sm font-medium">Super Union (opcional)</h5>
+                      <h5 className="text-sm font-medium">
+                        Super Union (opcional)
+                      </h5>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         PPST = Torneios Globais | PPSR = Cash Games Globais
                       </p>
@@ -369,7 +408,13 @@ function PokerSettingsForm() {
 
       {/* Linked Clubs Section - Only show for Liga */}
       {isLiga && (
-        <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Carregando clubes...</div>}>
+        <Suspense
+          fallback={
+            <div className="p-4 text-center text-muted-foreground">
+              Carregando clubes...
+            </div>
+          }
+        >
           <PokerLinkedClubs />
         </Suspense>
       )}
@@ -379,14 +424,16 @@ function PokerSettingsForm() {
 
 export function PokerSettings() {
   return (
-    <Suspense fallback={
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurações de Poker</CardTitle>
-          <CardDescription>Carregando...</CardDescription>
-        </CardHeader>
-      </Card>
-    }>
+    <Suspense
+      fallback={
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurações de Poker</CardTitle>
+            <CardDescription>Carregando...</CardDescription>
+          </CardHeader>
+        </Card>
+      }
+    >
       <PokerSettingsForm />
     </Suspense>
   );

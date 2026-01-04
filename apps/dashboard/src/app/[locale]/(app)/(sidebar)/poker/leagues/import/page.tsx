@@ -1,8 +1,7 @@
 import { ClientOnly } from "@/components/client-only";
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { LeagueImportUploader } from "@/components/poker/league-import-uploader";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
@@ -23,7 +22,7 @@ function LeagueImportSkeleton() {
 
 export default async function PokerLeaguesImportPage() {
   return (
-    <ErrorBoundary errorComponent={ErrorFallback}>
+    <ErrorBoundary>
       <Suspense fallback={<LeagueImportSkeleton />}>
         <ClientOnly fallback={<LeagueImportSkeleton />}>
           <LeagueImportUploader />

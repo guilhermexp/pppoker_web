@@ -81,7 +81,6 @@ export async function POST(req: Request) {
       .single()
       .throwOnError();
 
-
     const teamId = teamData?.id;
 
     // If the email is forwarded from a Google Workspace account, we need to send a reply to the team email

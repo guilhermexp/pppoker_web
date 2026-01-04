@@ -16,7 +16,10 @@ export default async function Layout({
             path: "/settings/accounts",
             label: t("navigation.settings.bank_connections"),
           },
-          { path: "/settings/members", label: t("navigation.settings.members") },
+          {
+            path: "/settings/members",
+            label: t("navigation.settings.members"),
+          },
           {
             path: "/settings/notifications",
             label: t("navigation.settings.notifications"),

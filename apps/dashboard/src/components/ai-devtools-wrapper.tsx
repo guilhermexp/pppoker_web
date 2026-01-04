@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 // Dynamic import with SSR disabled for AIDevtools (contains CSS imports that fail during SSR)
 const AIDevtools = dynamic(
   () => import("@ai-sdk-tools/devtools").then((mod) => mod.AIDevtools),
-  { ssr: false }
+  { ssr: false },
 );
 
 interface AIDevtoolsWrapperProps {

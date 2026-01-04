@@ -187,7 +187,9 @@ export function ChatInput() {
                   handleKeyDown(e);
                 }}
                 value={input}
-                placeholder={isWebSearch ? t("chat.search_web") : t("chat.ask_anything")}
+                placeholder={
+                  isWebSearch ? t("chat.search_web") : t("chat.ask_anything")
+                }
               />
             </PromptInputBody>
             <PromptInputToolbar>

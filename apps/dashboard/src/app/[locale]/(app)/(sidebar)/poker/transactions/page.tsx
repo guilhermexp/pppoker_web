@@ -1,4 +1,4 @@
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { PokerTransactionsHeader } from "@/components/poker/poker-transactions-header";
 import { TransactionsDataTable } from "@/components/tables/poker-transactions/data-table";
 import { DataTableSkeleton } from "@/components/tables/poker-transactions/skeleton";
@@ -7,7 +7,6 @@ import { loadSortParams } from "@/hooks/use-sort-params";
 import { getI18n } from "@/locales/server";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import type { SearchParams } from "nuqs";
 import { Suspense } from "react";
 
@@ -33,7 +32,7 @@ export default async function PokerTransactionsPage(props: Props) {
       trpc.poker.transactions.get.infiniteQueryOptions({
         ...filter,
         sort: sort as [string, string] | null,
-      })
+      }),
     );
   } catch {
     // SSR prefetch failed, client will fetch via Suspense
@@ -51,7 +50,7 @@ export default async function PokerTransactionsPage(props: Props) {
 
         <PokerTransactionsHeader />
 
-        <ErrorBoundary errorComponent={ErrorFallback}>
+        <ErrorBoundary>
           <Suspense fallback={<DataTableSkeleton />}>
             <TransactionsDataTable />
           </Suspense>

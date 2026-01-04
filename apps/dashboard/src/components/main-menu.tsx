@@ -21,6 +21,7 @@ const icons = {
   "/poker": () => <Icons.PieChart size={20} />,
   "/poker/league-import": () => <Icons.Globle size={20} />,
   "/poker/leagues": () => <Icons.Link size={20} />,
+  "/su": () => <Icons.GridView size={20} />,
 } as const;
 
 const getItems = (t: ReturnType<typeof useI18n>) => [
@@ -92,19 +93,21 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
     ],
   },
   {
-    path: "/poker/league-import",
-    name: t("sidebar.super_union"),
-    children: [
-      { path: "/poker/league-import/painel", name: t("sidebar.super_union_painel") },
-      { path: "/poker/league-import", name: t("sidebar.super_union_import") },
-      { path: "/poker/league-import/grade", name: t("sidebar.super_union_grade") },
-    ],
-  },
-  {
     path: "/poker/leagues",
     name: t("sidebar.ligas"),
     children: [
       { path: "/poker/leagues/import", name: t("sidebar.ligas_import") },
+    ],
+  },
+  {
+    path: "/su",
+    name: t("sidebar.su"),
+    children: [
+      { path: "/su/ligas", name: t("sidebar.su_ligas") },
+      { path: "/su/jogos", name: t("sidebar.su_jogos") },
+      { path: "/su/acertos", name: t("sidebar.su_acertos") },
+      { path: "/su/import", name: t("sidebar.su_import") },
+      { path: "/su/grade", name: t("sidebar.su_grade") },
     ],
   },
   {
@@ -139,6 +142,7 @@ const KNOWN_MENU_PATHS = [
   "/poker",
   "/poker/league-import",
   "/poker/leagues",
+  "/su",
   "/apps",
   "/settings",
 ];
@@ -349,7 +353,10 @@ export function MainMenu({ onSelect, isExpanded = false }: Props) {
   const findBestMatchPath = (currentPath: string) => {
     let bestMatch = "";
     for (const item of items) {
-      if (currentPath === item.path || currentPath.startsWith(`${item.path}/`)) {
+      if (
+        currentPath === item.path ||
+        currentPath.startsWith(`${item.path}/`)
+      ) {
         if (item.path.length > bestMatch.length) {
           bestMatch = item.path;
         }
@@ -368,7 +375,7 @@ export function MainMenu({ onSelect, isExpanded = false }: Props) {
             const isActive =
               (pathname === "/" && item.path === "/") ||
               (item.path === "/" && isValidChatPage) ||
-              (item.path === bestMatchPath);
+              item.path === bestMatchPath;
 
             return (
               <Item

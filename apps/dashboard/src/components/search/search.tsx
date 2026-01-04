@@ -144,7 +144,9 @@ const formatGroupName = (name: string): string | null => {
 };
 
 // Add desktop navigation function
-const handleDesktopNavigation = async () => { return false; };
+const handleDesktopNavigation = async () => {
+  return false;
+};
 
 const useSearchNavigation = () => {
   const router = useRouter();
@@ -155,7 +157,9 @@ const useSearchNavigation = () => {
   const { setParams: setTransactionParams } = useTransactionParams();
   const { setParams: setDocumentParams } = useDocumentParams();
 
-  const shouldUseWebNavigation = async () => { return true; };
+  const shouldUseWebNavigation = async () => {
+    return true;
+  };
 
   const navigateWithParams = async (
     params: Record<string, any>,
@@ -487,13 +491,18 @@ export function Search() {
 
   useHotkeys(
     "esc",
-    () => { setDebouncedSearch(""); setOpen(); },
+    () => {
+      setDebouncedSearch("");
+      setOpen();
+    },
     {
       enableOnFormTags: true,
     },
   );
 
-  useEffect(() => { refetchTimerStatus(); }, [refetchTimerStatus]);
+  useEffect(() => {
+    refetchTimerStatus();
+  }, [refetchTimerStatus]);
 
   // Refetch timer status when search component mounts (for both desktop and web)
   useEffect(() => {

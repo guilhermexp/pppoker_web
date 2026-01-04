@@ -1,9 +1,9 @@
 "use client";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@midday/ui/sheet";
+import { LeagueImportUploader as SUUploader } from "./league/league-import-uploader";
 import { ImportUploader } from "./poker/import-uploader";
 import { LeagueImportUploader as PokerLeagueUploader } from "./poker/league-import-uploader";
-import { LeagueImportUploader as SUUploader } from "./league/league-import-uploader";
 
 type PokerImportType = "club" | "league" | "su";
 

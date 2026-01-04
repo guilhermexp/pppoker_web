@@ -1,13 +1,12 @@
 "use client";
 
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
 import { ScrollArea } from "@midday/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EmptyState } from "./empty-state";
@@ -54,7 +53,7 @@ export function NotificationCenter() {
         align="end"
         sideOffset={10}
       >
-        <ErrorBoundary errorComponent={ErrorFallback}>
+        <ErrorBoundary>
           <Tabs defaultValue="inbox">
             <TabsList className="w-full justify-between bg-transparent border-b-[1px] rounded-none py-6">
               <div className="flex">

@@ -1,6 +1,11 @@
 "use client";
 
-import { languages, useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
+import {
+  languages,
+  useChangeLocale,
+  useCurrentLocale,
+  useI18n,
+} from "@/locales/client";
 import {
   Card,
   CardContent,

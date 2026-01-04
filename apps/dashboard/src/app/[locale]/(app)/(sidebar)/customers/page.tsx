@@ -1,5 +1,5 @@
 import { CustomersHeader } from "@/components/customers-header";
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { InactiveClients } from "@/components/inactive-clients";
 import { InvoiceSummarySkeleton } from "@/components/invoice-summary";
 import { MostActiveClient } from "@/components/most-active-client";
@@ -16,7 +16,6 @@ import {
   trpc,
 } from "@/trpc/server";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import type { SearchParams } from "nuqs";
 import { Suspense } from "react";
 
@@ -71,7 +70,7 @@ export default async function Page(props: Props) {
 
         <CustomersHeader />
 
-        <ErrorBoundary errorComponent={ErrorFallback}>
+        <ErrorBoundary>
           <Suspense fallback={<CustomersSkeleton />}>
             <DataTable />
           </Suspense>

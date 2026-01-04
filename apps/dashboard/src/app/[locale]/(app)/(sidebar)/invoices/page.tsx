@@ -1,4 +1,4 @@
-import { ErrorFallback } from "@/components/error-fallback";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { InvoiceHeader } from "@/components/invoice-header";
 import {
   InvoicePaymentScore,
@@ -15,7 +15,6 @@ import { loadSortParams } from "@/hooks/use-sort-params";
 import { batchPrefetch, trpc } from "@/trpc/server";
 import { getInitialInvoicesColumnVisibility } from "@/utils/columns";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import type { SearchParams } from "nuqs";
 import { Suspense } from "react";
 
@@ -71,7 +70,7 @@ export default async function Page(props: Props) {
 
       <InvoiceHeader />
 
-      <ErrorBoundary errorComponent={ErrorFallback}>
+      <ErrorBoundary>
         <Suspense fallback={<InvoiceSkeleton />}>
           <DataTable columnVisibility={columnVisibility} />
         </Suspense>

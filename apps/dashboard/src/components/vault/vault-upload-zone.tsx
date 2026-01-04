@@ -45,7 +45,9 @@ export function VaultUploadZone({ onUpload, children }: Props) {
   useEffect(() => {
     if (!toastId && showProgress) {
       const { id } = toast({
-        title: t("vault.upload_title", { count: uploadProgress.current.length }),
+        title: t("vault.upload_title", {
+          count: uploadProgress.current.length,
+        }),
         progress,
         variant: "progress",
         description: t("vault.upload_description"),
@@ -56,7 +58,9 @@ export function VaultUploadZone({ onUpload, children }: Props) {
     } else if (toastId) {
       update(toastId, {
         id: toastId,
-        title: t("vault.upload_title", { count: uploadProgress.current.length }),
+        title: t("vault.upload_title", {
+          count: uploadProgress.current.length,
+        }),
         progress,
         variant: "progress",
       });
@@ -207,7 +211,9 @@ export function VaultUploadZone({ onUpload, children }: Props) {
               {t("vault.drop_max_files")}
             </p>
 
-            <span className="text-xs text-[#878787]">{t("vault.drop_max_size")}</span>
+            <span className="text-xs text-[#878787]">
+              {t("vault.drop_max_size")}
+            </span>
           </div>
         </div>
       </div>

@@ -16,7 +16,9 @@ export function NoResults() {
         <Icons.Transactions2 className="mb-4" />
         <div className="text-center mb-6 space-y-2">
           <h2 className="font-medium text-lg">{t("vault.no_results")}</h2>
-          <p className="text-[#606060] text-sm">{t("vault.no_results_description")}</p>
+          <p className="text-[#606060] text-sm">
+            {t("vault.no_results_description")}
+          </p>
         </div>
 
         <Button variant="outline" onClick={() => setFilter(null)}>

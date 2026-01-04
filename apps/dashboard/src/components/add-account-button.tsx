@@ -8,7 +8,7 @@ export function AddAccountButton({ onClick }: { onClick?: () => void }) {
   const t = useI18n();
   const [_, setCreateAccount] = useQueryState(
     "createAccount",
-    parseAsBoolean.withDefault(false)
+    parseAsBoolean.withDefault(false),
   );
 
   const handleClick = () => {
