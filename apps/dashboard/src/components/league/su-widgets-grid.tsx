@@ -1,47 +1,9 @@
 "use client";
 
+import { useTRPC } from "@/trpc/client";
 import { Icons } from "@midday/ui/icons";
-import { useEffect, useState } from "react";
-
-// Storage key for SU validation data
-const SU_VALIDATION_STORAGE_KEY = "su-validation-data";
-
-// Type for stored validation data
-interface StoredSUValidationData {
-  // General stats
-  totalLigas: number;
-  totalTorneios: number;
-  totalJogadores: number;
-  // Taxa stats
-  totalTaxaPPST: number;
-  totalTaxaPPSR: number;
-  totalTaxa: number;
-  // Player stats
-  totalGanhosJogador: number;
-  // GTD stats
-  totalGTD: number;
-  totalArrecadacao: number;
-  totalGap: number;
-  // Overlay distribution
-  gapBrasileiro: number;
-  gapEstrangeiro: number;
-  percBrasileiro: number;
-  percEstrangeiro: number;
-  // Tournament types
-  gameTypes: {
-    mtt: number;
-    spin: number;
-    pko: number;
-    mko: number;
-    sat: number;
-  };
-  // Meta
-  period: {
-    start: string;
-    end: string;
-  };
-  savedAt: string;
-}
+import { Skeleton } from "@midday/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("pt-BR").format(value);
@@ -92,223 +54,273 @@ function SUWidget({
   );
 }
 
-export function SUWidgetsGrid() {
-  const [data, setData] = useState<StoredSUValidationData | null>(null);
+interface SUWidgetsGridProps {
+  from?: string | null;
+  to?: string | null;
+  viewMode?: "current_week" | "historical" | null;
+}
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(SU_VALIDATION_STORAGE_KEY);
-      if (stored) {
-        setData(JSON.parse(stored));
+export function SUWidgetsGrid({ from, to, viewMode }: SUWidgetsGridProps = {}) {
+  const trpc = useTRPC();
+  const { data, isLoading } = useQuery(
+    trpc.su.analytics.getDashboardStats.queryOptions(
+      {
+        from: from ?? undefined,
+        to: to ?? undefined,
+        viewMode: viewMode ?? undefined,
+      },
+      {
+        refetchOnWindowFocus: false,
       }
-    } catch {
-      // Ignore parse errors
-    }
-  }, []);
+    )
+  );
 
-  // Empty state
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 border rounded-lg bg-muted/10">
-        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-6">
-          <Icons.Globle className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h2 className="text-xl font-semibold mb-2">Nenhum dado disponível</h2>
-        <p className="text-muted-foreground text-center max-w-md mb-6">
-          Importe e valide uma planilha da Super Union para ver os dados aqui.
-        </p>
-      </div>
-    );
+  // Loading state
+  if (isLoading) {
+    return <SUWidgetsGrid.Skeleton />;
   }
+
+  // Use data or defaults
+  const stats = data ?? {
+    totalLeagues: 0,
+    totalGamesPPST: 0,
+    totalGamesPPSR: 0,
+    totalPlayersPPST: 0,
+    totalPlayersPPSR: 0,
+    leagueEarningsTotal: 0,
+    leagueEarningsPPST: 0,
+    leagueEarningsPPSR: 0,
+    gapGuaranteedTotal: 0,
+    gamesWithGap: 0,
+    maxGap: 0,
+    playerWinningsTotal: 0,
+    playerWinningsPPST: 0,
+    playerWinningsPPSR: 0,
+    totalGTD: 0,
+    topLeagues: [],
+    gamesPPSTByType: { nlh: 0, spinup: 0, knockout: 0 },
+    gamesPPSRByType: { nlh: 0, plo: 0, other: 0 },
+  };
+
+  const totalPlayers = (stats.totalPlayersPPST ?? 0) + (stats.totalPlayersPPSR ?? 0);
+  const totalGames = (stats.totalGamesPPST ?? 0) + (stats.totalGamesPPSR ?? 0);
+  const gameTypes = stats.gamesPPSTByType ?? { nlh: 0, spinup: 0, knockout: 0 };
+  const gameTypesPPSR = stats.gamesPPSRByType ?? { nlh: 0, plo: 0, other: 0 };
 
   return (
     <div className="space-y-6">
-      {/* Period Info */}
-      {data.period.start && data.period.end && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Icons.CalendarMonth className="w-4 h-4" />
-          <span>Período: {data.period.start} - {data.period.end}</span>
-        </div>
-      )}
-
-      {/* Row 1 - Main Stats */}
+      {/* Row 1 - Ligas, Jogadores, Taxa, GTD */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
         <SUWidget
-          title="Entidades"
-          description="Blocos Liga/SuperUnion"
+          title="Ligas"
+          description="Total de ligas ativas"
           icon={<Icons.Link className="size-4" />}
         >
-          <h2 className="text-2xl font-normal">{formatNumber(data.totalLigas)}</h2>
-        </SUWidget>
-
-        <SUWidget
-          title="Torneios"
-          description="Total de torneios importados"
-          icon={<Icons.PlayOutline className="size-4" />}
-        >
-          <h2 className="text-2xl font-normal">{formatNumber(data.totalTorneios)}</h2>
+          <h2 className="text-2xl font-normal">
+            {formatNumber(stats.totalLeagues ?? 0)}
+          </h2>
         </SUWidget>
 
         <SUWidget
           title="Jogadores"
-          description="Participações em torneios"
+          description="Total de participações"
           icon={<Icons.Customers className="size-4" />}
         >
-          <h2 className="text-2xl font-normal">{formatNumber(data.totalJogadores)}</h2>
+          <h2 className="text-2xl font-normal">
+            {formatNumber(totalPlayers)}
+          </h2>
         </SUWidget>
 
         <SUWidget
           title="Taxa Total"
-          description="Taxa total coletada"
+          description="Ganhos das ligas"
           icon={<Icons.Currency className="size-4" />}
         >
           <h2 className="text-2xl font-normal text-[#00C969]">
-            {formatCurrency(data.totalTaxa)}
+            {formatCurrency(stats.leagueEarningsTotal ?? 0)}
+          </h2>
+        </SUWidget>
+
+        <SUWidget
+          title="Total Garantidos"
+          description="Soma de GTD anunciado"
+          icon={<Icons.TrendingUp className="size-4" />}
+        >
+          <h2 className="text-2xl font-normal">
+            {formatCurrency(stats.totalGTD ?? 0)}
           </h2>
         </SUWidget>
       </div>
 
-      {/* Row 2 - Taxa Breakdown */}
+      {/* Row 2 - Gap e Detalhes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
         <SUWidget
-          title="Taxa PPST"
-          description="Taxa de torneios (PPST)"
-          icon={<Icons.Star className="size-4" />}
+          title="Total Gap"
+          description="Overlay total (GTD - Arrecadação)"
+          icon={<Icons.TrendingDown className="size-4" />}
         >
-          <h2 className="text-2xl font-normal text-[#00C969]">
-            {formatCurrency(data.totalTaxaPPST)}
+          <h2
+            className={`text-2xl font-normal ${(stats.gapGuaranteedTotal ?? 0) < 0 ? "text-red-500" : "text-muted-foreground"}`}
+          >
+            {formatCurrency(stats.gapGuaranteedTotal ?? 0)}
           </h2>
         </SUWidget>
 
         <SUWidget
-          title="Taxa PPSR"
-          description="Taxa de cash game (PPSR)"
-          icon={<Icons.TrendingUp className="size-4" />}
+          title="Jogos PPST"
+          description="Total de torneios"
+          icon={<Icons.PlayOutline className="size-4" />}
         >
-          <h2 className="text-2xl font-normal text-[#00C969]">
-            {formatCurrency(data.totalTaxaPPSR)}
+          <h2 className="text-2xl font-normal">
+            {formatNumber(stats.totalGamesPPST ?? 0)}
+          </h2>
+        </SUWidget>
+
+        <SUWidget
+          title="Jogos PPSR"
+          description="Total de cash games"
+          icon={<Icons.Inbox className="size-4" />}
+        >
+          <h2 className="text-2xl font-normal">
+            {formatNumber(stats.totalGamesPPSR ?? 0)}
           </h2>
         </SUWidget>
 
         <SUWidget
           title="Resultado Jogadores"
-          description="Ganhos e perdas dos jogadores"
+          description="Ganhos e perdas"
           icon={<Icons.Accounts className="size-4" />}
         >
-          <h2 className={`text-2xl font-normal ${data.totalGanhosJogador < 0 ? "text-red-500" : "text-blue-500"}`}>
-            {formatCurrency(data.totalGanhosJogador)}
-          </h2>
-        </SUWidget>
-
-        <SUWidget
-          title="Gap (Overlay)"
-          description="Diferença GTD vs Arrecadação"
-          icon={<Icons.Speed className="size-4" />}
-        >
-          <h2 className={`text-2xl font-normal ${data.totalGap < 0 ? "text-red-500" : "text-muted-foreground"}`}>
-            {formatCurrency(data.totalGap)}
+          <h2
+            className={`text-2xl font-normal ${(stats.playerWinningsTotal ?? 0) < 0 ? "text-red-500" : "text-blue-500"}`}
+          >
+            {formatCurrency(stats.playerWinningsTotal ?? 0)}
           </h2>
         </SUWidget>
       </div>
 
-      {/* Row 3 - GTD Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
-        <SUWidget
-          title="GTD Total"
-          description="Garantido total anunciado"
-          icon={<Icons.TrendingUp className="size-4" />}
-        >
-          <h2 className="text-2xl font-normal">{formatCurrency(data.totalGTD)}</h2>
-        </SUWidget>
-
-        <SUWidget
-          title="Arrecadação"
-          description="Total de buy-ins coletados"
-          icon={<Icons.ReceiptLong className="size-4" />}
-        >
-          <h2 className="text-2xl font-normal text-blue-500">{formatCurrency(data.totalArrecadacao)}</h2>
-        </SUWidget>
-
-        <SUWidget
-          title="Overlay BR"
-          description="Gap ligas 1765, 1675, 2448, 2101"
-          icon={<Icons.PieChart className="size-4" />}
-        >
-          <div className="flex flex-col">
-            <h2 className={`text-2xl font-normal ${data.gapBrasileiro < 0 ? "text-red-500" : "text-muted-foreground"}`}>
-              {formatCurrency(data.gapBrasileiro)}
-            </h2>
-            <span className="text-xs text-[#666666]">{data.percBrasileiro.toFixed(0)}% do total</span>
-          </div>
-        </SUWidget>
-
-        <SUWidget
-          title="Overlay Outros"
-          description="Gap outras ligas (não BR)"
-          icon={<Icons.Globle className="size-4" />}
-        >
-          <div className="flex flex-col">
-            <h2 className={`text-2xl font-normal ${data.gapEstrangeiro < 0 ? "text-red-500" : "text-muted-foreground"}`}>
-              {formatCurrency(data.gapEstrangeiro)}
-            </h2>
-            <span className="text-xs text-[#666666]">{data.percEstrangeiro.toFixed(0)}% do total</span>
-          </div>
-        </SUWidget>
-      </div>
-
-      {/* Row 4 - Tournament Types */}
+      {/* Row 3 - Tipos de Jogos PPST */}
       <div className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 transition-all duration-300 dark:hover:bg-[#0f0f0f] dark:hover:border-[#222222]">
         <div className="flex items-center gap-2 mb-4">
           <Icons.Category className="size-4 text-[#666666]" />
-          <span className="text-xs text-[#666666] font-medium">Tipos de Torneio</span>
+          <span className="text-xs text-[#666666] font-medium">
+            Tipos de Torneio (PPST)
+          </span>
           <span className="ml-auto text-2xl font-normal">
-            {formatNumber(
-              data.gameTypes.mtt +
-              data.gameTypes.spin +
-              data.gameTypes.pko +
-              data.gameTypes.mko +
-              data.gameTypes.sat
-            )}
+            {formatNumber(stats.totalGamesPPST ?? 0)}
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          {data.gameTypes.mtt > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded bg-blue-500/10 text-xs">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-[#666666]">MTT</span>
-              <span className="font-mono font-medium">{formatNumber(data.gameTypes.mtt)}</span>
-            </div>
-          )}
-          {data.gameTypes.spin > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded bg-pink-500/10 text-xs">
-              <div className="w-2 h-2 rounded-full bg-pink-500" />
-              <span className="text-[#666666]">SPIN</span>
-              <span className="font-mono font-medium">{formatNumber(data.gameTypes.spin)}</span>
-            </div>
-          )}
-          {data.gameTypes.pko > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded bg-orange-500/10 text-xs">
-              <div className="w-2 h-2 rounded-full bg-orange-500" />
-              <span className="text-[#666666]">PKO</span>
-              <span className="font-mono font-medium">{formatNumber(data.gameTypes.pko)}</span>
-            </div>
-          )}
-          {data.gameTypes.mko > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded bg-orange-400/10 text-xs">
-              <div className="w-2 h-2 rounded-full bg-orange-400" />
-              <span className="text-[#666666]">MKO</span>
-              <span className="font-mono font-medium">{formatNumber(data.gameTypes.mko)}</span>
-            </div>
-          )}
-          {data.gameTypes.sat > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded bg-purple-500/10 text-xs">
-              <div className="w-2 h-2 rounded-full bg-purple-500" />
-              <span className="text-[#666666]">SAT</span>
-              <span className="font-mono font-medium">{formatNumber(data.gameTypes.sat)}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 px-3 py-2 rounded bg-blue-500/10 text-xs">
+            <div className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="text-[#666666]">NLH</span>
+            <span className="font-mono font-medium">
+              {formatNumber(gameTypes.nlh ?? 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded bg-pink-500/10 text-xs">
+            <div className="w-2 h-2 rounded-full bg-pink-500" />
+            <span className="text-[#666666]">SpinUp</span>
+            <span className="font-mono font-medium">
+              {formatNumber(gameTypes.spinup ?? 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded bg-orange-500/10 text-xs">
+            <div className="w-2 h-2 rounded-full bg-orange-500" />
+            <span className="text-[#666666]">PKO/MKO</span>
+            <span className="font-mono font-medium">
+              {formatNumber(gameTypes.knockout ?? 0)}
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* Row 4 - Tipos de Jogos PPSR */}
+      <div className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 transition-all duration-300 dark:hover:bg-[#0f0f0f] dark:hover:border-[#222222]">
+        <div className="flex items-center gap-2 mb-4">
+          <Icons.Category className="size-4 text-[#666666]" />
+          <span className="text-xs text-[#666666] font-medium">
+            Tipos de Cash Game (PPSR)
+          </span>
+          <span className="ml-auto text-2xl font-normal">
+            {formatNumber(stats.totalGamesPPSR ?? 0)}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded bg-green-500/10 text-xs">
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-[#666666]">NLH</span>
+            <span className="font-mono font-medium">
+              {formatNumber(gameTypesPPSR.nlh ?? 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded bg-purple-500/10 text-xs">
+            <div className="w-2 h-2 rounded-full bg-purple-500" />
+            <span className="text-[#666666]">PLO</span>
+            <span className="font-mono font-medium">
+              {formatNumber(gameTypesPPSR.plo ?? 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded bg-gray-500/10 text-xs">
+            <div className="w-2 h-2 rounded-full bg-gray-500" />
+            <span className="text-[#666666]">Outros</span>
+            <span className="font-mono font-medium">
+              {formatNumber(gameTypesPPSR.other ?? 0)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 5 - Top Leagues */}
+      {(stats.topLeagues?.length ?? 0) > 0 && (
+        <div className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 transition-all duration-300 dark:hover:bg-[#0f0f0f] dark:hover:border-[#222222]">
+          <div className="flex items-center gap-2 mb-4">
+            <Icons.Leaderboard className="size-4 text-[#666666]" />
+            <span className="text-xs text-[#666666] font-medium">
+              Top Ligas por Taxa
+            </span>
+          </div>
+          <div className="space-y-2">
+            {stats.topLeagues?.slice(0, 5).map((league: any, index: number) => (
+              <div key={league.ligaId} className="flex items-center justify-between py-2 border-b border-[#1d1d1d] last:border-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-mono text-[#666666]">{index + 1}</span>
+                  <span className="text-sm">{league.ligaNome}</span>
+                </div>
+                <span className="text-sm text-[#00C969] font-mono">
+                  {formatCurrency(league.totalFee ?? 0)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+// Skeleton component
+SUWidgetsGrid.Skeleton = function SUWidgetsGridSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 h-[210px]">
+            <Skeleton className="h-4 w-20 mb-3" />
+            <Skeleton className="h-3 w-32 mb-4" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 h-[210px]">
+            <Skeleton className="h-4 w-20 mb-3" />
+            <Skeleton className="h-3 w-32 mb-4" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

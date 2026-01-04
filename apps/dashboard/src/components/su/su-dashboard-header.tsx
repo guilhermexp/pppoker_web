@@ -1,16 +1,21 @@
 "use client";
 
+import { CloseSUWeekPreviewModal } from "@/components/su/close-su-week-preview-modal";
+import { SUCustomize } from "@/components/su/widgets/su-customize";
+import { useSUDashboardParams } from "@/hooks/use-su-dashboard-params";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@midday/ui/button";
 import { Calendar } from "@midday/ui/calendar";
 import { Icons } from "@midday/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
-import { Skeleton } from "@midday/ui/skeleton";
-import { cn } from "@midday/ui/cn";
+import { useQuery } from "@tanstack/react-query";
 import { endOfMonth, format, startOfMonth, subDays, subMonths } from "date-fns";
 import Link from "next/link";
+import { useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { SUWeekPeriodIndicator } from "./su-week-period-indicator";
+import { SUWeekViewToggle } from "./su-week-view-toggle";
 
 const quickSelections = [
   { key: "7d", days: 7 },
@@ -20,29 +25,35 @@ const quickSelections = [
   { key: "last_month", days: -1 },
 ] as const;
 
-interface SUDashboardHeaderProps {
-  from?: string | null;
-  to?: string | null;
-  viewMode?: "current_week" | "historical" | null;
-  onParamsChange?: (params: { from?: string | null; to?: string | null; viewMode?: "current_week" | "historical" | null }) => void;
-}
-
-export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDashboardHeaderProps = {}) {
+export function SUDashboardHeader() {
+  const t = useI18n();
   const trpc = useTRPC();
-  const { data: openPeriods, isLoading: isLoadingOpenPeriods } =
-    useQuery(trpc.su.weekPeriods.getOpenPeriods.queryOptions());
+  const {
+    from,
+    to,
+    setParams,
+    hasDateFilter,
+    viewMode,
+    setViewMode,
+    isCurrentWeekView,
+  } = useSUDashboardParams();
+
+  const [closeWeekModalOpen, setCloseWeekModalOpen] = useState(false);
+
+  // Fetch open periods from su.weekPeriods.getOpenPeriods
+  const { data: openPeriods, isLoading: isLoadingOpenPeriods } = useQuery(
+    trpc.su.weekPeriods.getOpenPeriods.queryOptions(),
+  );
   const currentWeek = openPeriods?.[0] ?? null;
+  const isLoadingCurrentWeek = isLoadingOpenPeriods;
 
   const dateRange: DateRange = {
     from: from ? new Date(from) : undefined,
     to: to ? new Date(to) : undefined,
   };
 
-  const hasDateFilter = !!(from || to);
-  const isCurrentWeekView = viewMode === "current_week" || !viewMode;
-
   const handleSelect = (range?: DateRange) => {
-    onParamsChange?.({
+    setParams({
       from: range?.from ? format(range.from, "yyyy-MM-dd") : null,
       to: range?.to ? format(range.to, "yyyy-MM-dd") : null,
     });
@@ -52,19 +63,19 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
     const now = new Date();
 
     if (key === "this_month") {
-      onParamsChange?.({
+      setParams({
         from: format(startOfMonth(now), "yyyy-MM-dd"),
         to: format(endOfMonth(now), "yyyy-MM-dd"),
       });
     } else if (key === "last_month") {
       const lastMonth = subMonths(now, 1);
-      onParamsChange?.({
+      setParams({
         from: format(startOfMonth(lastMonth), "yyyy-MM-dd"),
         to: format(endOfMonth(lastMonth), "yyyy-MM-dd"),
       });
     } else {
       const days = Number.parseInt(key.replace("d", ""), 10);
-      onParamsChange?.({
+      setParams({
         from: format(subDays(now, days), "yyyy-MM-dd"),
         to: format(now, "yyyy-MM-dd"),
       });
@@ -73,20 +84,20 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
 
   const formatDateLabel = () => {
     if (!from && !to) {
-      return "Todo período";
+      return t("poker.dashboard.all_time");
     }
     if (from && to) {
       return `${format(new Date(from), "dd/MM/yy")} - ${format(new Date(to), "dd/MM/yy")}`;
     }
     if (from) {
-      return `De ${format(new Date(from), "dd/MM/yy")}`;
+      return `${t("poker.dashboard.from")} ${format(new Date(from), "dd/MM/yy")}`;
     }
-    return `Até ${format(new Date(to!), "dd/MM/yy")}`;
+    return `${t("poker.dashboard.to")} ${format(new Date(to!), "dd/MM/yy")}`;
   };
 
-  const handleViewModeChange = (value: string) => {
-    if (value) {
-      onParamsChange?.({ viewMode: value as "current_week" | "historical" });
+  const handleCloseCurrentWeek = () => {
+    if (currentWeek) {
+      setCloseWeekModalOpen(true);
     }
   };
 
@@ -94,57 +105,41 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
     <div className="space-y-4 mb-8">
       {/* Main header row */}
       <div className="flex justify-between items-center">
-        {/* Left side - Week indicator */}
+        {/* Left side - Week indicator and Close Week button */}
         <div className="flex items-center gap-3">
-          {isLoadingOpenPeriods ? (
-            <Skeleton className="h-8 w-48" />
+          {isLoadingCurrentWeek ? (
+            <SUWeekPeriodIndicator.Skeleton />
           ) : currentWeek ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 rounded-md border border-green-500/20">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-medium">
-                Semana {format(new Date(currentWeek.week_start), "dd/MM")} - {format(new Date(currentWeek.week_end), "dd/MM")}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                ({currentWeek.status === "open" ? "Aberta" : "Fechada"})
-              </span>
-            </div>
+            <SUWeekPeriodIndicator
+              weekStart={currentWeek.week_start}
+              weekEnd={currentWeek.week_end}
+              status={currentWeek.status}
+            />
           ) : (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Icons.CalendarMonth className="h-4 w-4" />
               <span>Super Union - Nenhum período importado</span>
             </div>
           )}
+
+          {isCurrentWeekView && currentWeek?.status === "open" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCloseCurrentWeek}
+            >
+              <Icons.Check className="h-4 w-4 mr-2" />
+              Fechar Semana
+            </Button>
+          )}
         </div>
 
         {/* Center - View mode toggle */}
-        <div className="flex bg-muted rounded-lg p-1 gap-1">
-          <button
-            type="button"
-            onClick={() => handleViewModeChange("current_week")}
-            className={cn(
-              "flex items-center px-3 py-1.5 text-sm rounded-md transition-colors",
-              isCurrentWeekView
-                ? "bg-background shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Icons.CalendarMonth className="h-4 w-4 mr-2" />
-            Semana Atual
-          </button>
-          <button
-            type="button"
-            onClick={() => handleViewModeChange("historical")}
-            className={cn(
-              "flex items-center px-3 py-1.5 text-sm rounded-md transition-colors",
-              !isCurrentWeekView
-                ? "bg-background shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Icons.History className="h-4 w-4 mr-2" />
-            Histórico
-          </button>
-        </div>
+        <SUWeekViewToggle
+          value={viewMode}
+          onChange={setViewMode}
+          disabled={isLoadingCurrentWeek}
+        />
 
         {/* Right side - Filters and Actions */}
         <div className="flex items-center gap-2">
@@ -166,7 +161,7 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
                   {/* Quick selections */}
                   <div className="border-r p-2 space-y-1">
                     <p className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                      Seleção rápida
+                      {t("poker.dashboard.quick_select")}
                     </p>
                     {quickSelections.map((item) => (
                       <Button
@@ -176,11 +171,7 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
                         className="w-full justify-start text-sm"
                         onClick={() => handleQuickSelect(item.key)}
                       >
-                        {item.key === "7d" && "Últimos 7 dias"}
-                        {item.key === "30d" && "Últimos 30 dias"}
-                        {item.key === "90d" && "Últimos 90 dias"}
-                        {item.key === "this_month" && "Este mês"}
-                        {item.key === "last_month" && "Mês passado"}
+                        {t(`poker.dashboard.period_${item.key}` as any)}
                       </Button>
                     ))}
                     {hasDateFilter && (
@@ -190,10 +181,10 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
                           variant="ghost"
                           size="sm"
                           className="w-full justify-start text-sm text-muted-foreground"
-                          onClick={() => onParamsChange?.({ from: null, to: null })}
+                          onClick={() => setParams(null)}
                         >
                           <Icons.Clear className="mr-2 h-3 w-3" />
-                          Limpar filtro
+                          {t("poker.dashboard.clear_filter")}
                         </Button>
                       </>
                     )}
@@ -215,13 +206,23 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
 
           {/* Quick Actions */}
           <Button variant="outline" size="sm" asChild>
-            <Link href="/poker/league-import">
+            <Link href="/su/import">
               <Icons.Import className="mr-2 h-4 w-4" />
               Importar
             </Link>
           </Button>
+
+          {/* Customize Widgets */}
+          <SUCustomize />
         </div>
       </div>
+
+      {/* Close Week Preview Modal */}
+      <CloseSUWeekPreviewModal
+        open={closeWeekModalOpen}
+        onOpenChange={setCloseWeekModalOpen}
+        weekPeriodId={currentWeek?.id}
+      />
     </div>
   );
 }
