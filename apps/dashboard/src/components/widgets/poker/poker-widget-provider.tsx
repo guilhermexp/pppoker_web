@@ -1,6 +1,9 @@
 "use client";
 
-import type { PokerWidgetPreferences, PokerWidgetType } from "@midday/cache/poker-widget-preferences-cache";
+import type {
+  PokerWidgetPreferences,
+  PokerWidgetType,
+} from "@midday/cache/poker-widget-preferences-cache";
 import { type ReactNode, createContext, useContext, useRef } from "react";
 import { useStore } from "zustand";
 import { devtools } from "zustand/middleware";
@@ -25,8 +28,14 @@ interface PokerWidgetState {
   // Widget Management
   reorderPrimaryWidgets: (newOrder: PokerWidgetType[]) => void;
   moveToAvailable: (widgetId: PokerWidgetType) => void;
-  moveToPrimary: (widgetId: PokerWidgetType, newPrimaryOrder: PokerWidgetType[]) => void;
-  swapWithLastPrimary: (widgetId: PokerWidgetType, insertAtIndex: number) => void;
+  moveToPrimary: (
+    widgetId: PokerWidgetType,
+    newPrimaryOrder: PokerWidgetType[],
+  ) => void;
+  swapWithLastPrimary: (
+    widgetId: PokerWidgetType,
+    insertAtIndex: number,
+  ) => void;
 
   // Data Actions
   setSaving: (isSaving: boolean) => void;
@@ -35,11 +44,15 @@ interface PokerWidgetState {
 const NUMBER_OF_WIDGETS = 8;
 
 // Store factory that accepts initial preferences
-export const createPokerWidgetStore = (initialPreferences?: PokerWidgetPreferences) => {
+export const createPokerWidgetStore = (
+  initialPreferences?: PokerWidgetPreferences,
+) => {
   const initialState = {
     isCustomizing: false,
-    primaryWidgets: initialPreferences?.primaryWidgets || ([] as PokerWidgetType[]),
-    availableWidgets: initialPreferences?.availableWidgets || ([] as PokerWidgetType[]),
+    primaryWidgets:
+      initialPreferences?.primaryWidgets || ([] as PokerWidgetType[]),
+    availableWidgets:
+      initialPreferences?.availableWidgets || ([] as PokerWidgetType[]),
     isSaving: false,
   };
 
@@ -105,7 +118,10 @@ export const createPokerWidgetStore = (initialPreferences?: PokerWidgetPreferenc
           );
         },
 
-        swapWithLastPrimary: (widgetId: PokerWidgetType, insertAtIndex: number) => {
+        swapWithLastPrimary: (
+          widgetId: PokerWidgetType,
+          insertAtIndex: number,
+        ) => {
           const state = get();
           if (state.primaryWidgets.length < NUMBER_OF_WIDGETS) {
             console.warn("Swap only needed when primary is full");
@@ -150,9 +166,9 @@ export const createPokerWidgetStore = (initialPreferences?: PokerWidgetPreferenc
 // Context for the store
 export type PokerWidgetStoreApi = ReturnType<typeof createPokerWidgetStore>;
 
-export const PokerWidgetStoreContext = createContext<PokerWidgetStoreApi | undefined>(
-  undefined,
-);
+export const PokerWidgetStoreContext = createContext<
+  PokerWidgetStoreApi | undefined
+>(undefined);
 
 // Provider component
 export interface PokerWidgetProviderProps {
@@ -178,11 +194,15 @@ export const PokerWidgetProvider = ({
 };
 
 // Hook to use the store
-export const usePokerWidgetStore = <T,>(selector: (store: PokerWidgetState) => T): T => {
+export const usePokerWidgetStore = <T,>(
+  selector: (store: PokerWidgetState) => T,
+): T => {
   const storeContext = useContext(PokerWidgetStoreContext);
 
   if (!storeContext) {
-    throw new Error("usePokerWidgetStore must be used within PokerWidgetProvider");
+    throw new Error(
+      "usePokerWidgetStore must be used within PokerWidgetProvider",
+    );
   }
 
   return useStore(storeContext, selector);

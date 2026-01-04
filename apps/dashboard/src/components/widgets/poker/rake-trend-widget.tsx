@@ -35,7 +35,8 @@ function ChartTooltip({ active, payload }: TooltipProps) {
           Semana de {data.formattedWeek}
         </p>
         <p className="text-black dark:text-white font-sans font-medium">
-          Rake: {data.rake.toLocaleString("pt-BR", {
+          Rake:{" "}
+          {data.rake.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
@@ -57,7 +58,7 @@ export function RakeTrendWidget() {
   const trpc = useTRPC();
 
   const { data, isLoading } = useQuery(
-    trpc.poker.analytics.getRakeTrend.queryOptions({ weeks: 8 })
+    trpc.poker.analytics.getRakeTrend.queryOptions({ weeks: 8 }),
   );
 
   if (isLoading) {

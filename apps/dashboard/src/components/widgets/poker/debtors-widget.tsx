@@ -12,7 +12,7 @@ export function DebtorsWidget() {
   const t = useI18n();
 
   const { data, isLoading } = useQuery(
-    trpc.poker.analytics.getDebtors.queryOptions({ limit: 5 })
+    trpc.poker.analytics.getDebtors.queryOptions({ limit: 5 }),
   );
 
   if (isLoading) {

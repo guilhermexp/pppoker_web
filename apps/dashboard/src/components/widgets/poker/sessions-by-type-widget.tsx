@@ -4,13 +4,7 @@ import { useTRPC } from "@/trpc/client";
 import { Icons } from "@midday/ui/icons";
 import { Skeleton } from "@midday/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 const COLORS = [
   "#22c55e", // green for cash_game
@@ -51,9 +45,7 @@ function ChartTooltip({ active, payload }: TooltipProps) {
         <p className="mb-1 text-black dark:text-white font-sans">
           Sessoes: {data.count}
         </p>
-        <p className="text-gray-500 dark:text-[#666666]">
-          {data.percentage}%
-        </p>
+        <p className="text-gray-500 dark:text-[#666666]">{data.percentage}%</p>
       </div>
     );
   }
@@ -64,7 +56,7 @@ export function SessionsByTypeWidget() {
   const trpc = useTRPC();
 
   const { data, isLoading } = useQuery(
-    trpc.poker.analytics.getSessionsByType.queryOptions()
+    trpc.poker.analytics.getSessionsByType.queryOptions(),
   );
 
   if (isLoading) {

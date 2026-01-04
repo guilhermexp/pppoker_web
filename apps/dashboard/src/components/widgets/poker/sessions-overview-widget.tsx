@@ -23,7 +23,8 @@ function formatNumber(value: number) {
 export function SessionsOverviewWidget() {
   const trpc = useTRPC();
   const t = useI18n();
-  const { dateFrom, dateTo, sessionType, gameVariant } = usePokerSessionParams();
+  const { dateFrom, dateTo, sessionType, gameVariant } =
+    usePokerSessionParams();
 
   const { data, isLoading } = useQuery(
     trpc.poker.sessions.getStats.queryOptions({
@@ -31,7 +32,7 @@ export function SessionsOverviewWidget() {
       dateTo: dateTo ?? undefined,
       sessionType: sessionType ?? undefined,
       gameVariant: gameVariant ?? undefined,
-    })
+    }),
   );
 
   if (isLoading) {
@@ -85,7 +86,9 @@ export function SessionsOverviewWidget() {
           <div key={stat.label} className="space-y-1">
             <div className="flex items-center gap-1.5">
               <stat.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{stat.label}</span>
+              <span className="text-xs text-muted-foreground">
+                {stat.label}
+              </span>
             </div>
             <p className={`text-xl font-semibold ${stat.className ?? ""}`}>
               {stat.value}

@@ -30,7 +30,7 @@ export function AgentsOverviewWidget() {
       dateFrom: dateFrom ?? undefined,
       dateTo: dateTo ?? undefined,
       superAgentId: superAgentId ?? undefined,
-    })
+    }),
   );
 
   if (isLoading) {
@@ -87,7 +87,9 @@ export function AgentsOverviewWidget() {
           <div key={stat.label} className="space-y-1">
             <div className="flex items-center gap-1.5">
               <stat.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{stat.label}</span>
+              <span className="text-xs text-muted-foreground">
+                {stat.label}
+              </span>
             </div>
             <p className={`text-xl font-semibold ${stat.className ?? ""}`}>
               {stat.value}

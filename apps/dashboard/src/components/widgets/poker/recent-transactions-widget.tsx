@@ -45,7 +45,7 @@ export function RecentTransactionsWidget() {
   const trpc = useTRPC();
 
   const { data, isLoading } = useQuery(
-    trpc.poker.transactions.get.queryOptions({ pageSize: 5 })
+    trpc.poker.transactions.get.queryOptions({ pageSize: 5 }),
   );
 
   if (isLoading) {
@@ -114,15 +114,16 @@ export function RecentTransactionsWidget() {
   );
 }
 
-RecentTransactionsWidget.Skeleton = function RecentTransactionsWidgetSkeleton() {
-  return (
-    <div className="border rounded-lg p-4 dark:bg-[#0c0c0c] dark:border-[#1d1d1d]">
-      <Skeleton className="h-4 w-40 mb-4" />
-      <div className="space-y-3">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-12 w-full" />
-        ))}
+RecentTransactionsWidget.Skeleton =
+  function RecentTransactionsWidgetSkeleton() {
+    return (
+      <div className="border rounded-lg p-4 dark:bg-[#0c0c0c] dark:border-[#1d1d1d]">
+        <Skeleton className="h-4 w-40 mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };

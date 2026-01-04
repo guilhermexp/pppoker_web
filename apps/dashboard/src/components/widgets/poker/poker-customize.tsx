@@ -3,7 +3,10 @@
 import { useI18n } from "@/locales/client";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
-import { usePokerIsCustomizing, usePokerWidgetActions } from "./poker-widget-provider";
+import {
+  usePokerIsCustomizing,
+  usePokerWidgetActions,
+} from "./poker-widget-provider";
 
 export function PokerCustomize() {
   const isCustomizing = usePokerIsCustomizing();
@@ -18,7 +21,9 @@ export function PokerCustomize() {
       onClick={() => setIsCustomizing(!isCustomizing)}
       data-no-close
     >
-      <span>{isCustomizing ? t("dashboard.save") : t("dashboard.customize")}</span>
+      <span>
+        {isCustomizing ? t("dashboard.save") : t("dashboard.customize")}
+      </span>
       {isCustomizing ? (
         <Icons.Check size={16} />
       ) : (

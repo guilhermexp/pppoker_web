@@ -36,7 +36,7 @@ export function PokerStatCard({
       className={cn(
         "dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 h-[210px] flex flex-col justify-between transition-all duration-300 dark:hover:bg-[#0f0f0f] dark:hover:border-[#222222] group",
         actionHref && "cursor-pointer",
-        className
+        className,
       )}
     >
       <div>
@@ -44,9 +44,7 @@ export function PokerStatCard({
           <span className="text-[#666666]">{icon}</span>
           <h3 className="text-xs text-[#666666] font-medium">{title}</h3>
         </div>
-        {description && (
-          <p className="text-sm text-[#666666]">{description}</p>
-        )}
+        {description && <p className="text-sm text-[#666666]">{description}</p>}
       </div>
 
       <div>
@@ -56,16 +54,21 @@ export function PokerStatCard({
             {breakdown.map((item, idx) => (
               <div key={idx} className="flex justify-between text-xs">
                 <span className="text-[#666666]">{item.label}</span>
-                <span className={cn(
-                  "font-medium",
-                  item.color === "green" && "text-green-500",
-                  item.color === "red" && "text-red-500",
-                  item.color === "orange" && "text-orange-500",
-                  item.color === "blue" && "text-blue-500",
-                  item.color === "purple" && "text-purple-500",
-                  (!item.color || item.color === "default") && "text-foreground"
-                )}>
-                  {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
+                <span
+                  className={cn(
+                    "font-medium",
+                    item.color === "green" && "text-green-500",
+                    item.color === "red" && "text-red-500",
+                    item.color === "orange" && "text-orange-500",
+                    item.color === "blue" && "text-blue-500",
+                    item.color === "purple" && "text-purple-500",
+                    (!item.color || item.color === "default") &&
+                      "text-foreground",
+                  )}
+                >
+                  {typeof item.value === "number"
+                    ? item.value.toLocaleString()
+                    : item.value}
                 </span>
               </div>
             ))}

@@ -5,13 +5,7 @@ import { useTRPC } from "@/trpc/client";
 import { Icons } from "@midday/ui/icons";
 import { Skeleton } from "@midday/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 const COLORS = [
   "#ffffff",
@@ -42,7 +36,8 @@ function ChartTooltip({ active, payload }: TooltipProps) {
           {data.gameType}
         </p>
         <p className="mb-1 text-black dark:text-white font-sans">
-          Rake: {data.rake.toLocaleString(undefined, {
+          Rake:{" "}
+          {data.rake.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
@@ -61,7 +56,7 @@ export function RevenueByGameWidget() {
   const t = useI18n();
 
   const { data, isLoading } = useQuery(
-    trpc.poker.analytics.getRevenueByGameType.queryOptions()
+    trpc.poker.analytics.getRevenueByGameType.queryOptions(),
   );
 
   if (isLoading) {

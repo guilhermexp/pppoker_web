@@ -57,7 +57,8 @@ function formatCurrency(value: number) {
 export function SessionsBreakdownWidget() {
   const trpc = useTRPC();
   const t = useI18n();
-  const { dateFrom, dateTo, sessionType, gameVariant } = usePokerSessionParams();
+  const { dateFrom, dateTo, sessionType, gameVariant } =
+    usePokerSessionParams();
 
   const { data, isLoading } = useQuery(
     trpc.poker.sessions.getStats.queryOptions({
@@ -65,7 +66,7 @@ export function SessionsBreakdownWidget() {
       dateTo: dateTo ?? undefined,
       sessionType: sessionType ?? undefined,
       gameVariant: gameVariant ?? undefined,
-    })
+    }),
   );
 
   if (isLoading) {
@@ -110,10 +111,7 @@ export function SessionsBreakdownWidget() {
                 bgColor: "bg-gray-500/10",
               };
               return (
-                <div
-                  key={type}
-                  className="flex items-center justify-between"
-                >
+                <div key={type} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="outline"

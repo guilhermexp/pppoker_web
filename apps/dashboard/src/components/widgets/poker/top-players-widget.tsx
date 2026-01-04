@@ -12,7 +12,7 @@ export function TopPlayersWidget() {
   const t = useI18n();
 
   const { data, isLoading } = useQuery(
-    trpc.poker.analytics.getTopPlayers.queryOptions({ limit: 5 })
+    trpc.poker.analytics.getTopPlayers.queryOptions({ limit: 5 }),
   );
 
   if (isLoading) {

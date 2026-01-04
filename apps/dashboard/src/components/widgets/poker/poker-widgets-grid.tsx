@@ -458,7 +458,7 @@ const WIDGET_COMPONENTS: Record<
 export function PokerWidgetsGrid() {
   const trpc = useTRPC();
   const t = useI18n();
-  const { from, to } = usePokerDashboardParams();
+  const { from, to, viewMode } = usePokerDashboardParams();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const gridRef = useRef<HTMLDivElement>(null!);
 
@@ -491,10 +491,35 @@ export function PokerWidgetsGrid() {
     }),
   );
 
+  // Fetch open periods to get the ACTUAL current week dates (from imports, not from today)
+  const { data: openPeriods, isLoading: isLoadingPeriods } = useQuery(
+    trpc.poker.weekPeriods.getOpenPeriods.queryOptions(),
+  );
+
+  // The "current" week is the most recent open period (first in list)
+  const currentWeekPeriod = openPeriods?.[0] ?? null;
+
+  // Determine the actual date range to use for the query
+  // In "current_week" mode, use dates from the open period (imported data)
+  // In "historical" mode, use the user-selected from/to dates
+  const effectiveFrom =
+    viewMode === "current_week" && currentWeekPeriod
+      ? currentWeekPeriod.weekStart
+      : (from ?? undefined);
+  const effectiveTo =
+    viewMode === "current_week" && currentWeekPeriod
+      ? currentWeekPeriod.weekEnd
+      : (to ?? undefined);
+
   const { data, isLoading } = useQuery(
     trpc.poker.analytics.getDashboardStats.queryOptions({
-      from: from ?? undefined,
-      to: to ?? undefined,
+      from: effectiveFrom,
+      to: effectiveTo,
+      // Don't pass viewMode anymore - we're handling the date logic here
+      viewMode: undefined,
+      // In current_week mode, include draft (non-committed) data for preview
+      // In historical mode, only show committed data
+      includeDraft: viewMode === "current_week",
     }),
   );
 
@@ -585,7 +610,11 @@ export function PokerWidgetsGrid() {
     return `wiggle-${wiggleIndex}`;
   };
 
-  if (isLoading) {
+  // Show skeleton while loading data or while loading periods in current_week mode
+  const showSkeleton =
+    isLoading || (viewMode === "current_week" && isLoadingPeriods);
+
+  if (showSkeleton) {
     return <PokerWidgetsGrid.Skeleton />;
   }
 

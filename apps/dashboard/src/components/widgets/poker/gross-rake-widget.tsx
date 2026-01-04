@@ -11,7 +11,7 @@ export function GrossRakeWidget() {
   const t = useI18n();
 
   const { data, isLoading } = useQuery(
-    trpc.poker.analytics.getGrossRake.queryOptions()
+    trpc.poker.analytics.getGrossRake.queryOptions(),
   );
 
   if (isLoading) {

@@ -16,12 +16,29 @@ function formatCurrency(value: number) {
   });
 }
 
-const statusColors: Record<string, { bg: string; text: string; dot: string }> = {
-  active: { bg: "bg-green-500/10", text: "text-green-600", dot: "bg-green-500" },
-  inactive: { bg: "bg-gray-500/10", text: "text-gray-500", dot: "bg-gray-500" },
-  suspended: { bg: "bg-orange-500/10", text: "text-orange-600", dot: "bg-orange-500" },
-  blacklisted: { bg: "bg-red-500/10", text: "text-red-600", dot: "bg-red-500" },
-};
+const statusColors: Record<string, { bg: string; text: string; dot: string }> =
+  {
+    active: {
+      bg: "bg-green-500/10",
+      text: "text-green-600",
+      dot: "bg-green-500",
+    },
+    inactive: {
+      bg: "bg-gray-500/10",
+      text: "text-gray-500",
+      dot: "bg-gray-500",
+    },
+    suspended: {
+      bg: "bg-orange-500/10",
+      text: "text-orange-600",
+      dot: "bg-orange-500",
+    },
+    blacklisted: {
+      bg: "bg-red-500/10",
+      text: "text-red-600",
+      dot: "bg-red-500",
+    },
+  };
 
 export function AgentsBreakdownWidget() {
   const trpc = useTRPC();
@@ -33,7 +50,7 @@ export function AgentsBreakdownWidget() {
       dateFrom: dateFrom ?? undefined,
       dateTo: dateTo ?? undefined,
       superAgentId: superAgentId ?? undefined,
-    })
+    }),
   );
 
   if (isLoading) {
@@ -41,9 +58,14 @@ export function AgentsBreakdownWidget() {
   }
 
   const byStatus = data?.byStatus ?? {};
-  const bySuperAgent = data?.bySuperAgent ?? [];
+  // Ensure bySuperAgent is always an array (API may return {} when no data)
+  const bySuperAgent = Array.isArray(data?.bySuperAgent)
+    ? data.bySuperAgent
+    : [];
 
-  const statusEntries = Object.entries(byStatus).sort((a, b) => b[1].rake - a[1].rake);
+  const statusEntries = Object.entries(byStatus).sort(
+    (a, b) => b[1].rake - a[1].rake,
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -112,15 +134,21 @@ export function AgentsBreakdownWidget() {
           ) : (
             statusEntries.map(([status, stats]) => {
               const colors = statusColors[status] ?? statusColors.active;
-              const totalRake = Object.values(byStatus).reduce((sum, s) => sum + s.rake, 0);
-              const percentage = totalRake > 0 ? (stats.rake / totalRake) * 100 : 0;
+              const totalRake = Object.values(byStatus).reduce(
+                (sum, s) => sum + s.rake,
+                0,
+              );
+              const percentage =
+                totalRake > 0 ? (stats.rake / totalRake) * 100 : 0;
 
               return (
                 <div key={status} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
                     <div>
-                      <span className={`text-sm font-medium capitalize ${colors.text}`}>
+                      <span
+                        className={`text-sm font-medium capitalize ${colors.text}`}
+                      >
                         {t(`poker.status.${status}` as any) ?? status}
                       </span>
                       <span className="text-xs text-muted-foreground ml-2">
