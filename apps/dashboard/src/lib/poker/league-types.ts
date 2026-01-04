@@ -2,74 +2,74 @@
 // Note: League imports have an additional "Geral da Liga" sheet before the club-level sheets
 
 import type {
+  AgentSummary,
+  DetectedInsight,
+  ParsedDemonstrativo,
+  ParsedDetailed,
   ParsedPlayer,
-  ParsedTransaction,
+  ParsedRakeback,
   ParsedSession,
   ParsedSummary,
-  ParsedDetailed,
-  ParsedDemonstrativo,
-  ParsedRakeback,
+  ParsedTransaction,
   ValidationCheck,
   ValidationWarning,
-  DetectedInsight,
-  AgentSummary,
 } from "./types";
 
 // Club row from "Geral de Liga" sheet
 // Maps columns A-AP from the Excel sheet (42 columns)
 export type ParsedLeagueClubRow = {
   // Section 1: Club Info (A-B)
-  clubName: string;                   // A: Nome do Clube
-  clubId: string;                     // B: ID de clube
+  clubName: string; // A: Nome do Clube
+  clubId: string; // B: ID de clube
 
   // Section 2: Classifications (C-F)
-  classificationPpsr: number;         // C: Classificação PPSR
-  classificationRingGame: number;     // D: Classificação Ring Game
-  classificationRgCustom: number;     // E: Classificação de RG Personalizado
-  classificationMtt: number;          // F: Classificação MTT
+  classificationPpsr: number; // C: Classificação PPSR
+  classificationRingGame: number; // D: Classificação Ring Game
+  classificationRgCustom: number; // E: Classificação de RG Personalizado
+  classificationMtt: number; // F: Classificação MTT
 
   // Section 3: Player Earnings - Ganhos do jogador (G-P)
-  playerEarningsGeneral: number;      // G: Geral
-  playerEarningsRingGames: number;    // H: Ring Games
-  playerEarningsMttSitNGo: number;    // I: MTT, SItNGo
-  playerEarningsSpinUp: number;       // J: SPINUP
+  playerEarningsGeneral: number; // G: Geral
+  playerEarningsRingGames: number; // H: Ring Games
+  playerEarningsMttSitNGo: number; // I: MTT, SItNGo
+  playerEarningsSpinUp: number; // J: SPINUP
   playerEarningsCaribbeanPoker: number; // K: Caribbean+ Poker
-  playerEarningsColorGame: number;    // L: COLOR GAME
-  playerEarningsCrash: number;        // M: CRASH
-  playerEarningsLuckyDraw: number;    // N: LUCKY DRAW
-  playerEarningsJackpot: number;      // O: Jackpot
-  playerEarningsSplitEv: number;      // P: Dividir EV
+  playerEarningsColorGame: number; // L: COLOR GAME
+  playerEarningsCrash: number; // M: CRASH
+  playerEarningsLuckyDraw: number; // N: LUCKY DRAW
+  playerEarningsJackpot: number; // O: Jackpot
+  playerEarningsSplitEv: number; // P: Dividir EV
 
   // Section 4: Ticket/Prize (Q-S)
-  ticketValueWon: number;             // Q: Valor do ticket ganho
-  ticketBuyInPlayer: number;          // R: Buy-in de ticket
-  customPrizeValue: number;           // S: Valor do prêmio personalizado
+  ticketValueWon: number; // Q: Valor do ticket ganho
+  ticketBuyInPlayer: number; // R: Buy-in de ticket
+  customPrizeValue: number; // S: Valor do prêmio personalizado
 
   // Section 5: Club Earnings - Ganhos do clube (T-AL)
-  clubEarningsGeneral: number;        // T: Geral
-  clubEarningsFee: number;            // U: Taxa
-  clubEarningsFeePpst: number;        // V: Taxa (jogos PPST)
-  clubEarningsFeeNonPpst: number;     // W: Taxa (jogos não PPST)
-  clubEarningsFeePpsr: number;        // X: Taxa (jogos PPSR)
-  clubEarningsFeeNonPpsr: number;     // Y: Taxa (jogos não PPSR)
-  clubEarningsSpinUpBuyIn: number;    // Z: Buy-in de SPINUP
-  clubEarningsSpinUpPrize: number;    // AA: Premiação de SPINUP
-  clubEarningsCaribbeanBets: number;  // AB: Apostas de Caribbean+ Poker
+  clubEarningsGeneral: number; // T: Geral
+  clubEarningsFee: number; // U: Taxa
+  clubEarningsFeePpst: number; // V: Taxa (jogos PPST)
+  clubEarningsFeeNonPpst: number; // W: Taxa (jogos não PPST)
+  clubEarningsFeePpsr: number; // X: Taxa (jogos PPSR)
+  clubEarningsFeeNonPpsr: number; // Y: Taxa (jogos não PPSR)
+  clubEarningsSpinUpBuyIn: number; // Z: Buy-in de SPINUP
+  clubEarningsSpinUpPrize: number; // AA: Premiação de SPINUP
+  clubEarningsCaribbeanBets: number; // AB: Apostas de Caribbean+ Poker
   clubEarningsCaribbeanPrize: number; // AC: Premiação de Caribbean+ Poker
-  clubEarningsColorGameBets: number;  // AD: Apostas do COLOR GAME
+  clubEarningsColorGameBets: number; // AD: Apostas do COLOR GAME
   clubEarningsColorGamePrize: number; // AE: Premiação do COLOR GAME
-  clubEarningsCrashBets: number;      // AF: Apostas (CRASH)
-  clubEarningsCrashPrize: number;     // AG: Prêmios (CRASH)
-  clubEarningsLuckyDrawBets: number;  // AH: Apostas de LUCKY DRAW
+  clubEarningsCrashBets: number; // AF: Apostas (CRASH)
+  clubEarningsCrashPrize: number; // AG: Prêmios (CRASH)
+  clubEarningsLuckyDrawBets: number; // AH: Apostas de LUCKY DRAW
   clubEarningsLuckyDrawPrize: number; // AI: Premiação de LUCKY DRAW
-  clubEarningsJackpotFee: number;     // AJ: Taxa do Jackpot
-  clubEarningsJackpotPrize: number;   // AK: Prêmios Jackpot
-  clubEarningsSplitEv: number;        // AL: Dividir EV
+  clubEarningsJackpotFee: number; // AJ: Taxa do Jackpot
+  clubEarningsJackpotPrize: number; // AK: Prêmios Jackpot
+  clubEarningsSplitEv: number; // AL: Dividir EV
 
   // Section 6: Final Ticket/Gap (AM-AP)
-  ticketDeliveredValue: number;       // AM: Valor do ticket entregue
-  ticketDeliveredBuyIn: number;       // AN: Buy-in de ticket
-  guaranteedGap: number;              // AO/AP: Gap garantido
+  ticketDeliveredValue: number; // AM: Valor do ticket entregue
+  ticketDeliveredBuyIn: number; // AN: Buy-in de ticket
+  guaranteedGap: number; // AO/AP: Gap garantido
 };
 
 // League-level summary (calculated from ParsedLeagueClubRow[])

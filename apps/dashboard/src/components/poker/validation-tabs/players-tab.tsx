@@ -17,31 +17,32 @@ export function PlayersTab({ players, summaries }: PlayersTabProps) {
   const pageSize = 10;
 
   // Combine player data with summaries
-  const combinedData = players.length > 0
-    ? players.map((p) => {
-        const summary = summaries.find((s) => s.ppPokerId === p.ppPokerId);
-        return {
-          ...p,
-          winningsTotal: summary?.playerWinningsTotal || 0,
-          rakeTotal: summary?.generalTotal || 0,
-        };
-      })
-    : summaries.map((s) => ({
-        ppPokerId: s.ppPokerId,
-        nickname: s.nickname,
-        memoName: s.memoName,
-        country: s.country || null,
-        agentNickname: s.agentNickname,
-        agentPpPokerId: s.agentPpPokerId,
-        superAgentNickname: s.superAgentNickname,
-        superAgentPpPokerId: s.superAgentPpPokerId,
-        chipBalance: 0,
-        agentCreditBalance: 0,
-        lastActiveAt: null,
-        winningsTotal: s.playerWinningsTotal,
-        rakeTotal: s.generalTotal,
-        importStatus: "new" as const,
-      }));
+  const combinedData =
+    players.length > 0
+      ? players.map((p) => {
+          const summary = summaries.find((s) => s.ppPokerId === p.ppPokerId);
+          return {
+            ...p,
+            winningsTotal: summary?.playerWinningsTotal || 0,
+            rakeTotal: summary?.generalTotal || 0,
+          };
+        })
+      : summaries.map((s) => ({
+          ppPokerId: s.ppPokerId,
+          nickname: s.nickname,
+          memoName: s.memoName,
+          country: s.country || null,
+          agentNickname: s.agentNickname,
+          agentPpPokerId: s.agentPpPokerId,
+          superAgentNickname: s.superAgentNickname,
+          superAgentPpPokerId: s.superAgentPpPokerId,
+          chipBalance: 0,
+          agentCreditBalance: 0,
+          lastActiveAt: null,
+          winningsTotal: s.playerWinningsTotal,
+          rakeTotal: s.generalTotal,
+          importStatus: "new" as const,
+        }));
 
   // Filter data
   const filteredData = combinedData.filter((p) => {
@@ -59,7 +60,7 @@ export function PlayersTab({ players, summaries }: PlayersTabProps) {
   const totalPages = Math.ceil(filteredData.length / pageSize);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   return (
@@ -114,7 +115,9 @@ export function PlayersTab({ players, summaries }: PlayersTabProps) {
                 <td className="p-3 text-[#878787]">
                   {player.agentNickname || "-"}
                 </td>
-                <td className={`p-3 text-right font-mono ${player.winningsTotal > 0 ? "text-[#00C969]" : ""}`}>
+                <td
+                  className={`p-3 text-right font-mono ${player.winningsTotal > 0 ? "text-[#00C969]" : ""}`}
+                >
                   {formatCurrency(player.winningsTotal)}
                 </td>
                 <td className="p-3 text-right font-mono text-[#878787]">
@@ -130,7 +133,9 @@ export function PlayersTab({ players, summaries }: PlayersTabProps) {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-[#878787]">
-            {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredData.length)} de {filteredData.length}
+            {(currentPage - 1) * pageSize + 1} -{" "}
+            {Math.min(currentPage * pageSize, filteredData.length)} de{" "}
+            {filteredData.length}
           </p>
           <div className="flex items-center gap-2">
             <Button

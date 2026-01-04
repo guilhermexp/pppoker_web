@@ -26,25 +26,107 @@ const SUMMARY_COLUMNS = [
 // Todas as colunas (21 campos - A ate U)
 const ALL_COLUMNS = [
   { key: "occurredAt", label: "Tempo", type: "datetime", group: "Geral" },
-  { key: "senderClubId", label: "ID Clube Rem.", type: "id", group: "Remetente" },
-  { key: "senderPlayerId", label: "ID Jogador Rem.", type: "id", group: "Remetente" },
-  { key: "senderNickname", label: "Apelido Rem.", type: "text", group: "Remetente" },
-  { key: "senderMemoName", label: "Memo Rem.", type: "text", group: "Remetente" },
-  { key: "recipientPlayerId", label: "ID Jogador Dest.", type: "id", group: "Destinatario" },
-  { key: "recipientNickname", label: "Apelido Dest.", type: "text", group: "Destinatario" },
-  { key: "recipientMemoName", label: "Memo Dest.", type: "text", group: "Destinatario" },
-  { key: "creditSent", label: "Cred. Enviado", type: "currency", group: "Credito" },
-  { key: "creditRedeemed", label: "Cred. Resgatado", type: "currency", group: "Credito" },
-  { key: "creditLeftClub", label: "Cred. Saiu", type: "currency", group: "Credito" },
-  { key: "chipsSent", label: "Fichas Enviadas", type: "currency", group: "Fichas" },
-  { key: "chipsRedeemed", label: "Fichas Resg.", type: "currency", group: "Fichas" },
-  { key: "chipsLeftClub", label: "Fichas Saiu", type: "currency", group: "Fichas" },
-  { key: "ticketSent", label: "Ticket Enviado", type: "currency", group: "Ticket" },
-  { key: "ticketRedeemed", label: "Ticket Resgatado", type: "currency", group: "Ticket" },
-  { key: "ticketExpired", label: "Ticket Expirado", type: "currency", group: "Ticket" },
+  {
+    key: "senderClubId",
+    label: "ID Clube Rem.",
+    type: "id",
+    group: "Remetente",
+  },
+  {
+    key: "senderPlayerId",
+    label: "ID Jogador Rem.",
+    type: "id",
+    group: "Remetente",
+  },
+  {
+    key: "senderNickname",
+    label: "Apelido Rem.",
+    type: "text",
+    group: "Remetente",
+  },
+  {
+    key: "senderMemoName",
+    label: "Memo Rem.",
+    type: "text",
+    group: "Remetente",
+  },
+  {
+    key: "recipientPlayerId",
+    label: "ID Jogador Dest.",
+    type: "id",
+    group: "Destinatario",
+  },
+  {
+    key: "recipientNickname",
+    label: "Apelido Dest.",
+    type: "text",
+    group: "Destinatario",
+  },
+  {
+    key: "recipientMemoName",
+    label: "Memo Dest.",
+    type: "text",
+    group: "Destinatario",
+  },
+  {
+    key: "creditSent",
+    label: "Cred. Enviado",
+    type: "currency",
+    group: "Credito",
+  },
+  {
+    key: "creditRedeemed",
+    label: "Cred. Resgatado",
+    type: "currency",
+    group: "Credito",
+  },
+  {
+    key: "creditLeftClub",
+    label: "Cred. Saiu",
+    type: "currency",
+    group: "Credito",
+  },
+  {
+    key: "chipsSent",
+    label: "Fichas Enviadas",
+    type: "currency",
+    group: "Fichas",
+  },
+  {
+    key: "chipsRedeemed",
+    label: "Fichas Resg.",
+    type: "currency",
+    group: "Fichas",
+  },
+  {
+    key: "chipsLeftClub",
+    label: "Fichas Saiu",
+    type: "currency",
+    group: "Fichas",
+  },
+  {
+    key: "ticketSent",
+    label: "Ticket Enviado",
+    type: "currency",
+    group: "Ticket",
+  },
+  {
+    key: "ticketRedeemed",
+    label: "Ticket Resgatado",
+    type: "currency",
+    group: "Ticket",
+  },
+  {
+    key: "ticketExpired",
+    label: "Ticket Expirado",
+    type: "currency",
+    group: "Ticket",
+  },
 ] as const;
 
-export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) {
+export function LeagueTransacoesTab({
+  transactions,
+}: LeagueTransacoesTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
 
@@ -64,16 +146,41 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
 
   // Calculate totals
   const totalTransactions = transactions.length;
-  const uniqueSenders = new Set(transactions.map((t) => t.senderPlayerId).filter(Boolean));
-  const uniqueRecipients = new Set(transactions.map((t) => t.recipientPlayerId).filter(Boolean));
+  const uniqueSenders = new Set(
+    transactions.map((t) => t.senderPlayerId).filter(Boolean),
+  );
+  const uniqueRecipients = new Set(
+    transactions.map((t) => t.recipientPlayerId).filter(Boolean),
+  );
 
-  const totalCreditSent = transactions.reduce((sum, t) => sum + (t.creditSent || 0), 0);
-  const totalCreditRedeemed = transactions.reduce((sum, t) => sum + (t.creditRedeemed || 0), 0);
-  const totalChipsSent = transactions.reduce((sum, t) => sum + (t.chipsSent || 0), 0);
-  const totalChipsRedeemed = transactions.reduce((sum, t) => sum + (t.chipsRedeemed || 0), 0);
-  const totalTicketSent = transactions.reduce((sum, t) => sum + (t.ticketSent || 0), 0);
-  const totalTicketRedeemed = transactions.reduce((sum, t) => sum + (t.ticketRedeemed || 0), 0);
-  const totalTicketExpired = transactions.reduce((sum, t) => sum + (t.ticketExpired || 0), 0);
+  const totalCreditSent = transactions.reduce(
+    (sum, t) => sum + (t.creditSent || 0),
+    0,
+  );
+  const totalCreditRedeemed = transactions.reduce(
+    (sum, t) => sum + (t.creditRedeemed || 0),
+    0,
+  );
+  const totalChipsSent = transactions.reduce(
+    (sum, t) => sum + (t.chipsSent || 0),
+    0,
+  );
+  const totalChipsRedeemed = transactions.reduce(
+    (sum, t) => sum + (t.chipsRedeemed || 0),
+    0,
+  );
+  const totalTicketSent = transactions.reduce(
+    (sum, t) => sum + (t.ticketSent || 0),
+    0,
+  );
+  const totalTicketRedeemed = transactions.reduce(
+    (sum, t) => sum + (t.ticketRedeemed || 0),
+    0,
+  );
+  const totalTicketExpired = transactions.reduce(
+    (sum, t) => sum + (t.ticketExpired || 0),
+    0,
+  );
 
   if (transactions.length === 0) {
     return (
@@ -98,8 +205,12 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
             <span className="text-sm font-semibold">{uniqueSenders.size}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Destinatários:</span>
-            <span className="text-sm font-semibold">{uniqueRecipients.size}</span>
+            <span className="text-xs text-muted-foreground">
+              Destinatários:
+            </span>
+            <span className="text-sm font-semibold">
+              {uniqueRecipients.size}
+            </span>
           </div>
         </div>
 
@@ -107,35 +218,109 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Crédito:</span>
-            <span className={`text-sm font-semibold font-mono ${(totalCreditSent - totalCreditRedeemed) >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {(totalCreditSent - totalCreditRedeemed).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span
+              className={`text-sm font-semibold font-mono ${(totalCreditSent - totalCreditRedeemed) >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {(totalCreditSent - totalCreditRedeemed).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Fichas:</span>
-            <span className={`text-sm font-semibold font-mono ${(totalChipsSent - totalChipsRedeemed) >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {(totalChipsSent - totalChipsRedeemed).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span
+              className={`text-sm font-semibold font-mono ${(totalChipsSent - totalChipsRedeemed) >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {(totalChipsSent - totalChipsRedeemed).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Ticket:</span>
-            <span className={`text-sm font-semibold font-mono ${(totalTicketSent - totalTicketRedeemed - totalTicketExpired) >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {(totalTicketSent - totalTicketRedeemed - totalTicketExpired).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span
+              className={`text-sm font-semibold font-mono ${(totalTicketSent - totalTicketRedeemed - totalTicketExpired) >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {(
+                totalTicketSent -
+                totalTicketRedeemed -
+                totalTicketExpired
+              ).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
             </span>
           </div>
         </div>
 
         {/* Row 3: Detalhado */}
         <div className="pt-3 border-t border-border/50">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">DETALHADO</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+            DETALHADO
+          </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-            <span>Crédito Env: <span className="font-mono">{totalCreditSent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-            <span>Crédito Resg: <span className="font-mono">{totalCreditRedeemed.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-            <span>Fichas Env: <span className="font-mono">{totalChipsSent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-            <span>Fichas Resg: <span className="font-mono">{totalChipsRedeemed.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-            <span>Ticket Env: <span className="font-mono">{totalTicketSent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-            <span>Ticket Resg: <span className="font-mono">{totalTicketRedeemed.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-            <span>Ticket Exp: <span className="font-mono">{totalTicketExpired.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
+            <span>
+              Crédito Env:{" "}
+              <span className="font-mono">
+                {totalCreditSent.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
+            <span>
+              Crédito Resg:{" "}
+              <span className="font-mono">
+                {totalCreditRedeemed.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
+            <span>
+              Fichas Env:{" "}
+              <span className="font-mono">
+                {totalChipsSent.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
+            <span>
+              Fichas Resg:{" "}
+              <span className="font-mono">
+                {totalChipsRedeemed.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
+            <span>
+              Ticket Env:{" "}
+              <span className="font-mono">
+                {totalTicketSent.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
+            <span>
+              Ticket Resg:{" "}
+              <span className="font-mono">
+                {totalTicketRedeemed.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
+            <span>
+              Ticket Exp:{" "}
+              <span className="font-mono">
+                {totalTicketExpired.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
           </div>
         </div>
       </div>
@@ -143,7 +328,9 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <p className="text-sm text-[#878787]">{transactions.length} transacoes</p>
+          <p className="text-sm text-[#878787]">
+            {transactions.length} transacoes
+          </p>
           <Button
             variant="outline"
             size="sm"
@@ -176,7 +363,9 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
       {/* Table */}
       <div className="border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className={`w-full text-xs ${expanded ? "min-w-[1800px]" : "min-w-[900px]"}`}>
+          <table
+            className={`w-full text-xs ${expanded ? "min-w-[1800px]" : "min-w-[900px]"}`}
+          >
             <thead>
               <tr className="border-b bg-muted/50">
                 {columns.map((col) => (
@@ -195,7 +384,10 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
             </thead>
             <tbody className="divide-y">
               {filteredData.slice(0, 100).map((row, idx) => (
-                <tr key={`${row.occurredAt}-${idx}`} className="hover:bg-muted/30">
+                <tr
+                  key={`${row.occurredAt}-${idx}`}
+                  className="hover:bg-muted/30"
+                >
                   {columns.map((col) => (
                     <td
                       key={col.key}
@@ -203,13 +395,16 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
                         col.type === "currency" || col.type === "number"
                           ? "text-right font-mono"
                           : col.type === "id"
-                          ? "font-mono text-[#878787]"
-                          : col.type === "datetime"
-                          ? "text-[#878787]"
-                          : ""
+                            ? "font-mono text-[#878787]"
+                            : col.type === "datetime"
+                              ? "text-[#878787]"
+                              : ""
                       }`}
                     >
-                      {formatValue(row[col.key as keyof ParsedTransaction], col.type)}
+                      {formatValue(
+                        row[col.key as keyof ParsedTransaction],
+                        col.type,
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -229,7 +424,7 @@ export function LeagueTransacoesTab({ transactions }: LeagueTransacoesTabProps) 
 
 function formatValue(
   value: string | number | null | undefined,
-  type: string
+  type: string,
 ): string {
   if (value === null || value === undefined) return "-";
 

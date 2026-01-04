@@ -9,12 +9,23 @@ import { Icons } from "@midday/ui/icons";
 import { Skeleton } from "@midday/ui/skeleton";
 import { Spinner } from "@midday/ui/spinner";
 import { useToast } from "@midday/ui/use-toast";
-import { useMutation, useQueryClient, useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
-type ImportStatus = "pending" | "validating" | "validated" | "processing" | "completed" | "failed" | "cancelled";
+type ImportStatus =
+  | "pending"
+  | "validating"
+  | "validated"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "cancelled";
 type SourceType = "club" | "league" | "su";
 
 const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
@@ -25,11 +36,14 @@ const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
 
 const SOURCE_TYPE_COLORS: Record<SourceType, string> = {
   club: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  league: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  league:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
   su: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
 };
 
-function getStatusVariant(status: ImportStatus): "default" | "secondary" | "success" | "destructive" | "warning" {
+function getStatusVariant(
+  status: ImportStatus,
+): "default" | "secondary" | "success" | "destructive" | "warning" {
   switch (status) {
     case "completed":
       return "success";
@@ -65,12 +79,13 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
   const { toast } = useToast();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery(
-    trpc.poker.imports.get.infiniteQueryOptions(
-      { pageSize: compact ? 5 : 10, sourceType: sourceType ?? null },
-      { getNextPageParam: (lastPage) => lastPage.meta.cursor }
-    )
-  );
+  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useSuspenseInfiniteQuery(
+      trpc.poker.imports.get.infiniteQueryOptions(
+        { pageSize: compact ? 5 : 10, sourceType: sourceType ?? null },
+        { getNextPageParam: (lastPage) => lastPage.meta.cursor },
+      ),
+    );
 
   const invalidateImports = () => {
     // Force refetch of all import queries - use refetchQueries for immediate update
@@ -83,7 +98,7 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
           return routeKey[0] === "poker" && routeKey[1] === "imports";
         }
         return false;
-      }
+      },
     });
   };
 
@@ -103,7 +118,7 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
           variant: "error",
         });
       },
-    })
+    }),
   );
 
   const processMutation = useMutation(
@@ -116,11 +131,15 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
             const key = query.queryKey;
             if (Array.isArray(key) && Array.isArray(key[0])) {
               const routeKey = key[0] as string[];
-              return routeKey[0] === "poker" &&
-                (routeKey[1] === "players" || routeKey[1] === "sessions" || routeKey[1] === "analytics");
+              return (
+                routeKey[0] === "poker" &&
+                (routeKey[1] === "players" ||
+                  routeKey[1] === "sessions" ||
+                  routeKey[1] === "analytics")
+              );
             }
             return false;
-          }
+          },
         });
         toast({
           title: t("poker.import.processSuccess"),
@@ -134,7 +153,7 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
           variant: "error",
         });
       },
-    })
+    }),
   );
 
   const cancelMutation = useMutation(
@@ -146,7 +165,7 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
           variant: "success",
         });
       },
-    })
+    }),
   );
 
   const deleteMutation = useMutation(
@@ -158,26 +177,29 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
           variant: "success",
         });
       },
-    })
+    }),
   );
 
   const imports = data?.pages.flatMap((page) => page.data) ?? [];
 
   if (imports.length === 0) {
     return (
-      <div className={cn(
-        "text-center text-muted-foreground",
-        compact ? "py-6" : "py-12"
-      )}>
-        <Icons.Files className={cn(
-          "mx-auto mb-3 opacity-50",
-          compact ? "h-8 w-8" : "h-12 w-12 mb-4"
-        )} />
+      <div
+        className={cn(
+          "text-center text-muted-foreground",
+          compact ? "py-6" : "py-12",
+        )}
+      >
+        <Icons.Files
+          className={cn(
+            "mx-auto mb-3 opacity-50",
+            compact ? "h-8 w-8" : "h-12 w-12 mb-4",
+          )}
+        />
         <p className={compact ? "text-sm" : ""}>
           {sourceType
             ? `Nenhuma importação de ${SOURCE_TYPE_LABELS[sourceType]}`
-            : t("poker.import.noImports")
-          }
+            : t("poker.import.noImports")}
         </p>
       </div>
     );
@@ -212,114 +234,143 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
                 <span
                   className={cn(
                     "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-                    SOURCE_TYPE_COLORS[(imp.sourceType as SourceType) ?? "club"]
+                    SOURCE_TYPE_COLORS[
+                      (imp.sourceType as SourceType) ?? "club"
+                    ],
                   )}
                 >
                   {SOURCE_TYPE_LABELS[(imp.sourceType as SourceType) ?? "club"]}
                 </span>
               )}
-              <Badge variant={getStatusVariant(imp.status as ImportStatus)} className="text-[10px]">
+              <Badge
+                variant={getStatusVariant(imp.status as ImportStatus)}
+                className="text-[10px]"
+              >
                 {t(`poker.import.status.${imp.status}`)}
               </Badge>
+              {imp.status === "completed" && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px]",
+                    (imp as any).committed
+                      ? "border-green-500/50 text-green-600 dark:text-green-400"
+                      : "border-amber-500/50 text-amber-600 dark:text-amber-400",
+                  )}
+                >
+                  {(imp as any).committed ? "Committed" : "Draft"}
+                </Badge>
+              )}
             </div>
           </div>
 
           {/* Row 2: Action buttons */}
           <div className="flex items-center justify-end gap-1">
-                {imp.status === "validating" && (
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => validateMutation.mutate({ id: imp.id })}
-                    disabled={validateMutation.isPending}
-                  >
-                    {validateMutation.isPending ? (
-                      <Spinner size={14} />
-                    ) : (
-                      t("poker.import.validate")
-                    )}
-                  </Button>
+            {imp.status === "validating" && (
+              <Button
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => validateMutation.mutate({ id: imp.id })}
+                disabled={validateMutation.isPending}
+              >
+                {validateMutation.isPending ? (
+                  <Spinner size={14} />
+                ) : (
+                  t("poker.import.validate")
                 )}
+              </Button>
+            )}
 
-                {imp.status === "validated" && (
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => processMutation.mutate({ id: imp.id })}
-                    disabled={processMutation.isPending}
-                  >
-                    {processMutation.isPending ? (
-                      <Spinner size={14} />
-                    ) : (
-                      t("poker.import.process")
-                    )}
-                  </Button>
+            {imp.status === "validated" && (
+              <Button
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => processMutation.mutate({ id: imp.id })}
+                disabled={processMutation.isPending}
+              >
+                {processMutation.isPending ? (
+                  <Spinner size={14} />
+                ) : (
+                  t("poker.import.process")
                 )}
+              </Button>
+            )}
 
-                {["pending", "validating", "validated"].includes(imp.status) && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0"
-                    onClick={() => cancelMutation.mutate({ id: imp.id })}
-                    disabled={cancelMutation.isPending}
-                    title="Cancelar"
-                  >
-                    <Icons.Close className="h-3.5 w-3.5" />
-                  </Button>
+            {["pending", "validating", "validated"].includes(imp.status) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0"
+                onClick={() => cancelMutation.mutate({ id: imp.id })}
+                disabled={cancelMutation.isPending}
+                title="Cancelar"
+              >
+                <Icons.Close className="h-3.5 w-3.5" />
+              </Button>
+            )}
+
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Tem certeza que deseja excluir esta importação?",
+                  )
+                ) {
+                  deleteMutation.mutate({ id: imp.id });
+                }
+              }}
+              disabled={deleteMutation.isPending || imp.status === "processing"}
+              title="Excluir"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0"
+              onClick={() =>
+                setExpandedId(expandedId === imp.id ? null : imp.id)
+              }
+            >
+              <Icons.ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform",
+                  expandedId === imp.id && "rotate-180",
                 )}
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => {
-                    if (window.confirm("Tem certeza que deseja excluir esta importação?")) {
-                      deleteMutation.mutate({ id: imp.id });
-                    }
-                  }}
-                  disabled={deleteMutation.isPending || imp.status === "processing"}
-                  title="Excluir"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 p-0"
-                  onClick={() => setExpandedId(expandedId === imp.id ? null : imp.id)}
-                >
-                  <Icons.ChevronDown
-                    className={cn(
-                      "h-3.5 w-3.5 transition-transform",
-                      expandedId === imp.id && "rotate-180"
-                    )}
-                  />
-                </Button>
+              />
+            </Button>
           </div>
 
           {expandedId === imp.id && (
             <div className="mt-4 pt-4 border-t space-y-4">
               {/* Metadata: Club ID, Union ID, Period */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                {(imp as any).leagueId && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Liga:</span>
+                    <span className="font-mono font-medium">
+                      {(imp as any).leagueId}
+                    </span>
+                  </div>
+                )}
                 {(imp as any).clubId && (
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground">Clube:</span>
-                    <span className="font-mono font-medium">{(imp as any).clubId}</span>
-                  </div>
-                )}
-                {(imp as any).unionId && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">União:</span>
-                    <span className="font-mono font-medium">{(imp as any).unionId}</span>
+                    <span className="font-mono font-medium">
+                      {(imp as any).clubId}
+                    </span>
                   </div>
                 )}
                 {imp.periodStart && imp.periodEnd && (
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground">Período:</span>
                     <span className="font-medium">
-                      {new Date(imp.periodStart).toLocaleDateString()} - {new Date(imp.periodEnd).toLocaleDateString()}
+                      {new Date(imp.periodStart).toLocaleDateString()} -{" "}
+                      {new Date(imp.periodEnd).toLocaleDateString()}
                     </span>
                   </div>
                 )}
@@ -338,11 +389,15 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
                     <div className="text-[11px] text-muted-foreground space-y-0.5">
                       <div className="flex justify-between">
                         <span>Com agente</span>
-                        <span className="font-medium text-foreground">{(imp as any).stats.playersWithAgent}</span>
+                        <span className="font-medium text-foreground">
+                          {(imp as any).stats.playersWithAgent}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Sem agente</span>
-                        <span className="font-medium text-foreground">{(imp as any).stats.playersWithoutAgent}</span>
+                        <span className="font-medium text-foreground">
+                          {(imp as any).stats.playersWithoutAgent}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -354,16 +409,22 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
                     <Icons.Category className="h-3.5 w-3.5" />
                     <span>Hierarquia</span>
                   </div>
-                  <p className="text-xl font-semibold">{(imp as any).stats?.agentsCount ?? 0}</p>
+                  <p className="text-xl font-semibold">
+                    {(imp as any).stats?.agentsCount ?? 0}
+                  </p>
                   {(imp as any).stats && (
                     <div className="text-[11px] text-muted-foreground space-y-0.5">
                       <div className="flex justify-between">
                         <span>Agentes</span>
-                        <span className="font-medium text-foreground">{(imp as any).stats.agentsCount}</span>
+                        <span className="font-medium text-foreground">
+                          {(imp as any).stats.agentsCount}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Super agentes</span>
-                        <span className="font-medium text-foreground">{(imp as any).stats.superAgentsCount}</span>
+                        <span className="font-medium text-foreground">
+                          {(imp as any).stats.superAgentsCount}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -381,19 +442,25 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
                       {(imp as any).stats.sessionsByType.cash_game > 0 && (
                         <div className="flex justify-between">
                           <span>Cash Games</span>
-                          <span className="font-medium text-foreground">{(imp as any).stats.sessionsByType.cash_game}</span>
+                          <span className="font-medium text-foreground">
+                            {(imp as any).stats.sessionsByType.cash_game}
+                          </span>
                         </div>
                       )}
                       {(imp as any).stats.sessionsByType.mtt > 0 && (
                         <div className="flex justify-between">
                           <span>MTT</span>
-                          <span className="font-medium text-foreground">{(imp as any).stats.sessionsByType.mtt}</span>
+                          <span className="font-medium text-foreground">
+                            {(imp as any).stats.sessionsByType.mtt}
+                          </span>
                         </div>
                       )}
                       {(imp as any).stats.sessionsByType.spin > 0 && (
                         <div className="flex justify-between">
                           <span>SPIN</span>
-                          <span className="font-medium text-foreground">{(imp as any).stats.sessionsByType.spin}</span>
+                          <span className="font-medium text-foreground">
+                            {(imp as any).stats.sessionsByType.spin}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -406,22 +473,36 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
                     <Icons.Currency className="h-3.5 w-3.5" />
                     <span>Resultado</span>
                   </div>
-                  <p className={cn(
-                    "text-xl font-semibold",
-                    ((imp as any).stats?.totalWinnings ?? 0) >= 0 ? "text-green-500" : "text-red-500"
-                  )}>
+                  <p
+                    className={cn(
+                      "text-xl font-semibold",
+                      ((imp as any).stats?.totalWinnings ?? 0) >= 0
+                        ? "text-green-500"
+                        : "text-red-500",
+                    )}
+                  >
                     {((imp as any).stats?.totalWinnings ?? 0) >= 0 ? "" : "-"}
-                    R$ {Math.abs((imp as any).stats?.totalWinnings ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    R${" "}
+                    {Math.abs(
+                      (imp as any).stats?.totalWinnings ?? 0,
+                    ).toLocaleString("pt-BR", {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}
                   </p>
                   {(imp as any).stats && (
                     <div className="text-[11px] text-muted-foreground space-y-0.5">
                       <div className="flex justify-between">
                         <span>Winners</span>
-                        <span className="font-medium text-green-500">{(imp as any).stats.winners}</span>
+                        <span className="font-medium text-green-500">
+                          {(imp as any).stats.winners}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Losers</span>
-                        <span className="font-medium text-red-500">{(imp as any).stats.losers}</span>
+                        <span className="font-medium text-red-500">
+                          {(imp as any).stats.losers}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -431,15 +512,25 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
               {/* Secondary stats row */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="border rounded-lg p-3">
-                  <div className="text-xs text-muted-foreground mb-1">Transações</div>
-                  <p className="text-lg font-semibold">{imp.totalTransactions.toLocaleString()}</p>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Transações
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {imp.totalTransactions.toLocaleString()}
+                  </p>
                 </div>
                 <div className="border rounded-lg p-3">
-                  <div className="text-xs text-muted-foreground mb-1">Novos jogadores</div>
-                  <p className="text-lg font-semibold text-green-500">+{imp.newPlayers}</p>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Novos jogadores
+                  </div>
+                  <p className="text-lg font-semibold text-green-500">
+                    +{imp.newPlayers}
+                  </p>
                 </div>
                 <div className="border rounded-lg p-3">
-                  <div className="text-xs text-muted-foreground mb-1">Atualizados</div>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Atualizados
+                  </div>
                   <p className="text-lg font-semibold">{imp.updatedPlayers}</p>
                 </div>
               </div>
@@ -457,18 +548,19 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
                 </div>
               )}
 
-              {imp.processingErrors && (imp.processingErrors as string[]).length > 0 && (
-                <div>
-                  <p className="text-sm text-destructive font-medium mb-2">
-                    {t("poker.import.processingErrors")}
-                  </p>
-                  <ul className="list-disc list-inside text-sm text-muted-foreground">
-                    {(imp.processingErrors as string[]).map((error, i) => (
-                      <li key={i}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {imp.processingErrors &&
+                (imp.processingErrors as string[]).length > 0 && (
+                  <div>
+                    <p className="text-sm text-destructive font-medium mb-2">
+                      {t("poker.import.processingErrors")}
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      {(imp.processingErrors as string[]).map((error, i) => (
+                        <li key={i}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
               {imp.validationWarnings && imp.validationWarnings.length > 0 && (
                 <div>
@@ -494,9 +586,7 @@ export function ImportsList({ sourceType, compact = false }: ImportsListProps) {
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
           >
-            {isFetchingNextPage ? (
-              <Spinner size={16} className="mr-2" />
-            ) : null}
+            {isFetchingNextPage ? <Spinner size={16} className="mr-2" /> : null}
             {t("poker.import.loadMore")}
           </Button>
         </div>

@@ -19,14 +19,16 @@ import type {
   ParsedLeagueTotalLigaPPSR,
 } from "@/lib/league/types";
 import { validateLeagueImportData } from "@/lib/league/validation";
+import { useTRPC } from "@/trpc/client";
 import { cn } from "@midday/ui/cn";
 import { Skeleton } from "@midday/ui/skeleton";
 import { useToast } from "@midday/ui/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
 import { LeagueImportValidationModal } from "./league-import-validation-modal";
-import { ImportsList } from "../poker/imports-list";
+import { SUImportsList } from "../su/su-imports-list";
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -220,9 +222,6 @@ function parseGeralPPSTSheet(sheet: XLSX.WorkSheet): {
             premiacaoSpinup +
             valorTicketEntregue +
             buyinTicketLiga;
-          console.log(
-            `[parseGeralPPST] Calculated ganhosLigaGeral for liga ${ligaId}: ${ganhosLigaGeral} (was 0, formula cell)`,
-          );
         }
       }
 
@@ -451,9 +450,6 @@ function parseGeralPPSRSheet(sheet: XLSX.WorkSheet): {
             ganhosJogadorDeAdversarios +
             ganhosJogadorDeJackpot +
             ganhosJogadorDeDividirEV;
-          console.log(
-            `[parseGeralPPSR] Calculated ganhosJogadorGeral for liga ${ligaId}: ${ganhosJogadorGeral} (was 0, formula cell)`,
-          );
         }
       }
 
@@ -472,9 +468,6 @@ function parseGeralPPSRSheet(sheet: XLSX.WorkSheet): {
             ganhosLigaTaxaJackpot +
             ganhosLigaPremioJackpot +
             ganhosLigaDividirEV;
-          console.log(
-            `[parseGeralPPSR] Calculated ganhosLigaGeral for liga ${ligaId}: ${ganhosLigaGeral} (was 0, formula cell)`,
-          );
         }
       }
 
@@ -541,10 +534,6 @@ function parseGeralPPSRSheet(sheet: XLSX.WorkSheet): {
     };
   }
 
-  console.log(
-    `[parseGeralPPSR] ✅ ${blocos.length} blocos, ${blocos.reduce((s, b) => s + b.ligas.length, 0)} ligas parsed`,
-  );
-
   return { blocos, periodStart, periodEnd };
 }
 
@@ -562,12 +551,6 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
     raw: true, // Get raw numeric values (important for formula cells)
     blankrows: false,
   });
-
-  console.log(`[parseJogosPPST] Total rows: ${rows.length}`);
-  // Debug: show first 10 rows
-  for (let i = 0; i < Math.min(10, rows.length); i++) {
-    console.log(`[parseJogosPPST] Row ${i}:`, rows[i]?.slice(0, 5));
-  }
 
   // Count game headers for validation (cross-check with parsed games)
   // Look for the SECOND line of game headers: "ID do jogo: XXX Nome da mesa: YYY"
@@ -587,9 +570,6 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
       }
     }
   }
-  console.log(
-    `[parseJogosPPST] Found ${inicioCount} game headers (ID do jogo) in spreadsheet`,
-  );
 
   const jogos: ParsedLeagueJogoPPST[] = [];
   const seenGameIds = new Set<string>(); // Track seen game IDs to avoid duplicates
@@ -649,7 +629,6 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
       const gameId = idJogoMatch[1].trim();
       // Skip if we've already seen this game ID
       if (seenGameIds.has(gameId)) {
-        console.log(`[parseJogosPPST] Skipping duplicate game ID: ${gameId}`);
         currentMetadata = {}; // Reset metadata to avoid partial state
         currentJogo = null; // Prevent adding players to wrong game
         continue;
@@ -697,18 +676,12 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
           rowIndex: i,
         };
         unknownGameFormats.push(unknownFormat);
-        console.log(
-          `[parseJogosPPST] ⚠️ UNKNOWN FORMAT at row ${i} (ID: ${currentMetadata.idJogo}): "${rowJoined.substring(0, 150)}"`,
-        );
       }
     }
 
     if (tipoJogoMatch) {
       // Only create game if we have valid metadata (idJogo was set and not skipped as duplicate)
       if (!currentMetadata.idJogo) {
-        console.log(
-          `[parseJogosPPST] Skipping tipoJogo match - no valid idJogo in metadata`,
-        );
         continue;
       }
 
@@ -752,10 +725,6 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
         buyInBase = buyinPart1;
         buyInTaxa = 0;
       }
-
-      console.log(
-        `[parseJogosPPST] Found game ${gamesFoundCount} at row ${i}: ${tipoJogoMatch[1]} ${isSatellite ? "(SAT)" : isKnockout ? "(KO)" : premiacaoMatch ? `(GTD: ${premiacaoMatch[1]})` : ""} (ID: ${currentMetadata.idJogo})`,
-      );
 
       // Mark this game ID as seen
       seenGameIds.add(currentMetadata.idJogo);
@@ -872,60 +841,6 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
   // Don't forget the last game
   if (currentJogo && currentJogo.jogadores.length > 0) {
     jogos.push(currentJogo);
-  }
-
-  console.log(
-    `[parseJogosPPST] Total games detected: ${gamesFoundCount}, unique games: ${seenGameIds.size}, games with players: ${jogos.length}, inicioCount: ${inicioCount}`,
-  );
-
-  // Log summary of missing games
-  const gamesWithoutPlayers = gamesFoundCount - jogos.length;
-  if (gamesWithoutPlayers > 0) {
-    console.log(
-      `[parseJogosPPST] ⚠️ ${gamesWithoutPlayers} jogos detectados sem jogadores (provavelmente cancelados ou formato diferente)`,
-    );
-  }
-  const unmatchedHeaders = inicioCount - gamesFoundCount;
-  if (unmatchedHeaders > 0) {
-    console.log(
-      `[parseJogosPPST] ⚠️ ${unmatchedHeaders} headers "ID do jogo" não casaram com regex PPST (verificar formatos não suportados)`,
-    );
-    // Find and log which game IDs are missing
-    const missingGameIds = [...allGameIdsFromHeaders].filter(
-      (id) => !seenGameIds.has(id),
-    );
-    if (missingGameIds.length > 0) {
-      console.log(
-        `[parseJogosPPST] 🔍 IDs de jogos faltando (não parseados): ${missingGameIds.join(", ")}`,
-      );
-      // Find the rows for these missing game IDs to help debug
-      for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
-        const row = rows[rowIdx];
-        const rowStr = row.map((cell: any) => String(cell || "")).join(" ");
-        for (const missingId of missingGameIds) {
-          if (
-            rowStr.includes(`ID do jogo: ${missingId}`) ||
-            rowStr.includes(`ID do jogo:${missingId}`)
-          ) {
-            // Found the ID do jogo line, now look at the next few rows for the PPST line
-            console.log(
-              `[parseJogosPPST] 🔍 Missing game ${missingId} at row ${rowIdx}:`,
-            );
-            console.log(
-              `[parseJogosPPST]   Row ${rowIdx}: "${rowStr.substring(0, 150)}"`,
-            );
-            if (rows[rowIdx + 1]) {
-              const nextRow = rows[rowIdx + 1]
-                .map((cell: any) => String(cell || ""))
-                .join(" ");
-              console.log(
-                `[parseJogosPPST]   Row ${rowIdx + 1}: "${nextRow.substring(0, 150)}"`,
-              );
-            }
-          }
-        }
-      }
-    }
   }
 
   // Calculate totals from player data (since Excel formulas may not be read correctly)
@@ -1056,16 +971,6 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
         return total;
       },
     );
-  }
-
-  // Log summary of unknown formats
-  if (unknownGameFormats.length > 0) {
-    console.log(
-      `[parseJogosPPST] ⚠️ Found ${unknownGameFormats.length} unknown game format(s):`,
-    );
-    for (const uf of unknownGameFormats) {
-      console.log(`  - Game ${uf.gameId}: "${uf.rawText.substring(0, 80)}..."`);
-    }
   }
 
   return { jogos, inicioCount, unknownGameFormats };
@@ -1326,8 +1231,6 @@ function parseJogosPPSRSheet(sheet: XLSX.WorkSheet): {
     jogos.push(currentJogo);
   }
 
-  console.log(`[parseJogosPPSR] ✅ ${jogos.length} cash games parsed`);
-
   // Calculate totals
   for (const jogo of jogos) {
     // Calculate total geral
@@ -1404,13 +1307,6 @@ function parseJogosPPSRSheet(sheet: XLSX.WorkSheet): {
     );
   }
 
-  // Log summary of unknown formats (if any)
-  if (unknownCashFormats.length > 0) {
-    console.log(
-      `[parseJogosPPSR] ⚠️ ${unknownCashFormats.length} unknown cash format(s)`,
-    );
-  }
-
   return { jogos, inicioCount, unknownCashFormats };
 }
 
@@ -1432,14 +1328,9 @@ function parseLeagueExcelWorkbook(
     fileSize,
   };
 
-  console.log("[LeagueParser] Available sheets:", workbook.SheetNames);
-
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];
     const normalizedName = normalizeSheetName(sheetName);
-    console.log(
-      `[LeagueParser] Processing sheet: "${sheetName}" (normalized: "${normalizedName}")`,
-    );
 
     // Parse Geral do PPST
     if (normalizedName.includes("geral") && normalizedName.includes("ppst")) {
@@ -1455,7 +1346,6 @@ function parseLeagueExcelWorkbook(
 
     // Parse Jogos PPST
     if (normalizedName.includes("jogos") && normalizedName.includes("ppst")) {
-      console.log(`[LeagueParser] Found Jogos PPST sheet: "${sheetName}"`);
       const { jogos, inicioCount, unknownGameFormats } =
         parseJogosPPSTSheet(sheet);
       result.jogosPPST = jogos;
@@ -1466,14 +1356,10 @@ function parseLeagueExcelWorkbook(
         0,
       );
       result.unknownGameFormats = unknownGameFormats;
-      console.log(
-        `[LeagueParser] Parsed ${result.jogosPPSTCount} jogos, ${result.jogosPPSTJogadorCount} jogadores, ${inicioCount} inicio markers, ${unknownGameFormats.length} unknown formats`,
-      );
     }
 
     // Parse Geral do PPSR (Cash Games)
     if (normalizedName.includes("geral") && normalizedName.includes("ppsr")) {
-      console.log(`[LeagueParser] Found Geral PPSR sheet: "${sheetName}"`);
       const {
         blocos,
         periodStart: ppsrPeriodStart,
@@ -1488,14 +1374,10 @@ function parseLeagueExcelWorkbook(
         (sum, b) => sum + b.ligas.length,
         0,
       );
-      console.log(
-        `[LeagueParser] Parsed ${blocos.length} blocos, ${result.geralPPSRLigaCount} ligas in Geral PPSR`,
-      );
     }
 
     // Parse Jogos PPSR (Cash Games)
     if (normalizedName.includes("jogos") && normalizedName.includes("ppsr")) {
-      console.log(`[LeagueParser] Found Jogos PPSR sheet: "${sheetName}"`);
       const { jogos, inicioCount, unknownCashFormats } =
         parseJogosPPSRSheet(sheet);
       result.jogosPPSR = jogos;
@@ -1506,9 +1388,6 @@ function parseLeagueExcelWorkbook(
         0,
       );
       result.unknownCashFormats = unknownCashFormats;
-      console.log(
-        `[LeagueParser] Parsed ${result.jogosPPSRCount} cash games, ${result.jogosPPSRJogadorCount} jogadores, ${inicioCount} inicio markers, ${unknownCashFormats.length} unknown formats`,
-      );
     }
   }
 
@@ -1520,6 +1399,8 @@ function parseLeagueExcelWorkbook(
 // ============================================================================
 
 export function LeagueImportUploader() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { toast, update } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedLeagueImportData | null>(
@@ -1530,6 +1411,47 @@ export function LeagueImportUploader() {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const workerRef = useRef<Worker | null>(null);
   const toastIdRef = useRef<string | null>(null);
+
+  // Mutations for saving data
+  const createImportMutation = useMutation(
+    trpc.su.imports.create.mutationOptions({
+      onError: (error) => {
+        toast({
+          variant: "destructive",
+          title: "Erro ao criar importação",
+          description: error.message,
+        });
+      },
+    }),
+  );
+
+  const processImportMutation = useMutation(
+    trpc.su.imports.process.mutationOptions({
+      onSuccess: (data) => {
+        toast({
+          title: "Importação concluída!",
+          description: `${data.stats.totalLeagues} ligas, ${data.stats.totalGamesPPST} jogos PPST, ${data.stats.totalGamesPPSR} jogos PPSR processados.`,
+        });
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.imports.list.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.analytics.getDashboardStats.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.weekPeriods.getOpenPeriods.queryKey(),
+        });
+      },
+      onError: (error) => {
+        toast({
+          variant: "destructive",
+          title: "Erro ao processar importação",
+          description: error.message,
+        });
+      },
+    }),
+  );
 
   // Cleanup worker on unmount
   useEffect(() => {
@@ -1679,16 +1601,51 @@ export function LeagueImportUploader() {
     disabled: isProcessing,
   });
 
-  const handleApprove = useCallback(() => {
-    // TODO: Implement database save logic
-    toast({
-      title: "Dados aprovados",
-      description: "Os dados serão processados e salvos no sistema.",
-    });
-    setShowValidationModal(false);
-    setParsedData(null);
-    setValidationResult(null);
-  }, [toast]);
+  const handleApprove = useCallback(async () => {
+    if (!parsedData || !validationResult) return;
+
+    setIsProcessing(true);
+    try {
+      // Step 1: Create the import record
+      const importRecord = await createImportMutation.mutateAsync({
+        fileName: parsedData.fileName,
+        fileSize: parsedData.fileSize,
+        periodStart: parsedData.periodStart ?? "",
+        periodEnd: parsedData.periodEnd ?? "",
+        timezone: "UTC -0500",
+        rawData: {
+          geralPPSTCount: parsedData.geralPPSTLigaCount ?? 0,
+          jogosPPSTCount: parsedData.jogosPPSTCount ?? 0,
+          geralPPSRCount: parsedData.geralPPSRLigaCount ?? 0,
+          jogosPPSRCount: parsedData.jogosPPSRCount ?? 0,
+        },
+        validationPassed: !validationResult.hasBlockingErrors,
+        validationErrors: validationResult.errors,
+        validationWarnings: validationResult.warnings,
+        qualityScore: validationResult.qualityScore,
+      });
+
+      // Step 2: Process the import data
+      await processImportMutation.mutateAsync({
+        importId: importRecord.id,
+        data: {
+          geralPPST: parsedData.geralPPST,
+          jogosPPST: parsedData.jogosPPST,
+          geralPPSR: parsedData.geralPPSR,
+          jogosPPSR: parsedData.jogosPPSR,
+        },
+      });
+
+      setShowValidationModal(false);
+      setParsedData(null);
+      setValidationResult(null);
+    } catch (error) {
+      console.error("Error saving import:", error);
+      // Error toast is handled by mutation callbacks
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [parsedData, validationResult, createImportMutation, processImportMutation]);
 
   const handleReject = useCallback(() => {
     setShowValidationModal(false);
@@ -1752,9 +1709,11 @@ export function LeagueImportUploader() {
 
           {/* Imports list for SU type */}
           <div className="border-t pt-6">
-            <h3 className="font-medium text-sm mb-4">Importações de Super Union</h3>
-            <Suspense fallback={<ImportsList.Skeleton />}>
-              <ImportsList sourceType="su" compact />
+            <h3 className="font-medium text-sm mb-4">
+              Importações de Super Union
+            </h3>
+            <Suspense fallback={<SUImportsList.Skeleton />}>
+              <SUImportsList compact />
             </Suspense>
           </div>
         </div>

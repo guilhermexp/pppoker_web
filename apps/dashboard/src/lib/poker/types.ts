@@ -61,9 +61,9 @@ export type ParsedSession = {
   buyInAmount: number | null;
   guaranteedPrize: number | null;
   // CASH/PPSR specific
-  rakePercent?: number | null;  // e.g., 5 (for 5%)
-  rakeCap?: string | null;      // e.g., "3BB"
-  timeLimit?: string | null;    // e.g., "0.5h"
+  rakePercent?: number | null; // e.g., 5 (for 5%)
+  rakeCap?: string | null; // e.g., "3BB"
+  timeLimit?: string | null; // e.g., "0.5h"
   createdByNickname: string | null;
   createdByPpPokerId: string | null;
   playerCount?: number;
@@ -429,7 +429,11 @@ export type ValidationCheckId =
   | ConsistencyCheckId
   | MathCheckId;
 
-export type ValidationCheckCategory = "structure" | "integrity" | "consistency" | "math";
+export type ValidationCheckCategory =
+  | "structure"
+  | "integrity"
+  | "consistency"
+  | "math";
 export type ValidationCheckSeverity = "critical" | "warning" | "info";
 export type ValidationCheckStatus = "passed" | "warning" | "failed";
 
@@ -444,9 +448,9 @@ export type ValidationCheck = {
   severity?: ValidationCheckSeverity;
   // Debug info for collapsible section
   debug?: {
-    logic: string;       // Resumo da lógica
-    expected: string;    // Valor/resultado esperado
-    actual?: string;     // Valor/resultado atual
+    logic: string; // Resumo da lógica
+    expected: string; // Valor/resultado esperado
+    actual?: string; // Valor/resultado atual
     failedItems?: string[]; // Lista de itens que falharam (max 10)
   };
 };
@@ -462,7 +466,13 @@ export type ValidationWarning = {
 
 export type DetectedInsight = {
   id: string;
-  type: "shark" | "churn_risk" | "trend" | "debtor" | "high_volume" | "new_agent";
+  type:
+    | "shark"
+    | "churn_risk"
+    | "trend"
+    | "debtor"
+    | "high_volume"
+    | "new_agent";
   icon: string;
   title: string;
   description: string;

@@ -114,8 +114,14 @@ const SessionContent = memo(function SessionContent({
   const colConfig = TABLE_COLUMN_CONFIGS[tableType];
 
   // Calculate totals from players
-  const totalBuyInChips = players.reduce((s, p) => s + (p.buyInChips ?? p.buyIn ?? 0), 0);
-  const totalBuyInTicket = players.reduce((s, p) => s + (p.buyInTicket ?? 0), 0);
+  const totalBuyInChips = players.reduce(
+    (s, p) => s + (p.buyInChips ?? p.buyIn ?? 0),
+    0,
+  );
+  const totalBuyInTicket = players.reduce(
+    (s, p) => s + (p.buyInTicket ?? 0),
+    0,
+  );
   const totalPrize = players.reduce((s, p) => s + (p.prize ?? 0), 0);
   const totalBounty = players.reduce((s, p) => s + (p.bounty ?? 0), 0);
   const totalHands = players.reduce((s, p) => s + (p.hands ?? 0), 0);
@@ -123,7 +129,10 @@ const SessionContent = memo(function SessionContent({
   const totalRake = players.reduce((s, p) => s + (p.rake ?? 0), 0);
 
   // Helper to get player value by field name
-  const getPlayerValue = (player: NonNullable<ParsedSession["players"]>[number], field: string): number => {
+  const getPlayerValue = (
+    player: NonNullable<ParsedSession["players"]>[number],
+    field: string,
+  ): number => {
     return (player as Record<string, number | undefined>)[field] ?? 0;
   };
 
@@ -133,7 +142,9 @@ const SessionContent = memo(function SessionContent({
       <div className="flex flex-wrap gap-4 text-sm bg-muted/30 rounded-lg p-3">
         <div>
           <span className="text-muted-foreground">Tipo:</span>{" "}
-          <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{tableType}</span>
+          <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
+            {tableType}
+          </span>
         </div>
         {session.startedAt && (
           <div>
@@ -190,7 +201,11 @@ const SessionContent = memo(function SessionContent({
                   Nome Memo
                 </TableHead>
                 {/* Dynamic Columns G+ */}
-                <TableHead className={colConfig.colG.isRanking ? "w-[50px]" : "text-right"}>
+                <TableHead
+                  className={
+                    colConfig.colG.isRanking ? "w-[50px]" : "text-right"
+                  }
+                >
                   <div className="text-[9px] text-muted-foreground">col. G</div>
                   {colConfig.colG.label}
                 </TableHead>
@@ -204,19 +219,25 @@ const SessionContent = memo(function SessionContent({
                 </TableHead>
                 {colConfig.colJ && (
                   <TableHead className="text-right">
-                    <div className="text-[9px] text-muted-foreground">col. J</div>
+                    <div className="text-[9px] text-muted-foreground">
+                      col. J
+                    </div>
                     {colConfig.colJ.label}
                   </TableHead>
                 )}
                 {colConfig.colK && (
                   <TableHead className="text-right">
-                    <div className="text-[9px] text-muted-foreground">col. K</div>
+                    <div className="text-[9px] text-muted-foreground">
+                      col. K
+                    </div>
                     {colConfig.colK.label}
                   </TableHead>
                 )}
                 {colConfig.hasColL && (
                   <TableHead className="text-right">
-                    <div className="text-[9px] text-muted-foreground">col. L</div>
+                    <div className="text-[9px] text-muted-foreground">
+                      col. L
+                    </div>
                     Taxa
                   </TableHead>
                 )}
@@ -248,31 +269,51 @@ const SessionContent = memo(function SessionContent({
                     {player.memoName || "-"}
                   </TableCell>
                   {/* Dynamic Columns G+ */}
-                  <TableCell className={colConfig.colG.isRanking ? "font-medium text-center" : "text-right"}>
+                  <TableCell
+                    className={
+                      colConfig.colG.isRanking
+                        ? "font-medium text-center"
+                        : "text-right"
+                    }
+                  >
                     {colConfig.colG.isRanking
-                      ? (getPlayerValue(player, colConfig.colG.field) || "-")
-                      : formatNumber(getPlayerValue(player, colConfig.colG.field))}
+                      ? getPlayerValue(player, colConfig.colG.field) || "-"
+                      : formatNumber(
+                          getPlayerValue(player, colConfig.colG.field),
+                        )}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatNumber(getPlayerValue(player, colConfig.colH.field))}
                   </TableCell>
-                  <TableCell className={`text-right ${colConfig.colI.field === "winnings" ? (getPlayerValue(player, "winnings") > 0 ? "text-green-600 font-medium" : getPlayerValue(player, "winnings") < 0 ? "text-red-600 font-medium" : "") : ""}`}>
+                  <TableCell
+                    className={`text-right ${colConfig.colI.field === "winnings" ? (getPlayerValue(player, "winnings") > 0 ? "text-green-600 font-medium" : getPlayerValue(player, "winnings") < 0 ? "text-red-600 font-medium" : "") : ""}`}
+                  >
                     {colConfig.colI.field === "winnings"
-                      ? formatCurrency(getPlayerValue(player, colConfig.colI.field))
-                      : formatNumber(getPlayerValue(player, colConfig.colI.field))}
+                      ? formatCurrency(
+                          getPlayerValue(player, colConfig.colI.field),
+                        )
+                      : formatNumber(
+                          getPlayerValue(player, colConfig.colI.field),
+                        )}
                   </TableCell>
                   {colConfig.colJ && (
                     <TableCell
                       className={`text-right font-medium ${getPlayerValue(player, colConfig.colJ.field) > 0 ? "text-green-600" : getPlayerValue(player, colConfig.colJ.field) < 0 ? "text-red-600" : ""}`}
                     >
-                      {formatCurrency(getPlayerValue(player, colConfig.colJ.field))}
+                      {formatCurrency(
+                        getPlayerValue(player, colConfig.colJ.field),
+                      )}
                     </TableCell>
                   )}
                   {colConfig.colK && (
                     <TableCell className="text-right">
                       {colConfig.colK.field === "bounty"
-                        ? formatCurrency(getPlayerValue(player, colConfig.colK.field))
-                        : formatCurrency(getPlayerValue(player, colConfig.colK.field))}
+                        ? formatCurrency(
+                            getPlayerValue(player, colConfig.colK.field),
+                          )
+                        : formatCurrency(
+                            getPlayerValue(player, colConfig.colK.field),
+                          )}
                     </TableCell>
                   )}
                   {colConfig.hasColL && (
@@ -290,11 +331,21 @@ const SessionContent = memo(function SessionContent({
                 <TableCell className="text-muted-foreground">-</TableCell>
                 <TableCell className="font-bold">Total</TableCell>
                 <TableCell className="text-muted-foreground">-</TableCell>
-                <TableCell className={colConfig.colG.isRanking ? "font-bold text-center" : "text-right font-bold"}>
-                  {colConfig.colG.isRanking ? "-" : formatNumber(totalBuyInChips)}
+                <TableCell
+                  className={
+                    colConfig.colG.isRanking
+                      ? "font-bold text-center"
+                      : "text-right font-bold"
+                  }
+                >
+                  {colConfig.colG.isRanking
+                    ? "-"
+                    : formatNumber(totalBuyInChips)}
                 </TableCell>
                 <TableCell className="text-right font-bold">
-                  {tableType === "PPSR" ? formatNumber(totalHands) : formatNumber(totalBuyInChips)}
+                  {tableType === "PPSR"
+                    ? formatNumber(totalHands)
+                    : formatNumber(totalBuyInChips)}
                 </TableCell>
                 <TableCell className="text-right font-bold">
                   {tableType === "PPST_SPINUP"
@@ -334,7 +385,18 @@ const SessionContent = memo(function SessionContent({
 });
 
 // Game type categories for filtering and stats
-type GameCategory = "mtt" | "spin" | "pko" | "mko" | "sat" | "cash_nlh" | "cash_plo" | "cash_plo5" | "cash_plo6" | "cash_ofc" | "sitng";
+type GameCategory =
+  | "mtt"
+  | "spin"
+  | "pko"
+  | "mko"
+  | "sat"
+  | "cash_nlh"
+  | "cash_plo"
+  | "cash_plo5"
+  | "cash_plo6"
+  | "cash_ofc"
+  | "sitng";
 
 // Helper to determine game type from variant string
 function getGameTypeInfo(gameVariant: string): {
@@ -352,27 +414,62 @@ function getGameTypeInfo(gameVariant: string): {
 
   // SPINUP - Pink (must check before other PPST)
   if (variant.includes("SPINUP")) {
-    return { label: "SPIN", badgeClass: "bg-pink-500 text-white", category: "spin", isPPST: true, isPPSR: false };
+    return {
+      label: "SPIN",
+      badgeClass: "bg-pink-500 text-white",
+      category: "spin",
+      isPPST: true,
+      isPPSR: false,
+    };
   }
 
   // PKO - Progressive Knockout - Orange
   if (variant.includes("PKO")) {
-    return { label: "PKO", badgeClass: "bg-orange-500 text-white", category: "pko", isPPST: true, isPPSR: false };
+    return {
+      label: "PKO",
+      badgeClass: "bg-orange-500 text-white",
+      category: "pko",
+      isPPST: true,
+      isPPSR: false,
+    };
   }
 
   // MKO - Mystery Knockout - Orange (darker)
   if (variant.includes("MKO")) {
-    return { label: "MKO", badgeClass: "bg-orange-600 text-white", category: "mko", isPPST: true, isPPSR: false };
+    return {
+      label: "MKO",
+      badgeClass: "bg-orange-600 text-white",
+      category: "mko",
+      isPPST: true,
+      isPPSR: false,
+    };
   }
 
   // SAT - Satellite - Cyan
   if (variant.includes("SAT") || variant.includes("SATELLITE")) {
-    return { label: "SAT", badgeClass: "bg-cyan-500 text-white", category: "sat", isPPST: true, isPPSR: false };
+    return {
+      label: "SAT",
+      badgeClass: "bg-cyan-500 text-white",
+      category: "sat",
+      isPPST: true,
+      isPPSR: false,
+    };
   }
 
   // SIT&GO - Purple
-  if (variant.includes("SNG") || variant.includes("SITNG") || variant.includes("SIT&GO") || variant.includes("SITNGO")) {
-    return { label: "SITNG", badgeClass: "bg-purple-500 text-white", category: "sitng", isPPST: true, isPPSR: false };
+  if (
+    variant.includes("SNG") ||
+    variant.includes("SITNG") ||
+    variant.includes("SIT&GO") ||
+    variant.includes("SITNGO")
+  ) {
+    return {
+      label: "SITNG",
+      badgeClass: "bg-purple-500 text-white",
+      category: "sitng",
+      isPPST: true,
+      isPPSR: false,
+    };
   }
 
   // ========== PPSR CASH GAMES ==========
@@ -380,38 +477,86 @@ function getGameTypeInfo(gameVariant: string): {
   if (isPPSR) {
     // PLO6 - Teal
     if (variant.includes("PLO6")) {
-      return { label: "PLO6", badgeClass: "bg-teal-500 text-white", category: "cash_plo6", isPPST: false, isPPSR: true };
+      return {
+        label: "PLO6",
+        badgeClass: "bg-teal-500 text-white",
+        category: "cash_plo6",
+        isPPST: false,
+        isPPSR: true,
+      };
     }
     // PLO5 - Purple
     if (variant.includes("PLO5")) {
-      return { label: "PLO5", badgeClass: "bg-purple-500 text-white", category: "cash_plo5", isPPST: false, isPPSR: true };
+      return {
+        label: "PLO5",
+        badgeClass: "bg-purple-500 text-white",
+        category: "cash_plo5",
+        isPPST: false,
+        isPPSR: true,
+      };
     }
     // PLO (PLO4) - Purple (lighter)
     if (variant.includes("PLO")) {
-      return { label: "PLO", badgeClass: "bg-purple-400 text-white", category: "cash_plo", isPPST: false, isPPSR: true };
+      return {
+        label: "PLO",
+        badgeClass: "bg-purple-400 text-white",
+        category: "cash_plo",
+        isPPST: false,
+        isPPSR: true,
+      };
     }
     // OFC - Amber
     if (variant.includes("OFC")) {
-      return { label: "OFC", badgeClass: "bg-amber-500 text-white", category: "cash_ofc", isPPST: false, isPPSR: true };
+      return {
+        label: "OFC",
+        badgeClass: "bg-amber-500 text-white",
+        category: "cash_ofc",
+        isPPST: false,
+        isPPSR: true,
+      };
     }
     // Default PPSR = NLH Cash - Green
-    return { label: "NLH", badgeClass: "bg-green-600 text-white", category: "cash_nlh", isPPST: false, isPPSR: true };
+    return {
+      label: "NLH",
+      badgeClass: "bg-green-600 text-white",
+      category: "cash_nlh",
+      isPPST: false,
+      isPPSR: true,
+    };
   }
 
   // ========== PPST DEFAULT (MTT) ==========
   if (isPPST) {
-    return { label: "MTT", badgeClass: "bg-blue-500 text-white", category: "mtt", isPPST: true, isPPSR: false };
+    return {
+      label: "MTT",
+      badgeClass: "bg-blue-500 text-white",
+      category: "mtt",
+      isPPST: true,
+      isPPSR: false,
+    };
   }
 
   // ========== FALLBACKS ==========
 
   // Cash game fallbacks
   if (variant.includes("CASH") || variant.includes("RING")) {
-    return { label: "CASH", badgeClass: "bg-green-600 text-white", category: "cash_nlh", isPPST: false, isPPSR: true };
+    return {
+      label: "CASH",
+      badgeClass: "bg-green-600 text-white",
+      category: "cash_nlh",
+      isPPST: false,
+      isPPSR: true,
+    };
   }
 
   // Default to MTT
-  return { label: "MTT", badgeClass: "bg-blue-500 text-white", category: "mtt", isPPST: true, isPPSR: false };
+  return {
+    label: "MTT",
+    badgeClass: "bg-blue-500 text-white",
+    category: "mtt",
+    isPPST: true,
+    isPPSR: false,
+  };
 }
 
 // Memoized session item - compact row style
@@ -521,9 +666,25 @@ const SessionItem = memo(function SessionItem({
 });
 
 // Filter options for session types
-type SessionFilter = "all" | "ppst" | "ppsr" | "mtt" | "spin" | "pko" | "mko" | "sat" | "sitng" | "nlh" | "plo" | "gtd";
+type SessionFilter =
+  | "all"
+  | "ppst"
+  | "ppsr"
+  | "mtt"
+  | "spin"
+  | "pko"
+  | "mko"
+  | "sat"
+  | "sitng"
+  | "nlh"
+  | "plo"
+  | "gtd";
 
-const FILTER_OPTIONS: { value: SessionFilter; label: string; group?: "ppst" | "ppsr" }[] = [
+const FILTER_OPTIONS: {
+  value: SessionFilter;
+  label: string;
+  group?: "ppst" | "ppsr";
+}[] = [
   { value: "all", label: "Todos" },
   { value: "ppst", label: "PPST (Torneios)" },
   { value: "ppsr", label: "PPSR (Cash)" },
@@ -538,7 +699,10 @@ const FILTER_OPTIONS: { value: SessionFilter; label: string; group?: "ppst" | "p
   { value: "gtd", label: "Com GTD" },
 ];
 
-export function LeaguePartidasTab({ sessions, period }: LeaguePartidasTabProps) {
+export function LeaguePartidasTab({
+  sessions,
+  period,
+}: LeaguePartidasTabProps) {
   const [openSessions, setOpenSessions] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<SessionFilter>("all");
@@ -575,7 +739,11 @@ export function LeaguePartidasTab({ sessions, period }: LeaguePartidasTabProps) 
         case "nlh":
           return typeInfo.category === "cash_nlh";
         case "plo":
-          return typeInfo.category === "cash_plo" || typeInfo.category === "cash_plo5" || typeInfo.category === "cash_plo6";
+          return (
+            typeInfo.category === "cash_plo" ||
+            typeInfo.category === "cash_plo5" ||
+            typeInfo.category === "cash_plo6"
+          );
         // Special filters
         case "gtd":
           return hasGTD;
@@ -760,35 +928,55 @@ export function LeaguePartidasTab({ sessions, period }: LeaguePartidasTabProps) 
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Partidas:</span>
-            <span className="text-sm font-semibold">{formatNumber(summaryStats.totalSessions)}</span>
+            <span className="text-sm font-semibold">
+              {formatNumber(summaryStats.totalSessions)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Jogadores:</span>
-            <span className="text-sm font-semibold">{formatNumber(summaryStats.totalPlayers)}</span>
+            <span className="text-sm font-semibold">
+              {formatNumber(summaryStats.totalPlayers)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">c/ GTD:</span>
-            <span className="text-sm font-semibold text-yellow-500">{formatNumber(summaryStats.gtdCount)}</span>
+            <span className="text-sm font-semibold text-yellow-500">
+              {formatNumber(summaryStats.gtdCount)}
+            </span>
           </div>
         </div>
 
         {/* Row 2: Valores */}
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Buy-in Total (H):</span>
-            <span className="text-sm font-semibold font-mono">{formatNumber(summaryStats.totalBuyIn)}</span>
+            <span className="text-xs text-muted-foreground">
+              Buy-in Total (H):
+            </span>
+            <span className="text-sm font-semibold font-mono">
+              {formatNumber(summaryStats.totalBuyIn)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Taxa Total (K):</span>
-            <span className="text-sm font-semibold font-mono text-[#00C969]">{formatCurrency(summaryStats.totalRake)}</span>
+            <span className="text-xs text-muted-foreground">
+              Taxa Total (K):
+            </span>
+            <span className="text-sm font-semibold font-mono text-[#00C969]">
+              {formatCurrency(summaryStats.totalRake)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Total GTD:</span>
-            <span className="text-sm font-semibold font-mono text-yellow-500">{formatNumber(summaryStats.totalGTD)}</span>
+            <span className="text-sm font-semibold font-mono text-yellow-500">
+              {formatNumber(summaryStats.totalGTD)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Ganhos Totais (J):</span>
-            <span className={`text-sm font-semibold font-mono ${summaryStats.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+            <span className="text-xs text-muted-foreground">
+              Ganhos Totais (J):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${summaryStats.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
               {formatCurrency(summaryStats.totalWinnings)}
             </span>
           </div>
@@ -797,49 +985,64 @@ export function LeaguePartidasTab({ sessions, period }: LeaguePartidasTabProps) 
         {/* Row 3: PPST (Torneios) */}
         <div className="pt-3 border-t border-border/50">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
-            PPST (TORNEIOS) <span className="text-blue-500 font-semibold">{formatNumber(summaryStats.ppstCount)}</span>
+            PPST (TORNEIOS){" "}
+            <span className="text-blue-500 font-semibold">
+              {formatNumber(summaryStats.ppstCount)}
+            </span>
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {summaryStats.mttCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-blue-500">●</span>
                 <span className="text-xs">MTT</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.mttCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.mttCount)}
+                </span>
               </div>
             )}
             {summaryStats.spinCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-pink-500">●</span>
                 <span className="text-xs">SPIN</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.spinCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.spinCount)}
+                </span>
               </div>
             )}
             {summaryStats.pkoCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-orange-500">●</span>
                 <span className="text-xs">PKO</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.pkoCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.pkoCount)}
+                </span>
               </div>
             )}
             {summaryStats.mkoCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-orange-600">●</span>
                 <span className="text-xs">MKO</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.mkoCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.mkoCount)}
+                </span>
               </div>
             )}
             {summaryStats.satCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-cyan-500">●</span>
                 <span className="text-xs">SAT</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.satCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.satCount)}
+                </span>
               </div>
             )}
             {summaryStats.sitngCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-purple-500">●</span>
                 <span className="text-xs">SIT&GO</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.sitngCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.sitngCount)}
+                </span>
               </div>
             )}
           </div>
@@ -848,42 +1051,55 @@ export function LeaguePartidasTab({ sessions, period }: LeaguePartidasTabProps) 
         {/* Row 4: PPSR (Cash Games) */}
         <div className="pt-3 border-t border-border/50">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
-            PPSR (CASH GAMES) <span className="text-green-500 font-semibold">{formatNumber(summaryStats.ppsrCount)}</span>
+            PPSR (CASH GAMES){" "}
+            <span className="text-green-500 font-semibold">
+              {formatNumber(summaryStats.ppsrCount)}
+            </span>
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {summaryStats.nlhCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-green-600">●</span>
                 <span className="text-xs">NLH</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.nlhCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.nlhCount)}
+                </span>
               </div>
             )}
             {summaryStats.ploCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-purple-400">●</span>
                 <span className="text-xs">PLO</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.ploCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.ploCount)}
+                </span>
               </div>
             )}
             {summaryStats.plo5Count > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-purple-500">●</span>
                 <span className="text-xs">PLO5</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.plo5Count)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.plo5Count)}
+                </span>
               </div>
             )}
             {summaryStats.plo6Count > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-teal-500">●</span>
                 <span className="text-xs">PLO6</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.plo6Count)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.plo6Count)}
+                </span>
               </div>
             )}
             {summaryStats.ofcCount > 0 && (
               <div className="flex items-center gap-1">
                 <span className="text-sm text-amber-500">●</span>
                 <span className="text-xs">OFC</span>
-                <span className="text-xs text-muted-foreground">{formatNumber(summaryStats.ofcCount)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatNumber(summaryStats.ofcCount)}
+                </span>
               </div>
             )}
           </div>
@@ -933,7 +1149,9 @@ export function LeaguePartidasTab({ sessions, period }: LeaguePartidasTabProps) 
             className="gap-1"
           >
             <ChevronsLeft className="h-4 w-4" />
-            <span className="text-[10px] text-muted-foreground">(primeiro)</span>
+            <span className="text-[10px] text-muted-foreground">
+              (primeiro)
+            </span>
           </Button>
           {/* Previous page */}
           <Button

@@ -199,7 +199,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           details: "Todos os formatos de torneio são reconhecidos",
           count: 0,
           debug: {
-            logic: "Verifica se há formatos de torneio não reconhecidos pelo parser",
+            logic:
+              "Verifica se há formatos de torneio não reconhecidos pelo parser",
             expected: "0 formatos desconhecidos",
             actual: "0 formatos desconhecidos",
           },
@@ -220,12 +221,15 @@ const STRUCTURE_RULES: ValidationRule[] = [
         details: `${count} torneio(s) com formato desconhecido: ${[...formatTypes].join(", ")}`,
         count,
         debug: {
-          logic: "Verifica se há formatos de torneio não reconhecidos pelo parser",
+          logic:
+            "Verifica se há formatos de torneio não reconhecidos pelo parser",
           expected: "0 formatos desconhecidos",
           actual: `${count} formatos não reconhecidos`,
-          failedItems: unknownFormats.slice(0, 10).map(
-            (uf) => `Game ${uf.gameId}: ${uf.rawText.substring(0, 60)}...`,
-          ),
+          failedItems: unknownFormats
+            .slice(0, 10)
+            .map(
+              (uf) => `Game ${uf.gameId}: ${uf.rawText.substring(0, 60)}...`,
+            ),
         },
       };
     },
@@ -247,7 +251,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           details: "Todos os formatos de cash são reconhecidos",
           count: 0,
           debug: {
-            logic: "Verifica se há formatos de cash não reconhecidos pelo parser",
+            logic:
+              "Verifica se há formatos de cash não reconhecidos pelo parser",
             expected: "0 formatos desconhecidos",
             actual: "0 formatos desconhecidos",
           },
@@ -271,9 +276,11 @@ const STRUCTURE_RULES: ValidationRule[] = [
           logic: "Verifica se há formatos de cash não reconhecidos pelo parser",
           expected: "0 formatos desconhecidos",
           actual: `${count} formatos não reconhecidos`,
-          failedItems: unknownFormats.slice(0, 10).map(
-            (uf) => `Game ${uf.gameId}: ${uf.rawText.substring(0, 60)}...`,
-          ),
+          failedItems: unknownFormats
+            .slice(0, 10)
+            .map(
+              (uf) => `Game ${uf.gameId}: ${uf.rawText.substring(0, 60)}...`,
+            ),
         },
       };
     },
@@ -603,15 +610,20 @@ const MATH_RULES: ValidationRule[] = [
     category: "math",
     severity: "info",
     label: "Colunas de fórmula consistentes",
-    description: "Verifica se colunas que são somas de outras estão corretas (Geral = soma das sub-colunas)",
+    description:
+      "Verifica se colunas que são somas de outras estão corretas (Geral = soma das sub-colunas)",
     validate: (data) => {
       const issues: string[] = [];
 
       // Check PPST: ganhosLigaGeral = Taxa + Buy-in SPIN + Prêmio SPIN + Ticket Entreg. + Buy-in Ticket
       for (const bloco of data.geralPPST || []) {
         for (const liga of bloco.ligas) {
-          const expectedGeral = liga.ganhosLigaTaxa + liga.buyinSpinup + liga.premiacaoSpinup +
-                               liga.valorTicketEntregue + liga.buyinTicketLiga;
+          const expectedGeral =
+            liga.ganhosLigaTaxa +
+            liga.buyinSpinup +
+            liga.premiacaoSpinup +
+            liga.valorTicketEntregue +
+            liga.buyinTicketLiga;
           // Tolerance of 0.1 for rounding
           if (Math.abs(liga.ganhosLigaGeral - expectedGeral) > 0.1) {
             issues.push(
@@ -625,16 +637,21 @@ const MATH_RULES: ValidationRule[] = [
       // Check PPSR: ganhosLigaGeral = Taxa + Taxa do Jackpot + Prêmio Jackpot + Dividir EV
       for (const bloco of data.geralPPSR || []) {
         for (const liga of bloco.ligas) {
-          const expectedJogadorGeral = liga.ganhosJogadorDeAdversarios + liga.ganhosJogadorDeJackpot +
-                                       liga.ganhosJogadorDeDividirEV;
+          const expectedJogadorGeral =
+            liga.ganhosJogadorDeAdversarios +
+            liga.ganhosJogadorDeJackpot +
+            liga.ganhosJogadorDeDividirEV;
           if (Math.abs(liga.ganhosJogadorGeral - expectedJogadorGeral) > 0.1) {
             issues.push(
               `PPSR Liga ${liga.ligaId}: GanhosJogGeral=${liga.ganhosJogadorGeral.toFixed(2)}, esperado=${expectedJogadorGeral.toFixed(2)}`,
             );
           }
 
-          const expectedLigaGeral = liga.ganhosLigaTaxa + liga.ganhosLigaTaxaJackpot +
-                                   liga.ganhosLigaPremioJackpot + liga.ganhosLigaDividirEV;
+          const expectedLigaGeral =
+            liga.ganhosLigaTaxa +
+            liga.ganhosLigaTaxaJackpot +
+            liga.ganhosLigaPremioJackpot +
+            liga.ganhosLigaDividirEV;
           if (Math.abs(liga.ganhosLigaGeral - expectedLigaGeral) > 0.1) {
             issues.push(
               `PPSR Liga ${liga.ligaId}: GanhosLigaGeral=${liga.ganhosLigaGeral.toFixed(2)}, esperado=${expectedLigaGeral.toFixed(2)}`,
@@ -651,7 +668,8 @@ const MATH_RULES: ValidationRule[] = [
             : `${issues.length} inconsistências detectadas (valores foram recalculados)`,
         count: issues.length,
         debug: {
-          logic: "Verifica se Geral = soma das sub-colunas (Taxa, SPIN, Ticket, etc.)",
+          logic:
+            "Verifica se Geral = soma das sub-colunas (Taxa, SPIN, Ticket, etc.)",
           expected: "Geral = soma das sub-colunas",
           actual: `${issues.length} inconsistências`,
           failedItems: issues.slice(0, 10),
@@ -846,7 +864,10 @@ export function validateLeagueImportData(
   const warnings: LeagueValidationWarning[] = [];
 
   // Verifica se PPSR não tem dados
-  if ((data.jogosPPSR?.length ?? 0) === 0 && (data.jogosPPSRInicioCount ?? 0) > 0) {
+  if (
+    (data.jogosPPSR?.length ?? 0) === 0 &&
+    (data.jogosPPSRInicioCount ?? 0) > 0
+  ) {
     warnings.push({
       id: "ppsr_no_players",
       severity: "warning",
@@ -860,7 +881,8 @@ export function validateLeagueImportData(
   // Calcula estatísticas
   const totalLigasPPST = new Set<number>();
   const totalJogosPPST = data.jogosPPST?.length ?? 0;
-  let totalJogadoresPPST = 0;
+  const uniquePlayersPPST = new Set<number | string>(); // Jogadores únicos
+  let totalParticipacoesPPST = 0; // Total de participações (entradas)
   let totalBuyinPPST = 0;
   let totalGanhosPPST = 0;
   let totalTaxaPPST = 0;
@@ -873,8 +895,12 @@ export function validateLeagueImportData(
   }
 
   for (const jogo of data.jogosPPST || []) {
-    totalJogadoresPPST += jogo.jogadores.length;
+    totalParticipacoesPPST += jogo.jogadores.length;
     for (const jogador of jogo.jogadores) {
+      // Conta jogador único
+      if (jogador.jogadorId) {
+        uniquePlayersPPST.add(jogador.jogadorId);
+      }
       totalBuyinPPST += jogador.buyinFichas;
       totalGanhosPPST += jogador.ganhos;
       totalTaxaPPST += jogador.taxa ?? 0;
@@ -902,7 +928,8 @@ export function validateLeagueImportData(
     }
   }
 
-  const totalJogos = nlhCount + spinupCount + knockoutCount + satelliteCount || 1;
+  const totalJogos =
+    nlhCount + spinupCount + knockoutCount + satelliteCount || 1;
 
   // Top ligas por taxa
   const ligaTaxas = new Map<
@@ -962,7 +989,8 @@ export function validateLeagueImportData(
     stats: {
       totalLigasPPST: totalLigasPPST.size,
       totalJogosPPST,
-      totalJogadoresPPST,
+      totalJogadoresPPST: uniquePlayersPPST.size, // Jogadores únicos (corrigido)
+      totalParticipacoesPPST, // Total de participações (entradas)
       totalBuyinPPST,
       totalGanhosPPST,
       totalTaxaPPST,
@@ -978,11 +1006,37 @@ export function validateLeagueImportData(
         return ligas.size;
       })(),
       totalJogosPPSR: data.jogosPPSR?.length ?? 0,
-      totalJogadoresPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.jogadores.length, 0),
-      totalMaosPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.maos, 0),
-      totalBuyinPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.buyinFichas, 0),
-      totalGanhosPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.ganhosJogadorGeral, 0),
-      totalTaxaPPSR: (data.jogosPPSR || []).reduce((sum, j) => sum + j.totalGeral.taxa, 0),
+      totalJogadoresPPSR: (() => {
+        const uniquePlayers = new Set<number | string>();
+        for (const jogo of data.jogosPPSR || []) {
+          for (const jogador of jogo.jogadores) {
+            if (jogador.jogadorId) {
+              uniquePlayers.add(jogador.jogadorId);
+            }
+          }
+        }
+        return uniquePlayers.size;
+      })(),
+      totalParticipacoesPPSR: (data.jogosPPSR || []).reduce(
+        (sum, j) => sum + j.jogadores.length,
+        0,
+      ),
+      totalMaosPPSR: (data.jogosPPSR || []).reduce(
+        (sum, j) => sum + j.totalGeral.maos,
+        0,
+      ),
+      totalBuyinPPSR: (data.jogosPPSR || []).reduce(
+        (sum, j) => sum + j.totalGeral.buyinFichas,
+        0,
+      ),
+      totalGanhosPPSR: (data.jogosPPSR || []).reduce(
+        (sum, j) => sum + j.totalGeral.ganhosJogadorGeral,
+        0,
+      ),
+      totalTaxaPPSR: (data.jogosPPSR || []).reduce(
+        (sum, j) => sum + j.totalGeral.taxa,
+        0,
+      ),
     },
 
     gameTypeDistribution: [

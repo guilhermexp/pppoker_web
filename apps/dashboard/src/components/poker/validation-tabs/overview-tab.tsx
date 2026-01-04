@@ -34,7 +34,9 @@ export function OverviewTab({ result }: OverviewTabProps) {
         </div>
         <div className="border rounded-lg p-4">
           <p className="text-xs text-[#878787] mb-1">Ganhos/Perdas</p>
-          <p className={`text-xl font-mono ${stats.totalWinnings >= 0 ? "text-[#00C969]" : ""}`}>
+          <p
+            className={`text-xl font-mono ${stats.totalWinnings >= 0 ? "text-[#00C969]" : ""}`}
+          >
             {formatCurrency(stats.totalWinnings)}
           </p>
         </div>
@@ -44,7 +46,9 @@ export function OverviewTab({ result }: OverviewTabProps) {
         </div>
         <div className="border rounded-lg p-4">
           <p className="text-xs text-[#878787] mb-1">Partidas</p>
-          <p className="text-xl font-mono">{stats.totalSessions || stats.totalPlayers}</p>
+          <p className="text-xl font-mono">
+            {stats.totalSessions || stats.totalPlayers}
+          </p>
           <p className="text-xs text-[#878787] mt-1">
             Cash: {stats.cashGameSessions} · MTT: {stats.mttSessions}
           </p>
@@ -83,15 +87,21 @@ export function OverviewTab({ result }: OverviewTabProps) {
       <div className="border rounded-lg divide-y">
         <div className="flex items-center justify-between p-4">
           <span className="text-[#878787]">Total de Transações</span>
-          <span className="font-mono">{stats.totalTransactions.toLocaleString()}</span>
+          <span className="font-mono">
+            {stats.totalTransactions.toLocaleString()}
+          </span>
         </div>
         <div className="flex items-center justify-between p-4">
           <span className="text-[#878787]">Volume Total</span>
-          <span className="font-mono">{formatCurrency(stats.transactionVolume)}</span>
+          <span className="font-mono">
+            {formatCurrency(stats.transactionVolume)}
+          </span>
         </div>
         <div className="flex items-center justify-between p-4">
           <span className="text-[#878787]">Média por Transação</span>
-          <span className="font-mono">{formatCurrency(stats.avgTransactionValue)}</span>
+          <span className="font-mono">
+            {formatCurrency(stats.avgTransactionValue)}
+          </span>
         </div>
       </div>
 

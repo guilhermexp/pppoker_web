@@ -35,7 +35,8 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import React, { memo, useMemo, useState } from "react";
+import type React from "react";
+import { memo, useMemo, useState } from "react";
 
 interface LeagueJogosPPSTTabProps {
   data: ParsedLeagueJogoPPST[];
@@ -555,6 +556,10 @@ const JogoItem = memo(function JogoItem({
   const isKnockout = subtipo === "knockout";
   const isSatellite = subtipo === "satellite";
 
+  // Extract organizer from tipoJogo (e.g., "PPST" from "PPST/NLH")
+  const organizer = tipoJogo.split("/")[0] || "?";
+  const isPPSTOrganized = organizer.toUpperCase() === "PPST";
+
   // Game type label and style
   let gameTypeLabel: string;
   let badgeClass: string;
@@ -593,6 +598,17 @@ const JogoItem = memo(function JogoItem({
           {index}
         </span>
 
+        {/* Organizer badge */}
+        <span
+          className={`px-1.5 py-0.5 rounded text-[10px] font-medium mr-1 flex-shrink-0 ${
+            isPPSTOrganized
+              ? "bg-[#00C969] text-white"
+              : "bg-gray-500 text-white"
+          }`}
+        >
+          {organizer}
+        </span>
+
         {/* Type badge */}
         <span
           className={`${badgeClass} px-1.5 py-0.5 rounded text-[10px] font-medium mr-2 flex-shrink-0`}
@@ -629,7 +645,7 @@ const JogoItem = memo(function JogoItem({
 
         {/* GTD */}
         {jogo.metadata.premiacaoGarantida ? (
-          <span className="text-yellow-500 font-medium mr-3 flex-shrink-0">
+          <span className="text-[#00C969] font-medium mr-3 flex-shrink-0">
             GTD {formatNumber(jogo.metadata.premiacaoGarantida)}
           </span>
         ) : (
@@ -638,9 +654,48 @@ const JogoItem = memo(function JogoItem({
           </span>
         )}
 
+        {/* Buyin */}
+        <span className="mr-3 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground mr-0.5">Buyin</span>
+          <span className="text-blue-500 font-mono">{formatCurrency(jogo.totalGeral?.buyinFichas ?? 0)}</span>
+        </span>
+
+        {/* Ganhos */}
+        <span className="mr-3 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground mr-0.5">Ganhos</span>
+          <span className={`font-mono ${(jogo.totalGeral?.ganhos ?? 0) < 0 ? "text-red-500" : "text-green-500"}`}>
+            {formatCurrency(jogo.totalGeral?.ganhos ?? 0)}
+          </span>
+        </span>
+
+        {/* Taxa */}
+        <span className="mr-3 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground mr-0.5">Taxa</span>
+          <span className="text-orange-500 font-mono">{formatCurrency(jogo.totalGeral?.taxa ?? 0)}</span>
+        </span>
+
+        {/* Overlay/Lucro para torneios GTD */}
+        {jogo.metadata.premiacaoGarantida && jogo.metadata.premiacaoGarantida > 0 ? (
+          (() => {
+            const buyinLiquido = (jogo.totalGeral?.buyinFichas ?? 0) - (jogo.totalGeral?.taxa ?? 0);
+            const gtd = jogo.metadata.premiacaoGarantida;
+            const resultado = buyinLiquido - gtd; // positivo = lucro, negativo = overlay
+            return (
+              <span className="mr-3 flex-shrink-0">
+                <span className="text-[10px] text-muted-foreground mr-0.5">Resultado</span>
+                <span className={`font-mono text-xs ${resultado >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  {resultado >= 0 ? "+" : ""}{formatCurrency(resultado)}
+                </span>
+              </span>
+            );
+          })()
+        ) : (
+          <span className="mr-3 flex-shrink-0 w-[70px]" />
+        )}
+
         {/* Date/time */}
         <span className="text-muted-foreground flex-shrink-0">
-          {jogo.metadata.dataInicio} {jogo.metadata.horaInicio}
+          {jogo.metadata.dataInicio}
         </span>
       </CollapsibleTrigger>
 
@@ -652,7 +707,7 @@ const JogoItem = memo(function JogoItem({
 });
 
 // Filter options for tournament types
-type TournamentFilter = "all" | "mtt" | "spin" | "pko" | "mko" | "sat" | "gtd";
+type TournamentFilter = "all" | "mtt" | "spin" | "pko" | "mko" | "sat" | "gtd" | "overlay";
 
 const FILTER_OPTIONS: { value: TournamentFilter; label: string }[] = [
   { value: "all", label: "Todos" },
@@ -662,6 +717,7 @@ const FILTER_OPTIONS: { value: TournamentFilter; label: string }[] = [
   { value: "mko", label: "MKO" },
   { value: "sat", label: "SAT" },
   { value: "gtd", label: "Com GTD" },
+  { value: "overlay", label: "Com Overlay" },
 ];
 
 export function LeagueJogosPPSTTab({
@@ -680,11 +736,17 @@ export function LeagueJogosPPSTTab({
     return data.filter((jogo) => {
       const tipoJogo = jogo.metadata.tipoJogo;
       const subtipo = jogo.metadata.subtipo;
-      const hasGTD = jogo.metadata.premiacaoGarantida && jogo.metadata.premiacaoGarantida > 0;
+      const hasGTD =
+        jogo.metadata.premiacaoGarantida &&
+        jogo.metadata.premiacaoGarantida > 0;
 
       switch (typeFilter) {
         case "mtt":
-          return !tipoJogo.includes("SPINUP") && subtipo !== "knockout" && subtipo !== "satellite";
+          return (
+            !tipoJogo.includes("SPINUP") &&
+            subtipo !== "knockout" &&
+            subtipo !== "satellite"
+          );
         case "spin":
           return tipoJogo.includes("SPINUP");
         case "pko":
@@ -695,6 +757,15 @@ export function LeagueJogosPPSTTab({
           return subtipo === "satellite";
         case "gtd":
           return hasGTD;
+        case "overlay": {
+          // Only PPST organized tournaments with GTD that have overlay
+          const isPPSTOrganized = tipoJogo.toUpperCase().startsWith("PPST");
+          if (!isPPSTOrganized || !hasGTD) return false;
+          const buyinLiquido = (jogo.totalGeral?.buyinFichas ?? 0) - (jogo.totalGeral?.taxa ?? 0);
+          const gtd = jogo.metadata.premiacaoGarantida ?? 0;
+          const resultado = buyinLiquido - gtd;
+          return resultado < 0; // Only show if overlay (negative result)
+        }
         default:
           return true;
       }
@@ -717,7 +788,12 @@ export function LeagueJogosPPSTTab({
     let totalBuyin = 0; // Sum of all buy-ins (column J)
     let totalGTD = 0;
     let totalArrecadacaoGTD = 0; // Total collected from GTD tournaments
+    let totalTaxaGTD = 0; // Total tax from GTD tournaments only
     let gtdTourneysCount = 0; // Count of tournaments with GTD
+    let totalOverlayOnly = 0; // Sum of only negative results (overlays)
+    let overlayCount = 0; // Count of tournaments with overlay
+    let arrecadacaoOverlay = 0; // Buyin - Taxa only from tournaments with overlay
+    let gtdOverlay = 0; // GTD only from tournaments with overlay
     let mttCount = 0;
     let spinCount = 0;
     let pkoCount = 0;
@@ -734,7 +810,7 @@ export function LeagueJogosPPSTTab({
     let totalGeralRecompensa = 0;
     let totalGeralValorTicket = 0;
 
-    for (const jogo of data) {
+    for (const jogo of filteredData) {
       // Conta jogadores únicos
       for (const jogador of jogo.jogadores) {
         if (jogador.jogadorId) {
@@ -779,7 +855,10 @@ export function LeagueJogosPPSTTab({
       totalGeralValorTicket += jogoValorTicket;
 
       // Calculate arrecadação (buy-ins collected) for GTD tournaments
+      // IMPORTANT: Only count tournaments organized by PPST (tipoJogo starts with "PPST")
+      const isPPSTOrganized = jogo.metadata.tipoJogo.toUpperCase().startsWith("PPST");
       if (
+        isPPSTOrganized &&
         jogo.metadata.premiacaoGarantida &&
         jogo.metadata.premiacaoGarantida > 0
       ) {
@@ -788,6 +867,18 @@ export function LeagueJogosPPSTTab({
 
         // Usa o total com fallback
         totalArrecadacaoGTD += jogoBuyinFichas;
+        totalTaxaGTD += jogoTaxa;
+
+        // Calculate overlay: (Buyin - Taxa) - GTD
+        // Only sum negative results (overlays), ignore profits
+        const buyinLiquido = jogoBuyinFichas - jogoTaxa;
+        const resultado = buyinLiquido - jogo.metadata.premiacaoGarantida;
+        if (resultado < 0) {
+          totalOverlayOnly += resultado; // Add negative value (overlay)
+          overlayCount++;
+          arrecadacaoOverlay += buyinLiquido; // Sum buyin líquido only from overlay tournaments
+          gtdOverlay += jogo.metadata.premiacaoGarantida; // Sum GTD only from overlay tournaments
+        }
       }
 
       const tipoJogo = jogo.metadata.tipoJogo;
@@ -812,9 +903,9 @@ export function LeagueJogosPPSTTab({
       }
     }
 
-    const jogosCount = data.length;
+    const jogosCount = filteredData.length;
     const cancelledCount =
-      inicioCount > jogosCount ? inicioCount - jogosCount : 0;
+      inicioCount > data.length ? inicioCount - data.length : 0;
 
     // Gap = GTD - Arrecadação (positive = overlay/loss, negative = profit)
     const totalGap = totalGTD - totalArrecadacaoGTD;
@@ -825,8 +916,13 @@ export function LeagueJogosPPSTTab({
       totalBuyin,
       totalGTD,
       totalArrecadacaoGTD,
+      totalTaxaGTD,
       gtdTourneysCount,
       totalGap,
+      totalOverlayOnly,
+      overlayCount,
+      arrecadacaoOverlay,
+      gtdOverlay,
       mttCount,
       spinCount,
       pkoCount,
@@ -844,7 +940,7 @@ export function LeagueJogosPPSTTab({
       totalGeralRecompensa,
       totalGeralValorTicket,
     };
-  }, [data, inicioCount]);
+  }, [filteredData, data, inicioCount]);
 
   // Get paginated data from filtered results
   const paginatedData = useMemo(() => {
@@ -890,117 +986,6 @@ export function LeagueJogosPPSTTab({
     <div className="space-y-4">
       {/* Summary Stats Header */}
       <div className="space-y-4">
-        {/* Main Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {/* Torneios */}
-          <div className="bg-muted/30 rounded-lg p-3 border">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              Torneios
-            </div>
-            <div className="text-xl font-bold">
-              {formatNumber(summaryStats.jogosCount)}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              aba Jogos PPST
-            </div>
-          </div>
-
-          {/* Cancelados */}
-          {summaryStats.cancelledCount > 0 && (
-            <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
-              <div className="text-[10px] text-amber-600 uppercase tracking-wide flex items-center gap-1">
-                <Ban className="h-3 w-3" />
-                Cancelados
-              </div>
-              <div className="text-xl font-bold text-amber-600">
-                {formatNumber(summaryStats.cancelledCount)}
-              </div>
-              <div className="text-[10px] text-amber-600/70">
-                headers sem jogadores
-              </div>
-            </div>
-          )}
-
-          {/* Não reconhecidos */}
-          {unknownFormatsCount > 0 && (
-            <div className="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
-              <div className="text-[10px] text-red-600 uppercase tracking-wide flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                Não Reconhecidos
-              </div>
-              <div className="text-xl font-bold text-red-600">
-                {formatNumber(unknownFormatsCount)}
-              </div>
-              <div className="text-[10px] text-red-600/70">
-                formato não mapeado
-              </div>
-            </div>
-          )}
-
-          {/* Jogadores */}
-          <div className="bg-muted/30 rounded-lg p-3 border">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              Jogadores
-            </div>
-            <div className="text-xl font-bold">
-              {formatNumber(summaryStats.totalPlayers)}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              jogadores únicos
-            </div>
-          </div>
-
-          {/* Buyin Total */}
-          <div className="bg-muted/30 rounded-lg p-3 border">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              Buyin Total
-            </div>
-            <div className="text-xl font-bold">
-              {formatNumber(summaryStats.totalBuyin)}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              Σ col. J (Buy-in)
-            </div>
-          </div>
-
-          {/* Torneios c/ GTD - novo rastreamento */}
-          <div className="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/20">
-            <div className="text-[10px] text-yellow-600 uppercase tracking-wide flex items-center gap-1">
-              <Trophy className="h-3 w-3" />
-              Torneios c/ GTD
-            </div>
-            <div className="text-xl font-bold text-yellow-600">
-              {formatNumber(summaryStats.gtdTourneysCount)}
-            </div>
-            <div className="text-[10px] text-yellow-600/70">
-              jogos onde header tem GTD
-            </div>
-            <div className="mt-2 pt-2 border-t border-yellow-500/20">
-              <div className="text-[10px] text-yellow-600/70">Total GTD</div>
-              <div className="text-lg font-bold text-yellow-500">
-                {formatNumber(summaryStats.totalGTD)}
-              </div>
-            </div>
-          </div>
-
-          {/* Gap */}
-          <div className="bg-muted/30 rounded-lg p-3 border">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              Gap (Overlay)
-            </div>
-            <div
-              className={`text-xl font-bold ${summaryStats.totalGap > 0 ? "text-red-500" : "text-green-500"}`}
-            >
-              {summaryStats.totalGap > 0 ? "-" : "+"}
-              {formatNumber(Math.abs(summaryStats.totalGap))}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              GTD Total - Arrecadação
-            </div>
-          </div>
-        </div>
-
         {/* Game Types Legend */}
         <div className="bg-muted/20 rounded-lg p-3 border">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
@@ -1082,8 +1067,8 @@ export function LeagueJogosPPSTTab({
         <div className="flex items-center gap-3">
           <div className="text-sm text-muted-foreground">
             Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
-            {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} de {filteredData.length}{" "}
-            jogos
+            {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} de{" "}
+            {filteredData.length} jogos
             {typeFilter !== "all" && (
               <span className="text-muted-foreground/60 ml-1">
                 (filtrado de {data.length})
@@ -1093,21 +1078,62 @@ export function LeagueJogosPPSTTab({
           {/* Type Filter */}
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={typeFilter} onValueChange={(v) => handleFilterChange(v as TournamentFilter)}>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => handleFilterChange(v as TournamentFilter)}
+            >
               <SelectTrigger className="w-[130px] h-8">
                 <SelectValue placeholder="Filtrar tipo" />
               </SelectTrigger>
               <SelectContent>
                 {FILTER_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {option.value === "overlay"
+                      ? `${option.label} (${summaryStats.overlayCount})`
+                      : option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-col items-end gap-1">
+          {/* Totals */}
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">GTD ({summaryStats.gtdTourneysCount})</span>
+              <span className="text-[#00C969]">{formatCurrency(summaryStats.totalGTD)}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">Buyin GTD</span>
+              <span className="text-blue-500">{formatCurrency(summaryStats.totalArrecadacaoGTD)}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">Buyin GTD - Taxa</span>
+              <span className="text-cyan-500">{formatCurrency(summaryStats.totalArrecadacaoGTD - summaryStats.totalTaxaGTD)}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">Só Overlay ({summaryStats.overlayCount})</span>
+              <span className="text-red-500">{formatCurrency(summaryStats.totalOverlayOnly)}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">Arrec. Overlay</span>
+              <span className="text-orange-500">{formatCurrency(summaryStats.arrecadacaoOverlay)}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">GTD Overlay</span>
+              <span className="text-[#00C969]">{formatCurrency(summaryStats.gtdOverlay)}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">Ganhos</span>
+              <span className={summaryStats.totalGeralGanhos < 0 ? "text-red-500" : "text-green-500"}>{formatCurrency(summaryStats.totalGeralGanhos)}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted-foreground">Taxa</span>
+              <span className="text-green-500">{formatCurrency(summaryStats.totalGeralTaxa)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
           {/* First page */}
           <Button
             variant="outline"
@@ -1178,6 +1204,7 @@ export function LeagueJogosPPSTTab({
             </span>
             <ChevronsRight className="h-4 w-4" />
           </Button>
+          </div>
         </div>
       </div>
 

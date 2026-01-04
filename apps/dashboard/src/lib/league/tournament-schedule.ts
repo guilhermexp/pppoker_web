@@ -48,7 +48,7 @@ const excelTimeToStr = (val: unknown): string => {
 // Extrai datas da semana do nome do arquivo
 const parseWeekFromFilename = (filename: string): WeekScheduleInfo | null => {
   const match = filename.match(
-    /(\d{1,2})[\s_-](\d{1,2})[\s_-]al[\s_-](\d{1,2})[\s_-](\d{1,2})/i
+    /(\d{1,2})[\s_-](\d{1,2})[\s_-]al[\s_-](\d{1,2})[\s_-](\d{1,2})/i,
   );
   if (match) {
     const [, startDay, startMonth, endDay, endMonth] = match;
@@ -112,7 +112,9 @@ export const dayOrder = [
 // Encontra índice de coluna pelo nome do header
 const findColumnIndex = (row: unknown[], names: string[]): number => {
   for (let i = 0; i < row.length; i++) {
-    const cell = String(row[i] || "").trim().toUpperCase();
+    const cell = String(row[i] || "")
+      .trim()
+      .toUpperCase();
     for (const name of names) {
       if (cell === name.toUpperCase() || cell.includes(name.toUpperCase())) {
         return i;
@@ -125,7 +127,9 @@ const findColumnIndex = (row: unknown[], names: string[]): number => {
 // Verifica se uma linha contém um dia da semana
 const findDayInRow = (row: unknown[]): string | null => {
   for (const cell of row) {
-    const val = String(cell || "").trim().toUpperCase();
+    const val = String(cell || "")
+      .trim()
+      .toUpperCase();
     if (dayMap[val]) {
       return dayMap[val];
     }
@@ -135,7 +139,7 @@ const findDayInRow = (row: unknown[]): string | null => {
 
 // Função principal de processamento do arquivo XLSX
 export const parseTournamentSchedule = (
-  file: File
+  file: File,
 ): Promise<TournamentScheduleData> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -154,7 +158,7 @@ export const parseTournamentSchedule = (
 
         // Encontrar a linha de header procurando por "NAME" ou "GTD"
         let headerRowIdx = -1;
-        let cols = {
+        const cols = {
           time: 2,
           gtd: -1,
           name: -1,
@@ -171,8 +175,17 @@ export const parseTournamentSchedule = (
 
         for (let i = 0; i < Math.min(15, json.length); i++) {
           const row = json[i];
-          const nameIdx = findColumnIndex(row, ["NAME", "NOME", "TORNEIO", "TOURNAMENT"]);
-          const gtdIdx = findColumnIndex(row, ["GTD", "GARANTIDO", "GUARANTEED"]);
+          const nameIdx = findColumnIndex(row, [
+            "NAME",
+            "NOME",
+            "TORNEIO",
+            "TOURNAMENT",
+          ]);
+          const gtdIdx = findColumnIndex(row, [
+            "GTD",
+            "GARANTIDO",
+            "GUARANTEED",
+          ]);
 
           if (nameIdx !== -1 || gtdIdx !== -1) {
             headerRowIdx = i;
@@ -182,7 +195,12 @@ export const parseTournamentSchedule = (
             if (cols.time === -1) cols.time = 2; // Fallback para coluna C
             cols.game = findColumnIndex(row, ["GAME", "JOGO", "TIPO"]);
             if (cols.game === -1) cols.game = cols.name + 1;
-            cols.buyIn = findColumnIndex(row, ["BUY-IN", "BUYIN", "BUY IN", "BUY"]);
+            cols.buyIn = findColumnIndex(row, [
+              "BUY-IN",
+              "BUYIN",
+              "BUY IN",
+              "BUY",
+            ]);
             if (cols.buyIn === -1) cols.buyIn = cols.game + 1;
             cols.rebuy = findColumnIndex(row, ["REBUY", "RE-BUY"]);
             if (cols.rebuy === -1) cols.rebuy = cols.buyIn + 1;
@@ -192,7 +210,11 @@ export const parseTournamentSchedule = (
             if (cols.stack === -1) cols.stack = cols.addOn + 2; // Pula uma coluna
             cols.players = findColumnIndex(row, ["PLAYERS", "JOGADORES"]);
             if (cols.players === -1) cols.players = cols.stack + 1;
-            cols.lateReg = findColumnIndex(row, ["LATE", "LATE REG", "LATEREG"]);
+            cols.lateReg = findColumnIndex(row, [
+              "LATE",
+              "LATE REG",
+              "LATEREG",
+            ]);
             if (cols.lateReg === -1) cols.lateReg = cols.players + 1;
             cols.minutes = findColumnIndex(row, ["MINUTES", "MINUTOS", "MIN"]);
             if (cols.minutes === -1) cols.minutes = cols.lateReg + 1;
@@ -225,7 +247,9 @@ export const parseTournamentSchedule = (
           if (
             tournamentName &&
             tournamentName.length > 1 &&
-            !["NAME", "NOME", "TORNEIO", "-5", "-3", "+3", "+8"].includes(tournamentName.toUpperCase())
+            !["NAME", "NOME", "TORNEIO", "-5", "-3", "+3", "+8"].includes(
+              tournamentName.toUpperCase(),
+            )
           ) {
             events.push({
               id: `${currentDay}-${i}`,
@@ -256,7 +280,9 @@ export const parseTournamentSchedule = (
           const today = new Date();
           const dayOfWeek = today.getDay();
           const monday = new Date(today);
-          monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+          monday.setDate(
+            today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1),
+          );
           const sunday = new Date(monday);
           sunday.setDate(monday.getDate() + 6);
 
@@ -278,7 +304,7 @@ export const parseTournamentSchedule = (
 
 // Agrupa eventos por dia
 export const groupEventsByDay = (
-  events: TournamentEvent[]
+  events: TournamentEvent[],
 ): Record<string, TournamentEvent[]> => {
   const grouped: Record<string, TournamentEvent[]> = {};
   for (const event of events) {
@@ -293,13 +319,17 @@ export const groupEventsByDay = (
 // Calcula totais
 export const calculateTotals = (events: TournamentEvent[]) => {
   let totalGTD = 0;
+  let tournamentsWithGTD = 0;
   const totalTournaments = events.length;
 
   for (const event of events) {
     // Remove tudo que não é dígito ou ponto
     const gtd = Number.parseFloat(event.gtd.replace(/[^\d.]/g, "")) || 0;
     totalGTD += gtd;
+    if (gtd > 0) {
+      tournamentsWithGTD++;
+    }
   }
 
-  return { totalGTD, totalTournaments };
+  return { totalGTD, totalTournaments: tournamentsWithGTD, totalTournamentsAll: totalTournaments };
 };

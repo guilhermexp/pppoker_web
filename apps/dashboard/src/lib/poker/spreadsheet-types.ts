@@ -13,11 +13,11 @@
  * Tipos de planilha do PPPoker
  */
 export type SpreadsheetType =
-  | "super-union"      // Liga com PPST-PPSR (lobby global)
+  | "super-union" // Liga com PPST-PPSR (lobby global)
   | "super-union-ppst" // Liga com apenas PPST (torneios globais)
   | "super-union-ppsr" // Liga com apenas PPSR (cash global)
-  | "league"           // Liga sem PPST-PPSR (dados da liga + clubes)
-  | "club";            // Clube individual (sem liga)
+  | "league" // Liga sem PPST-PPSR (dados da liga + clubes)
+  | "club"; // Clube individual (sem liga)
 
 /**
  * Metadados extraídos do nome do arquivo
@@ -68,16 +68,19 @@ const TYPE_LABELS: Record<SpreadsheetType, string> = {
   "super-union": "Super Union (PPST + PPSR)",
   "super-union-ppst": "Super Union (Torneios)",
   "super-union-ppsr": "Super Union (Cash)",
-  "league": "Liga",
-  "club": "Clube",
+  league: "Liga",
+  club: "Clube",
 };
 
 const TYPE_DESCRIPTIONS: Record<SpreadsheetType, string> = {
-  "super-union": "Dados de todas as ligas e clubes do lobby global (torneios + cash games)",
-  "super-union-ppst": "Dados de torneios de todas as ligas do lobby global PPST",
-  "super-union-ppsr": "Dados de cash games de todas as ligas do lobby global PPSR",
-  "league": "Dados da liga com todos os clubes associados",
-  "club": "Dados apenas do clube individual",
+  "super-union":
+    "Dados de todas as ligas e clubes do lobby global (torneios + cash games)",
+  "super-union-ppst":
+    "Dados de torneios de todas as ligas do lobby global PPST",
+  "super-union-ppsr":
+    "Dados de cash games de todas as ligas do lobby global PPSR",
+  league: "Dados da liga com todos os clubes associados",
+  club: "Dados apenas do clube individual",
 };
 
 // =============================================================================
@@ -103,9 +106,9 @@ function formatDate(dateStr: string): string {
 function isValidDate(dateStr: string): boolean {
   if (!dateStr || dateStr.length !== 8) return false;
 
-  const year = parseInt(dateStr.slice(0, 4), 10);
-  const month = parseInt(dateStr.slice(4, 6), 10);
-  const day = parseInt(dateStr.slice(6, 8), 10);
+  const year = Number.parseInt(dateStr.slice(0, 4), 10);
+  const month = Number.parseInt(dateStr.slice(4, 6), 10);
+  const day = Number.parseInt(dateStr.slice(6, 8), 10);
 
   if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
   if (year < 2000 || year > 2100) return false;
@@ -136,7 +139,9 @@ function isValidDate(dateStr: string): boolean {
  * parseSpreadsheetFileName("3357-4210947-20250901-20250907.xlsx")
  * // => { type: "club", primaryId: 3357, secondaryId: 4210947, ... }
  */
-export function parseSpreadsheetFileName(fileName: string): SpreadsheetMetadata {
+export function parseSpreadsheetFileName(
+  fileName: string,
+): SpreadsheetMetadata {
   const baseName = fileName.replace(/\.(xlsx|xls|csv)$/i, "");
 
   // Default result for unparseable files
@@ -157,11 +162,12 @@ export function parseSpreadsheetFileName(fileName: string): SpreadsheetMetadata 
 
   // Try to match Super Union pattern with PPST-PPSR, PPST, or PPSR suffix
   const superUnionMatch = baseName.match(
-    /^(\d+)-(\d+)-(\d{8})-(\d{8})-(PPST-PPSR|PPST|PPSR)$/
+    /^(\d+)-(\d+)-(\d{8})-(\d{8})-(PPST-PPSR|PPST|PPSR)$/,
   );
 
   if (superUnionMatch) {
-    const [, primaryId, secondaryId, dateStart, dateEnd, suffix] = superUnionMatch;
+    const [, primaryId, secondaryId, dateStart, dateEnd, suffix] =
+      superUnionMatch;
 
     let type: SpreadsheetType;
     if (suffix === "PPST-PPSR") {
@@ -176,8 +182,8 @@ export function parseSpreadsheetFileName(fileName: string): SpreadsheetMetadata 
       type,
       typeLabel: TYPE_LABELS[type],
       typeDescription: TYPE_DESCRIPTIONS[type],
-      primaryId: parseInt(primaryId, 10),
-      secondaryId: parseInt(secondaryId, 10),
+      primaryId: Number.parseInt(primaryId, 10),
+      secondaryId: Number.parseInt(secondaryId, 10),
       dateStart,
       dateEnd,
       dateStartFormatted: formatDate(dateStart),
@@ -189,9 +195,7 @@ export function parseSpreadsheetFileName(fileName: string): SpreadsheetMetadata 
   }
 
   // Try to match Liga/Club pattern without suffix
-  const standardMatch = baseName.match(
-    /^(\d+)-(\d+)-(\d{8})-(\d{8})$/
-  );
+  const standardMatch = baseName.match(/^(\d+)-(\d+)-(\d{8})-(\d{8})$/);
 
   if (standardMatch) {
     const [, primaryId, secondaryId, dateStart, dateEnd] = standardMatch;
@@ -206,7 +210,7 @@ export function parseSpreadsheetFileName(fileName: string): SpreadsheetMetadata 
     // For now, we'll use a simple heuristic based on ID size
     // Liga IDs tend to be smaller (under 10000), club IDs larger
     // But this is just a guess - the user or system should confirm
-    const primaryIdNum = parseInt(primaryId, 10);
+    const primaryIdNum = Number.parseInt(primaryId, 10);
     const type: SpreadsheetType = primaryIdNum < 10000 ? "league" : "club";
 
     return {
@@ -214,7 +218,7 @@ export function parseSpreadsheetFileName(fileName: string): SpreadsheetMetadata 
       typeLabel: TYPE_LABELS[type],
       typeDescription: TYPE_DESCRIPTIONS[type],
       primaryId: primaryIdNum,
-      secondaryId: parseInt(secondaryId, 10),
+      secondaryId: Number.parseInt(secondaryId, 10),
       dateStart,
       dateEnd,
       dateStartFormatted: formatDate(dateStart),
@@ -231,7 +235,9 @@ export function parseSpreadsheetFileName(fileName: string): SpreadsheetMetadata 
 /**
  * Gera uma descrição formatada do tipo de planilha para exibição na UI
  */
-export function getSpreadsheetDescription(metadata: SpreadsheetMetadata): string {
+export function getSpreadsheetDescription(
+  metadata: SpreadsheetMetadata,
+): string {
   if (!metadata.parsed) {
     return "Tipo de planilha não identificado";
   }
@@ -242,7 +248,11 @@ export function getSpreadsheetDescription(metadata: SpreadsheetMetadata): string
   parts.push(`📋 ${metadata.typeLabel}`);
 
   // Add IDs
-  if (metadata.type === "super-union" || metadata.type === "super-union-ppst" || metadata.type === "super-union-ppsr") {
+  if (
+    metadata.type === "super-union" ||
+    metadata.type === "super-union-ppst" ||
+    metadata.type === "super-union-ppsr"
+  ) {
     parts.push(`Liga: ${metadata.primaryId}`);
     parts.push(`Clube Master: ${metadata.secondaryId}`);
   } else if (metadata.type === "league") {
@@ -254,7 +264,9 @@ export function getSpreadsheetDescription(metadata: SpreadsheetMetadata): string
 
   // Add period
   if (metadata.dateStartFormatted && metadata.dateEndFormatted) {
-    parts.push(`Período: ${metadata.dateStartFormatted} - ${metadata.dateEndFormatted}`);
+    parts.push(
+      `Período: ${metadata.dateStartFormatted} - ${metadata.dateEndFormatted}`,
+    );
   }
 
   return parts.join(" | ");

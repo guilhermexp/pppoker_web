@@ -1,6 +1,10 @@
 "use client";
 
-import type { ParsedSession, ParsedSummary, ValidationCheck } from "@/lib/poker/types";
+import type {
+  ParsedSession,
+  ParsedSummary,
+  ValidationCheck,
+} from "@/lib/poker/types";
 import { useTRPC } from "@/trpc/client";
 import { Icons } from "@midday/ui/icons";
 import { Spinner } from "@midday/ui/spinner";
@@ -34,10 +38,21 @@ type ResumoTabProps = {
   checks: ValidationCheck[];
   clubId: string | null;
   period: { start: string; end: string; days: number };
-  weekInfo: { currentWeek: number; importWeek: number | null; isSameWeek: boolean };
+  weekInfo: {
+    currentWeek: number;
+    importWeek: number | null;
+    isSameWeek: boolean;
+  };
 };
 
-export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInfo }: ResumoTabProps) {
+export function ResumoTab({
+  summaries,
+  sessions,
+  checks,
+  clubId,
+  period,
+  weekInfo,
+}: ResumoTabProps) {
   const trpc = useTRPC();
 
   // Extract all unique ppPokerIds from summaries (players, agents, super agents)
@@ -60,7 +75,8 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
     for (const summary of summaries) {
       if (isValidId(summary.ppPokerId)) ids.add(summary.ppPokerId);
       if (isValidId(summary.agentPpPokerId)) ids.add(summary.agentPpPokerId);
-      if (isValidId(summary.superAgentPpPokerId)) ids.add(summary.superAgentPpPokerId);
+      if (isValidId(summary.superAgentPpPokerId))
+        ids.add(summary.superAgentPpPokerId);
     }
 
     return [...ids];
@@ -70,19 +86,26 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
   const { data: existingData, isLoading: isCheckingExisting } = useQuery(
     trpc.poker.players.checkExistingByPpPokerIds.queryOptions(
       { ppPokerIds: allPpPokerIds },
-      { enabled: allPpPokerIds.length > 0 }
-    )
+      { enabled: allPpPokerIds.length > 0 },
+    ),
   );
 
   // Calculate new vs existing counts
   const cadastroStats = useMemo(() => {
     if (!existingData) {
-      return { totalInSheet: allPpPokerIds.length, newCount: 0, existingCount: 0, isLoading: true };
+      return {
+        totalInSheet: allPpPokerIds.length,
+        newCount: 0,
+        existingCount: 0,
+        isLoading: true,
+      };
     }
 
     const existingSet = new Set(existingData.existing.map((e) => e.ppPokerId));
     const newCount = allPpPokerIds.filter((id) => !existingSet.has(id)).length;
-    const existingCount = allPpPokerIds.filter((id) => existingSet.has(id)).length;
+    const existingCount = allPpPokerIds.filter((id) =>
+      existingSet.has(id),
+    ).length;
 
     return {
       totalInSheet: allPpPokerIds.length,
@@ -108,7 +131,10 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
     };
 
     // Helper to format session type tag (same logic as sessions-tab)
-    const formatSessionTypeTag = (type: string, organizador?: string | null): "CASH" | "MTT" | "SITNG" | "SPIN" => {
+    const formatSessionTypeTag = (
+      type: string,
+      organizador?: string | null,
+    ): "CASH" | "MTT" | "SITNG" | "SPIN" => {
       const normalized = type.toLowerCase();
 
       // Se o organizador é PPST, é torneio (nunca CASH)
@@ -125,29 +151,32 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
 
       // Liga ou outros - usar o tipo
       if (normalized.includes("spin")) return "SPIN";
-      if (normalized.includes("mtt") || normalized.includes("tournament")) return "MTT";
-      if (normalized.includes("sit") || normalized.includes("sng")) return "SITNG";
-      if (normalized.includes("cash") || normalized.includes("ring")) return "CASH";
+      if (normalized.includes("mtt") || normalized.includes("tournament"))
+        return "MTT";
+      if (normalized.includes("sit") || normalized.includes("sng"))
+        return "SITNG";
+      if (normalized.includes("cash") || normalized.includes("ring"))
+        return "CASH";
       return "CASH";
     };
 
     // Unique agents and super-agents
     const uniqueAgents = new Set(
-      summaries.map((s) => s.agentPpPokerId).filter(isValidId)
+      summaries.map((s) => s.agentPpPokerId).filter(isValidId),
     );
     const uniqueSuperAgents = new Set(
-      summaries.map((s) => s.superAgentPpPokerId).filter(isValidId)
+      summaries.map((s) => s.superAgentPpPokerId).filter(isValidId),
     );
 
     // Players without agent
     const playersWithoutAgent = summaries.filter(
-      (s) => !isValidId(s.agentPpPokerId)
+      (s) => !isValidId(s.agentPpPokerId),
     ).length;
 
     // Total winnings (column J - playerWinningsTotal)
     const totalWinnings = summaries.reduce(
       (sum, s) => sum + (s.playerWinningsTotal || 0),
-      0
+      0,
     );
 
     // Total rake (column AC - fee)
@@ -159,16 +188,24 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
 
     // Session stats - categorized properly
     const cashGames = sessions.filter(
-      (s) => formatSessionTypeTag(s.sessionType || "", s.createdByNickname) === "CASH"
+      (s) =>
+        formatSessionTypeTag(s.sessionType || "", s.createdByNickname) ===
+        "CASH",
     ).length;
     const mttGames = sessions.filter(
-      (s) => formatSessionTypeTag(s.sessionType || "", s.createdByNickname) === "MTT"
+      (s) =>
+        formatSessionTypeTag(s.sessionType || "", s.createdByNickname) ===
+        "MTT",
     ).length;
     const sitngGames = sessions.filter(
-      (s) => formatSessionTypeTag(s.sessionType || "", s.createdByNickname) === "SITNG"
+      (s) =>
+        formatSessionTypeTag(s.sessionType || "", s.createdByNickname) ===
+        "SITNG",
     ).length;
     const spinGames = sessions.filter(
-      (s) => formatSessionTypeTag(s.sessionType || "", s.createdByNickname) === "SPIN"
+      (s) =>
+        formatSessionTypeTag(s.sessionType || "", s.createdByNickname) ===
+        "SPIN",
     ).length;
 
     const totalTorneios = mttGames + sitngGames + spinGames;
@@ -218,41 +255,52 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30">
             <Icons.Apps className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Clube {clubId}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-              stats.isLiga
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-purple-500/20 text-purple-400"
-            }`}>
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                stats.isLiga
+                  ? "bg-blue-500/20 text-blue-400"
+                  : "bg-purple-500/20 text-purple-400"
+              }`}
+            >
               {stats.isLiga ? "Liga" : "Privado"}
             </span>
           </div>
         )}
-        {period.start && period.end && (() => {
-          const startDay = getDayOfWeek(period.start);
-          const endDay = getDayOfWeek(period.end);
-          const dayRange = startDay && endDay ? `${startDay} a ${endDay}` : null;
-          return (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30">
-              <Icons.CalendarMonth className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-mono">
-                {period.start} - {period.end}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                ({period.days} dias{dayRange ? ` · ${dayRange}` : ""})
-              </span>
-            </div>
-          );
-        })()}
+        {period.start &&
+          period.end &&
+          (() => {
+            const startDay = getDayOfWeek(period.start);
+            const endDay = getDayOfWeek(period.end);
+            const dayRange =
+              startDay && endDay ? `${startDay} a ${endDay}` : null;
+            return (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30">
+                <Icons.CalendarMonth className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-mono">
+                  {period.start} - {period.end}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  ({period.days} dias{dayRange ? ` · ${dayRange}` : ""})
+                </span>
+              </div>
+            );
+          })()}
         {weekInfo.importWeek && (
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-            weekInfo.isSameWeek
-              ? "bg-[#00C969]/10 text-[#00C969]"
-              : "bg-amber-500/10 text-amber-500"
-          }`}>
+          <div
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+              weekInfo.isSameWeek
+                ? "bg-[#00C969]/10 text-[#00C969]"
+                : "bg-amber-500/10 text-amber-500"
+            }`}
+          >
             <Icons.DateFormat className="w-4 h-4" />
-            <span className="text-sm font-medium">Semana {weekInfo.importWeek}</span>
+            <span className="text-sm font-medium">
+              Semana {weekInfo.importWeek}
+            </span>
             {!weekInfo.isSameWeek && (
-              <span className="text-xs opacity-70">(atual: {weekInfo.currentWeek})</span>
+              <span className="text-xs opacity-70">
+                (atual: {weekInfo.currentWeek})
+              </span>
             )}
           </div>
         )}
@@ -264,7 +312,9 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
             <Icons.AccountCircle className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Jogadores</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Jogadores
+            </span>
           </div>
           <p className="text-2xl font-bold">{stats.totalPlayers}</p>
           <div className="mt-2 space-y-1 text-[11px] text-muted-foreground">
@@ -283,27 +333,37 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
             <Icons.Customers className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Cadastro</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Cadastro
+            </span>
           </div>
           {isCheckingExisting ? (
             <div className="flex items-center gap-2">
               <Spinner size={16} />
-              <span className="text-xs text-muted-foreground">Verificando...</span>
+              <span className="text-xs text-muted-foreground">
+                Verificando...
+              </span>
             </div>
           ) : (
             <>
               <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold text-[#00C969]">{cadastroStats.newCount}</p>
+                <p className="text-2xl font-bold text-[#00C969]">
+                  {cadastroStats.newCount}
+                </p>
                 <span className="text-xs text-muted-foreground">novos</span>
               </div>
               <div className="mt-2 space-y-1 text-[11px] text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Já cadastrados</span>
-                  <span className="font-mono">{cadastroStats.existingCount}</span>
+                  <span className="font-mono">
+                    {cadastroStats.existingCount}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Na planilha</span>
-                  <span className="font-mono">{cadastroStats.totalInSheet}</span>
+                  <span className="font-mono">
+                    {cadastroStats.totalInSheet}
+                  </span>
                 </div>
               </div>
             </>
@@ -314,7 +374,9 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
             <Icons.Accounts className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Hierarquia</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Hierarquia
+            </span>
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-2xl font-bold">{stats.totalAgents}</p>
@@ -332,9 +394,13 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
             <Icons.TrendingUp className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Ganhos + Eventos (J)</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Ganhos + Eventos (J)
+            </span>
           </div>
-          <p className={`text-2xl font-bold ${stats.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <p
+            className={`text-2xl font-bold ${stats.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(stats.totalWinnings)}
           </p>
           <div className="mt-2 space-y-1 text-[11px] text-muted-foreground">
@@ -353,7 +419,9 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
             <Icons.ReceiptLong className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Taxa/Rake (AC)</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Taxa/Rake (AC)
+            </span>
           </div>
           <p className="text-2xl font-bold text-[#00C969]">
             {formatCurrency(stats.totalRake)}
@@ -377,34 +445,48 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-3">
             <Icons.PlayOutline className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground font-medium">Partidas</span>
-            <span className="ml-auto text-2xl font-bold">{stats.totalSessions}</span>
+            <span className="text-sm text-muted-foreground font-medium">
+              Partidas
+            </span>
+            <span className="ml-auto text-2xl font-bold">
+              {stats.totalSessions}
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
               <span className="text-muted-foreground">Cash Games</span>
-              <span className="font-mono font-medium ml-2">{stats.cashGames}</span>
+              <span className="font-mono font-medium ml-2">
+                {stats.cashGames}
+              </span>
             </div>
             <div className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
               <span className="text-muted-foreground">Torneios</span>
-              <span className="font-mono font-medium ml-2">{stats.totalTorneios}</span>
+              <span className="font-mono font-medium ml-2">
+                {stats.totalTorneios}
+              </span>
             </div>
             {stats.mttGames > 0 && (
               <div className="flex items-center justify-between p-2 rounded bg-muted/20 text-xs">
                 <span className="text-muted-foreground/70 pl-2">└ MTT</span>
-                <span className="font-mono font-medium ml-2 text-muted-foreground">{stats.mttGames}</span>
+                <span className="font-mono font-medium ml-2 text-muted-foreground">
+                  {stats.mttGames}
+                </span>
               </div>
             )}
             {stats.sitngGames > 0 && (
               <div className="flex items-center justify-between p-2 rounded bg-muted/20 text-xs">
                 <span className="text-muted-foreground/70 pl-2">└ Sit&Go</span>
-                <span className="font-mono font-medium ml-2 text-muted-foreground">{stats.sitngGames}</span>
+                <span className="font-mono font-medium ml-2 text-muted-foreground">
+                  {stats.sitngGames}
+                </span>
               </div>
             )}
             {stats.spinGames > 0 && (
               <div className="flex items-center justify-between p-2 rounded bg-muted/20 text-xs">
                 <span className="text-muted-foreground/70 pl-2">└ SPIN</span>
-                <span className="font-mono font-medium ml-2 text-muted-foreground">{stats.spinGames}</span>
+                <span className="font-mono font-medium ml-2 text-muted-foreground">
+                  {stats.spinGames}
+                </span>
               </div>
             )}
           </div>
@@ -414,7 +496,9 @@ export function ResumoTab({ summaries, sessions, checks, clubId, period, weekInf
         <div className="p-3 border rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-3">
             <Icons.Check className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground font-medium">Validação</span>
+            <span className="text-sm text-muted-foreground font-medium">
+              Validação
+            </span>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-center">

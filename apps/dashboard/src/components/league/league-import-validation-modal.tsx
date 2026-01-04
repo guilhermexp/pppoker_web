@@ -1,7 +1,10 @@
 "use client";
 
 import type { LeagueImportValidationModalProps } from "@/lib/league/types";
-import { isBrazilianLeague, parseSpreadsheetFileName } from "@/lib/poker/spreadsheet-types";
+import {
+  isBrazilianLeague,
+  parseSpreadsheetFileName,
+} from "@/lib/poker/spreadsheet-types";
 import { Badge } from "@midday/ui/badge";
 import { Button } from "@midday/ui/button";
 import {
@@ -24,6 +27,7 @@ import {
   LeagueJogosPPSRTab,
   LeagueJogosPPSTTab,
   LeagueOverviewTab,
+  LeagueRateioTab,
   LeagueValidationTab,
 } from "./validation-tabs";
 
@@ -60,6 +64,7 @@ const TAB_COLUMNS: Record<string, { name: string; cols: number }> = {
   "jogos-ppst": { name: "Jogos PPST", cols: 14 },
   "geral-ppsr": { name: "Geral PPSR", cols: 13 },
   "jogos-ppsr": { name: "Jogos PPSR", cols: 18 },
+  rateio: { name: "Rateio", cols: 0 },
   validation: { name: "Validação", cols: 0 },
 };
 
@@ -111,7 +116,8 @@ export function LeagueImportValidationModal({
   const jogosPPSTCount = validationResult.stats.totalJogosPPST;
   const jogadoresPPSTCount = validationResult.stats.totalJogadoresPPST;
   // Use actual parsed data count for Geral PPSR (not jogos-derived stats)
-  const geralPPSRCount = parsedData.geralPPSR?.reduce((s, b) => s + b.ligas.length, 0) ?? 0;
+  const geralPPSRCount =
+    parsedData.geralPPSR?.reduce((s, b) => s + b.ligas.length, 0) ?? 0;
   const jogosPPSRCount = validationResult.stats.totalJogosPPSR ?? 0;
 
   // Calculate stats for Painel SU
@@ -127,7 +133,10 @@ export function LeagueImportValidationModal({
       totalGanhosJogador += bloco.total.ganhosJogador;
 
       // Separar gap por origem (BR = Ligas 1765, 1675, 2448, 2101)
-      const isBrasileiro = isBrasileiraLiga(bloco.contexto.entidadeTipo, bloco.contexto.entidadeId);
+      const isBrasileiro = isBrasileiraLiga(
+        bloco.contexto.entidadeTipo,
+        bloco.contexto.entidadeId,
+      );
       if (isBrasileiro) {
         gapBrasileiro += bloco.total.gapGarantido;
       } else {
@@ -151,7 +160,10 @@ export function LeagueImportValidationModal({
       if (jogo.metadata?.premiacaoGarantida) {
         totalGTD += jogo.metadata.premiacaoGarantida;
         // Arrecadação = soma dos buy-ins
-        totalArrecadacao += jogo.jogadores.reduce((sum, j) => sum + j.buyinFichas, 0);
+        totalArrecadacao += jogo.jogadores.reduce(
+          (sum, j) => sum + j.buyinFichas,
+          0,
+        );
       }
 
       // Game types
@@ -171,8 +183,10 @@ export function LeagueImportValidationModal({
 
     const totalGap = totalGTD - totalArrecadacao;
     const totalGapAbs = Math.abs(gapBrasileiro) + Math.abs(gapEstrangeiro);
-    const percBrasileiro = totalGapAbs > 0 ? (Math.abs(gapBrasileiro) / totalGapAbs) * 100 : 0;
-    const percEstrangeiro = totalGapAbs > 0 ? (Math.abs(gapEstrangeiro) / totalGapAbs) * 100 : 0;
+    const percBrasileiro =
+      totalGapAbs > 0 ? (Math.abs(gapBrasileiro) / totalGapAbs) * 100 : 0;
+    const percEstrangeiro =
+      totalGapAbs > 0 ? (Math.abs(gapEstrangeiro) / totalGapAbs) * 100 : 0;
 
     return {
       totalLigas: parsedData.geralPPST.length, // Número de blocos/entidades, não linhas
@@ -226,11 +240,13 @@ export function LeagueImportValidationModal({
                 <DialogTitle className="text-lg font-medium">
                   Validação de Liga
                 </DialogTitle>
-                {validationResult.period.start && validationResult.period.end && (
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-mono">
-                    {validationResult.period.start} - {validationResult.period.end}
-                  </span>
-                )}
+                {validationResult.period.start &&
+                  validationResult.period.end && (
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-mono">
+                      {validationResult.period.start} -{" "}
+                      {validationResult.period.end}
+                    </span>
+                  )}
                 {currentTabInfo && currentTabInfo.cols > 0 && (
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
                     {currentTabInfo.cols} colunas
@@ -245,12 +261,18 @@ export function LeagueImportValidationModal({
             </div>
             <div className="text-right mr-6">
               {hasBlockingErrors ? (
-                <Badge variant="outline" className="text-xs px-2 py-0.5 gap-1 border-[#FF3638]/30 text-[#FF3638]">
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2 py-0.5 gap-1 border-[#FF3638]/30 text-[#FF3638]"
+                >
                   <Icons.AlertCircle className="w-3 h-3" />
                   Bloqueado
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-xs px-2 py-0.5 gap-1 border-[#00C969]/30 text-[#00C969]">
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2 py-0.5 gap-1 border-[#00C969]/30 text-[#00C969]"
+                >
                   <Icons.Check className="w-3 h-3" />
                   {qualityScore}% válido
                 </Badge>
@@ -258,8 +280,7 @@ export function LeagueImportValidationModal({
               <p className="text-[11px] text-muted-foreground mt-1">
                 {hasBlockingErrors
                   ? `${criticalFailed} verificação(ões) crítica(s)`
-                  : `${passedChecks}/${totalChecks} verificações`
-                }
+                  : `${passedChecks}/${totalChecks} verificações`}
               </p>
             </div>
           </div>
@@ -303,6 +324,13 @@ export function LeagueImportValidationModal({
               disabled={jogosPPSRCount === 0}
             >
               Jogos PPSR ({jogosPPSRCount})
+            </TabsTrigger>
+            <TabsTrigger
+              value="rateio"
+              className="rounded-md data-[state=active]:bg-muted/50 px-3 py-2"
+            >
+              <Icons.PieChart className="w-3.5 h-3.5 mr-1" />
+              Rateio
             </TabsTrigger>
             <TabsTrigger
               value="validation"
@@ -349,6 +377,14 @@ export function LeagueImportValidationModal({
                 />
               )}
             </TabsContent>
+            <TabsContent value="rateio" className="m-0 h-full">
+              {activeTab === "rateio" && (
+                <LeagueRateioTab
+                  geralPPST={parsedData.geralPPST}
+                  jogosPPST={parsedData.jogosPPST}
+                />
+              )}
+            </TabsContent>
             <TabsContent value="validation" className="m-0 h-full">
               <LeagueValidationTab
                 checks={checks}
@@ -362,14 +398,19 @@ export function LeagueImportValidationModal({
         <div className="flex-shrink-0 border-t border-border bg-muted/30">
           {/* Spreadsheet Info Bar */}
           {(() => {
-            const metadata = parseSpreadsheetFileName(parsedData.fileName || "");
+            const metadata = parseSpreadsheetFileName(
+              parsedData.fileName || "",
+            );
             return (
               <div className="px-6 py-2 border-b border-border/50 bg-muted/20">
                 <div className="flex items-center gap-4 text-xs">
                   {/* Type Badge */}
                   <div className="flex items-center gap-1.5">
                     <span className="text-muted-foreground">Tipo:</span>
-                    <Badge variant="outline" className="px-2 py-0.5 text-[10px] font-medium">
+                    <Badge
+                      variant="outline"
+                      className="px-2 py-0.5 text-[10px] font-medium"
+                    >
                       {metadata.typeLabel}
                     </Badge>
                   </div>
@@ -377,21 +418,32 @@ export function LeagueImportValidationModal({
                   {/* IDs */}
                   {metadata.parsed && (
                     <>
-                      {(metadata.type === "super-union" || metadata.type === "super-union-ppst" || metadata.type === "super-union-ppsr" || metadata.type === "league") ? (
+                      {metadata.type === "super-union" ||
+                      metadata.type === "super-union-ppst" ||
+                      metadata.type === "super-union-ppsr" ||
+                      metadata.type === "league" ? (
                         <>
                           <div className="flex items-center gap-1">
                             <span className="text-muted-foreground">Liga:</span>
-                            <span className="font-mono font-medium">{metadata.primaryId}</span>
+                            <span className="font-mono font-medium">
+                              {metadata.primaryId}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Clube Master:</span>
-                            <span className="font-mono font-medium">{metadata.secondaryId}</span>
+                            <span className="text-muted-foreground">
+                              Clube Master:
+                            </span>
+                            <span className="font-mono font-medium">
+                              {metadata.secondaryId}
+                            </span>
                           </div>
                         </>
                       ) : (
                         <div className="flex items-center gap-1">
                           <span className="text-muted-foreground">Clube:</span>
-                          <span className="font-mono font-medium">{metadata.primaryId}</span>
+                          <span className="font-mono font-medium">
+                            {metadata.primaryId}
+                          </span>
                         </div>
                       )}
                     </>
@@ -412,7 +464,9 @@ export function LeagueImportValidationModal({
               <Icons.Description className="h-4 w-4" />
               <span className="font-mono text-xs">{parsedData.fileName}</span>
               <span className="text-muted-foreground/50">|</span>
-              <span className="text-xs">{((parsedData.fileSize ?? 0) / 1024).toFixed(1)} KB</span>
+              <span className="text-xs">
+                {((parsedData.fileSize ?? 0) / 1024).toFixed(1)} KB
+              </span>
             </div>
 
             <div className="flex items-center gap-3">

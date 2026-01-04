@@ -5,10 +5,10 @@ import { useTRPC } from "@/trpc/client";
 import { Badge } from "@midday/ui/badge";
 import { Button } from "@midday/ui/button";
 import { Checkbox } from "@midday/ui/checkbox";
+import { cn } from "@midday/ui/cn";
 import { Icons } from "@midday/ui/icons";
 import { Input } from "@midday/ui/input";
 import { Spinner } from "@midday/ui/spinner";
-import { cn } from "@midday/ui/cn";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -38,7 +38,9 @@ const ENTITY_COLORS = {
 
 export function CadastroTab({ summaries }: CadastroTabProps) {
   const trpc = useTRPC();
-  const [activeSubTab, setActiveSubTab] = useState<"players" | "agents" | "superAgents">("players");
+  const [activeSubTab, setActiveSubTab] = useState<
+    "players" | "agents" | "superAgents"
+  >("players");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [registrationComplete, setRegistrationComplete] = useState(false);
@@ -75,8 +77,12 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
           memoName: summary.memoName,
           country: summary.country,
           type: "player",
-          agentPpPokerId: isValidId(summary.agentPpPokerId) ? summary.agentPpPokerId : null,
-          superAgentPpPokerId: isValidId(summary.superAgentPpPokerId) ? summary.superAgentPpPokerId : null,
+          agentPpPokerId: isValidId(summary.agentPpPokerId)
+            ? summary.agentPpPokerId
+            : null,
+          superAgentPpPokerId: isValidId(summary.superAgentPpPokerId)
+            ? summary.superAgentPpPokerId
+            : null,
         });
       }
 
@@ -88,11 +94,16 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
           country: null,
           type: "agent",
           agentPpPokerId: null,
-          superAgentPpPokerId: isValidId(summary.superAgentPpPokerId) ? summary.superAgentPpPokerId : null,
+          superAgentPpPokerId: isValidId(summary.superAgentPpPokerId)
+            ? summary.superAgentPpPokerId
+            : null,
         });
       }
 
-      if (isValidId(summary.superAgentPpPokerId) && summary.superAgentNickname) {
+      if (
+        isValidId(summary.superAgentPpPokerId) &&
+        summary.superAgentNickname
+      ) {
         superAgentMap.set(summary.superAgentPpPokerId, {
           ppPokerId: summary.superAgentPpPokerId,
           nickname: summary.superAgentNickname,
@@ -105,7 +116,11 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
       }
     }
 
-    const allIds = [...playerMap.keys(), ...agentMap.keys(), ...superAgentMap.keys()];
+    const allIds = [
+      ...playerMap.keys(),
+      ...agentMap.keys(),
+      ...superAgentMap.keys(),
+    ];
 
     return {
       players: Array.from(playerMap.values()),
@@ -119,8 +134,8 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
   const { data: existingData, isLoading: isCheckingExisting } = useQuery(
     trpc.poker.players.checkExistingByPpPokerIds.queryOptions(
       { ppPokerIds: allPpPokerIds },
-      { enabled: allPpPokerIds.length > 0 }
-    )
+      { enabled: allPpPokerIds.length > 0 },
+    ),
   );
 
   // Bulk create mutation
@@ -131,33 +146,41 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
         setRegistrationResult(result);
         setSelectedIds(new Set());
       },
-    })
+    }),
   );
 
   // Merge existing data with extracted entities
-  const { enrichedPlayers, enrichedAgents, enrichedSuperAgents } = useMemo(() => {
-    const existingSet = new Set(existingData?.existing.map((e) => e.ppPokerId) ?? []);
-    const existingMap = new Map(existingData?.existing.map((e) => [e.ppPokerId, e]) ?? []);
+  const { enrichedPlayers, enrichedAgents, enrichedSuperAgents } =
+    useMemo(() => {
+      const existingSet = new Set(
+        existingData?.existing.map((e) => e.ppPokerId) ?? [],
+      );
+      const existingMap = new Map(
+        existingData?.existing.map((e) => [e.ppPokerId, e]) ?? [],
+      );
 
-    const enrichPlayer = (entity: ExtractedEntity): ExtractedEntity => {
-      const existing = existingMap.get(entity.ppPokerId);
-      return {
-        ...entity,
-        isNew: !existingSet.has(entity.ppPokerId),
-        existingId: existing?.id,
-        existingStatus: existing?.status,
+      const enrichPlayer = (entity: ExtractedEntity): ExtractedEntity => {
+        const existing = existingMap.get(entity.ppPokerId);
+        return {
+          ...entity,
+          isNew: !existingSet.has(entity.ppPokerId),
+          existingId: existing?.id,
+          existingStatus: existing?.status,
+        };
       };
-    };
 
-    return {
-      enrichedPlayers: players.map(enrichPlayer),
-      enrichedAgents: agents.map(enrichPlayer),
-      enrichedSuperAgents: superAgents.map(enrichPlayer),
-    };
-  }, [players, agents, superAgents, existingData]);
+      return {
+        enrichedPlayers: players.map(enrichPlayer),
+        enrichedAgents: agents.map(enrichPlayer),
+        enrichedSuperAgents: superAgents.map(enrichPlayer),
+      };
+    }, [players, agents, superAgents, existingData]);
 
   // Filter entities
-  const filterEntities = (entities: ExtractedEntity[], onlyNew = true): ExtractedEntity[] => {
+  const filterEntities = (
+    entities: ExtractedEntity[],
+    onlyNew = true,
+  ): ExtractedEntity[] => {
     return entities.filter((entity) => {
       if (onlyNew && !entity.isNew) return false;
       if (!searchQuery) return true;
@@ -181,9 +204,12 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
   // Get current tab entities
   const getCurrentEntities = () => {
     switch (activeSubTab) {
-      case "players": return { new: newPlayers, existing: existingPlayers };
-      case "agents": return { new: newAgents, existing: existingAgents };
-      case "superAgents": return { new: newSuperAgents, existing: existingSuperAgents };
+      case "players":
+        return { new: newPlayers, existing: existingPlayers };
+      case "agents":
+        return { new: newAgents, existing: existingAgents };
+      case "superAgents":
+        return { new: newSuperAgents, existing: existingSuperAgents };
     }
   };
 
@@ -221,13 +247,16 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
     const entitiesToRegister: ExtractedEntity[] = [];
 
     for (const entity of enrichedSuperAgents) {
-      if (selectedIds.has(entity.ppPokerId) && entity.isNew) entitiesToRegister.push(entity);
+      if (selectedIds.has(entity.ppPokerId) && entity.isNew)
+        entitiesToRegister.push(entity);
     }
     for (const entity of enrichedAgents) {
-      if (selectedIds.has(entity.ppPokerId) && entity.isNew) entitiesToRegister.push(entity);
+      if (selectedIds.has(entity.ppPokerId) && entity.isNew)
+        entitiesToRegister.push(entity);
     }
     for (const entity of enrichedPlayers) {
-      if (selectedIds.has(entity.ppPokerId) && entity.isNew) entitiesToRegister.push(entity);
+      if (selectedIds.has(entity.ppPokerId) && entity.isNew)
+        entitiesToRegister.push(entity);
     }
 
     if (entitiesToRegister.length === 0) return;
@@ -267,13 +296,16 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3">
         <Spinner size={32} />
-        <p className="text-sm text-muted-foreground">Verificando jogadores existentes...</p>
+        <p className="text-sm text-muted-foreground">
+          Verificando jogadores existentes...
+        </p>
       </div>
     );
   }
 
   const totalNew = newPlayers.length + newAgents.length + newSuperAgents.length;
-  const totalExisting = existingPlayers.length + existingAgents.length + existingSuperAgents.length;
+  const totalExisting =
+    existingPlayers.length + existingAgents.length + existingSuperAgents.length;
   const selectedCount = selectedIds.size;
 
   return (
@@ -282,9 +314,13 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
       {registrationComplete && registrationResult && (
         <div className="flex items-center gap-2 py-2 text-xs">
           <Icons.Check className="w-3.5 h-3.5 text-[#00C969]" />
-          <span className="text-[#00C969] font-medium">{registrationResult.created} cadastrado(s)</span>
+          <span className="text-[#00C969] font-medium">
+            {registrationResult.created} cadastrado(s)
+          </span>
           {registrationResult.errors.length > 0 && (
-            <span className="text-[#FF3638]">· {registrationResult.errors.length} erro(s)</span>
+            <span className="text-[#FF3638]">
+              · {registrationResult.errors.length} erro(s)
+            </span>
           )}
         </div>
       )}
@@ -292,7 +328,10 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
       {/* Row 1: Counters */}
       <div className="flex items-center gap-4 text-xs py-2">
         <span className="text-muted-foreground">
-          Na Planilha <span className="text-foreground font-medium">{players.length + agents.length + superAgents.length}</span>
+          Na Planilha{" "}
+          <span className="text-foreground font-medium">
+            {players.length + agents.length + superAgents.length}
+          </span>
         </span>
         <span className="text-border/60">·</span>
         <span className="text-muted-foreground">
@@ -300,11 +339,13 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
         </span>
         <span className="text-border/60">·</span>
         <span className="text-muted-foreground">
-          Existentes <span className="text-foreground font-medium">{totalExisting}</span>
+          Existentes{" "}
+          <span className="text-foreground font-medium">{totalExisting}</span>
         </span>
         <span className="text-border/60">·</span>
         <span className="text-muted-foreground">
-          Selecionados <span className="text-foreground font-medium">{selectedCount}</span>
+          Selecionados{" "}
+          <span className="text-foreground font-medium">{selectedCount}</span>
         </span>
       </div>
 
@@ -316,14 +357,21 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
             onClick={() => setActiveSubTab("players")}
             className={cn(
               "flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-muted/50",
-              activeSubTab === "players" && "bg-muted/50"
+              activeSubTab === "players" && "bg-muted/50",
             )}
           >
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ENTITY_COLORS.players }} />
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: ENTITY_COLORS.players }}
+            />
             <span className="text-muted-foreground">Jogadores</span>
-            <span className="text-foreground font-medium">{newPlayers.length}</span>
+            <span className="text-foreground font-medium">
+              {newPlayers.length}
+            </span>
             {existingPlayers.length > 0 && (
-              <span className="text-[9px] text-muted-foreground">(+{existingPlayers.length})</span>
+              <span className="text-[9px] text-muted-foreground">
+                (+{existingPlayers.length})
+              </span>
             )}
           </button>
 
@@ -332,14 +380,21 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
             onClick={() => setActiveSubTab("agents")}
             className={cn(
               "flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-muted/50",
-              activeSubTab === "agents" && "bg-muted/50"
+              activeSubTab === "agents" && "bg-muted/50",
             )}
           >
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ENTITY_COLORS.agents }} />
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: ENTITY_COLORS.agents }}
+            />
             <span className="text-muted-foreground">Agentes</span>
-            <span className="text-foreground font-medium">{newAgents.length}</span>
+            <span className="text-foreground font-medium">
+              {newAgents.length}
+            </span>
             {existingAgents.length > 0 && (
-              <span className="text-[9px] text-muted-foreground">(+{existingAgents.length})</span>
+              <span className="text-[9px] text-muted-foreground">
+                (+{existingAgents.length})
+              </span>
             )}
           </button>
 
@@ -348,14 +403,21 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
             onClick={() => setActiveSubTab("superAgents")}
             className={cn(
               "flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-muted/50",
-              activeSubTab === "superAgents" && "bg-muted/50"
+              activeSubTab === "superAgents" && "bg-muted/50",
             )}
           >
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ENTITY_COLORS.superAgents }} />
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: ENTITY_COLORS.superAgents }}
+            />
             <span className="text-muted-foreground">Super Agentes</span>
-            <span className="text-foreground font-medium">{newSuperAgents.length}</span>
+            <span className="text-foreground font-medium">
+              {newSuperAgents.length}
+            </span>
             {existingSuperAgents.length > 0 && (
-              <span className="text-[9px] text-muted-foreground">(+{existingSuperAgents.length})</span>
+              <span className="text-[9px] text-muted-foreground">
+                (+{existingSuperAgents.length})
+              </span>
             )}
           </button>
         </div>
@@ -397,7 +459,8 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
               onClick={() => setShowExisting(!showExisting)}
               className="text-[10px] text-muted-foreground hover:text-foreground"
             >
-              {showExisting ? "Ocultar" : "Mostrar"} existentes ({currentEntities.existing.length})
+              {showExisting ? "Ocultar" : "Mostrar"} existentes (
+              {currentEntities.existing.length})
             </button>
           )}
         </div>
@@ -426,7 +489,9 @@ export function CadastroTab({ summaries }: CadastroTabProps) {
       {/* Existing entities (collapsible) */}
       {showExisting && currentEntities.existing.length > 0 && (
         <div className="border-t border-border/40 pt-2 mt-2">
-          <p className="text-[10px] text-muted-foreground mb-2">Já cadastrados ({currentEntities.existing.length})</p>
+          <p className="text-[10px] text-muted-foreground mb-2">
+            Já cadastrados ({currentEntities.existing.length})
+          </p>
           <EntityTable
             entities={currentEntities.existing}
             selectedIds={new Set()}
@@ -460,16 +525,25 @@ function EntityTable({
   readonly = false,
 }: EntityTableProps) {
   if (entities.length === 0) {
-    const label = type === "players" ? "jogador" : type === "agents" ? "agente" : "super agente";
+    const label =
+      type === "players"
+        ? "jogador"
+        : type === "agents"
+          ? "agente"
+          : "super agente";
     return (
       <div className="text-center py-6 text-xs text-muted-foreground">
-        {readonly ? "Nenhum registro existente" : `Nenhum ${label} novo para cadastrar`}
+        {readonly
+          ? "Nenhum registro existente"
+          : `Nenhum ${label} novo para cadastrar`}
       </div>
     );
   }
 
-  const allSelected = entities.length > 0 && entities.every((e) => selectedIds.has(e.ppPokerId));
-  const someSelected = entities.some((e) => selectedIds.has(e.ppPokerId)) && !allSelected;
+  const allSelected =
+    entities.length > 0 && entities.every((e) => selectedIds.has(e.ppPokerId));
+  const someSelected =
+    entities.some((e) => selectedIds.has(e.ppPokerId)) && !allSelected;
 
   return (
     <div className="overflow-x-auto max-h-[280px]">
@@ -485,19 +559,35 @@ function EntityTable({
                 />
               </th>
             )}
-            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Status</th>
-            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">ID PPPoker</th>
-            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Apelido</th>
-            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Memorando</th>
-            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">País</th>
+            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+              Status
+            </th>
+            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+              ID PPPoker
+            </th>
+            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+              Apelido
+            </th>
+            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+              Memorando
+            </th>
+            <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+              País
+            </th>
             {type === "players" && (
               <>
-                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Agente</th>
-                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Super Ag.</th>
+                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                  Agente
+                </th>
+                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                  Super Ag.
+                </th>
               </>
             )}
             {type === "agents" && (
-              <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Super Ag.</th>
+              <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                Super Ag.
+              </th>
             )}
           </tr>
         </thead>
@@ -505,7 +595,10 @@ function EntityTable({
           {entities.map((entity) => (
             <tr
               key={entity.ppPokerId}
-              className={cn("hover:bg-muted/30", selectedIds.has(entity.ppPokerId) && "bg-primary/5")}
+              className={cn(
+                "hover:bg-muted/30",
+                selectedIds.has(entity.ppPokerId) && "bg-primary/5",
+              )}
             >
               {!readonly && (
                 <td className="py-1.5 px-2">
@@ -518,17 +611,27 @@ function EntityTable({
               )}
               <td className="py-1.5 px-2">
                 {entity.isNew ? (
-                  <span className="text-[9px] text-[#00C969] font-medium">Novo</span>
+                  <span className="text-[9px] text-[#00C969] font-medium">
+                    Novo
+                  </span>
                 ) : (
-                  <span className="text-[9px] text-blue-500 font-medium">Existente</span>
+                  <span className="text-[9px] text-blue-500 font-medium">
+                    Existente
+                  </span>
                 )}
               </td>
               <td className="py-1.5 px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
                 {entity.ppPokerId}
               </td>
-              <td className="py-1.5 px-2 whitespace-nowrap">{entity.nickname}</td>
-              <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">{entity.memoName || "-"}</td>
-              <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">{entity.country || "-"}</td>
+              <td className="py-1.5 px-2 whitespace-nowrap">
+                {entity.nickname}
+              </td>
+              <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
+                {entity.memoName || "-"}
+              </td>
+              <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
+                {entity.country || "-"}
+              </td>
               {type === "players" && (
                 <>
                   <td className="py-1.5 px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">

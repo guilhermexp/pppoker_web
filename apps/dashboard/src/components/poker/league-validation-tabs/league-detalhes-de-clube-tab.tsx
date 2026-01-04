@@ -1,7 +1,7 @@
 "use client";
 
-import type { ParsedDetailed } from "@/lib/poker/types";
 import type { ParsedClubSummary } from "@/lib/poker/league-types";
+import type { ParsedDetailed } from "@/lib/poker/types";
 import { Badge } from "@midday/ui/badge";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";
@@ -105,7 +105,7 @@ const GAME_CATEGORIES = [
 
 // Flat list for counting (derived from categories)
 const GAME_TYPES = GAME_CATEGORIES.flatMap((cat) =>
-  cat.games.map((g) => ({ ...g, group: cat.name }))
+  cat.games.map((g) => ({ ...g, group: cat.name })),
 );
 
 // Grouped club data for detailed tab
@@ -138,28 +138,86 @@ const ALL_COLUMNS = [
   { key: "date", label: "Data (A)", type: "text", group: "Identificacao" },
   { key: "ppPokerId", label: "ID (B)", type: "id", group: "Identificacao" },
   { key: "country", label: "Pais (C)", type: "text", group: "Identificacao" },
-  { key: "nickname", label: "Apelido (D)", type: "text", group: "Identificacao" },
-  { key: "memoName", label: "Memorando (E)", type: "text", group: "Identificacao" },
-  { key: "agentNickname", label: "Agente (F)", type: "text", group: "Identificacao" },
-  { key: "agentPpPokerId", label: "ID Agente (G)", type: "id", group: "Identificacao" },
-  { key: "superAgentNickname", label: "Superagente (H)", type: "text", group: "Identificacao" },
-  { key: "superAgentPpPokerId", label: "ID Super (I)", type: "id", group: "Identificacao" },
+  {
+    key: "nickname",
+    label: "Apelido (D)",
+    type: "text",
+    group: "Identificacao",
+  },
+  {
+    key: "memoName",
+    label: "Memorando (E)",
+    type: "text",
+    group: "Identificacao",
+  },
+  {
+    key: "agentNickname",
+    label: "Agente (F)",
+    type: "text",
+    group: "Identificacao",
+  },
+  {
+    key: "agentPpPokerId",
+    label: "ID Agente (G)",
+    type: "id",
+    group: "Identificacao",
+  },
+  {
+    key: "superAgentNickname",
+    label: "Superagente (H)",
+    type: "text",
+    group: "Identificacao",
+  },
+  {
+    key: "superAgentPpPokerId",
+    label: "ID Super (I)",
+    type: "id",
+    group: "Identificacao",
+  },
   { key: "nlhRegular", label: "NLH Reg (J)", type: "currency", group: "NLH" },
-  { key: "totalWinnings", label: "Total (AV)", type: "currency", group: "Totais" },
-  { key: "generalPlusEvents", label: "Ganhos+Eventos (BA)", type: "currency", group: "Valores" },
-  { key: "feeTotal", label: "Taxa Total (CJ)", type: "currency", group: "Taxas" },
-  { key: "handsTotal", label: "Total Maos (EG)", type: "number", group: "Maos" },
+  {
+    key: "totalWinnings",
+    label: "Total (AV)",
+    type: "currency",
+    group: "Totais",
+  },
+  {
+    key: "generalPlusEvents",
+    label: "Ganhos+Eventos (BA)",
+    type: "currency",
+    group: "Valores",
+  },
+  {
+    key: "feeTotal",
+    label: "Taxa Total (CJ)",
+    type: "currency",
+    group: "Taxas",
+  },
+  {
+    key: "handsTotal",
+    label: "Total Maos (EG)",
+    type: "number",
+    group: "Maos",
+  },
 ] as const;
 
-export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDetalhesDeClubeTabProps) {
+export function LeagueDetalhesDeClubeTab({
+  detailed,
+  summaries = [],
+}: LeagueDetalhesDeClubeTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [showDifference, setShowDifference] = useState(false);
-  const [expandedClubs, setExpandedClubs] = useState<Record<string, boolean>>({});
+  const [expandedClubs, setExpandedClubs] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Helper to validate IDs
   const isValidId = (id: string | null | undefined) =>
-    id && id.trim() !== "" && id.toLowerCase() !== "(none)" && id.toLowerCase() !== "none";
+    id &&
+    id.trim() !== "" &&
+    id.toLowerCase() !== "(none)" &&
+    id.toLowerCase() !== "none";
 
   // Group players by club
   const clubGroups = useMemo(() => {
@@ -193,9 +251,7 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
     // Calculate unique agents per club
     for (const group of groups.values()) {
       const uniqueAgents = new Set(
-        group.players
-          .map((p) => p.agentPpPokerId)
-          .filter(isValidId)
+        group.players.map((p) => p.agentPpPokerId).filter(isValidId),
       );
       group.totalAgents = uniqueAgents.size;
     }
@@ -215,8 +271,8 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
           (p) =>
             p.nickname.toLowerCase().includes(query) ||
             p.ppPokerId.includes(query) ||
-            p.memoName?.toLowerCase().includes(query)
-        )
+            p.memoName?.toLowerCase().includes(query),
+        ),
     );
   }, [clubGroups, searchQuery]);
 
@@ -228,7 +284,10 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
   const onlyInDetailedIds = [...detailedIds].filter((id) => !geralIds.has(id));
   const onlyInDetailed = onlyInDetailedIds.map((id) => {
     const rows = detailed.filter((d) => d.ppPokerId === id);
-    const totalWinnings = rows.reduce((sum, r) => sum + (r.totalWinnings || 0), 0);
+    const totalWinnings = rows.reduce(
+      (sum, r) => sum + (r.totalWinnings || 0),
+      0,
+    );
     return {
       ppPokerId: id,
       nickname: rows[0]?.nickname || "",
@@ -241,13 +300,13 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
   // Calculate global totals for summary cards
   const globalTotals = useMemo(() => {
     const uniqueAgents = new Set(
-      detailed.map((d) => d.agentPpPokerId).filter(isValidId)
+      detailed.map((d) => d.agentPpPokerId).filter(isValidId),
     );
     const uniqueSuperAgents = new Set(
-      detailed.map((d) => d.superAgentPpPokerId).filter(isValidId)
+      detailed.map((d) => d.superAgentPpPokerId).filter(isValidId),
     );
     const activeGameTypes = GAME_TYPES.filter((gt) =>
-      detailed.some((d) => (d[gt.key as keyof ParsedDetailed] as number) !== 0)
+      detailed.some((d) => (d[gt.key as keyof ParsedDetailed] as number) !== 0),
     );
 
     return {
@@ -256,10 +315,19 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
       totalAgents: uniqueAgents.size,
       totalSuperAgents: uniqueSuperAgents.size,
       activeGameTypes,
-      totalWinnings: detailed.reduce((sum, d) => sum + (d.totalWinnings || 0), 0),
+      totalWinnings: detailed.reduce(
+        (sum, d) => sum + (d.totalWinnings || 0),
+        0,
+      ),
       totalJackpot: detailed.reduce((sum, d) => sum + (d.jackpot || 0), 0),
-      totalEvSplit: detailed.reduce((sum, d) => sum + (d.evSplitWinnings || 0), 0),
-      totalGeneralPlusEvents: detailed.reduce((sum, d) => sum + (d.generalPlusEvents || 0), 0),
+      totalEvSplit: detailed.reduce(
+        (sum, d) => sum + (d.evSplitWinnings || 0),
+        0,
+      ),
+      totalGeneralPlusEvents: detailed.reduce(
+        (sum, d) => sum + (d.generalPlusEvents || 0),
+        0,
+      ),
       totalHands: detailed.reduce((sum, d) => sum + (d.handsTotal || 0), 0),
       totalFees: detailed.reduce((sum, d) => sum + (d.feeTotal || 0), 0),
     };
@@ -303,15 +371,21 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
               <span className="text-sm font-medium text-amber-600">
                 IDs nao encontrados na aba Geral
               </span>
-              <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-600">
+              <Badge
+                variant="outline"
+                className="text-xs border-amber-500/30 text-amber-600"
+              >
                 {onlyInDetailed.length} jogador(es)
               </Badge>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">
-                Geral: {geralIds.size} | Detalhado: {detailedIds.size} IDs unicos
+                Geral: {geralIds.size} | Detalhado: {detailedIds.size} IDs
+                unicos
               </span>
-              <Icons.ChevronDown className={`w-4 h-4 text-amber-500 transition-transform ${showDifference ? "rotate-180" : ""}`} />
+              <Icons.ChevronDown
+                className={`w-4 h-4 text-amber-500 transition-transform ${showDifference ? "rotate-180" : ""}`}
+              />
             </div>
           </div>
 
@@ -319,7 +393,8 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
             <div className="mt-3 pt-3 border-t border-amber-500/20">
               <div className="border rounded-lg bg-background p-3">
                 <p className="text-xs text-muted-foreground mb-2">
-                  Estes jogadores aparecem na aba Detalhado mas nao na aba Geral:
+                  Estes jogadores aparecem na aba Detalhado mas nao na aba
+                  Geral:
                 </p>
                 <div className="max-h-60 overflow-y-auto">
                   <table className="w-full text-xs">
@@ -333,10 +408,17 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
                     <tbody className="divide-y">
                       {onlyInDetailed.map((d, idx) => (
                         <tr key={`${d.ppPokerId}-${idx}`}>
-                          <td className="py-1 font-mono text-muted-foreground">{d.ppPokerId}</td>
+                          <td className="py-1 font-mono text-muted-foreground">
+                            {d.ppPokerId}
+                          </td>
                           <td className="py-1">{d.nickname}</td>
-                          <td className={`py-1 text-right font-mono ${d.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-                            {d.totalWinnings.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          <td
+                            className={`py-1 text-right font-mono ${d.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+                          >
+                            {d.totalWinnings.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
                           </td>
                         </tr>
                       ))}
@@ -355,52 +437,91 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Clubes:</span>
-            <span className="text-sm font-semibold">{globalTotals.totalClubs}</span>
+            <span className="text-sm font-semibold">
+              {globalTotals.totalClubs}
+            </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Jogadores (B):</span>
-            <span className="text-sm font-semibold">{globalTotals.totalPlayers}</span>
+            <span className="text-xs text-muted-foreground">
+              Jogadores (B):
+            </span>
+            <span className="text-sm font-semibold">
+              {globalTotals.totalPlayers}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Agentes (G):</span>
-            <span className="text-sm font-semibold">{globalTotals.totalAgents}</span>
+            <span className="text-sm font-semibold">
+              {globalTotals.totalAgents}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Superag. (I):</span>
-            <span className="text-sm font-semibold">{globalTotals.totalSuperAgents}</span>
+            <span className="text-sm font-semibold">
+              {globalTotals.totalSuperAgents}
+            </span>
           </div>
         </div>
 
         {/* Row 2: Valores */}
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Total Ganhos (AV):</span>
-            <span className={`text-sm font-semibold font-mono ${globalTotals.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {globalTotals.totalWinnings.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Total Ganhos (AV):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${globalTotals.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {globalTotals.totalWinnings.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Ganhos+Ev (BA):</span>
-            <span className={`text-sm font-semibold font-mono ${globalTotals.totalGeneralPlusEvents >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {globalTotals.totalGeneralPlusEvents.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Ganhos+Ev (BA):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${globalTotals.totalGeneralPlusEvents >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {globalTotals.totalGeneralPlusEvents.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Jackpot (AT):</span>
-            <span className={`text-sm font-semibold font-mono ${globalTotals.totalJackpot >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {globalTotals.totalJackpot.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span
+              className={`text-sm font-semibold font-mono ${globalTotals.totalJackpot >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {globalTotals.totalJackpot.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Dividir EV (AU):</span>
-            <span className={`text-sm font-semibold font-mono ${globalTotals.totalEvSplit >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {globalTotals.totalEvSplit.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Dividir EV (AU):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${globalTotals.totalEvSplit >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {globalTotals.totalEvSplit.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Taxa (CJ):</span>
             <span className="text-sm font-semibold font-mono">
-              {globalTotals.totalFees.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              {globalTotals.totalFees.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
@@ -413,20 +534,39 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
 
         {/* Row 3: Tipos de Jogo - Bullet list */}
         <div className="pt-3 border-t border-border/50">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">TIPOS DE JOGO</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+            TIPOS DE JOGO
+          </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {GAME_CATEGORIES.map((category, idx) => {
               const activeInCategory = category.games.filter((g) =>
-                detailed.some((d) => (d[g.key as keyof ParsedDetailed] as number) !== 0)
+                detailed.some(
+                  (d) => (d[g.key as keyof ParsedDetailed] as number) !== 0,
+                ),
               );
-              const colors = ["#22c55e", "#f97316", "#eab308", "#3b82f6", "#ec4899", "#8b5cf6", "#06b6d4", "#ef4444"];
+              const colors = [
+                "#22c55e",
+                "#f97316",
+                "#eab308",
+                "#3b82f6",
+                "#ec4899",
+                "#8b5cf6",
+                "#06b6d4",
+                "#ef4444",
+              ];
               const color = colors[idx % colors.length];
 
               return (
                 <div key={category.name} className="flex items-center gap-1">
-                  <span className="text-sm" style={{ color }}>●</span>
-                  <span className="text-xs text-foreground">{category.name}</span>
-                  <span className="text-xs text-muted-foreground">{activeInCategory.length}</span>
+                  <span className="text-sm" style={{ color }}>
+                    ●
+                  </span>
+                  <span className="text-xs text-foreground">
+                    {category.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {activeInCategory.length}
+                  </span>
                 </div>
               );
             })}
@@ -437,12 +577,20 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
             <span className="mr-2">Detalhado:</span>
             {GAME_CATEGORIES.map((category, idx) => {
               const categoryTotal = detailed.reduce((sum, d) => {
-                return sum + category.games.reduce((gameSum, g) => {
-                  return gameSum + ((d[g.key as keyof ParsedDetailed] as number) || 0);
-                }, 0);
+                return (
+                  sum +
+                  category.games.reduce((gameSum, g) => {
+                    return (
+                      gameSum +
+                      ((d[g.key as keyof ParsedDetailed] as number) || 0)
+                    );
+                  }, 0)
+                );
               }, 0);
               const activeCount = category.games.filter((g) =>
-                detailed.some((d) => (d[g.key as keyof ParsedDetailed] as number) !== 0)
+                detailed.some(
+                  (d) => (d[g.key as keyof ParsedDetailed] as number) !== 0,
+                ),
               ).length;
 
               if (activeCount === 0) return null;
@@ -450,8 +598,13 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
               return (
                 <span key={category.name} className="whitespace-nowrap mr-3">
                   {category.name}/{category.colRange}:{" "}
-                  <span className={`font-mono font-medium ${categoryTotal >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-                    {categoryTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  <span
+                    className={`font-mono font-medium ${categoryTotal >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+                  >
+                    {categoryTotal.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
                   </span>
                 </span>
               );
@@ -463,7 +616,9 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <p className="text-sm text-[#878787]">{filteredClubs.length} clubes</p>
+          <p className="text-sm text-[#878787]">
+            {filteredClubs.length} clubes
+          </p>
           <Button variant="ghost" size="sm" onClick={expandAll}>
             Expandir todos
           </Button>
@@ -537,10 +692,14 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
                   {club.totalAgents} agentes
                 </span>
                 <div className="text-right">
-                  <span className="text-sm text-muted-foreground mr-1">Ganhos:</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    Ganhos:
+                  </span>
                   <span
                     className={`font-mono font-medium ${
-                      club.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"
+                      club.totalWinnings >= 0
+                        ? "text-[#00C969]"
+                        : "text-[#FF3638]"
                     }`}
                   >
                     {club.totalWinnings.toLocaleString("pt-BR", {
@@ -550,7 +709,9 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm text-muted-foreground mr-1">Taxa:</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    Taxa:
+                  </span>
                   <span className="font-mono font-medium text-[#00C969]">
                     {club.totalFees.toLocaleString("pt-BR", {
                       style: "currency",
@@ -559,7 +720,9 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
                   </span>
                 </div>
                 <div className="text-right min-w-[100px]">
-                  <span className="text-sm text-muted-foreground mr-1">Mãos:</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    Mãos:
+                  </span>
                   <span className="font-mono font-medium">
                     {club.totalHands.toLocaleString("pt-BR")}
                   </span>
@@ -571,7 +734,9 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
             {expandedClubs[club.clubId] && (
               <div className="border-t bg-muted/10 p-4">
                 <div className="overflow-x-auto">
-                  <table className={`w-full text-xs ${expanded ? "min-w-[2000px]" : "min-w-[1200px]"}`}>
+                  <table
+                    className={`w-full text-xs ${expanded ? "min-w-[2000px]" : "min-w-[1200px]"}`}
+                  >
                     <thead>
                       <tr className="border-b bg-muted/50">
                         {columns.map((col) => (
@@ -601,20 +766,22 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
                                 col.type === "currency" || col.type === "number"
                                   ? "text-right font-mono"
                                   : col.type === "id"
-                                  ? "font-mono text-[#878787]"
-                                  : ""
+                                    ? "font-mono text-[#878787]"
+                                    : ""
                               } ${
                                 col.type === "currency" &&
-                                (player[col.key as keyof ParsedDetailed] as number) < 0
+                                (player[
+                                  col.key as keyof ParsedDetailed
+                                ] as number) < 0
                                   ? "text-[#FF3638]"
                                   : col.type === "currency"
-                                  ? "text-[#00C969]"
-                                  : ""
+                                    ? "text-[#00C969]"
+                                    : ""
                               }`}
                             >
                               {formatValue(
                                 player[col.key as keyof ParsedDetailed],
-                                col.type
+                                col.type,
                               )}
                             </td>
                           ))}
@@ -635,30 +802,32 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
                             {col.key === "ppPokerId"
                               ? "TOTAL"
                               : col.key === "nickname"
-                              ? `${club.players.length} jogadores`
-                              : col.type === "currency"
-                              ? formatValue(
-                                  club.players.reduce(
-                                    (sum, row) =>
-                                      sum +
-                                      ((row[col.key as keyof ParsedDetailed] as number) ||
-                                        0),
-                                    0
-                                  ),
-                                  "currency"
-                                )
-                              : col.type === "number"
-                              ? formatValue(
-                                  club.players.reduce(
-                                    (sum, row) =>
-                                      sum +
-                                      ((row[col.key as keyof ParsedDetailed] as number) ||
-                                        0),
-                                    0
-                                  ),
-                                  "number"
-                                )
-                              : ""}
+                                ? `${club.players.length} jogadores`
+                                : col.type === "currency"
+                                  ? formatValue(
+                                      club.players.reduce(
+                                        (sum, row) =>
+                                          sum +
+                                          ((row[
+                                            col.key as keyof ParsedDetailed
+                                          ] as number) || 0),
+                                        0,
+                                      ),
+                                      "currency",
+                                    )
+                                  : col.type === "number"
+                                    ? formatValue(
+                                        club.players.reduce(
+                                          (sum, row) =>
+                                            sum +
+                                            ((row[
+                                              col.key as keyof ParsedDetailed
+                                            ] as number) || 0),
+                                          0,
+                                        ),
+                                        "number",
+                                      )
+                                    : ""}
                           </td>
                         ))}
                       </tr>
@@ -676,7 +845,7 @@ export function LeagueDetalhesDeClubeTab({ detailed, summaries = [] }: LeagueDet
 
 function formatValue(
   value: string | number | null | undefined,
-  type: string
+  type: string,
 ): string {
   if (value === null || value === undefined) return "-";
 

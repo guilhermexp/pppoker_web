@@ -12,6 +12,16 @@ import { useEffect, useMemo, useState } from "react";
 // Chave do localStorage (mesma da página de grade)
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
 
+// Tipo para torneio salvo
+interface StoredTournament {
+  name: string;
+  day: string;
+  time: string;
+  gtd: number;
+  buyIn: string;
+  game: string;
+}
+
 // Tipo para dados salvos no localStorage
 interface StoredScheduleData {
   weekNumber: number;
@@ -22,7 +32,22 @@ interface StoredScheduleData {
     endDate: string;
   };
   savedAt: string;
+  // Nomes dos torneios com GTD para comparação (legacy)
+  tournamentNames?: string[];
+  // Torneios completos com detalhes
+  tournaments?: StoredTournament[];
 }
+
+// Labels para os dias
+const dayLabels: Record<string, string> = {
+  MONDAY: "Seg",
+  TUESDAY: "Ter",
+  WEDNESDAY: "Qua",
+  THURSDAY: "Qui",
+  FRIDAY: "Sex",
+  SATURDAY: "Sáb",
+  SUNDAY: "Dom",
+};
 
 interface LeagueOverviewTabProps {
   parsedData: ParsedLeagueImportData;
@@ -63,7 +88,9 @@ export function LeagueOverviewTab({
   const { stats } = validationResult;
 
   // Estado para dados da grade salvos
-  const [scheduleData, setScheduleData] = useState<StoredScheduleData | null>(null);
+  const [scheduleData, setScheduleData] = useState<StoredScheduleData | null>(
+    null,
+  );
 
   // Carregar dados da grade do localStorage
   useEffect(() => {
@@ -119,8 +146,33 @@ export function LeagueOverviewTab({
     // Conta torneios com GTD na grade vs realizados
     const tournamentsScheduled = scheduleData.totalTournaments;
     const tournamentsWithGTD = parsedData.jogosPPST.filter(
-      (j) => j.metadata?.premiacaoGarantida && j.metadata.premiacaoGarantida > 0
+      (j) =>
+        j.metadata?.premiacaoGarantida && j.metadata.premiacaoGarantida > 0,
     ).length;
+
+    // Comparar nomes dos torneios (grade vs planilha)
+    let missingTournaments: StoredTournament[] = [];
+    let missingGTDTotal = 0;
+
+    // Nomes da planilha PPST (nomeMesa = nome do torneio)
+    const ppstNames = new Set(
+      parsedData.jogosPPST
+        .filter((j) => j.metadata?.premiacaoGarantida && j.metadata.premiacaoGarantida > 0)
+        .map((j) => j.metadata.nomeMesa.trim().toUpperCase())
+    );
+
+    // Usar torneios completos se disponível, senão fallback para nomes
+    if (scheduleData.tournaments && scheduleData.tournaments.length > 0) {
+      missingTournaments = scheduleData.tournaments.filter(
+        (t) => !ppstNames.has(t.name)
+      );
+      missingGTDTotal = missingTournaments.reduce((sum, t) => sum + (t.gtd * 5), 0); // GTD em reais
+    } else if (scheduleData.tournamentNames && scheduleData.tournamentNames.length > 0) {
+      // Fallback para dados antigos (só nomes)
+      missingTournaments = scheduleData.tournamentNames
+        .filter((name) => !ppstNames.has(name))
+        .map((name) => ({ name, day: "", time: "", gtd: 0, buyIn: "", game: "" }));
+    }
 
     return {
       match: true,
@@ -133,6 +185,8 @@ export function LeagueOverviewTab({
       tournamentsScheduled,
       tournamentsWithGTD,
       isBalanced: Math.abs(gtdDiffReais) < 100, // considera igual se diferença < 100 reais
+      missingTournaments,
+      missingGTDTotal,
     };
   }, [scheduleData, ppstWeekNumber, parsedData.jogosPPST]);
 
@@ -168,11 +222,17 @@ export function LeagueOverviewTab({
     let gtdCount = 0;
 
     for (const jogo of parsedData.jogosPPST) {
-      if (jogo.metadata.premiacaoGarantida && jogo.metadata.premiacaoGarantida > 0) {
+      if (
+        jogo.metadata.premiacaoGarantida &&
+        jogo.metadata.premiacaoGarantida > 0
+      ) {
         totalGTD += jogo.metadata.premiacaoGarantida;
         gtdCount++;
         // Sum all buy-ins from players
-        const arrecadacao = jogo.jogadores.reduce((sum, j) => sum + j.buyinFichas, 0);
+        const arrecadacao = jogo.jogadores.reduce(
+          (sum, j) => sum + j.buyinFichas,
+          0,
+        );
         totalArrecadacao += arrecadacao;
       }
     }
@@ -185,269 +245,255 @@ export function LeagueOverviewTab({
     };
   }, [parsedData.jogosPPST]);
 
-  // Calculate total taxa from Geral PPST
-  const totalTaxa = useMemo(() => {
-    let total = 0;
-    for (const bloco of parsedData.geralPPST) {
-      for (const liga of bloco.ligas) {
-        total += liga.ganhosLigaTaxa;
+  // Soma dos totais das partidas (Jogos PPST)
+  const partidasStats = useMemo(() => {
+    let totalBuyin = 0;
+    let totalGTD = 0;
+    let totalGanhos = 0;
+    let totalTaxa = 0;
+
+    for (const jogo of parsedData.jogosPPST) {
+      // GTD do header
+      if (jogo.metadata.premiacaoGarantida) {
+        totalGTD += jogo.metadata.premiacaoGarantida;
       }
+      // Buyin, Ganhos, Taxa - do totalGeral ou soma dos jogadores
+      const buyinFichas = jogo.totalGeral?.buyinFichas || jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
+      const ganhos = jogo.totalGeral?.ganhos || jogo.jogadores.reduce((s, j) => s + j.ganhos, 0);
+      const taxa = jogo.totalGeral?.taxa || jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
+
+      totalBuyin += buyinFichas;
+      totalGanhos += ganhos;
+      totalTaxa += taxa;
     }
-    return total;
+
+    return { totalBuyin, totalGTD, totalGanhos, totalTaxa };
+  }, [parsedData.jogosPPST]);
+
+  // Calculate totals from Geral PPST - busca o bloco com ratio 1:5
+  const geralPPSTTotals = useMemo(() => {
+    // Procura o bloco com taxaCambio 1:5 (geralmente o primeiro)
+    const bloco = parsedData.geralPPST?.find(b => b.contexto?.taxaCambio === "1:5")
+      || parsedData.geralPPST?.[0];
+    if (!bloco?.total) {
+      return { ganhosJogador: 0, ganhosLigaTaxa: 0, ganhosLigaGeral: 0, gapGarantido: 0 };
+    }
+    return {
+      ganhosJogador: bloco.total.ganhosJogador ?? 0,
+      ganhosLigaTaxa: bloco.total.ganhosLigaTaxa ?? 0,
+      ganhosLigaGeral: bloco.total.ganhosLigaGeral ?? 0,
+      gapGarantido: bloco.total.gapGarantido ?? 0,
+    };
   }, [parsedData.geralPPST]);
+
+  // Taxa total = do primeiro bloco Geral PPST
+  const totalTaxa = geralPPSTTotals.ganhosLigaTaxa;
+
+  // Calculate totals from Geral PPSR - usa apenas o PRIMEIRO bloco (principal)
+  const geralPPSRTotals = useMemo(() => {
+    const bloco = parsedData.geralPPSR?.[0];
+    if (!bloco?.total) {
+      return { ganhosJogadorGeral: 0, ganhosLigaTaxa: 0, ganhosLigaGeral: 0 };
+    }
+    return {
+      ganhosJogadorGeral: bloco.total.ganhosJogadorGeral ?? 0,
+      ganhosLigaTaxa: bloco.total.ganhosLigaTaxa ?? 0,
+      ganhosLigaGeral: bloco.total.ganhosLigaGeral ?? 0,
+    };
+  }, [parsedData.geralPPSR]);
 
   // Cross-validation counts
   const inicioCount = parsedData.jogosPPSTInicioCount ?? 0;
   const jogosCount = stats.totalJogosPPST;
-  const cancelledCount = inicioCount > jogosCount ? inicioCount - jogosCount : 0;
+  const cancelledCount =
+    inicioCount > jogosCount ? inicioCount - jogosCount : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        {/* Torneios */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Icons.PlayOutline className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Torneios</span>
+    <div className="space-y-4">
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-2 gap-8">
+        {/* Left Column - Main Metric */}
+        <div>
+          <div className="text-sm text-muted-foreground">Taxa Total</div>
+          <div className="text-4xl font-bold text-[#00C969]">{formatNumber(totalTaxa)}</div>
+
+          {/* Soma das Partidas (Jogos PPST) */}
+          <div className="mt-4 space-y-1 text-sm border-t pt-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Σ Partidas</div>
+            <div className="flex justify-between">
+              <span>Buyin</span>
+              <span className="text-blue-500 font-mono">{formatNumber(partidasStats.totalBuyin)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>GTD</span>
+              <span className="text-[#00C969] font-mono">{formatNumber(partidasStats.totalGTD)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Ganhos</span>
+              <span className={`font-mono ${partidasStats.totalGanhos < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(partidasStats.totalGanhos)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Taxa</span>
+              <span className="text-green-500 font-mono">{formatNumber(partidasStats.totalTaxa)}</span>
+            </div>
           </div>
-          <p className="text-2xl font-bold">{formatNumber(jogosCount)}</p>
-          <div className="mt-2 space-y-1 text-[11px] text-muted-foreground">
-            <div>aba Jogos PPST</div>
-            {cancelledCount > 0 && (
-              <div className="flex justify-between text-amber-500">
-                <span>Cancelados</span>
-                <span className="font-mono">{formatNumber(cancelledCount)}</span>
+
+          {/* Comparação com Geral PPST (Planilha) */}
+          <div className="mt-4 space-y-1 text-sm border-t pt-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Geral PPST 1:5</div>
+            <div className="flex justify-between">
+              <span>Ganhos (col E)</span>
+              <span className={`font-mono ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(geralPPSTTotals.ganhosJogador)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Taxa (col J)</span>
+              <span className="text-green-500 font-mono">{formatNumber(geralPPSTTotals.ganhosLigaTaxa)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Gap (col O)</span>
+              <span className={`font-mono ${geralPPSTTotals.gapGarantido < 0 ? "text-red-500" : geralPPSTTotals.gapGarantido > 0 ? "text-green-500" : ""}`}>{formatNumber(geralPPSTTotals.gapGarantido)}</span>
+            </div>
+            {/* Diferença para validação */}
+            {partidasStats.totalGanhos !== geralPPSTTotals.ganhosJogador && (
+              <div className="flex justify-between text-xs text-muted-foreground border-t pt-1 mt-1">
+                <span>Δ Ganhos</span>
+                <span className={Math.abs(partidasStats.totalGanhos - geralPPSTTotals.ganhosJogador) > 1 ? "text-amber-500" : "text-green-500"}>
+                  {formatNumber(partidasStats.totalGanhos - geralPPSTTotals.ganhosJogador)}
+                </span>
               </div>
             )}
           </div>
+
         </div>
 
-        {/* Jogadores */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Icons.AccountCircle className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Jogadores</span>
-          </div>
-          <p className="text-2xl font-bold">{formatNumber(stats.totalJogadoresPPST)}</p>
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            <div>participações totais</div>
-          </div>
-        </div>
-
-        {/* Ligas */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Icons.Accounts className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Ligas</span>
-          </div>
-          <p className="text-2xl font-bold">{formatNumber(stats.totalLigasPPST)}</p>
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            <div>aba Geral PPST</div>
-          </div>
-        </div>
-
-        {/* Taxa Total */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Icons.ReceiptLong className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Taxa Total</span>
-          </div>
-          <p className="text-2xl font-bold text-[#00C969]">{formatNumber(totalTaxa)}</p>
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            <div>col. J (Geral PPST)</div>
-            <div className="flex justify-between opacity-70">
-              <span>R$ {formatNumber(totalTaxa * 5)}</span>
-              <span>(×5)</span>
+        {/* Right Column - Stats */}
+        <div className="space-y-4">
+          {/* Torneios */}
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-sm text-muted-foreground">Torneios</div>
+              <div className="text-2xl font-bold">{formatNumber(jogosCount)}</div>
+            </div>
+            <div className="text-right text-xs space-y-0.5">
+              {gameTypeCounts.mtt > 0 && <div><span className="text-muted-foreground">MTT:</span> {formatNumber(gameTypeCounts.mtt)}</div>}
+              {gameTypeCounts.spin > 0 && <div><span className="text-muted-foreground">Spin:</span> {formatNumber(gameTypeCounts.spin)}</div>}
+              {gameTypeCounts.pko > 0 && <div><span className="text-muted-foreground">PKO:</span> {formatNumber(gameTypeCounts.pko)}</div>}
+              {gameTypeCounts.mko > 0 && <div><span className="text-muted-foreground">MKO:</span> {formatNumber(gameTypeCounts.mko)}</div>}
+              {gameTypeCounts.sat > 0 && <div><span className="text-muted-foreground">SAT:</span> {formatNumber(gameTypeCounts.sat)}</div>}
             </div>
           </div>
-        </div>
 
-        {/* GTD Total */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Icons.TrendingUp className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">GTD Total</span>
-          </div>
-          <p className="text-2xl font-bold">{formatNumber(gtdStats.totalGTD)}</p>
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            <div>header "Premiação Garantida"</div>
-            <div className="flex justify-between opacity-70">
-              <span>R$ {formatNumber(gtdStats.totalGTD * 5)}</span>
-              <span>(×5)</span>
+          {/* Jogadores */}
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-sm text-muted-foreground">Jogadores</div>
+              <div className="text-2xl font-bold">{formatNumber(stats.totalJogadoresPPST)}</div>
+            </div>
+            <div className="text-right text-xs">
+              <div><span className="text-muted-foreground">Ligas:</span> {formatNumber(stats.totalLigasPPST)}</div>
+              {stats.totalParticipacoesPPST && stats.totalParticipacoesPPST !== stats.totalJogadoresPPST && (
+                <div><span className="text-muted-foreground">Entradas:</span> {formatNumber(stats.totalParticipacoesPPST)}</div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Arrecadação */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Icons.Currency className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Arrecadação</span>
-          </div>
-          <p className="text-2xl font-bold text-blue-500">{formatNumber(gtdStats.totalArrecadacao)}</p>
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            <div>col. J (torneios c/ GTD)</div>
-            <div className="flex justify-between opacity-70">
-              <span>R$ {formatNumber(gtdStats.totalArrecadacao * 5)}</span>
-              <span>(×5)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Gap */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Icons.Speed className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-medium">Gap (Overlay)</span>
-          </div>
-          <p className={`text-2xl font-bold ${gtdStats.gap > 0 ? "text-red-500" : "text-green-500"}`}>
-            {gtdStats.gap > 0 ? "-" : "+"}{formatNumber(Math.abs(gtdStats.gap))}
-          </p>
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            <div>GTD - Arrecadação</div>
-            <div className="flex justify-between opacity-70">
-              <span>R$ {gtdStats.gap > 0 ? "-" : "+"}{formatNumber(Math.abs(gtdStats.gap) * 5)}</span>
-              <span>(×5)</span>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Second Row - Tipos de Torneio */}
-      <div className="grid grid-cols-1 gap-4">
-        {/* Tipos de Torneio */}
-        <div className="p-3 border rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Icons.Category className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground font-medium">Tipos de Torneio</span>
-            <span className="ml-auto text-2xl font-bold">{formatNumber(gameTypeCounts.total)}</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {gameTypeCounts.mtt > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded bg-blue-500/10 text-xs">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-muted-foreground">MTT</span>
-                <span className="font-mono font-medium">{formatNumber(gameTypeCounts.mtt)}</span>
-              </div>
-            )}
-            {gameTypeCounts.spin > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded bg-pink-500/10 text-xs">
-                <div className="w-2 h-2 rounded-full bg-pink-500" />
-                <span className="text-muted-foreground">SPIN</span>
-                <span className="font-mono font-medium">{formatNumber(gameTypeCounts.spin)}</span>
-              </div>
-            )}
-            {gameTypeCounts.pko > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded bg-orange-500/10 text-xs">
-                <div className="w-2 h-2 rounded-full bg-orange-500" />
-                <span className="text-muted-foreground">PKO</span>
-                <span className="font-mono font-medium">{formatNumber(gameTypeCounts.pko)}</span>
-              </div>
-            )}
-            {gameTypeCounts.mko > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded bg-orange-400/10 text-xs">
-                <div className="w-2 h-2 rounded-full bg-orange-400" />
-                <span className="text-muted-foreground">MKO</span>
-                <span className="font-mono font-medium">{formatNumber(gameTypeCounts.mko)}</span>
-              </div>
-            )}
-            {gameTypeCounts.sat > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded bg-purple-500/10 text-xs">
-                <div className="w-2 h-2 rounded-full bg-purple-500" />
-                <span className="text-muted-foreground">SAT</span>
-                <span className="font-mono font-medium">{formatNumber(gameTypeCounts.sat)}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Cross-validation with Schedule (Grade de Torneios) */}
+      {/* Cross-validation with Schedule (Grade de Torneios) - Compact */}
       {crossValidation && (
-        <div className="p-4 border rounded-lg bg-muted/20">
-          <div className="flex items-center gap-2 mb-4">
-            <Icons.SyncAlt className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Conferência com Grade de Torneios</span>
-            <span className="text-xs text-muted-foreground ml-auto">
-              Semana {crossValidation.scheduleWeek}
+        <div className="border rounded bg-muted/10 p-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Icons.SyncAlt className="w-3 h-3 text-muted-foreground" />
+            <span className="text-[10px] text-muted-foreground">
+              Grade S{crossValidation.scheduleWeek}
             </span>
           </div>
 
           {crossValidation.match === false && crossValidation.reason === "different_week" ? (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <Icons.AlertCircle className="w-4 h-4 text-amber-500" />
-              <span className="text-sm text-amber-600">
-                Grade carregada é da Semana {crossValidation.scheduleWeek}, mas PPST é da Semana {crossValidation.ppstWeek}
-              </span>
+            <div className="flex items-center gap-1 text-[10px] text-amber-500">
+              <Icons.AlertCircle className="w-3 h-3" />
+              <span>Grade S{crossValidation.scheduleWeek} ≠ PPST S{crossValidation.ppstWeek}</span>
             </div>
           ) : crossValidation.match ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* GTD Previsto (Grade) */}
-              <div className="p-3 rounded-lg bg-muted/30">
-                <span className="text-xs text-muted-foreground">GTD Previsto</span>
-                <p className="text-lg font-bold mt-1">R$ {formatNumber(crossValidation.gtdScheduledReais)}</p>
-                <span className="text-[10px] text-muted-foreground">na grade ({formatNumber(crossValidation.gtdScheduledFichas)} fichas)</span>
+            <>
+              <div className="grid grid-cols-4 gap-2 text-xs">
+                <div>
+                  <div className="text-[9px] text-muted-foreground">Previsto</div>
+                  <div className="font-mono font-medium">R$ {formatNumber(crossValidation.gtdScheduledReais)}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-muted-foreground">Realizado</div>
+                  <div className="font-mono font-medium">R$ {formatNumber(crossValidation.gtdRealizedReais)}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-muted-foreground">Diff</div>
+                  <div className={`font-mono font-medium ${
+                    crossValidation.isBalanced ? "text-[#00C969]" : crossValidation.gtdDiffReais > 0 ? "text-amber-500" : "text-blue-500"
+                  }`}>
+                    {crossValidation.isBalanced ? "OK" : `${crossValidation.gtdDiffReais > 0 ? "+" : ""}${formatNumber(crossValidation.gtdDiffReais)}`}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-muted-foreground">Torneios</div>
+                  <div className={`font-mono font-medium ${crossValidation.tournamentsWithGTD !== crossValidation.tournamentsScheduled ? "text-amber-500" : ""}`}>
+                    {crossValidation.tournamentsWithGTD}/{crossValidation.tournamentsScheduled}
+                  </div>
+                </div>
               </div>
-
-              {/* GTD Realizado (PPST) */}
-              <div className="p-3 rounded-lg bg-muted/30">
-                <span className="text-xs text-muted-foreground">GTD Realizado</span>
-                <p className="text-lg font-bold mt-1">R$ {formatNumber(crossValidation.gtdRealizedReais)}</p>
-                <span className="text-[10px] text-muted-foreground">no PPST</span>
-              </div>
-
-              {/* Diferença */}
-              <div className={`p-3 rounded-lg ${
-                crossValidation.isBalanced
-                  ? "bg-[#00C969]/10"
-                  : crossValidation.gtdDiffReais > 0
-                    ? "bg-amber-500/10"
-                    : "bg-blue-500/10"
-              }`}>
-                <span className="text-xs text-muted-foreground">Diferença GTD</span>
-                <p className={`text-lg font-bold mt-1 ${
-                  crossValidation.isBalanced
-                    ? "text-[#00C969]"
-                    : crossValidation.gtdDiffReais > 0
-                      ? "text-amber-500"
-                      : "text-blue-500"
-                }`}>
-                  {crossValidation.isBalanced
-                    ? "✓ OK"
-                    : `R$ ${crossValidation.gtdDiffReais > 0 ? "+" : ""}${formatNumber(crossValidation.gtdDiffReais)}`
-                  }
-                </p>
-                <span className="text-[10px] text-muted-foreground">
-                  {crossValidation.isBalanced
-                    ? "valores iguais"
-                    : crossValidation.gtdDiffReais > 0
-                      ? "faltou criar"
-                      : "criado a mais"
-                  }
-                </span>
-              </div>
-
-              {/* Torneios GTD */}
-              <div className="p-3 rounded-lg bg-muted/30">
-                <span className="text-xs text-muted-foreground">Torneios GTD</span>
-                <p className="text-lg font-bold mt-1">
-                  {crossValidation.tournamentsWithGTD} / {crossValidation.tournamentsScheduled}
-                </p>
-                <span className="text-[10px] text-muted-foreground">criados / previstos</span>
-              </div>
-            </div>
+              {/* Torneios não encontrados */}
+              {crossValidation.missingTournaments && crossValidation.missingTournaments.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[10px] text-amber-500 font-medium">
+                      {crossValidation.missingTournaments.length} torneios da grade não encontrados
+                    </div>
+                    {crossValidation.missingGTDTotal > 0 && (
+                      <div className="text-[10px] text-amber-500">
+                        GTD: R$ {formatNumber(crossValidation.missingGTDTotal)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto border rounded">
+                    <table className="w-full text-[10px]">
+                      <thead className="bg-muted/50 sticky top-0">
+                        <tr>
+                          <th className="text-left px-2 py-1 font-medium">Dia</th>
+                          <th className="text-left px-2 py-1 font-medium">Hora</th>
+                          <th className="text-left px-2 py-1 font-medium">Torneio</th>
+                          <th className="text-left px-2 py-1 font-medium">Tipo</th>
+                          <th className="text-right px-2 py-1 font-medium">GTD</th>
+                          <th className="text-right px-2 py-1 font-medium">Buy-in</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {crossValidation.missingTournaments.map((t, i) => (
+                          <tr key={i} className="border-t border-border/30 hover:bg-muted/30">
+                            <td className="px-2 py-1 text-muted-foreground">{dayLabels[t.day] || t.day}</td>
+                            <td className="px-2 py-1 font-mono">{t.time}</td>
+                            <td className="px-2 py-1 font-medium text-amber-600">{t.name}</td>
+                            <td className="px-2 py-1 text-muted-foreground">{t.game}</td>
+                            <td className="px-2 py-1 text-right font-mono text-green-600">
+                              {t.gtd > 0 ? formatNumber(t.gtd * 5) : "-"}
+                            </td>
+                            <td className="px-2 py-1 text-right font-mono">{t.buyIn || "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
           ) : null}
         </div>
       )}
 
       {/* Info se não tiver grade carregada */}
       {!scheduleData && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/20 border border-dashed">
-          <Icons.Info className="w-4 h-4 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">
-            Importe a Grade de Torneios PPST para conferir GTD previsto vs realizado
-          </span>
+        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-muted/10 border border-dashed text-[10px] text-muted-foreground">
+          <Icons.Info className="w-3 h-3" />
+          <span>Importe Grade PPST para conferir GTD</span>
         </div>
       )}
     </div>

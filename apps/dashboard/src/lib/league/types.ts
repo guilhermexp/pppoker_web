@@ -73,7 +73,11 @@ export type ParsedLeagueGeralPPSTBloco = {
 // - PPST/NLH MKO: Torneio NLH com Mystery Knockout
 // - PPST/PLO5 PKO: Torneio PLO5 com Progressive Knockout
 // - E outras variantes com PKO/MKO
-export type LeagueTipoJogoBase = "PPST/NLH" | "PPST/SPINUP" | "PPST/PLO" | "PPST/PLO5";
+export type LeagueTipoJogoBase =
+  | "PPST/NLH"
+  | "PPST/SPINUP"
+  | "PPST/PLO"
+  | "PPST/PLO5";
 export type LeagueTipoJogo =
   | "PPST/NLH"
   | "PPST/SPINUP"
@@ -519,7 +523,8 @@ export type LeagueValidationResult = {
     // PPST Stats
     totalLigasPPST: number;
     totalJogosPPST: number;
-    totalJogadoresPPST: number;
+    totalJogadoresPPST: number; // Jogadores únicos
+    totalParticipacoesPPST?: number; // Total de participações (entradas)
     totalBuyinPPST: number;
     totalGanhosPPST: number;
     totalTaxaPPST: number;
@@ -527,7 +532,8 @@ export type LeagueValidationResult = {
     // PPSR Stats
     totalLigasPPSR: number;
     totalJogosPPSR: number;
-    totalJogadoresPPSR: number;
+    totalJogadoresPPSR: number; // Jogadores únicos
+    totalParticipacoesPPSR?: number; // Total de participações (entradas)
     totalMaosPPSR: number;
     totalBuyinPPSR: number;
     totalGanhosPPSR: number;

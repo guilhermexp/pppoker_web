@@ -2,7 +2,11 @@
 
 import type { ParsedSession } from "@/lib/poker/types";
 import { Button } from "@midday/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@midday/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@midday/ui/collapsible";
 import {
   Select,
   SelectContent,
@@ -10,7 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@midday/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@midday/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@midday/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -65,7 +76,10 @@ function formatNumber(value: number): string {
   return value.toLocaleString("pt-BR");
 }
 
-function formatSessionTypeTag(type: string, organizador?: string | null): "CASH" | "MTT" | "SITNG" | "SPIN" {
+function formatSessionTypeTag(
+  type: string,
+  organizador?: string | null,
+): "CASH" | "MTT" | "SITNG" | "SPIN" {
   const normalized = type.toLowerCase();
 
   if (organizador === "PPST") {
@@ -79,7 +93,8 @@ function formatSessionTypeTag(type: string, organizador?: string | null): "CASH"
   }
 
   if (normalized.includes("spin")) return "SPIN";
-  if (normalized.includes("mtt") || normalized.includes("tournament")) return "MTT";
+  if (normalized.includes("mtt") || normalized.includes("tournament"))
+    return "MTT";
   if (normalized.includes("sit") || normalized.includes("sng")) return "SITNG";
   return "CASH";
 }
@@ -97,7 +112,10 @@ function formatDateTime(dateStr: string): string {
 const SessionContent = memo(function SessionContent({
   session,
 }: { session: ParsedSession }) {
-  const sessionType = formatSessionTypeTag(session.sessionType, session.createdByNickname);
+  const sessionType = formatSessionTypeTag(
+    session.sessionType,
+    session.createdByNickname,
+  );
 
   return (
     <div className="px-4 pb-4 space-y-3">
@@ -109,12 +127,14 @@ const SessionContent = memo(function SessionContent({
         </div>
         {session.blinds && (
           <div>
-            <span className="text-muted-foreground">Blinds:</span> {session.blinds}
+            <span className="text-muted-foreground">Blinds:</span>{" "}
+            {session.blinds}
           </div>
         )}
         {session.rakePercent && (
           <div>
-            <span className="text-muted-foreground">Taxa:</span> {session.rakePercent}%
+            <span className="text-muted-foreground">Taxa:</span>{" "}
+            {session.rakePercent}%
             {session.rakeCap ? ` (cap: ${session.rakeCap})` : ""}
           </div>
         )}
@@ -144,8 +164,18 @@ const SessionContent = memo(function SessionContent({
                   <TableHead className="text-xs">Memorando</TableHead>
                   <TableHead className="text-xs text-right">Buy-in</TableHead>
                   <TableHead className="text-xs text-right">Mãos</TableHead>
-                  <TableHead className="text-xs text-right text-emerald-600" colSpan={4}>Ganhos Jogador</TableHead>
-                  <TableHead className="text-xs text-right text-rose-500" colSpan={5}>Ganhos Clube</TableHead>
+                  <TableHead
+                    className="text-xs text-right text-emerald-600"
+                    colSpan={4}
+                  >
+                    Ganhos Jogador
+                  </TableHead>
+                  <TableHead
+                    className="text-xs text-right text-rose-500"
+                    colSpan={5}
+                  >
+                    Ganhos Clube
+                  </TableHead>
                 </TableRow>
                 <TableRow className="bg-muted/30">
                   <TableHead className="text-[10px]" />
@@ -153,38 +183,84 @@ const SessionContent = memo(function SessionContent({
                   <TableHead className="text-[10px]" />
                   <TableHead className="text-[10px]" />
                   <TableHead className="text-[10px]" />
-                  <TableHead className="text-[10px] text-right">Geral</TableHead>
-                  <TableHead className="text-[10px] text-right">Advers.</TableHead>
-                  <TableHead className="text-[10px] text-right">Jackpot</TableHead>
-                  <TableHead className="text-[10px] text-right">Div. EV</TableHead>
-                  <TableHead className="text-[10px] text-right">Geral</TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Geral
+                  </TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Advers.
+                  </TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Jackpot
+                  </TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Div. EV
+                  </TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Geral
+                  </TableHead>
                   <TableHead className="text-[10px] text-right">Taxa</TableHead>
-                  <TableHead className="text-[10px] text-right">Tx. JP</TableHead>
-                  <TableHead className="text-[10px] text-right">Pr. JP</TableHead>
-                  <TableHead className="text-[10px] text-right">Div. EV</TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Tx. JP
+                  </TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Pr. JP
+                  </TableHead>
+                  <TableHead className="text-[10px] text-right">
+                    Div. EV
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {session.players.map((player, index) => (
                   <TableRow key={`${player.ppPokerId}-${index}`}>
-                    <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {player.ppPokerId}
+                    </TableCell>
                     <TableCell className="text-xs">{player.nickname}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.buyIn ?? 0)}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{player.hands ?? 0}</TableCell>
-                    <TableCell className={`text-xs text-right font-mono ${(player.winningsGeneral ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {player.memoName || "-"}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(player.buyIn ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {player.hands ?? 0}
+                    </TableCell>
+                    <TableCell
+                      className={`text-xs text-right font-mono ${(player.winningsGeneral ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}
+                    >
                       {formatCurrencyCompact(player.winningsGeneral ?? 0)}
                     </TableCell>
-                    <TableCell className={`text-xs text-right font-mono ${(player.winningsOpponents ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                    <TableCell
+                      className={`text-xs text-right font-mono ${(player.winningsOpponents ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}
+                    >
                       {formatCurrencyCompact(player.winningsOpponents ?? 0)}
                     </TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.winningsJackpot ?? 0)}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.winningsEvSplit ?? 0)}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.clubWinningsGeneral ?? 0)}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.clubWinningsFee ?? 0)}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.clubWinningsJackpotFee ?? 0)}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.clubWinningsJackpotPrize ?? 0)}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrencyCompact(player.clubWinningsEvSplit ?? 0)}</TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(player.winningsJackpot ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(player.winningsEvSplit ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(player.clubWinningsGeneral ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(player.clubWinningsFee ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(
+                        player.clubWinningsJackpotFee ?? 0,
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(
+                        player.clubWinningsJackpotPrize ?? 0,
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-right font-mono">
+                      {formatCurrencyCompact(player.clubWinningsEvSplit ?? 0)}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {/* Total Row */}
@@ -193,37 +269,84 @@ const SessionContent = memo(function SessionContent({
                   <TableCell className="text-xs font-bold">Total</TableCell>
                   <TableCell className="text-xs">-</TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.buyIn ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce((s, p) => s + (p.buyIn ?? 0), 0),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
                     {session.players.reduce((s, p) => s + (p.hands ?? 0), 0)}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.winningsGeneral ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.winningsGeneral ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.winningsOpponents ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.winningsOpponents ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.winningsJackpot ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.winningsJackpot ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.winningsEvSplit ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.winningsEvSplit ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.clubWinningsGeneral ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.clubWinningsGeneral ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold text-green-600">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.clubWinningsFee ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.clubWinningsFee ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.clubWinningsJackpotFee ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.clubWinningsJackpotFee ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.clubWinningsJackpotPrize ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.clubWinningsJackpotPrize ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.clubWinningsEvSplit ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.clubWinningsEvSplit ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -244,13 +367,27 @@ const SessionContent = memo(function SessionContent({
               <TableBody>
                 {session.players.map((player, index) => (
                   <TableRow key={`${player.ppPokerId}-${index}`}>
-                    <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {player.ppPokerId}
+                    </TableCell>
                     <TableCell className="text-xs">{player.nickname}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{player.ranking ?? "-"}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{formatCurrencyCompact(player.buyInChips ?? player.buyIn ?? 0)}</TableCell>
-                    <TableCell className="text-right font-mono text-xs text-pink-600">{formatCurrencyCompact(player.prize ?? 0)}</TableCell>
-                    <TableCell className={`text-right font-mono text-xs ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {player.memoName || "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {player.ranking ?? "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {formatCurrencyCompact(
+                        player.buyInChips ?? player.buyIn ?? 0,
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs text-pink-600">
+                      {formatCurrencyCompact(player.prize ?? 0)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-mono text-xs ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}
+                    >
                       {formatCurrencyCompact(player.winnings ?? 0)}
                     </TableCell>
                   </TableRow>
@@ -260,15 +397,29 @@ const SessionContent = memo(function SessionContent({
                   <TableCell className="text-xs">-</TableCell>
                   <TableCell className="text-xs font-bold">Total</TableCell>
                   <TableCell className="text-xs">-</TableCell>
-                  <TableCell className="text-xs text-right font-bold">-</TableCell>
+                  <TableCell className="text-xs text-right font-bold">
+                    -
+                  </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.buyInChips ?? p.buyIn ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.buyInChips ?? p.buyIn ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold text-pink-600">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.prize ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce((s, p) => s + (p.prize ?? 0), 0),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.winnings ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.winnings ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -290,16 +441,32 @@ const SessionContent = memo(function SessionContent({
               <TableBody>
                 {session.players.map((player, index) => (
                   <TableRow key={`${player.ppPokerId}-${index}`}>
-                    <TableCell className="font-mono text-xs">{player.ppPokerId}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {player.ppPokerId}
+                    </TableCell>
                     <TableCell className="text-xs">{player.nickname}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{player.memoName || "-"}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{player.ranking ?? "-"}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{formatCurrencyCompact(player.buyInChips ?? player.buyIn ?? 0)}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{formatCurrencyCompact(player.buyInTicket ?? 0)}</TableCell>
-                    <TableCell className={`text-right font-mono text-xs ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {player.memoName || "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {player.ranking ?? "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {formatCurrencyCompact(
+                        player.buyInChips ?? player.buyIn ?? 0,
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {formatCurrencyCompact(player.buyInTicket ?? 0)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-mono text-xs ${(player.winnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}
+                    >
                       {formatCurrencyCompact(player.winnings ?? 0)}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs">{formatCurrencyCompact(player.rake ?? 0)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {formatCurrencyCompact(player.rake ?? 0)}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {/* Total Row */}
@@ -307,18 +474,37 @@ const SessionContent = memo(function SessionContent({
                   <TableCell className="text-xs">-</TableCell>
                   <TableCell className="text-xs font-bold">Total</TableCell>
                   <TableCell className="text-xs">-</TableCell>
-                  <TableCell className="text-xs text-right font-bold">-</TableCell>
-                  <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.buyInChips ?? p.buyIn ?? 0), 0))}
+                  <TableCell className="text-xs text-right font-bold">
+                    -
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.buyInTicket ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.buyInChips ?? p.buyIn ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.winnings ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.buyInTicket ?? 0),
+                        0,
+                      ),
+                    )}
+                  </TableCell>
+                  <TableCell className="text-xs text-right font-mono font-bold">
+                    {formatCurrencyCompact(
+                      session.players.reduce(
+                        (s, p) => s + (p.winnings ?? 0),
+                        0,
+                      ),
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-right font-mono font-bold text-green-600">
-                    {formatCurrencyCompact(session.players.reduce((s, p) => s + (p.rake ?? 0), 0))}
+                    {formatCurrencyCompact(
+                      session.players.reduce((s, p) => s + (p.rake ?? 0), 0),
+                    )}
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -326,7 +512,9 @@ const SessionContent = memo(function SessionContent({
           )}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Nenhum jogador encontrado.</p>
+        <p className="text-sm text-muted-foreground">
+          Nenhum jogador encontrado.
+        </p>
       )}
     </div>
   );
@@ -344,7 +532,10 @@ const SessionItem = memo(function SessionItem({
   onToggle: () => void;
   index: number;
 }) {
-  const sessionType = formatSessionTypeTag(session.sessionType, session.createdByNickname);
+  const sessionType = formatSessionTypeTag(
+    session.sessionType,
+    session.createdByNickname,
+  );
   const playerCount = session.playerCount ?? session.players?.length ?? 0;
 
   // Type badge styling
@@ -364,13 +555,19 @@ const SessionItem = memo(function SessionItem({
   };
 
   // Clean table name
-  const tableName = session.tableName?.replace(/\(\?\)/g, "").replace(/\?/g, "").trim() || "Sem nome";
+  const tableName =
+    session.tableName
+      ?.replace(/\(\?\)/g, "")
+      .replace(/\?/g, "")
+      .trim() || "Sem nome";
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger className="flex items-center w-full px-3 py-1.5 hover:bg-muted/30 border-b border-border/50 text-xs">
         {/* Expand icon */}
-        <ChevronDown className={`h-3 w-3 mr-1 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
+        <ChevronDown
+          className={`h-3 w-3 mr-1 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? "" : "-rotate-90"}`}
+        />
 
         {/* Index number */}
         <span className="text-muted-foreground/60 font-mono w-[40px] text-right mr-2 flex-shrink-0">
@@ -378,7 +575,9 @@ const SessionItem = memo(function SessionItem({
         </span>
 
         {/* Type badge */}
-        <span className={`${getBadgeClass()} px-1.5 py-0.5 rounded text-[10px] font-medium mr-2 flex-shrink-0`}>
+        <span
+          className={`${getBadgeClass()} px-1.5 py-0.5 rounded text-[10px] font-medium mr-2 flex-shrink-0`}
+        >
           {sessionType}
         </span>
 
@@ -390,7 +589,10 @@ const SessionItem = memo(function SessionItem({
         )}
 
         {/* Table name - truncate */}
-        <span className="font-medium truncate max-w-[180px] mr-2" title={tableName}>
+        <span
+          className="font-medium truncate max-w-[180px] mr-2"
+          title={tableName}
+        >
           {tableName}
         </span>
 
@@ -420,13 +622,19 @@ const SessionItem = memo(function SessionItem({
         {/* Buy-in */}
         <span className="text-muted-foreground mr-3 flex-shrink-0">
           <span className="text-[10px] mr-1">Buy-in:</span>
-          <span className="font-mono">{formatCurrencyCompact(session.totalBuyIn ?? 0)}</span>
+          <span className="font-mono">
+            {formatCurrencyCompact(session.totalBuyIn ?? 0)}
+          </span>
         </span>
 
         {/* Ganhos */}
         <span className="mr-3 flex-shrink-0">
-          <span className="text-[10px] text-muted-foreground mr-1">Ganhos:</span>
-          <span className={`font-mono ${(session.totalWinnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+          <span className="text-[10px] text-muted-foreground mr-1">
+            Ganhos:
+          </span>
+          <span
+            className={`font-mono ${(session.totalWinnings ?? 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}
+          >
             {formatCurrencyCompact(session.totalWinnings ?? 0)}
           </span>
         </span>
@@ -434,7 +642,9 @@ const SessionItem = memo(function SessionItem({
         {/* Taxa */}
         <span className="mr-3 flex-shrink-0">
           <span className="text-[10px] text-muted-foreground mr-1">Taxa:</span>
-          <span className="text-green-600 font-medium font-mono">{formatCurrencyCompact(session.totalRake ?? 0)}</span>
+          <span className="text-green-600 font-medium font-mono">
+            {formatCurrencyCompact(session.totalRake ?? 0)}
+          </span>
         </span>
 
         {/* GTD */}
@@ -515,8 +725,16 @@ export function SessionsTab({ sessions, period, utcCount }: SessionsTabProps) {
       gameTypes[variant] = (gameTypes[variant] || 0) + 1;
 
       // Calcula a partir dos jogadores para garantir consistência com a linha de Total
-      const sessionBuyIn = s.players?.reduce((sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0), 0) ?? 0;
-      const sessionRake = s.players?.reduce((sum, p) => sum + (p.rake ?? p.clubWinningsFee ?? 0), 0) ?? 0;
+      const sessionBuyIn =
+        s.players?.reduce(
+          (sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0),
+          0,
+        ) ?? 0;
+      const sessionRake =
+        s.players?.reduce(
+          (sum, p) => sum + (p.rake ?? p.clubWinningsFee ?? 0),
+          0,
+        ) ?? 0;
 
       totalBuyIn += sessionBuyIn;
       totalRake += sessionRake;
@@ -582,17 +800,26 @@ export function SessionsTab({ sessions, period, utcCount }: SessionsTabProps) {
       {/* Row 1: Contadores simples - estilo minimalista */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm py-2">
         <span className="text-muted-foreground">
-          Partidas: <span className="text-foreground font-semibold">{formatNumber(sessions.length)}</span>
+          Partidas:{" "}
+          <span className="text-foreground font-semibold">
+            {formatNumber(sessions.length)}
+          </span>
           {utcCount !== undefined && utcCount !== sessions.length && (
             <span className="text-red-500 ml-1">(UTC: {utcCount})</span>
           )}
         </span>
         <span className="text-muted-foreground">
-          Jogadores: <span className="text-foreground font-semibold">{formatNumber(summaryStats.totalPlayers)}</span>
+          Jogadores:{" "}
+          <span className="text-foreground font-semibold">
+            {formatNumber(summaryStats.totalPlayers)}
+          </span>
         </span>
         {summaryStats.totalHands > 0 && (
           <span className="text-muted-foreground">
-            Mãos: <span className="text-foreground font-semibold">{formatNumber(summaryStats.totalHands)}</span>
+            Mãos:{" "}
+            <span className="text-foreground font-semibold">
+              {formatNumber(summaryStats.totalHands)}
+            </span>
           </span>
         )}
       </div>
@@ -629,50 +856,68 @@ export function SessionsTab({ sessions, period, utcCount }: SessionsTabProps) {
 
       {/* Row 3: Tipos de partida com dots coloridos */}
       <div className="py-2">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">TIPOS DE PARTIDA</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+          TIPOS DE PARTIDA
+        </p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           {summaryStats.totalCash > 0 && (
             <button
               type="button"
-              onClick={() => handleFilterChange(typeFilter === "cash" ? "all" : "cash")}
+              onClick={() =>
+                handleFilterChange(typeFilter === "cash" ? "all" : "cash")
+              }
               className={`flex items-center gap-1.5 cursor-pointer transition-opacity ${typeFilter !== "all" && typeFilter !== "cash" ? "opacity-40" : ""}`}
             >
               <span className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-muted-foreground">CASH</span>
-              <span className="text-foreground font-medium">{summaryStats.totalCash}</span>
+              <span className="text-foreground font-medium">
+                {summaryStats.totalCash}
+              </span>
             </button>
           )}
           {summaryStats.totalMTT > 0 && (
             <button
               type="button"
-              onClick={() => handleFilterChange(typeFilter === "mtt" ? "all" : "mtt")}
+              onClick={() =>
+                handleFilterChange(typeFilter === "mtt" ? "all" : "mtt")
+              }
               className={`flex items-center gap-1.5 cursor-pointer transition-opacity ${typeFilter !== "all" && typeFilter !== "mtt" ? "opacity-40" : ""}`}
             >
               <span className="w-2 h-2 rounded-full bg-blue-500" />
               <span className="text-muted-foreground">MTT</span>
-              <span className="text-foreground font-medium">{summaryStats.totalMTT}</span>
+              <span className="text-foreground font-medium">
+                {summaryStats.totalMTT}
+              </span>
             </button>
           )}
           {summaryStats.totalSitNG > 0 && (
             <button
               type="button"
-              onClick={() => handleFilterChange(typeFilter === "sitng" ? "all" : "sitng")}
+              onClick={() =>
+                handleFilterChange(typeFilter === "sitng" ? "all" : "sitng")
+              }
               className={`flex items-center gap-1.5 cursor-pointer transition-opacity ${typeFilter !== "all" && typeFilter !== "sitng" ? "opacity-40" : ""}`}
             >
               <span className="w-2 h-2 rounded-full bg-purple-500" />
               <span className="text-muted-foreground">SITNG</span>
-              <span className="text-foreground font-medium">{summaryStats.totalSitNG}</span>
+              <span className="text-foreground font-medium">
+                {summaryStats.totalSitNG}
+              </span>
             </button>
           )}
           {summaryStats.totalSpin > 0 && (
             <button
               type="button"
-              onClick={() => handleFilterChange(typeFilter === "spin" ? "all" : "spin")}
+              onClick={() =>
+                handleFilterChange(typeFilter === "spin" ? "all" : "spin")
+              }
               className={`flex items-center gap-1.5 cursor-pointer transition-opacity ${typeFilter !== "all" && typeFilter !== "spin" ? "opacity-40" : ""}`}
             >
               <span className="w-2 h-2 rounded-full bg-pink-500" />
               <span className="text-muted-foreground">SPIN</span>
-              <span className="text-foreground font-medium">{summaryStats.totalSpin}</span>
+              <span className="text-foreground font-medium">
+                {summaryStats.totalSpin}
+              </span>
             </button>
           )}
           {typeFilter !== "all" && (
@@ -696,7 +941,9 @@ export function SessionsTab({ sessions, period, utcCount }: SessionsTabProps) {
             .map(([type, count]) => (
               <span key={type}>
                 {type}:{" "}
-                <span className="font-mono text-foreground">{formatNumber(count)}</span>
+                <span className="font-mono text-foreground">
+                  {formatNumber(count)}
+                </span>
               </span>
             ))}
         </div>
@@ -709,17 +956,20 @@ export function SessionsTab({ sessions, period, utcCount }: SessionsTabProps) {
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-3">
           <p className="text-sm text-muted-foreground">
-            {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} de {filteredData.length}
+            {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
+            {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} de{" "}
+            {filteredData.length}
             {typeFilter !== "all" && (
-              <span className="text-muted-foreground/60 ml-1">
-                (filtrado)
-              </span>
+              <span className="text-muted-foreground/60 ml-1">(filtrado)</span>
             )}
           </p>
           {/* Type Filter Dropdown */}
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={typeFilter} onValueChange={(v) => handleFilterChange(v as SessionFilter)}>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => handleFilterChange(v as SessionFilter)}
+            >
               <SelectTrigger className="w-[100px] h-7 text-xs">
                 <SelectValue placeholder="Filtrar" />
               </SelectTrigger>

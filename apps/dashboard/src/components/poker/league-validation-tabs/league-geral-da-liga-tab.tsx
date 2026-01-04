@@ -1,8 +1,8 @@
 "use client";
 
 import type {
-  ParsedLeagueSummary,
   LeagueValidationResult,
+  ParsedLeagueSummary,
 } from "@/lib/poker/league-types";
 import { Button } from "@midday/ui/button";
 import { Icons } from "@midday/ui/icons";

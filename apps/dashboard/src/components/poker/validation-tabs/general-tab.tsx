@@ -74,65 +74,350 @@ const COLUMN_GROUPS = {
 // Todas as colunas (47 campos - B até AV, coluna A é data/período)
 const ALL_COLUMNS = [
   // Identificação (B-I) - 8 colunas
-  { key: "ppPokerId", label: "ID", col: "B", type: "id", group: "identificacao" },
-  { key: "country", label: "País", col: "C", type: "text", group: "identificacao" },
-  { key: "nickname", label: "Apelido", col: "D", type: "text", group: "identificacao" },
-  { key: "memoName", label: "Memorando", col: "E", type: "text", group: "identificacao" },
-  { key: "agentNickname", label: "Agente", col: "F", type: "text", group: "identificacao" },
-  { key: "agentPpPokerId", label: "ID Agente", col: "G", type: "id", group: "identificacao" },
-  { key: "superAgentNickname", label: "Superagente", col: "H", type: "text", group: "identificacao" },
-  { key: "superAgentPpPokerId", label: "ID Super", col: "I", type: "id", group: "identificacao" },
+  {
+    key: "ppPokerId",
+    label: "ID",
+    col: "B",
+    type: "id",
+    group: "identificacao",
+  },
+  {
+    key: "country",
+    label: "País",
+    col: "C",
+    type: "text",
+    group: "identificacao",
+  },
+  {
+    key: "nickname",
+    label: "Apelido",
+    col: "D",
+    type: "text",
+    group: "identificacao",
+  },
+  {
+    key: "memoName",
+    label: "Memorando",
+    col: "E",
+    type: "text",
+    group: "identificacao",
+  },
+  {
+    key: "agentNickname",
+    label: "Agente",
+    col: "F",
+    type: "text",
+    group: "identificacao",
+  },
+  {
+    key: "agentPpPokerId",
+    label: "ID Agente",
+    col: "G",
+    type: "id",
+    group: "identificacao",
+  },
+  {
+    key: "superAgentNickname",
+    label: "Superagente",
+    col: "H",
+    type: "text",
+    group: "identificacao",
+  },
+  {
+    key: "superAgentPpPokerId",
+    label: "ID Super",
+    col: "I",
+    type: "id",
+    group: "identificacao",
+  },
   // Classificações (J-N) - 5 colunas
-  { key: "playerWinningsTotal", label: "Ganhos+Eventos", col: "J", type: "currency", group: "classificacoes" },
-  { key: "classificationPpsr", label: "PPSR", col: "K", type: "currency", group: "classificacoes" },
-  { key: "classificationRing", label: "Ring", col: "L", type: "currency", group: "classificacoes" },
-  { key: "classificationCustomRing", label: "RG Pers.", col: "M", type: "currency", group: "classificacoes" },
-  { key: "classificationMtt", label: "MTT", col: "N", type: "currency", group: "classificacoes" },
+  {
+    key: "playerWinningsTotal",
+    label: "Ganhos+Eventos",
+    col: "J",
+    type: "currency",
+    group: "classificacoes",
+  },
+  {
+    key: "classificationPpsr",
+    label: "PPSR",
+    col: "K",
+    type: "currency",
+    group: "classificacoes",
+  },
+  {
+    key: "classificationRing",
+    label: "Ring",
+    col: "L",
+    type: "currency",
+    group: "classificacoes",
+  },
+  {
+    key: "classificationCustomRing",
+    label: "RG Pers.",
+    col: "M",
+    type: "currency",
+    group: "classificacoes",
+  },
+  {
+    key: "classificationMtt",
+    label: "MTT",
+    col: "N",
+    type: "currency",
+    group: "classificacoes",
+  },
   // Ganhos do Jogador (O-X) - 10 colunas
-  { key: "generalTotal", label: "Geral", col: "O", type: "currency", group: "ganhosJogador" },
-  { key: "ringGamesTotal", label: "Ring Games", col: "P", type: "currency", group: "ganhosJogador" },
-  { key: "mttSitNGoTotal", label: "MTT/SitNGo", col: "Q", type: "currency", group: "ganhosJogador" },
-  { key: "spinUpTotal", label: "SPINUP", col: "R", type: "currency", group: "ganhosJogador" },
-  { key: "caribbeanTotal", label: "Caribbean+", col: "S", type: "currency", group: "ganhosJogador" },
-  { key: "colorGameTotal", label: "COLOR", col: "T", type: "currency", group: "ganhosJogador" },
-  { key: "crashTotal", label: "CRASH", col: "U", type: "currency", group: "ganhosJogador" },
-  { key: "luckyDrawTotal", label: "LUCKY", col: "V", type: "currency", group: "ganhosJogador" },
-  { key: "jackpotTotal", label: "Jackpot", col: "W", type: "currency", group: "ganhosJogador" },
-  { key: "evSplitTotal", label: "Dividir EV", col: "X", type: "currency", group: "ganhosJogador" },
+  {
+    key: "generalTotal",
+    label: "Geral",
+    col: "O",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "ringGamesTotal",
+    label: "Ring Games",
+    col: "P",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "mttSitNGoTotal",
+    label: "MTT/SitNGo",
+    col: "Q",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "spinUpTotal",
+    label: "SPINUP",
+    col: "R",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "caribbeanTotal",
+    label: "Caribbean+",
+    col: "S",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "colorGameTotal",
+    label: "COLOR",
+    col: "T",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "crashTotal",
+    label: "CRASH",
+    col: "U",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "luckyDrawTotal",
+    label: "LUCKY",
+    col: "V",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "jackpotTotal",
+    label: "Jackpot",
+    col: "W",
+    type: "currency",
+    group: "ganhosJogador",
+  },
+  {
+    key: "evSplitTotal",
+    label: "Dividir EV",
+    col: "X",
+    type: "currency",
+    group: "ganhosJogador",
+  },
   // Tickets (Y-AA) - 3 colunas
-  { key: "ticketValueWon", label: "Ticket Ganho", col: "Y", type: "currency", group: "tickets" },
-  { key: "ticketBuyIn", label: "Ticket Buy-in", col: "Z", type: "currency", group: "tickets" },
-  { key: "customPrizeValue", label: "Prêmio Pers.", col: "AA", type: "currency", group: "tickets" },
+  {
+    key: "ticketValueWon",
+    label: "Ticket Ganho",
+    col: "Y",
+    type: "currency",
+    group: "tickets",
+  },
+  {
+    key: "ticketBuyIn",
+    label: "Ticket Buy-in",
+    col: "Z",
+    type: "currency",
+    group: "tickets",
+  },
+  {
+    key: "customPrizeValue",
+    label: "Prêmio Pers.",
+    col: "AA",
+    type: "currency",
+    group: "tickets",
+  },
   // Taxas (AB-AG) - 6 colunas
-  { key: "feeGeneral", label: "Taxa Geral", col: "AB", type: "currency", group: "taxas" },
+  {
+    key: "feeGeneral",
+    label: "Taxa Geral",
+    col: "AB",
+    type: "currency",
+    group: "taxas",
+  },
   { key: "fee", label: "Taxa", col: "AC", type: "currency", group: "taxas" },
-  { key: "feePpst", label: "Taxa PPST", col: "AD", type: "currency", group: "taxas" },
-  { key: "feeNonPpst", label: "Taxa não-PPST", col: "AE", type: "currency", group: "taxas" },
-  { key: "feePpsr", label: "Taxa PPSR", col: "AF", type: "currency", group: "taxas" },
-  { key: "feeNonPpsr", label: "Taxa não-PPSR", col: "AG", type: "currency", group: "taxas" },
+  {
+    key: "feePpst",
+    label: "Taxa PPST",
+    col: "AD",
+    type: "currency",
+    group: "taxas",
+  },
+  {
+    key: "feeNonPpst",
+    label: "Taxa não-PPST",
+    col: "AE",
+    type: "currency",
+    group: "taxas",
+  },
+  {
+    key: "feePpsr",
+    label: "Taxa PPSR",
+    col: "AF",
+    type: "currency",
+    group: "taxas",
+  },
+  {
+    key: "feeNonPpsr",
+    label: "Taxa não-PPSR",
+    col: "AG",
+    type: "currency",
+    group: "taxas",
+  },
   // SPINUP & Caribbean (AH-AK) - 4 colunas
-  { key: "spinUpBuyIn", label: "SPINUP Buy-in", col: "AH", type: "currency", group: "spinupCaribbean" },
-  { key: "spinUpPrize", label: "SPINUP Prêmio", col: "AI", type: "currency", group: "spinupCaribbean" },
-  { key: "caribbeanBets", label: "Caribbean Apostas", col: "AJ", type: "currency", group: "spinupCaribbean" },
-  { key: "caribbeanPrize", label: "Caribbean Prêmio", col: "AK", type: "currency", group: "spinupCaribbean" },
+  {
+    key: "spinUpBuyIn",
+    label: "SPINUP Buy-in",
+    col: "AH",
+    type: "currency",
+    group: "spinupCaribbean",
+  },
+  {
+    key: "spinUpPrize",
+    label: "SPINUP Prêmio",
+    col: "AI",
+    type: "currency",
+    group: "spinupCaribbean",
+  },
+  {
+    key: "caribbeanBets",
+    label: "Caribbean Apostas",
+    col: "AJ",
+    type: "currency",
+    group: "spinupCaribbean",
+  },
+  {
+    key: "caribbeanPrize",
+    label: "Caribbean Prêmio",
+    col: "AK",
+    type: "currency",
+    group: "spinupCaribbean",
+  },
   // Ganhos do Clube - Jogos (AL-AQ) - 6 colunas
-  { key: "colorGameBets", label: "COLOR Apostas", col: "AL", type: "currency", group: "ganhosClubeJogos" },
-  { key: "colorGamePrize", label: "COLOR Prêmio", col: "AM", type: "currency", group: "ganhosClubeJogos" },
-  { key: "crashBets", label: "CRASH Apostas", col: "AN", type: "currency", group: "ganhosClubeJogos" },
-  { key: "crashPrize", label: "CRASH Prêmio", col: "AO", type: "currency", group: "ganhosClubeJogos" },
-  { key: "luckyDrawBets", label: "LUCKY Apostas", col: "AP", type: "currency", group: "ganhosClubeJogos" },
-  { key: "luckyDrawPrize", label: "LUCKY Prêmio", col: "AQ", type: "currency", group: "ganhosClubeJogos" },
+  {
+    key: "colorGameBets",
+    label: "COLOR Apostas",
+    col: "AL",
+    type: "currency",
+    group: "ganhosClubeJogos",
+  },
+  {
+    key: "colorGamePrize",
+    label: "COLOR Prêmio",
+    col: "AM",
+    type: "currency",
+    group: "ganhosClubeJogos",
+  },
+  {
+    key: "crashBets",
+    label: "CRASH Apostas",
+    col: "AN",
+    type: "currency",
+    group: "ganhosClubeJogos",
+  },
+  {
+    key: "crashPrize",
+    label: "CRASH Prêmio",
+    col: "AO",
+    type: "currency",
+    group: "ganhosClubeJogos",
+  },
+  {
+    key: "luckyDrawBets",
+    label: "LUCKY Apostas",
+    col: "AP",
+    type: "currency",
+    group: "ganhosClubeJogos",
+  },
+  {
+    key: "luckyDrawPrize",
+    label: "LUCKY Prêmio",
+    col: "AQ",
+    type: "currency",
+    group: "ganhosClubeJogos",
+  },
   // Jackpot e Finais (AR-AV) - 5 colunas
-  { key: "jackpotFee", label: "Jackpot Taxa", col: "AR", type: "currency", group: "jackpotFinal" },
-  { key: "jackpotPrize", label: "Jackpot Prêmio", col: "AS", type: "currency", group: "jackpotFinal" },
-  { key: "evSplit", label: "Dividir EV", col: "AT", type: "currency", group: "jackpotFinal" },
-  { key: "ticketDeliveredValue", label: "Ticket Entregue", col: "AU", type: "currency", group: "jackpotFinal" },
-  { key: "ticketDeliveredBuyIn", label: "Ticket Buy-in", col: "AV", type: "currency", group: "jackpotFinal" },
+  {
+    key: "jackpotFee",
+    label: "Jackpot Taxa",
+    col: "AR",
+    type: "currency",
+    group: "jackpotFinal",
+  },
+  {
+    key: "jackpotPrize",
+    label: "Jackpot Prêmio",
+    col: "AS",
+    type: "currency",
+    group: "jackpotFinal",
+  },
+  {
+    key: "evSplit",
+    label: "Dividir EV",
+    col: "AT",
+    type: "currency",
+    group: "jackpotFinal",
+  },
+  {
+    key: "ticketDeliveredValue",
+    label: "Ticket Entregue",
+    col: "AU",
+    type: "currency",
+    group: "jackpotFinal",
+  },
+  {
+    key: "ticketDeliveredBuyIn",
+    label: "Ticket Buy-in",
+    col: "AV",
+    type: "currency",
+    group: "jackpotFinal",
+  },
 ] as const;
 
 // Colunas resumidas para modo compacto
 const SUMMARY_COLUMNS = ALL_COLUMNS.filter((col) =>
-  ["ppPokerId", "nickname", "memoName", "agentNickname", "playerWinningsTotal", "generalTotal", "feeGeneral", "fee"].includes(col.key)
+  [
+    "ppPokerId",
+    "nickname",
+    "memoName",
+    "agentNickname",
+    "playerWinningsTotal",
+    "generalTotal",
+    "feeGeneral",
+    "fee",
+  ].includes(col.key),
 );
 
 // Tipos de jogo para exibição com dots coloridos
@@ -149,7 +434,7 @@ const GAME_TYPE_CATEGORIES = [
 
 function formatValue(
   value: string | number | null | undefined,
-  type: string
+  type: string,
 ): string {
   if (value === null || value === undefined) return "-";
 
@@ -190,35 +475,70 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
 
   // Calculate totals
   const totalPlayers = summaries.length;
-  const isValidId = (id: string | null | undefined) => id && id.trim() !== "" && id.toLowerCase() !== "(none)" && id.toLowerCase() !== "none";
-  const uniqueAgents = new Set(summaries.map((s) => s.agentPpPokerId).filter(isValidId));
+  const isValidId = (id: string | null | undefined) =>
+    id &&
+    id.trim() !== "" &&
+    id.toLowerCase() !== "(none)" &&
+    id.toLowerCase() !== "none";
+  const uniqueAgents = new Set(
+    summaries.map((s) => s.agentPpPokerId).filter(isValidId),
+  );
   const totalAgents = uniqueAgents.size;
-  const uniqueSuperAgents = new Set(summaries.map((s) => s.superAgentPpPokerId).filter(isValidId));
+  const uniqueSuperAgents = new Set(
+    summaries.map((s) => s.superAgentPpPokerId).filter(isValidId),
+  );
   const totalSuperAgents = uniqueSuperAgents.size;
 
   // Totais financeiros
-  const totalWinnings = summaries.reduce((sum, s) => sum + (s.playerWinningsTotal || 0), 0);
-  const totalGeneral = summaries.reduce((sum, s) => sum + (s.generalTotal || 0), 0);
-  const totalRingGames = summaries.reduce((sum, s) => sum + (s.ringGamesTotal || 0), 0);
-  const totalMttSng = summaries.reduce((sum, s) => sum + (s.mttSitNGoTotal || 0), 0);
-  const totalSpinUp = summaries.reduce((sum, s) => sum + (s.spinUpTotal || 0), 0);
-  const totalCaribbean = summaries.reduce((sum, s) => sum + (s.caribbeanTotal || 0), 0);
-  const totalFeeGeral = summaries.reduce((sum, s) => sum + (s.feeGeneral || 0), 0);
+  const totalWinnings = summaries.reduce(
+    (sum, s) => sum + (s.playerWinningsTotal || 0),
+    0,
+  );
+  const totalGeneral = summaries.reduce(
+    (sum, s) => sum + (s.generalTotal || 0),
+    0,
+  );
+  const totalRingGames = summaries.reduce(
+    (sum, s) => sum + (s.ringGamesTotal || 0),
+    0,
+  );
+  const totalMttSng = summaries.reduce(
+    (sum, s) => sum + (s.mttSitNGoTotal || 0),
+    0,
+  );
+  const totalSpinUp = summaries.reduce(
+    (sum, s) => sum + (s.spinUpTotal || 0),
+    0,
+  );
+  const totalCaribbean = summaries.reduce(
+    (sum, s) => sum + (s.caribbeanTotal || 0),
+    0,
+  );
+  const totalFeeGeral = summaries.reduce(
+    (sum, s) => sum + (s.feeGeneral || 0),
+    0,
+  );
   const totalFeeJogos = summaries.reduce((sum, s) => sum + (s.fee || 0), 0);
-  const totalJackpot = summaries.reduce((sum, s) => sum + (s.jackpotTotal || 0), 0);
-  const totalEvSplit = summaries.reduce((sum, s) => sum + (s.evSplitTotal || 0), 0);
+  const totalJackpot = summaries.reduce(
+    (sum, s) => sum + (s.jackpotTotal || 0),
+    0,
+  );
+  const totalEvSplit = summaries.reduce(
+    (sum, s) => sum + (s.evSplitTotal || 0),
+    0,
+  );
   const totalMaos = summaries.reduce((sum, s) => sum + (s.handsTotal || 0), 0);
 
   // Contagem de tipos de jogo ativos (simulado - ajustar conforme dados reais)
   const gameTypeCounts = {
-    nlholdem: summaries.filter(s => (s.ringGamesTotal || 0) !== 0).length,
-    plo: summaries.filter(s => (s.mttSitNGoTotal || 0) !== 0).length,
+    nlholdem: summaries.filter((s) => (s.ringGamesTotal || 0) !== 0).length,
+    plo: summaries.filter((s) => (s.mttSitNGoTotal || 0) !== 0).length,
     flash: 0,
     outros: 0,
     seka: 0,
     teenPatti: 0,
     filipinos: 0,
-    cassino: summaries.filter(s => (s.caribbeanTotal || 0) !== 0).length,
+    cassino: summaries.filter((s) => (s.caribbeanTotal || 0) !== 0).length,
   };
 
   if (summaries.length === 0) {
@@ -230,7 +550,16 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
   }
 
   // Agrupar colunas para header com merge (apenas quando expandido)
-  const groupOrder = ["identificacao", "classificacoes", "ganhosJogador", "tickets", "taxas", "spinupCaribbean", "ganhosClubeJogos", "jackpotFinal"] as const;
+  const groupOrder = [
+    "identificacao",
+    "classificacoes",
+    "ganhosJogador",
+    "tickets",
+    "taxas",
+    "spinupCaribbean",
+    "ganhosClubeJogos",
+    "jackpotFinal",
+  ] as const;
 
   return (
     <div className="space-y-3 pb-4">
@@ -240,13 +569,18 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
           Clubes: <span className="text-foreground font-medium">1</span>
         </span>
         <span className="text-muted-foreground">
-          Jogadores (B): <span className="text-foreground font-semibold">{totalPlayers}</span>
+          Jogadores (B):{" "}
+          <span className="text-foreground font-semibold">{totalPlayers}</span>
         </span>
         <span className="text-muted-foreground">
-          Agentes (G): <span className="text-foreground font-semibold">{totalAgents}</span>
+          Agentes (G):{" "}
+          <span className="text-foreground font-semibold">{totalAgents}</span>
         </span>
         <span className="text-muted-foreground">
-          Superag. (I): <span className="text-foreground font-semibold">{totalSuperAgents}</span>
+          Superag. (I):{" "}
+          <span className="text-foreground font-semibold">
+            {totalSuperAgents}
+          </span>
         </span>
       </div>
 
@@ -257,35 +591,47 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm py-2">
         <span className="text-muted-foreground">
           Total Ganhos (AV):{" "}
-          <span className={`font-semibold ${totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-semibold ${totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalWinnings)}
           </span>
         </span>
         <span className="text-muted-foreground">
           Ganhos+Ev (BA):{" "}
-          <span className={`font-semibold ${totalGeneral >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-semibold ${totalGeneral >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalGeneral)}
           </span>
         </span>
         <span className="text-muted-foreground">
           Jackpot (AT):{" "}
-          <span className={`font-semibold ${totalJackpot >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-semibold ${totalJackpot >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalJackpot)}
           </span>
         </span>
         <span className="text-muted-foreground">
           Dividir EV (AU):{" "}
-          <span className={`font-semibold ${totalEvSplit >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-semibold ${totalEvSplit >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalEvSplit)}
           </span>
         </span>
         <span className="text-muted-foreground">
           Taxa (CJ):{" "}
-          <span className="text-foreground font-semibold">{formatCurrency(totalFeeGeral)}</span>
+          <span className="text-foreground font-semibold">
+            {formatCurrency(totalFeeGeral)}
+          </span>
         </span>
         <span className="text-muted-foreground">
           Mãos (EG):{" "}
-          <span className="text-foreground font-semibold">{totalMaos.toLocaleString("pt-BR")}</span>
+          <span className="text-foreground font-semibold">
+            {totalMaos.toLocaleString("pt-BR")}
+          </span>
         </span>
       </div>
 
@@ -294,10 +640,13 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
 
       {/* Row 3: Tipos de jogo com dots coloridos */}
       <div className="py-2">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">TIPOS DE JOGO</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+          TIPOS DE JOGO
+        </p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           {GAME_TYPE_CATEGORIES.map((cat) => {
-            const count = gameTypeCounts[cat.key as keyof typeof gameTypeCounts] || 0;
+            const count =
+              gameTypeCounts[cat.key as keyof typeof gameTypeCounts] || 0;
             return (
               <span key={cat.key} className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${cat.color}`} />
@@ -314,31 +663,41 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
         <span>Detalhado:</span>
         <span>
           NLHoldem/J-R:{" "}
-          <span className={`font-mono ${totalRingGames >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-mono ${totalRingGames >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalRingGames)}
           </span>
         </span>
         <span>
           PLO/S-AB:{" "}
-          <span className={`font-mono ${totalMttSng >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-mono ${totalMttSng >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalMttSng)}
           </span>
         </span>
         <span>
           FLASH/AC-AD:{" "}
-          <span className={`font-mono ${totalSpinUp >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-mono ${totalSpinUp >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalSpinUp)}
           </span>
         </span>
         <span>
           Outros/AE-AF:{" "}
-          <span className={`font-mono ${totalCaribbean >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-mono ${totalCaribbean >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalCaribbean)}
           </span>
         </span>
         <span>
           Cassino/AP-AU:{" "}
-          <span className={`font-mono ${totalFeeJogos >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
+          <span
+            className={`font-mono ${totalFeeJogos >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+          >
             {formatCurrency(totalFeeJogos)}
           </span>
         </span>
@@ -405,23 +764,28 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
               {/* Segunda linha - sub-headers das colunas */}
               <TableRow className="border-b bg-muted/50">
                 {columns.map((col) => (
-                    <TableHead
-                      key={col.key}
-                      className={`p-2 font-medium whitespace-nowrap text-xs ${
-                        col.type === "currency" || col.type === "number"
-                          ? "text-right"
-                          : "text-left"
-                      }`}
-                    >
-                      <div className="text-[9px] text-muted-foreground">{col.col}</div>
-                      {col.label}
-                    </TableHead>
-                  ))}
+                  <TableHead
+                    key={col.key}
+                    className={`p-2 font-medium whitespace-nowrap text-xs ${
+                      col.type === "currency" || col.type === "number"
+                        ? "text-right"
+                        : "text-left"
+                    }`}
+                  >
+                    <div className="text-[9px] text-muted-foreground">
+                      {col.col}
+                    </div>
+                    {col.label}
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredData.map((row, idx) => (
-                <TableRow key={`${row.ppPokerId}-${idx}`} className="hover:bg-muted/30">
+                <TableRow
+                  key={`${row.ppPokerId}-${idx}`}
+                  className="hover:bg-muted/30"
+                >
                   {columns.map((col) => {
                     const value = row[col.key as keyof ParsedSummary];
                     const numValue = typeof value === "number" ? value : 0;
@@ -434,8 +798,8 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
                           col.type === "currency" || col.type === "number"
                             ? "text-right font-mono"
                             : col.type === "id"
-                            ? "font-mono text-[#878787]"
-                            : ""
+                              ? "font-mono text-[#878787]"
+                              : ""
                         } ${isNegative ? "text-red-600" : ""}`}
                       >
                         {formatValue(value, col.type)}
@@ -448,7 +812,12 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
             <tfoot>
               <TableRow className="border-t-2 bg-muted/50 font-semibold">
                 {columns.map((col) => {
-                  const total = filteredData.reduce((sum, row) => sum + ((row[col.key as keyof ParsedSummary] as number) || 0), 0);
+                  const total = filteredData.reduce(
+                    (sum, row) =>
+                      sum +
+                      ((row[col.key as keyof ParsedSummary] as number) || 0),
+                    0,
+                  );
                   const isNegative = col.type === "currency" && total < 0;
 
                   return (
@@ -460,10 +829,15 @@ export function GeneralTab({ summaries }: GeneralTabProps) {
                           : ""
                       } ${isNegative ? "text-red-600" : ""}`}
                     >
-                      {col.key === "ppPokerId" ? "TOTAL" :
-                       col.key === "nickname" ? `${filteredData.length} jogadores` :
-                       col.type === "currency" ? formatValue(total, "currency") :
-                       col.type === "number" ? formatValue(total, "number") : ""}
+                      {col.key === "ppPokerId"
+                        ? "TOTAL"
+                        : col.key === "nickname"
+                          ? `${filteredData.length} jogadores`
+                          : col.type === "currency"
+                            ? formatValue(total, "currency")
+                            : col.type === "number"
+                              ? formatValue(total, "number")
+                              : ""}
                     </TableCell>
                   );
                 })}

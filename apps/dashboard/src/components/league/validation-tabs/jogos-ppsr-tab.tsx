@@ -27,7 +27,8 @@ import {
   DollarSign,
   Users,
 } from "lucide-react";
-import React, { memo, useMemo, useState } from "react";
+import type React from "react";
+import { memo, useMemo, useState } from "react";
 
 interface LeagueJogosPPSRTabProps {
   data: ParsedLeagueJogoPPSR[];
@@ -93,7 +94,9 @@ const JogoContent = memo(function JogoContent({
                 Clube
               </TableHead>
               <TableHead>
-                <div className="text-[9px] text-muted-foreground">col. E/F/G</div>
+                <div className="text-[9px] text-muted-foreground">
+                  col. E/F/G
+                </div>
                 Jogador
               </TableHead>
               <TableHead className="w-[100px]">
@@ -150,7 +153,9 @@ const JogoContent = memo(function JogoContent({
                         {jogador.ligaId}
                       </TableCell>
                       <TableCell>
-                        <div className="font-mono text-xs">{jogador.clubeId}</div>
+                        <div className="font-mono text-xs">
+                          {jogador.clubeId}
+                        </div>
                         {jogador.clubeNome && (
                           <div className="text-xs text-muted-foreground truncate max-w-[150px]">
                             {jogador.clubeNome}
@@ -193,17 +198,25 @@ const JogoContent = memo(function JogoContent({
                       <TableCell className="text-right text-orange-600">
                         {formatCurrency(jogador.taxa)}
                       </TableCell>
-                    </TableRow>
+                    </TableRow>,
                   );
                   rowIndex++;
                 }
 
                 // Liga Total row
-                const ligaTotal = jogo.totaisPorLiga.find(t => t.ligaId === ligaId);
+                const ligaTotal = jogo.totaisPorLiga.find(
+                  (t) => t.ligaId === ligaId,
+                );
                 if (ligaTotal) {
                   rows.push(
-                    <TableRow key={`liga-total-${ligaId}`} className="bg-blue-500/10 border-t border-blue-500/20">
-                      <TableCell colSpan={5} className="font-medium text-blue-600">
+                    <TableRow
+                      key={`liga-total-${ligaId}`}
+                      className="bg-blue-500/10 border-t border-blue-500/20"
+                    >
+                      <TableCell
+                        colSpan={5}
+                        className="font-medium text-blue-600"
+                      >
                         Liga Total ({ligaId})
                       </TableCell>
                       <TableCell className="text-right font-medium">
@@ -224,7 +237,7 @@ const JogoContent = memo(function JogoContent({
                       <TableCell className="text-right font-medium text-orange-600">
                         {formatCurrency(ligaTotal.taxa)}
                       </TableCell>
-                    </TableRow>
+                    </TableRow>,
                   );
                 }
               }
@@ -234,7 +247,9 @@ const JogoContent = memo(function JogoContent({
 
             {/* Total Geral Row */}
             <TableRow className="bg-muted/50 font-medium border-t-2">
-              <TableCell colSpan={5} className="font-bold">Total</TableCell>
+              <TableCell colSpan={5} className="font-bold">
+                Total
+              </TableCell>
               <TableCell className="text-right font-bold">
                 {formatNumber(jogo.totalGeral.buyinFichas)}
               </TableCell>
@@ -324,15 +339,19 @@ const JogoItem = memo(function JogoItem({
             <Users className="h-4 w-4 text-muted-foreground" />
             {jogo.jogadores.length}
           </span>
-          <Badge variant="outline">
-            {jogo.metadata.blinds}
-          </Badge>
+          <Badge variant="outline">{jogo.metadata.blinds}</Badge>
           <Badge variant="secondary" className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
             {jogo.metadata.duracao}
           </Badge>
+          <span className={`text-xs font-mono ${jogo.totalGeral.ganhosJogadorGeral < 0 ? "text-red-500" : "text-green-500"}`}>
+            {formatCurrency(jogo.totalGeral.ganhosJogadorGeral)}
+          </span>
+          <span className="text-xs font-mono text-orange-500">
+            {formatCurrency(jogo.totalGeral.taxa)}
+          </span>
           <span className="text-xs text-muted-foreground">
-            {jogo.metadata.dataInicio} {jogo.metadata.horaInicio}
+            {jogo.metadata.dataInicio}
           </span>
         </div>
       </CollapsibleTrigger>
@@ -344,7 +363,11 @@ const JogoItem = memo(function JogoItem({
   );
 });
 
-export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount = 0 }: LeagueJogosPPSRTabProps) {
+export function LeagueJogosPPSRTab({
+  data,
+  inicioCount = 0,
+  unknownFormatsCount = 0,
+}: LeagueJogosPPSRTabProps) {
   const [openJogos, setOpenJogos] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -353,12 +376,17 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
   // Calculate summary stats
   const summaryStats = useMemo(() => {
     const gameTypes: Record<string, number> = {};
-    let totalPlayers = 0;
+    const uniquePlayerIds = new Set<string | number>();
     let totalMaos = 0;
     let totalTaxa = 0;
 
     for (const jogo of data) {
-      totalPlayers += jogo.jogadores.length;
+      // Conta jogadores únicos
+      for (const jogador of jogo.jogadores) {
+        if (jogador.jogadorId) {
+          uniquePlayerIds.add(jogador.jogadorId);
+        }
+      }
       totalMaos += jogo.totalGeral.maos;
       totalTaxa += jogo.totalGeral.taxa;
 
@@ -370,11 +398,12 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
     }
 
     const jogosCount = data.length;
-    const cancelledCount = inicioCount > jogosCount ? inicioCount - jogosCount : 0;
+    const cancelledCount =
+      inicioCount > jogosCount ? inicioCount - jogosCount : 0;
 
     return {
       gameTypes,
-      totalPlayers,
+      totalPlayers: uniquePlayerIds.size,
       totalMaos,
       totalTaxa,
       jogosCount,
@@ -428,8 +457,12 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {/* Mesas */}
           <div className="bg-muted/30 rounded-lg p-3 border">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Mesas</div>
-            <div className="text-xl font-bold">{formatNumber(summaryStats.jogosCount)}</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              Mesas
+            </div>
+            <div className="text-xl font-bold">
+              {formatNumber(summaryStats.jogosCount)}
+            </div>
             <div className="text-[10px] text-muted-foreground">
               aba Jogos PPSR
             </div>
@@ -442,7 +475,9 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
                 <Ban className="h-3 w-3" />
                 Canceladas
               </div>
-              <div className="text-xl font-bold text-amber-600">{formatNumber(summaryStats.cancelledCount)}</div>
+              <div className="text-xl font-bold text-amber-600">
+                {formatNumber(summaryStats.cancelledCount)}
+              </div>
               <div className="text-[10px] text-amber-600/70">sem jogadores</div>
             </div>
           )}
@@ -453,8 +488,12 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
               <Users className="h-3 w-3" />
               Jogadores
             </div>
-            <div className="text-xl font-bold">{formatNumber(summaryStats.totalPlayers)}</div>
-            <div className="text-[10px] text-muted-foreground">participações totais</div>
+            <div className="text-xl font-bold">
+              {formatNumber(summaryStats.totalPlayers)}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              jogadores únicos
+            </div>
           </div>
 
           {/* Mãos */}
@@ -463,8 +502,12 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
               <CreditCard className="h-3 w-3" />
               Mãos
             </div>
-            <div className="text-xl font-bold">{formatNumber(summaryStats.totalMaos)}</div>
-            <div className="text-[10px] text-muted-foreground">col. J (Jogos PPSR)</div>
+            <div className="text-xl font-bold">
+              {formatNumber(summaryStats.totalMaos)}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              col. J (Jogos PPSR)
+            </div>
           </div>
 
           {/* Taxa Total */}
@@ -473,8 +516,12 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
               <DollarSign className="h-3 w-3" />
               Taxa Total
             </div>
-            <div className="text-xl font-bold text-green-600">{formatNumber(summaryStats.totalTaxa)}</div>
-            <div className="text-[10px] text-muted-foreground">col. N (Jogos PPSR)</div>
+            <div className="text-xl font-bold text-green-600">
+              {formatNumber(summaryStats.totalTaxa)}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              col. N (Jogos PPSR)
+            </div>
           </div>
 
           {/* Unknown Formats Warning */}
@@ -484,15 +531,21 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
                 <AlertTriangle className="h-3 w-3" />
                 Formato Desconhecido
               </div>
-              <div className="text-xl font-bold text-red-600">{formatNumber(unknownFormatsCount)}</div>
-              <div className="text-[10px] text-red-600/70">ver aba Validação</div>
+              <div className="text-xl font-bold text-red-600">
+                {formatNumber(unknownFormatsCount)}
+              </div>
+              <div className="text-[10px] text-red-600/70">
+                ver aba Validação
+              </div>
             </div>
           )}
         </div>
 
         {/* Game Types Legend */}
         <div className="bg-muted/20 rounded-lg p-3 border">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Tipos de Mesa</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
+            Tipos de Mesa
+          </div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(summaryStats.gameTypes)
               .sort((a, b) => b[1] - a[1])
@@ -515,9 +568,16 @@ export function LeagueJogosPPSRTab({ data, inicioCount = 0, unknownFormatsCount 
                 }
 
                 return (
-                  <div key={type} className={`flex items-center gap-1.5 ${colorClass} rounded px-2 py-1`}>
-                    <span className="text-xs font-medium">{type.replace("PPSR/", "")}</span>
-                    <span className="text-xs text-muted-foreground">{formatNumber(count)}</span>
+                  <div
+                    key={type}
+                    className={`flex items-center gap-1.5 ${colorClass} rounded px-2 py-1`}
+                  >
+                    <span className="text-xs font-medium">
+                      {type.replace("PPSR/", "")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatNumber(count)}
+                    </span>
                   </div>
                 );
               })}

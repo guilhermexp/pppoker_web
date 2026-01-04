@@ -29,9 +29,13 @@ export function WarningsTab({ warnings }: WarningsTabProps) {
       {/* Summary */}
       <div className="flex items-center gap-4 text-sm">
         <span className="text-[#878787]">{warnings.length} alertas</span>
-        {errorCount > 0 && <span className="text-[#FF3638]">{errorCount} erros</span>}
+        {errorCount > 0 && (
+          <span className="text-[#FF3638]">{errorCount} erros</span>
+        )}
         {warningCount > 0 && <span>{warningCount} avisos</span>}
-        {infoCount > 0 && <span className="text-[#878787]">{infoCount} info</span>}
+        {infoCount > 0 && (
+          <span className="text-[#878787]">{infoCount} info</span>
+        )}
       </div>
 
       {/* Warnings list */}
@@ -42,25 +46,28 @@ export function WarningsTab({ warnings }: WarningsTabProps) {
               <SeverityIcon severity={warning.severity} />
               <div className="flex-1">
                 <p className="font-medium">{warning.title}</p>
-                <p className="text-sm text-[#878787] mt-1">{warning.description}</p>
+                <p className="text-sm text-[#878787] mt-1">
+                  {warning.description}
+                </p>
                 {warning.suggestedAction && (
                   <p className="text-sm mt-2 flex items-center gap-1">
                     <Icons.ArrowForward className="w-3 h-3" />
                     {warning.suggestedAction}
                   </p>
                 )}
-                {warning.relatedEntities && warning.relatedEntities.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {warning.relatedEntities.map((entity, i) => (
-                      <span
-                        key={i}
-                        className="text-xs px-2 py-0.5 border rounded"
-                      >
-                        {entity}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {warning.relatedEntities &&
+                  warning.relatedEntities.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {warning.relatedEntities.map((entity, i) => (
+                        <span
+                          key={i}
+                          className="text-xs px-2 py-0.5 border rounded"
+                        >
+                          {entity}
+                        </span>
+                      ))}
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -70,13 +77,19 @@ export function WarningsTab({ warnings }: WarningsTabProps) {
   );
 }
 
-function SeverityIcon({ severity }: { severity: ValidationWarning["severity"] }) {
+function SeverityIcon({
+  severity,
+}: { severity: ValidationWarning["severity"] }) {
   switch (severity) {
     case "error":
-      return <Icons.Close className="w-4 h-4 text-[#FF3638] flex-shrink-0 mt-0.5" />;
+      return (
+        <Icons.Close className="w-4 h-4 text-[#FF3638] flex-shrink-0 mt-0.5" />
+      );
     case "warning":
       return <Icons.AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />;
     case "info":
-      return <Icons.Info className="w-4 h-4 text-[#878787] flex-shrink-0 mt-0.5" />;
+      return (
+        <Icons.Info className="w-4 h-4 text-[#878787] flex-shrink-0 mt-0.5" />
+      );
   }
 }

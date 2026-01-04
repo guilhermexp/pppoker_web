@@ -1,7 +1,7 @@
 "use client";
 
-import type { ImportValidationModalProps } from "@/lib/poker/types";
 import { parseSpreadsheetFileName } from "@/lib/poker/spreadsheet-types";
+import type { ImportValidationModalProps } from "@/lib/poker/types";
 import { Badge } from "@midday/ui/badge";
 import { Button } from "@midday/ui/button";
 import {
@@ -19,16 +19,16 @@ import { ptBR } from "date-fns/locale";
 import { useMemo, useState } from "react";
 
 import {
-  ResumoTab,
-  GeneralTab,
+  CadastroTab,
+  DemonstrativoTab,
   DetailedTab,
+  GeneralTab,
+  RakebackTab,
+  ResumoTab,
   SessionsTab,
   TransactionsTab,
-  DemonstrativoTab,
   UserDetailsTab,
-  RakebackTab,
   ValidationTab,
-  CadastroTab,
 } from "./validation-tabs";
 
 // Helper to get week number from date string (dd/MM/yyyy format)

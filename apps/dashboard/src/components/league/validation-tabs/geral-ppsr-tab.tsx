@@ -79,6 +79,15 @@ export function LeagueGeralPPSRTab({ data }: LeagueGeralPPSRTabProps) {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <span>{bloco.ligas.length} ligas</span>
+              <span
+                className={
+                  bloco.total.ganhosJogadorGeral < 0
+                    ? "text-red-600 font-medium"
+                    : "text-muted-foreground"
+                }
+              >
+                Jogador: {formatCurrency(bloco.total.ganhosJogadorGeral)}
+              </span>
               <span className="text-green-600 font-medium">
                 Taxa: {formatCurrency(bloco.total.ganhosLigaTaxa)}
               </span>
@@ -92,55 +101,99 @@ export function LeagueGeralPPSRTab({ data }: LeagueGeralPPSRTabProps) {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[60px]">
-                        <div className="text-[9px] text-muted-foreground">col. A</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          col. A
+                        </div>
                         SU ID
                       </TableHead>
                       <TableHead>
-                        <div className="text-[9px] text-muted-foreground">col. B/C</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          col. B/C
+                        </div>
                         Liga
                       </TableHead>
                       <TableHead className="w-[70px]">
-                        <div className="text-[9px] text-muted-foreground">col. D</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          col. D
+                        </div>
                         ID Liga
                       </TableHead>
                       <TableHead className="w-[80px]">
-                        <div className="text-[9px] text-muted-foreground">col. E</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          col. E
+                        </div>
                         Class.
                       </TableHead>
-                      <TableHead className="text-right" title="Ganhos Jogador - Geral">
-                        <div className="text-[9px] text-muted-foreground">col. F</div>
+                      <TableHead
+                        className="text-right"
+                        title="Ganhos Jogador - Geral"
+                      >
+                        <div className="text-[9px] text-muted-foreground">
+                          col. F
+                        </div>
                         Jogador
                       </TableHead>
-                      <TableHead className="text-right" title="Ganhos Jogador - De adversários">
-                        <div className="text-[9px] text-muted-foreground">col. G</div>
+                      <TableHead
+                        className="text-right"
+                        title="Ganhos Jogador - De adversários"
+                      >
+                        <div className="text-[9px] text-muted-foreground">
+                          col. G
+                        </div>
                         Advers.
                       </TableHead>
-                      <TableHead className="text-right" title="Ganhos Jogador - De Jackpot">
-                        <div className="text-[9px] text-muted-foreground">col. H</div>
+                      <TableHead
+                        className="text-right"
+                        title="Ganhos Jogador - De Jackpot"
+                      >
+                        <div className="text-[9px] text-muted-foreground">
+                          col. H
+                        </div>
                         Jackpot
                       </TableHead>
-                      <TableHead className="text-right" title="Ganhos Jogador - Dividir EV">
-                        <div className="text-[9px] text-muted-foreground">col. I</div>
+                      <TableHead
+                        className="text-right"
+                        title="Ganhos Jogador - Dividir EV"
+                      >
+                        <div className="text-[9px] text-muted-foreground">
+                          col. I
+                        </div>
                         Div. EV
                       </TableHead>
-                      <TableHead className="text-right" title="Ganhos Liga - Geral">
-                        <div className="text-[9px] text-muted-foreground">col. J</div>
+                      <TableHead
+                        className="text-right"
+                        title="Ganhos Liga - Geral"
+                      >
+                        <div className="text-[9px] text-muted-foreground">
+                          col. J
+                        </div>
                         Liga
                       </TableHead>
-                      <TableHead className="text-right" title="Ganhos Liga - Taxa">
-                        <div className="text-[9px] text-muted-foreground">col. K</div>
+                      <TableHead
+                        className="text-right"
+                        title="Ganhos Liga - Taxa"
+                      >
+                        <div className="text-[9px] text-muted-foreground">
+                          col. K
+                        </div>
                         Taxa
                       </TableHead>
                       <TableHead className="text-right" title="Taxa do Jackpot">
-                        <div className="text-[9px] text-muted-foreground">col. L</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          col. L
+                        </div>
                         Tx. JP
                       </TableHead>
                       <TableHead className="text-right" title="Prêmio Jackpot">
-                        <div className="text-[9px] text-muted-foreground">col. M</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          col. M
+                        </div>
                         Pr. JP
                       </TableHead>
                       <TableHead className="text-right" title="Dividir EV">
-                        <div className="text-[9px] text-muted-foreground">col. N</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          col. N
+                        </div>
                         Div. EV
                       </TableHead>
                     </TableRow>
@@ -151,7 +204,10 @@ export function LeagueGeralPPSRTab({ data }: LeagueGeralPPSRTabProps) {
                         <TableCell className="font-mono text-xs">
                           {liga.superUnionId ?? "-"}
                         </TableCell>
-                        <TableCell className="font-medium max-w-[150px] truncate" title={liga.ligaNome}>
+                        <TableCell
+                          className="font-medium max-w-[150px] truncate"
+                          title={liga.ligaNome}
+                        >
                           {liga.ligaNome}
                         </TableCell>
                         <TableCell className="font-mono text-xs">

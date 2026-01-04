@@ -33,7 +33,12 @@ const CATEGORY_INFO = {
   },
 } as const;
 
-const CATEGORY_ORDER = ["structure", "integrity", "consistency", "math"] as const;
+const CATEGORY_ORDER = [
+  "structure",
+  "integrity",
+  "consistency",
+  "math",
+] as const;
 
 export function ValidationTab({ checks }: ValidationTabProps) {
   const [expandedChecks, setExpandedChecks] = useState<Set<string>>(new Set());
@@ -50,7 +55,9 @@ export function ValidationTab({ checks }: ValidationTabProps) {
     });
   };
 
-  const criticalFailed = checks.filter((c) => c.status === "failed" && c.severity === "critical").length;
+  const criticalFailed = checks.filter(
+    (c) => c.status === "failed" && c.severity === "critical",
+  ).length;
   const warningCount = checks.filter((c) => c.status === "warning").length;
   const passedCount = checks.filter((c) => c.status === "passed").length;
 
@@ -74,18 +81,24 @@ export function ValidationTab({ checks }: ValidationTabProps) {
           <div className="flex items-center gap-4 text-sm">
             <span className="flex items-center gap-1.5">
               <Icons.Check className="w-4 h-4 text-[#00C969]" />
-              <span className="text-[#00C969] font-medium">{passedCount} aprovadas</span>
+              <span className="text-[#00C969] font-medium">
+                {passedCount} aprovadas
+              </span>
             </span>
             {warningCount > 0 && (
               <span className="flex items-center gap-1.5">
                 <Icons.AlertCircle className="w-4 h-4 text-amber-500" />
-                <span className="text-amber-500 font-medium">{warningCount} avisos</span>
+                <span className="text-amber-500 font-medium">
+                  {warningCount} avisos
+                </span>
               </span>
             )}
             {criticalFailed > 0 && (
               <span className="flex items-center gap-1.5">
                 <Icons.Close className="w-4 h-4 text-[#FF3638]" />
-                <span className="text-[#FF3638] font-medium">{criticalFailed} falhas</span>
+                <span className="text-[#FF3638] font-medium">
+                  {criticalFailed} falhas
+                </span>
               </span>
             )}
           </div>
@@ -97,7 +110,10 @@ export function ValidationTab({ checks }: ValidationTabProps) {
             Bloqueado
           </Badge>
         ) : (
-          <Badge variant="secondary" className="gap-1.5 px-3 py-1 bg-[#00C969]/10 text-[#00C969] border-[#00C969]/20">
+          <Badge
+            variant="secondary"
+            className="gap-1.5 px-3 py-1 bg-[#00C969]/10 text-[#00C969] border-[#00C969]/20"
+          >
             <Icons.Check className="w-3.5 h-3.5" />
             Aprovado
           </Badge>
@@ -114,8 +130,9 @@ export function ValidationTab({ checks }: ValidationTabProps) {
                 {criticalFailed} verificação(ões) crítica(s) falhou(aram)
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                A importação será bloqueada até que todas as verificações críticas passem.
-                Verifique se a planilha está no formato correto do PPPoker.
+                A importação será bloqueada até que todas as verificações
+                críticas passem. Verifique se a planilha está no formato correto
+                do PPPoker.
               </p>
             </div>
           </div>
@@ -126,8 +143,12 @@ export function ValidationTab({ checks }: ValidationTabProps) {
       {checksByCategory.map(({ category, info, checks: categoryChecks }) => {
         if (categoryChecks.length === 0) return null;
 
-        const categoryPassed = categoryChecks.filter((c) => c.status === "passed").length;
-        const categoryFailed = categoryChecks.filter((c) => c.status === "failed").length;
+        const categoryPassed = categoryChecks.filter(
+          (c) => c.status === "passed",
+        ).length;
+        const categoryFailed = categoryChecks.filter(
+          (c) => c.status === "failed",
+        ).length;
         const categoryTotal = categoryChecks.length;
 
         return (
@@ -138,7 +159,9 @@ export function ValidationTab({ checks }: ValidationTabProps) {
                 <CategoryIcon category={category} />
                 <div>
                   <h3 className="font-medium">{info.label}</h3>
-                  <p className="text-xs text-muted-foreground">{info.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {info.description}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -147,7 +170,10 @@ export function ValidationTab({ checks }: ValidationTabProps) {
                     {categoryFailed} falha(s)
                   </Badge>
                 ) : (
-                  <Badge variant="secondary" className="text-xs bg-[#00C969]/10 text-[#00C969]">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-[#00C969]/10 text-[#00C969]"
+                  >
                     {categoryPassed}/{categoryTotal}
                   </Badge>
                 )}
@@ -158,7 +184,11 @@ export function ValidationTab({ checks }: ValidationTabProps) {
             <div className="divide-y">
               {categoryChecks.map((check) => {
                 const isExpanded = expandedChecks.has(check.id);
-                const hasDebug = check.debug && (check.debug.logic || check.debug.expected || check.debug.failedItems?.length);
+                const hasDebug =
+                  check.debug &&
+                  (check.debug.logic ||
+                    check.debug.expected ||
+                    check.debug.failedItems?.length);
 
                 return (
                   <div
@@ -176,7 +206,10 @@ export function ValidationTab({ checks }: ValidationTabProps) {
                           <div className="flex items-center gap-2">
                             <p className="font-medium text-sm">{check.label}</p>
                             {check.severity === "critical" && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-[#FF3638]/30 text-[#FF3638]">
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] px-1.5 py-0 h-4 border-[#FF3638]/30 text-[#FF3638]"
+                              >
                                 OBRIGATÓRIO
                               </Badge>
                             )}
@@ -186,7 +219,9 @@ export function ValidationTab({ checks }: ValidationTabProps) {
                               />
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">{check.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {check.description}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right ml-4">
@@ -202,39 +237,58 @@ export function ValidationTab({ checks }: ValidationTabProps) {
                         <div className="p-3 rounded-md bg-muted/50 border border-border/50 space-y-3 text-xs font-mono">
                           {/* Logic */}
                           <div>
-                            <p className="text-muted-foreground mb-1 font-sans font-medium">Lógica:</p>
-                            <p className="text-foreground bg-background/50 p-2 rounded">{check.debug.logic}</p>
+                            <p className="text-muted-foreground mb-1 font-sans font-medium">
+                              Lógica:
+                            </p>
+                            <p className="text-foreground bg-background/50 p-2 rounded">
+                              {check.debug.logic}
+                            </p>
                           </div>
 
                           {/* Expected */}
                           <div>
-                            <p className="text-muted-foreground mb-1 font-sans font-medium">Esperado:</p>
-                            <p className="text-[#00C969] bg-background/50 p-2 rounded">{check.debug.expected}</p>
+                            <p className="text-muted-foreground mb-1 font-sans font-medium">
+                              Esperado:
+                            </p>
+                            <p className="text-[#00C969] bg-background/50 p-2 rounded">
+                              {check.debug.expected}
+                            </p>
                           </div>
 
                           {/* Actual */}
                           {check.debug.actual && (
                             <div>
-                              <p className="text-muted-foreground mb-1 font-sans font-medium">Atual:</p>
-                              <p className={`bg-background/50 p-2 rounded ${check.status === "failed" ? "text-[#FF3638]" : check.status === "warning" ? "text-amber-500" : "text-foreground"}`}>
+                              <p className="text-muted-foreground mb-1 font-sans font-medium">
+                                Atual:
+                              </p>
+                              <p
+                                className={`bg-background/50 p-2 rounded ${check.status === "failed" ? "text-[#FF3638]" : check.status === "warning" ? "text-amber-500" : "text-foreground"}`}
+                              >
                                 {check.debug.actual}
                               </p>
                             </div>
                           )}
 
                           {/* Failed items */}
-                          {check.debug.failedItems && check.debug.failedItems.length > 0 && (
-                            <div>
-                              <p className="text-muted-foreground mb-1 font-sans font-medium">
-                                Itens com problema ({check.debug.failedItems.length > 10 ? "10 primeiros" : check.debug.failedItems.length}):
-                              </p>
-                              <div className="bg-background/50 p-2 rounded space-y-1">
-                                {check.debug.failedItems.map((item, idx) => (
-                                  <p key={idx} className="text-[#FF3638]">• {item}</p>
-                                ))}
+                          {check.debug.failedItems &&
+                            check.debug.failedItems.length > 0 && (
+                              <div>
+                                <p className="text-muted-foreground mb-1 font-sans font-medium">
+                                  Itens com problema (
+                                  {check.debug.failedItems.length > 10
+                                    ? "10 primeiros"
+                                    : check.debug.failedItems.length}
+                                  ):
+                                </p>
+                                <div className="bg-background/50 p-2 rounded space-y-1">
+                                  {check.debug.failedItems.map((item, idx) => (
+                                    <p key={idx} className="text-[#FF3638]">
+                                      • {item}
+                                    </p>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       </div>
                     )}

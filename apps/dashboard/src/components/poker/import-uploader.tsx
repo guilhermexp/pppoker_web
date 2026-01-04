@@ -1,16 +1,16 @@
 "use client";
 
-import { useI18n } from "@/locales/client";
 import type { ParsedImportData, ValidationResult } from "@/lib/poker/types";
 import { validateImportData } from "@/lib/poker/validation";
+import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { cn } from "@midday/ui/cn";
 import { Skeleton } from "@midday/ui/skeleton";
 import { useToast } from "@midday/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as Papa from "papaparse";
 import { Suspense, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import * as Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { ImportValidationModal } from "./import-validation-modal";
 import { ImportsList } from "./imports-list";
@@ -20,16 +20,25 @@ function parseClubMemberSheet(data: any[]): any[] {
   return data
     .filter((row) => row["PPPoker ID"] || row["pppoker_id"] || row["ID"])
     .map((row) => ({
-      ppPokerId: String(row["PPPoker ID"] || row["pppoker_id"] || row["ID"] || ""),
+      ppPokerId: String(
+        row["PPPoker ID"] || row["pppoker_id"] || row["ID"] || "",
+      ),
       nickname: row["Nickname"] || row["nickname"] || row["Name"] || "",
       memoName: row["Memo Name"] || row["memo_name"] || row["Memo"] || null,
       country: row["Country"] || row["country"] || null,
-      agentNickname: row["Agent Nickname"] || row["agent_nickname"] || row["Agent"] || null,
+      agentNickname:
+        row["Agent Nickname"] || row["agent_nickname"] || row["Agent"] || null,
       agentPpPokerId: row["Agent ID"] || row["agent_pppoker_id"] || null,
-      superAgentNickname: row["Super Agent Nickname"] || row["super_agent_nickname"] || null,
-      superAgentPpPokerId: row["Super Agent ID"] || row["super_agent_pppoker_id"] || null,
-      chipBalance: parseFloat(row["Chip Balance"] || row["chips"] || row["balance"] || 0),
-      agentCreditBalance: parseFloat(row["Agent Credit"] || row["agent_credit"] || 0),
+      superAgentNickname:
+        row["Super Agent Nickname"] || row["super_agent_nickname"] || null,
+      superAgentPpPokerId:
+        row["Super Agent ID"] || row["super_agent_pppoker_id"] || null,
+      chipBalance: Number.parseFloat(
+        row["Chip Balance"] || row["chips"] || row["balance"] || 0,
+      ),
+      agentCreditBalance: Number.parseFloat(
+        row["Agent Credit"] || row["agent_credit"] || 0,
+      ),
       lastActiveAt: row["Last Active"] || row["last_active_at"] || null,
     }));
 }
@@ -46,22 +55,44 @@ function parseTransactionSheet(data: any[]): any[] {
       senderPlayerId: row["Sender ID"] || row["sender_player_id"] || null,
       senderNickname: row["Sender Nickname"] || row["sender_nickname"] || null,
       senderMemoName: row["Sender Memo"] || row["sender_memo"] || null,
-      recipientNickname: row["Recipient Nickname"] || row["recipient_nickname"] || null,
+      recipientNickname:
+        row["Recipient Nickname"] || row["recipient_nickname"] || null,
       recipientMemoName: row["Recipient Memo"] || row["recipient_memo"] || null,
-      recipientPlayerId: row["Recipient ID"] || row["recipient_player_id"] || null,
-      creditSent: parseFloat(row["Credit Sent"] || row["credit_sent"] || 0),
-      creditRedeemed: parseFloat(row["Credit Redeemed"] || row["credit_redeemed"] || 0),
-      creditLeftClub: parseFloat(row["Credit Left Club"] || row["credit_left_club"] || 0),
-      chipsSent: parseFloat(row["Chips Sent"] || row["chips_sent"] || 0),
-      classificationPpsr: parseFloat(row["Classificação PPSR"] || 0),
-      classificationRing: parseFloat(row["Classificação Ring Game"] || 0),
-      classificationCustomRing: parseFloat(row["Classificação de RG Personalizado"] || 0),
-      classificationMtt: parseFloat(row["Classificação MTT"] || 0),
-      chipsRedeemed: parseFloat(row["Chips Redeemed"] || row["chips_redeemed"] || 0),
-      chipsLeftClub: parseFloat(row["Chips Left Club"] || row["chips_left_club"] || 0),
-      ticketSent: parseFloat(row["Ticket Sent"] || row["ticket_sent"] || 0),
-      ticketRedeemed: parseFloat(row["Ticket Redeemed"] || row["ticket_redeemed"] || 0),
-      ticketExpired: parseFloat(row["Ticket Expired"] || row["ticket_expired"] || 0),
+      recipientPlayerId:
+        row["Recipient ID"] || row["recipient_player_id"] || null,
+      creditSent: Number.parseFloat(
+        row["Credit Sent"] || row["credit_sent"] || 0,
+      ),
+      creditRedeemed: Number.parseFloat(
+        row["Credit Redeemed"] || row["credit_redeemed"] || 0,
+      ),
+      creditLeftClub: Number.parseFloat(
+        row["Credit Left Club"] || row["credit_left_club"] || 0,
+      ),
+      chipsSent: Number.parseFloat(row["Chips Sent"] || row["chips_sent"] || 0),
+      classificationPpsr: Number.parseFloat(row["Classificação PPSR"] || 0),
+      classificationRing: Number.parseFloat(
+        row["Classificação Ring Game"] || 0,
+      ),
+      classificationCustomRing: Number.parseFloat(
+        row["Classificação de RG Personalizado"] || 0,
+      ),
+      classificationMtt: Number.parseFloat(row["Classificação MTT"] || 0),
+      chipsRedeemed: Number.parseFloat(
+        row["Chips Redeemed"] || row["chips_redeemed"] || 0,
+      ),
+      chipsLeftClub: Number.parseFloat(
+        row["Chips Left Club"] || row["chips_left_club"] || 0,
+      ),
+      ticketSent: Number.parseFloat(
+        row["Ticket Sent"] || row["ticket_sent"] || 0,
+      ),
+      ticketRedeemed: Number.parseFloat(
+        row["Ticket Redeemed"] || row["ticket_redeemed"] || 0,
+      ),
+      ticketExpired: Number.parseFloat(
+        row["Ticket Expired"] || row["ticket_expired"] || 0,
+      ),
     }));
 }
 
@@ -70,17 +101,22 @@ function parseSessionSheet(data: any[]): any[] {
   return data
     .filter((row) => row["Session ID"] || row["Game ID"] || row["external_id"])
     .map((row) => ({
-      externalId: row["Session ID"] || row["Game ID"] || row["external_id"] || "",
+      externalId:
+        row["Session ID"] || row["Game ID"] || row["external_id"] || "",
       tableName: row["Table Name"] || row["table_name"] || null,
       sessionType: row["Game Type"] || row["session_type"] || "ring",
       gameVariant: row["Variant"] || row["game_variant"] || "nlh",
       startedAt: row["Start Time"] || row["started_at"] || null,
       endedAt: row["End Time"] || row["ended_at"] || null,
       blinds: row["Blinds"] || row["blinds"] || null,
-      buyInAmount: parseFloat(row["Buy-In"] || row["buy_in_amount"] || 0) || null,
-      guaranteedPrize: parseFloat(row["GTD"] || row["guaranteed_prize"] || 0) || null,
-      createdByNickname: row["Created By"] || row["created_by_nickname"] || null,
-      createdByPpPokerId: row["Created By ID"] || row["created_by_pppoker_id"] || null,
+      buyInAmount:
+        Number.parseFloat(row["Buy-In"] || row["buy_in_amount"] || 0) || null,
+      guaranteedPrize:
+        Number.parseFloat(row["GTD"] || row["guaranteed_prize"] || 0) || null,
+      createdByNickname:
+        row["Created By"] || row["created_by_nickname"] || null,
+      createdByPpPokerId:
+        row["Created By ID"] || row["created_by_pppoker_id"] || null,
     }));
 }
 
@@ -89,18 +125,26 @@ function parseSummarySheet(data: any[]): any[] {
   return data
     .filter((row) => row["PPPoker ID"] || row["pppoker_id"] || row["Player ID"])
     .map((row) => ({
-      ppPokerId: String(row["PPPoker ID"] || row["pppoker_id"] || row["Player ID"] || ""),
+      ppPokerId: String(
+        row["PPPoker ID"] || row["pppoker_id"] || row["Player ID"] || "",
+      ),
       country: row["Country"] || row["country"] || null,
       nickname: row["Nickname"] || row["nickname"] || row["Player"] || "",
       memoName: row["Memo Name"] || row["memo_name"] || null,
       agentNickname: row["Agent"] || row["agent_nickname"] || null,
       agentPpPokerId: row["Agent ID"] || row["agent_pppoker_id"] || null,
-      superAgentNickname: row["Super Agent"] || row["super_agent_nickname"] || null,
-      superAgentPpPokerId: row["Super Agent ID"] || row["super_agent_pppoker_id"] || null,
-      playerWinningsTotal: toNumber(row["Total Winnings"] || row["winnings_total"] || 0),
+      superAgentNickname:
+        row["Super Agent"] || row["super_agent_nickname"] || null,
+      superAgentPpPokerId:
+        row["Super Agent ID"] || row["super_agent_pppoker_id"] || null,
+      playerWinningsTotal: toNumber(
+        row["Total Winnings"] || row["winnings_total"] || 0,
+      ),
       classificationPpsr: toNumber(row["Classificação PPSR"] || 0),
       classificationRing: toNumber(row["Classificação Ring Game"] || 0),
-      classificationCustomRing: toNumber(row["Classificação de RG Personalizado"] || 0),
+      classificationCustomRing: toNumber(
+        row["Classificação de RG Personalizado"] || 0,
+      ),
       classificationMtt: toNumber(row["Classificação MTT"] || 0),
       generalTotal: toNumber(row["Total"] || row["Geral"] || 0),
     }));
@@ -231,9 +275,7 @@ function detectGameType(gameInfo: string): "MTT" | "SITNG" | "SPIN" | "CASH" {
 function isPlayerRow(row: Array<string | number | null>): boolean {
   const playerId = row[1];
   return (
-    typeof playerId === "number" &&
-    playerId > 0 &&
-    Number.isInteger(playerId)
+    typeof playerId === "number" && playerId > 0 && Number.isInteger(playerId)
   );
 }
 
@@ -266,7 +308,7 @@ function getBlinds(tipoJogo: string): string | null {
 // Get rake percentage from game type string (e.g., "5%")
 function getRakePercent(tipoJogo: string): number | null {
   const match = tipoJogo.match(/(\d+(?:\.\d+)?)\s*%/);
-  return match ? parseFloat(match[1]) : null;
+  return match ? Number.parseFloat(match[1]) : null;
 }
 
 // Get rake cap from game type string (e.g., "3BB")
@@ -292,10 +334,14 @@ function getOrganizador(tipoJogo: string): string {
   return "Liga";
 }
 
-function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["sessions"]; utcCount: number } {
-  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null }) as Array<
-    Array<string | number | null>
-  >;
+function parsePartidasSheet(sheet: XLSX.Sheet): {
+  sessions: ParsedImportData["sessions"];
+  utcCount: number;
+} {
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    defval: null,
+  }) as Array<Array<string | number | null>>;
 
   const sessions: ParsedImportData["sessions"] = [];
 
@@ -305,7 +351,12 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
   for (const row of rows) {
     const cellA = row[0];
     const cellB = row[1];
-    if (cellA && String(cellA).includes("UTC") && cellB && String(cellB).includes("Início:")) {
+    if (
+      cellA &&
+      String(cellA).includes("UTC") &&
+      cellB &&
+      String(cellB).includes("Início:")
+    ) {
       utcCount += 1;
     }
   }
@@ -359,11 +410,14 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
     const idCellRaw = idLine[1] ? String(idLine[1]) : "";
     const tableNameCellRaw = idLine[2] ? String(idLine[2]) : "";
 
-    let externalId: string = `match_${matchNumber}`;
+    let externalId = `match_${matchNumber}`;
     let tableName: string | null = null;
 
     // Check if both are in the same cell (combined format)
-    if (idCellRaw.includes("ID do jogo:") && idCellRaw.includes("Nome da mesa:")) {
+    if (
+      idCellRaw.includes("ID do jogo:") &&
+      idCellRaw.includes("Nome da mesa:")
+    ) {
       // Combined format: "ID do jogo: XXX   Nome da mesa: YYY"
       const idMatch = idCellRaw.match(/ID do jogo:\s*(\S+)/i);
       const tableMatch = idCellRaw.match(/Nome da mesa:\s*(.+)$/i);
@@ -401,7 +455,12 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
       // Checar se o tipo está na mesma linha do ID/Nome (pode estar em células diferentes)
       for (let i = 0; i < (typeLine.length || 0); i++) {
         const cell = typeLine[i] ? String(typeLine[i]) : "";
-        if (cell.includes("PPST") || cell.includes("PPSR") || cell.includes("Buy-in:") || cell.includes("Premiação")) {
+        if (
+          cell.includes("PPST") ||
+          cell.includes("PPSR") ||
+          cell.includes("Buy-in:") ||
+          cell.includes("Premiação")
+        ) {
           gameTypeRaw = cell;
           break;
         }
@@ -433,13 +492,20 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
     const timeLimit = getTimeLimit(gameTypeRaw);
 
     // Extract buy-in and guaranteed prize from game type string
-    const buyInRaw = gameTypeRaw.match(/Buy-in:\s*([0-9+.,]+)/)?.[1]?.trim() || null;
-    const guaranteedPrizeRaw = gameTypeRaw.match(/Premiação Garantida:\s*([0-9.,]+)/)?.[1]?.trim() || null;
+    const buyInRaw =
+      gameTypeRaw.match(/Buy-in:\s*([0-9+.,]+)/)?.[1]?.trim() || null;
+    const guaranteedPrizeRaw =
+      gameTypeRaw.match(/Premiação Garantida:\s*([0-9.,]+)/)?.[1]?.trim() ||
+      null;
     const buyInAmount = parseBuyInValue(buyInRaw);
-    const guaranteedPrize = guaranteedPrizeRaw ? toNumber(guaranteedPrizeRaw) : null;
+    const guaranteedPrize = guaranteedPrizeRaw
+      ? toNumber(guaranteedPrizeRaw)
+      : null;
 
     // Parse players starting from line N+3
-    const players: NonNullable<ParsedImportData["sessions"]>[number]["players"] = [];
+    const players: NonNullable<
+      ParsedImportData["sessions"]
+    >[number]["players"] = [];
     let totalBuyIn = 0;
     let totalWinnings = 0;
     let totalRake = 0;
@@ -467,7 +533,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
         // B(1): ID, C(2): Apelido, D(3): Memorando, E(4): Ranking, F(5): Buy-in fichas, G(6): Prêmio, H(7): Ganhos
         const ranking = toNumber(dataRow[4]);
         const buyInChips = toNumber(dataRow[5]);
-        const prize = toNumber(dataRow[6]);  // Prêmio (não é Buy-in ticket)
+        const prize = toNumber(dataRow[6]); // Prêmio (não é Buy-in ticket)
         const winnings = toNumber(dataRow[7]);
 
         totalBuyIn += buyInChips;
@@ -481,7 +547,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
           ranking,
           buyInChips,
           buyIn: buyInChips,
-          prize,  // Prêmio específico do SPIN
+          prize, // Prêmio específico do SPIN
           winnings,
           rake: 0,
           hands: 0,
@@ -521,22 +587,24 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
         const hands = toNumber(dataRow[5]);
 
         // Ganhos do jogador (índices 6-9, mas Geral[6] é fórmula - calcular)
-        const winningsOpponents = toNumber(dataRow[7]);   // H - De adversários
-        const winningsJackpot = toNumber(dataRow[8]);     // I - De Jackpot
-        const winningsEvSplit = toNumber(dataRow[9]);     // J - De Dividir EV
+        const winningsOpponents = toNumber(dataRow[7]); // H - De adversários
+        const winningsJackpot = toNumber(dataRow[8]); // I - De Jackpot
+        const winningsEvSplit = toNumber(dataRow[9]); // J - De Dividir EV
         // Geral é soma: De adversários + De Jackpot + De Dividir EV
-        const winningsGeneral = winningsOpponents + winningsJackpot + winningsEvSplit;
+        const winningsGeneral =
+          winningsOpponents + winningsJackpot + winningsEvSplit;
 
         // Ganhos do clube (índices 10-14, mas Geral[10] é fórmula - calcular)
-        const clubTaxa = toNumber(dataRow[11]);           // L - Taxa
-        const clubJackpotFee = toNumber(dataRow[12]);     // M - Taxa do Jackpot
-        const clubJackpotPrize = toNumber(dataRow[13]);   // N - Prêmios Jackpot
-        const clubEvSplit = toNumber(dataRow[14]);        // O - Dividir EV
+        const clubTaxa = toNumber(dataRow[11]); // L - Taxa
+        const clubJackpotFee = toNumber(dataRow[12]); // M - Taxa do Jackpot
+        const clubJackpotPrize = toNumber(dataRow[13]); // N - Prêmios Jackpot
+        const clubEvSplit = toNumber(dataRow[14]); // O - Dividir EV
         // Geral é soma: Taxa + Taxa do Jackpot + Prêmios Jackpot + Dividir EV
-        const clubGeneral = clubTaxa + clubJackpotFee + clubJackpotPrize + clubEvSplit;
+        const clubGeneral =
+          clubTaxa + clubJackpotFee + clubJackpotPrize + clubEvSplit;
 
         const winnings = winningsGeneral; // Total winnings = Geral (calculado)
-        const rake = clubTaxa;            // Taxa
+        const rake = clubTaxa; // Taxa
 
         totalBuyIn += buyIn;
         totalWinnings += winnings;
@@ -604,12 +672,15 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
     const v = session.gameVariant?.toUpperCase() || "UNKNOWN";
     variantCounts[v] = (variantCounts[v] || 0) + 1;
   }
-  console.log(`[ClubParser] ✅ Parsed ${sessions.length} sessions (UTC markers: ${utcCount})`);
-  console.log("[ClubParser] 📊 Game Variant Distribution:",
+  console.log(
+    `[ClubParser] ✅ Parsed ${sessions.length} sessions (UTC markers: ${utcCount})`,
+  );
+  console.log(
+    "[ClubParser] 📊 Game Variant Distribution:",
     Object.entries(variantCounts)
       .sort((a, b) => b[1] - a[1])
       .map(([k, v]) => `${k}:${v}`)
-      .join(" | ")
+      .join(" | "),
   );
 
   // Log what raw types became "other" so we can add proper mappings
@@ -624,7 +695,10 @@ function parsePartidasSheet(sheet: XLSX.Sheet): { sessions: ParsedImportData["se
         }
       }
     }
-    console.log("[ClubParser] ⚠️ 'OTHER' examples (table names):", otherExamples.join(" | "));
+    console.log(
+      "[ClubParser] ⚠️ 'OTHER' examples (table names):",
+      otherExamples.join(" | "),
+    );
   }
 
   return { sessions, utcCount };
@@ -711,7 +785,7 @@ function columnLetterToIndex(col: string): number {
 function getCellValue(
   sheet: XLSX.Sheet,
   cellAddress: string,
-  visited: Set<string> = new Set()
+  visited: Set<string> = new Set(),
 ): number {
   // Evitar loops infinitos
   if (visited.has(cellAddress)) return 0;
@@ -727,13 +801,13 @@ function getCellValue(
 
   // Se tem valor string que parece número
   if (cell.v !== undefined && cell.v !== null && typeof cell.v === "string") {
-    const parsed = parseFloat(cell.v.replace(/,/g, "."));
+    const parsed = Number.parseFloat(cell.v.replace(/,/g, "."));
     if (!isNaN(parsed)) return parsed;
   }
 
   // Se tem texto formatado que parece número
   if (cell.w !== undefined && cell.w !== null) {
-    const parsed = parseFloat(String(cell.w).replace(/,/g, "."));
+    const parsed = Number.parseFloat(String(cell.w).replace(/,/g, "."));
     if (!isNaN(parsed)) return parsed;
   }
 
@@ -749,7 +823,7 @@ function getCellValue(
 function calculateFormula(
   sheet: XLSX.Sheet,
   formula: string,
-  visited: Set<string> = new Set()
+  visited: Set<string> = new Set(),
 ): number {
   // Remove espaços
   const cleanFormula = formula.trim();
@@ -760,8 +834,8 @@ function calculateFormula(
     const [, startCol, startRowStr, endCol, endRowStr] = sumMatch;
     const startColIdx = columnLetterToIndex(startCol);
     const endColIdx = columnLetterToIndex(endCol);
-    const startRowIdx = parseInt(startRowStr, 10) - 1;
-    const endRowIdx = parseInt(endRowStr, 10) - 1;
+    const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
+    const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
 
     let sum = 0;
     for (let row = startRowIdx; row <= endRowIdx; row++) {
@@ -786,8 +860,8 @@ function calculateFormula(
         const [, startCol, startRowStr, endCol, endRowStr] = rangeMatch;
         const startColIdx = columnLetterToIndex(startCol);
         const endColIdx = columnLetterToIndex(endCol);
-        const startRowIdx = parseInt(startRowStr, 10) - 1;
-        const endRowIdx = parseInt(endRowStr, 10) - 1;
+        const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
+        const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
 
         for (let row = startRowIdx; row <= endRowIdx; row++) {
           for (let col = startColIdx; col <= endColIdx; col++) {
@@ -801,7 +875,7 @@ function calculateFormula(
       if (cellMatch) {
         const [, col, rowStr] = cellMatch;
         const colIdx = columnLetterToIndex(col);
-        const rowIdx = parseInt(rowStr, 10) - 1;
+        const rowIdx = Number.parseInt(rowStr, 10) - 1;
         const addr = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
         sum += getCellValue(sheet, addr, new Set(visited));
       }
@@ -814,7 +888,7 @@ function calculateFormula(
   if (cellRefMatch) {
     const [, col, rowStr] = cellRefMatch;
     const colIdx = columnLetterToIndex(col);
-    const rowIdx = parseInt(rowStr, 10) - 1;
+    const rowIdx = Number.parseInt(rowStr, 10) - 1;
     const addr = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
     return getCellValue(sheet, addr, visited);
   }
@@ -826,8 +900,8 @@ function calculateFormula(
 function parseSheetByPosition(
   sheet: XLSX.Sheet,
   columnMap: Record<string, number>,
-  headerRows: number = 4,
-  rowFilter?: (rowData: Record<string, any>) => boolean
+  headerRows = 4,
+  rowFilter?: (rowData: Record<string, any>) => boolean,
 ): any[] {
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
   const result: any[] = [];
@@ -851,7 +925,7 @@ function parseSheetByPosition(
         } else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
           // cell.w é string formatada, tentar converter para número
           const trimmed = String(cell.w).trim().replace(/,/g, ".");
-          const parsed = parseFloat(trimmed);
+          const parsed = Number.parseFloat(trimmed);
           value = !isNaN(parsed) ? parsed : cell.w;
         } else if (cell.f) {
           // Célula tem fórmula mas sem valor - calcular recursivamente
@@ -965,7 +1039,7 @@ function parseGeralSheet(data: any[], sheet?: XLSX.Sheet): any[] {
     .map((row) => ({
       // Identificação do Jogador (A-I)
       ppPokerId: String(
-        row["ID do jogador"] || row["Player ID"] || row["ID"] || ""
+        row["ID do jogador"] || row["Player ID"] || row["ID"] || "",
       ),
       country: row["País/região"] || row["Country"] || null,
       nickname: row["Apelido"] || row["Nickname"] || "",
@@ -973,13 +1047,20 @@ function parseGeralSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       agentNickname: row["Agente"] || row["Agent"] || null,
       agentPpPokerId: row["ID do agente"] || row["Agent ID"] || null,
       superAgentNickname: row["Superagente"] || row["Super Agent"] || null,
-      superAgentPpPokerId: row["ID do superagente"] || row["Super Agent ID"] || null,
+      superAgentPpPokerId:
+        row["ID do superagente"] || row["Super Agent ID"] || null,
 
       // Classificações (J-N)
-      playerWinningsTotal: toNumber(row["Ganhos de jogador gerais + Eventos"] || row["Geral + Eventos"] || 0),
+      playerWinningsTotal: toNumber(
+        row["Ganhos de jogador gerais + Eventos"] ||
+          row["Geral + Eventos"] ||
+          0,
+      ),
       classificationPpsr: toNumber(row["Classificação PPSR"] || 0),
       classificationRing: toNumber(row["Classificação Ring Game"] || 0),
-      classificationCustomRing: toNumber(row["Classificação de RG Personalizado"] || 0),
+      classificationCustomRing: toNumber(
+        row["Classificação de RG Personalizado"] || 0,
+      ),
       classificationMtt: toNumber(row["Classificação MTT"] || 0),
 
       // Ganhos do Jogador (O-X)
@@ -1423,9 +1504,11 @@ function parseUserDetailsSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       superAgentPpPokerId: row.superAgentPpPokerId
         ? String(row.superAgentPpPokerId)
         : null,
-      chipBalance: parseFloat(row.chipBalance || 0),
-      agentCreditBalance: parseFloat(row.agentCreditBalance || 0),
-      superAgentCreditBalance: parseFloat(row.superAgentCreditBalance || 0),
+      chipBalance: Number.parseFloat(row.chipBalance || 0),
+      agentCreditBalance: Number.parseFloat(row.agentCreditBalance || 0),
+      superAgentCreditBalance: Number.parseFloat(
+        row.superAgentCreditBalance || 0,
+      ),
       lastActiveAt: row.lastActiveAt || null,
     }));
   }
@@ -1438,19 +1521,23 @@ function parseUserDetailsSheet(data: any[], sheet?: XLSX.Sheet): any[] {
     })
     .map((row) => ({
       ppPokerId: String(
-        row["ID do jogador"] || row["Player ID"] || row["ID"] || ""
+        row["ID do jogador"] || row["Player ID"] || row["ID"] || "",
       ),
       nickname: row["Apelido"] || row["Nickname"] || "",
       memoName: row["Nome de memorando"] || row["Memo Name"] || null,
       country: row["País/região"] || row["Country"] || null,
       agentNickname: row["Agente"] || row["Agent"] || null,
       agentPpPokerId: row["ID do agente"] || row["Agent ID"] || null,
-      chipBalance: parseFloat(row["Saldo de fichas"] || row["Chip Balance"] || 0),
-      agentCreditBalance: parseFloat(
-        row["Crédito do agente"] || row["Agent Credit"] || 0
+      chipBalance: Number.parseFloat(
+        row["Saldo de fichas"] || row["Chip Balance"] || 0,
       ),
-      superAgentCreditBalance: parseFloat(
-        row["Saldo de crédito do superagente"] || row["Super Agent Credit"] || 0
+      agentCreditBalance: Number.parseFloat(
+        row["Crédito do agente"] || row["Agent Credit"] || 0,
+      ),
+      superAgentCreditBalance: Number.parseFloat(
+        row["Saldo de crédito do superagente"] ||
+          row["Super Agent Credit"] ||
+          0,
       ),
       lastActiveAt: row["Última atividade"] || row["Last Active"] || null,
     }));
@@ -1482,11 +1569,8 @@ const TRANSACOES_COLUMNS = {
 
 function parseTransacoesSheet(data: any[], sheet?: XLSX.Sheet): any[] {
   if (sheet) {
-    const rawData = parseSheetByPosition(
-      sheet,
-      TRANSACOES_COLUMNS,
-      3,
-      (row) => Boolean(row.occurredAt)
+    const rawData = parseSheetByPosition(sheet, TRANSACOES_COLUMNS, 3, (row) =>
+      Boolean(row.occurredAt),
     );
     return rawData.map((row) => ({
       occurredAt: row.occurredAt ? String(row.occurredAt) : "",
@@ -1498,7 +1582,9 @@ function parseTransacoesSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       senderPlayerId: row.senderPlayerId ? String(row.senderPlayerId) : null,
       recipientNickname: row.recipientNickname || null,
       recipientMemoName: row.recipientMemoName || null,
-      recipientPlayerId: row.recipientPlayerId ? String(row.recipientPlayerId) : null,
+      recipientPlayerId: row.recipientPlayerId
+        ? String(row.recipientPlayerId)
+        : null,
       creditSent: toNumber(row.creditSent),
       creditRedeemed: toNumber(row.creditRedeemed),
       creditLeftClub: toNumber(row.creditLeftClub),
@@ -1524,9 +1610,14 @@ function parseTransacoesSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       playerId: row["ID do jogador"] || row["Player ID"] || null,
       senderNickname: row["Apelido"] || row["Sender Nickname"] || null,
       senderMemoName: row["Nome de memorando"] || row["Sender Memo"] || null,
-      senderPlayerId: row["ID do jogador (remetente)"] || row["Sender ID"] || null,
-      recipientNickname: row["Apelido do destinatário"] || row["Recipient Nickname"] || null,
-      recipientMemoName: row["Nome de memorando do destinatário"] || row["Recipient Memo"] || null,
+      senderPlayerId:
+        row["ID do jogador (remetente)"] || row["Sender ID"] || null,
+      recipientNickname:
+        row["Apelido do destinatário"] || row["Recipient Nickname"] || null,
+      recipientMemoName:
+        row["Nome de memorando do destinatário"] ||
+        row["Recipient Memo"] ||
+        null,
       recipientPlayerId: row["ID do jogador"] || row["Player ID"] || null,
       creditSent: toNumber(row["Enviado"] || row["Credit Sent"]),
       creditRedeemed: toNumber(row["Resgatado"] || row["Credit Redeemed"]),
@@ -1534,12 +1625,20 @@ function parseTransacoesSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       chipsSent: toNumber(row["Fichas enviadas"] || row["Chips Sent"]),
       classificationPpsr: toNumber(row["Classificação PPSR"] || 0),
       classificationRing: toNumber(row["Classificação Ring Game"] || 0),
-      classificationCustomRing: toNumber(row["Classificação de RG Personalizado"] || 0),
+      classificationCustomRing: toNumber(
+        row["Classificação de RG Personalizado"] || 0,
+      ),
       classificationMtt: toNumber(row["Classificação MTT"] || 0),
-      chipsRedeemed: toNumber(row["Fichas resgatadas"] || row["Chips Redeemed"]),
-      chipsLeftClub: toNumber(row["Fichas saíram do clube"] || row["Chips Left Club"]),
+      chipsRedeemed: toNumber(
+        row["Fichas resgatadas"] || row["Chips Redeemed"],
+      ),
+      chipsLeftClub: toNumber(
+        row["Fichas saíram do clube"] || row["Chips Left Club"],
+      ),
       ticketSent: toNumber(row["Ticket enviado"] || row["Ticket Sent"]),
-      ticketRedeemed: toNumber(row["Ticket resgatado"] || row["Ticket Redeemed"]),
+      ticketRedeemed: toNumber(
+        row["Ticket resgatado"] || row["Ticket Redeemed"],
+      ),
       ticketExpired: toNumber(row["Ticket expirado"] || row["Ticket Expired"]),
     }));
 }
@@ -1554,11 +1653,8 @@ const DEMONSTRATIVO_COLUMNS = {
 };
 
 function parseDemonstrativoSheet(sheet: XLSX.Sheet): any[] {
-  const rawData = parseSheetByPosition(
-    sheet,
-    DEMONSTRATIVO_COLUMNS,
-    2,
-    (row) => Boolean(row.ppPokerId || row.occurredAt)
+  const rawData = parseSheetByPosition(sheet, DEMONSTRATIVO_COLUMNS, 2, (row) =>
+    Boolean(row.ppPokerId || row.occurredAt),
   );
   return rawData.map((row) => ({
     occurredAt: row.occurredAt ? String(row.occurredAt) : "",
@@ -1584,11 +1680,8 @@ const RAKEBACK_COLUMNS = {
 
 function parseRakebackSheet(data: any[], sheet?: XLSX.Sheet): any[] {
   if (sheet) {
-    const rawData = parseSheetByPosition(
-      sheet,
-      RAKEBACK_COLUMNS,
-      2,
-      (row) => Boolean(row.agentPpPokerId)
+    const rawData = parseSheetByPosition(sheet, RAKEBACK_COLUMNS, 2, (row) =>
+      Boolean(row.agentPpPokerId),
     );
     return rawData
       .filter((row) => row.agentPpPokerId && !isNaN(Number(row.agentPpPokerId)))
@@ -1615,11 +1708,15 @@ function parseRakebackSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       agentNickname: row["Apelido"] || row["Agent Nickname"] || "",
       country: row["País/região"] || row["Country"] || null,
       memoName: row["Nome de memorando"] || row["Memo Name"] || null,
-      superAgentPpPokerId: row["ID do superagente"] || row["Super Agent ID"] || null,
-      averageRakebackPercent: parseFloat(
-        row["Retorno% médio de taxa"] || row["Retorno médio"] || row["Avg Rakeback %"] || 0
+      superAgentPpPokerId:
+        row["ID do superagente"] || row["Super Agent ID"] || null,
+      averageRakebackPercent: Number.parseFloat(
+        row["Retorno% médio de taxa"] ||
+          row["Retorno médio"] ||
+          row["Avg Rakeback %"] ||
+          0,
       ),
-      totalRt: parseFloat(row["Total de RT"] || row["Total RT"] || 0),
+      totalRt: Number.parseFloat(row["Total de RT"] || row["Total RT"] || 0),
     }));
 }
 
@@ -1664,9 +1761,15 @@ function parseExcelWorkbook(workbook: XLSX.WorkBook): ParsedImportData {
       const { sessions, utcCount } = parsePartidasSheet(sheet);
       result.sessions = sessions;
       result.sessionsUtcCount = utcCount;
-    } else if (normalizedName === "detalhado" || normalizedName === "detailed") {
+    } else if (
+      normalizedName === "detalhado" ||
+      normalizedName === "detailed"
+    ) {
       result.detailed = parseDetalhadoSheet(sheet);
-    } else if (normalizedName === "demonstrativo" || normalizedName === "statement") {
+    } else if (
+      normalizedName === "demonstrativo" ||
+      normalizedName === "statement"
+    ) {
       result.demonstrativo = parseDemonstrativoSheet(sheet);
     }
   }
@@ -1697,15 +1800,15 @@ function detectAndParseData(data: any[]): ParsedImportData {
   }
 
   if (
-    headers.some((h) => h.includes("total winnings") || h.includes("total rake"))
+    headers.some(
+      (h) => h.includes("total winnings") || h.includes("total rake"),
+    )
   ) {
     return { summaries: parseSummarySheet(data) };
   }
 
   // Default: assume it's a member list
-  if (
-    headers.some((h) => h.includes("pppoker") || h.includes("nickname"))
-  ) {
+  if (headers.some((h) => h.includes("pppoker") || h.includes("nickname"))) {
     return { players: parseClubMemberSheet(data) };
   }
 
@@ -1722,8 +1825,10 @@ export function ImportUploader() {
 
   // Validation modal state
   const [validationModalOpen, setValidationModalOpen] = useState(false);
-  const [parsedDataForValidation, setParsedDataForValidation] = useState<ParsedImportData | null>(null);
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [parsedDataForValidation, setParsedDataForValidation] =
+    useState<ParsedImportData | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
   const [currentFileName, setCurrentFileName] = useState<string>("");
   const [currentFileSize, setCurrentFileSize] = useState<number>(0);
   const [currentFileType, setCurrentFileType] = useState<string>("");
@@ -1739,7 +1844,7 @@ export function ImportUploader() {
           return routeKey[0] === "poker" && routeKey[1] === "imports";
         }
         return false;
-      }
+      },
     });
   };
 
@@ -1756,7 +1861,7 @@ export function ImportUploader() {
           variant: "error",
         });
       },
-    })
+    }),
   );
 
   const validateImportMutation = useMutation(
@@ -1771,7 +1876,7 @@ export function ImportUploader() {
           variant: "error",
         });
       },
-    })
+    }),
   );
 
   const processImportMutation = useMutation(
@@ -1784,11 +1889,15 @@ export function ImportUploader() {
             const key = query.queryKey;
             if (Array.isArray(key) && Array.isArray(key[0])) {
               const routeKey = key[0] as string[];
-              return routeKey[0] === "poker" &&
-                (routeKey[1] === "players" || routeKey[1] === "sessions" || routeKey[1] === "analytics");
+              return (
+                routeKey[0] === "poker" &&
+                (routeKey[1] === "players" ||
+                  routeKey[1] === "sessions" ||
+                  routeKey[1] === "analytics")
+              );
             }
             return false;
-          }
+          },
         });
         toast({
           title: t("poker.import.uploadSuccess"),
@@ -1806,7 +1915,7 @@ export function ImportUploader() {
           variant: "error",
         });
       },
-    })
+    }),
   );
 
   const handleApproveImport = useCallback(async () => {
@@ -1839,7 +1948,9 @@ export function ImportUploader() {
       // Step 2: Validate the import
       currentStep = "Validando dados";
       update(toastId, { title: `${currentStep}...`, progress: 25 });
-      const validationResult = await validateImportMutation.mutateAsync({ id: importId });
+      const validationResult = await validateImportMutation.mutateAsync({
+        id: importId,
+      });
 
       if (!validationResult.validationPassed) {
         dismiss();
@@ -1855,19 +1966,21 @@ export function ImportUploader() {
       currentStep = "Cadastrando jogadores";
       update(toastId, { title: `${currentStep}...`, progress: 40 });
 
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 300));
       currentStep = "Cadastrando agentes";
       update(toastId, { title: `${currentStep}...`, progress: 55 });
 
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 300));
       currentStep = "Cadastrando sessões";
       update(toastId, { title: `${currentStep}...`, progress: 70 });
 
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 300));
       currentStep = "Processando transações";
       update(toastId, { title: `${currentStep}...`, progress: 85 });
 
-      const processResult = await processImportMutation.mutateAsync({ id: importId });
+      const processResult = await processImportMutation.mutateAsync({
+        id: importId,
+      });
 
       // Check if processing had errors
       if (processResult.errors && processResult.errors.length > 0) {
@@ -1883,7 +1996,7 @@ export function ImportUploader() {
 
       // Success
       update(toastId, { title: "Importação concluída!", progress: 100 });
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
       dismiss();
 
       toast({
@@ -1891,7 +2004,6 @@ export function ImportUploader() {
         description: `${validationResult.totalPlayers} jogadores, ${validationResult.totalSessions} sessões`,
         variant: "success",
       });
-
     } catch (error: any) {
       dismiss();
       console.error("Import failed:", error);
@@ -1904,7 +2016,17 @@ export function ImportUploader() {
     } finally {
       setIsImporting(false);
     }
-  }, [parsedDataForValidation, currentFileName, currentFileSize, currentFileType, createImportMutation, validateImportMutation, processImportMutation, toast, update]);
+  }, [
+    parsedDataForValidation,
+    currentFileName,
+    currentFileSize,
+    currentFileType,
+    createImportMutation,
+    validateImportMutation,
+    processImportMutation,
+    toast,
+    update,
+  ]);
 
   const handleRejectImport = useCallback(() => {
     setValidationModalOpen(false);
@@ -1971,11 +2093,14 @@ export function ImportUploader() {
 
           update(id, { title: "Extraindo período...", progress: 40 });
           // Extract period from Geral sheet header if available
-          const geralSheet = workbook.Sheets["Geral"] || workbook.Sheets["General"];
+          const geralSheet =
+            workbook.Sheets["Geral"] || workbook.Sheets["General"];
           if (geralSheet) {
             const periodCell = geralSheet["A3"];
             if (periodCell && periodCell.v) {
-              const periodMatch = periodCell.v.match(/(\d{4}\/\d{2}\/\d{2})\s*-\s*(\d{4}\/\d{2}\/\d{2})/);
+              const periodMatch = periodCell.v.match(
+                /(\d{4}\/\d{2}\/\d{2})\s*-\s*(\d{4}\/\d{2}\/\d{2})/,
+              );
               if (periodMatch) {
                 parsedData.periodStart = periodMatch[1].replace(/\//g, "-");
                 parsedData.periodEnd = periodMatch[2].replace(/\//g, "-");
@@ -2001,7 +2126,10 @@ export function ImportUploader() {
             update(id, { title: "Detectando formato...", progress: 70 });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const data = XLSX.utils.sheet_to_json(firstSheet, { defval: null });
-            parsedData = { ...parsedData, ...detectAndParseData(data as any[]) };
+            parsedData = {
+              ...parsedData,
+              ...detectAndParseData(data as any[]),
+            };
           }
         }
 
@@ -2009,18 +2137,23 @@ export function ImportUploader() {
         parsedData.fileName = file.name;
         parsedData.fileSize = file.size;
 
-        // Extract clubId and unionId from filename pattern: clubId-unionId-startDate-endDate.xlsx
+        // Extract leagueId and clubId from filename pattern: leagueId-clubId-startDate-endDate.xlsx
+        // When there's a league, league ID always comes first in the filename
         const fileNameMatch = file.name.match(/^(\d+)-(\d+)-(\d{8})-(\d{8})/);
         if (fileNameMatch) {
-          parsedData.clubId = fileNameMatch[1];
-          parsedData.unionId = fileNameMatch[2];
+          parsedData.leagueId = fileNameMatch[1];
+          parsedData.clubId = fileNameMatch[2];
         }
 
         // Also try to extract clubId from transactions if not in filename
         if (!parsedData.clubId && parsedData.transactions?.length) {
-          const firstTxWithClub = parsedData.transactions.find((tx: any) => tx.clubId || tx.senderClubId);
+          const firstTxWithClub = parsedData.transactions.find(
+            (tx: any) => tx.clubId || tx.senderClubId,
+          );
           if (firstTxWithClub) {
-            parsedData.clubId = String(firstTxWithClub.clubId || firstTxWithClub.senderClubId);
+            parsedData.clubId = String(
+              firstTxWithClub.clubId || firstTxWithClub.senderClubId,
+            );
           }
         }
 
@@ -2063,7 +2196,7 @@ export function ImportUploader() {
         setIsProcessing(false);
       }
     },
-    [toast, update, t]
+    [toast, update, t],
   );
 
   const onDrop = useCallback(
@@ -2071,7 +2204,7 @@ export function ImportUploader() {
       if (acceptedFiles.length === 0) return;
       processFile(acceptedFiles[0]);
     },
-    [processFile]
+    [processFile],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -2099,7 +2232,7 @@ export function ImportUploader() {
           <div
             className={cn(
               "bg-background dark:bg-[#1A1A1A] h-full w-full flex items-center justify-center text-center transition-opacity",
-              isDragActive ? "visible opacity-100" : "invisible opacity-0"
+              isDragActive ? "visible opacity-100" : "invisible opacity-0",
             )}
           >
             <input {...getInputProps()} id="upload-club-file" />
@@ -2129,7 +2262,9 @@ export function ImportUploader() {
 
               <button
                 type="button"
-                onClick={() => document.getElementById("upload-club-file")?.click()}
+                onClick={() =>
+                  document.getElementById("upload-club-file")?.click()
+                }
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mx-auto"
               >
                 {t("poker.import.upload")}

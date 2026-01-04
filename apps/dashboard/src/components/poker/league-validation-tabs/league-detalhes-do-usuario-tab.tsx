@@ -24,21 +24,53 @@ const SUMMARY_COLUMNS = [
 
 // Todas as colunas (12 campos - A ate L)
 const ALL_COLUMNS = [
-  { key: "lastActiveAt", label: "Ultima conexao", type: "datetime", group: "Identificacao" },
+  {
+    key: "lastActiveAt",
+    label: "Ultima conexao",
+    type: "datetime",
+    group: "Identificacao",
+  },
   { key: "ppPokerId", label: "ID", type: "id", group: "Identificacao" },
   { key: "country", label: "Pais", type: "text", group: "Identificacao" },
   { key: "nickname", label: "Apelido", type: "text", group: "Identificacao" },
   { key: "memoName", label: "Memorando", type: "text", group: "Identificacao" },
-  { key: "chipBalance", label: "Saldo Fichas", type: "currency", group: "Saldo" },
+  {
+    key: "chipBalance",
+    label: "Saldo Fichas",
+    type: "currency",
+    group: "Saldo",
+  },
   { key: "agentNickname", label: "Agente", type: "text", group: "Agente" },
   { key: "agentPpPokerId", label: "ID Agente", type: "id", group: "Agente" },
-  { key: "agentCreditBalance", label: "Credito Agente", type: "currency", group: "Agente" },
-  { key: "superAgentNickname", label: "Superagente", type: "text", group: "Superagente" },
-  { key: "superAgentPpPokerId", label: "ID Super", type: "id", group: "Superagente" },
-  { key: "superAgentCreditBalance", label: "Credito Super", type: "currency", group: "Superagente" },
+  {
+    key: "agentCreditBalance",
+    label: "Credito Agente",
+    type: "currency",
+    group: "Agente",
+  },
+  {
+    key: "superAgentNickname",
+    label: "Superagente",
+    type: "text",
+    group: "Superagente",
+  },
+  {
+    key: "superAgentPpPokerId",
+    label: "ID Super",
+    type: "id",
+    group: "Superagente",
+  },
+  {
+    key: "superAgentCreditBalance",
+    label: "Credito Super",
+    type: "currency",
+    group: "Superagente",
+  },
 ] as const;
 
-export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioTabProps) {
+export function LeagueDetalhesDoUsuarioTab({
+  players,
+}: LeagueDetalhesDoUsuarioTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
 
@@ -57,25 +89,46 @@ export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioT
 
   // Helper to check if ID is valid (not "(none)" or empty)
   const isValidId = (id: string | null | undefined) =>
-    id && id.trim() !== "" && id.toLowerCase() !== "(none)" && id.toLowerCase() !== "none";
+    id &&
+    id.trim() !== "" &&
+    id.toLowerCase() !== "(none)" &&
+    id.toLowerCase() !== "none";
 
   // Calculate totals
   const totalPlayers = players.length;
-  const uniqueAgents = new Set(players.map((p) => p.agentPpPokerId).filter(isValidId));
-  const uniqueSuperAgents = new Set(players.map((p) => p.superAgentPpPokerId).filter(isValidId));
+  const uniqueAgents = new Set(
+    players.map((p) => p.agentPpPokerId).filter(isValidId),
+  );
+  const uniqueSuperAgents = new Set(
+    players.map((p) => p.superAgentPpPokerId).filter(isValidId),
+  );
 
   // Players with/without agent
   const playersWithAgent = players.filter((p) => isValidId(p.agentPpPokerId));
-  const playersWithoutAgent = players.filter((p) => !isValidId(p.agentPpPokerId));
+  const playersWithoutAgent = players.filter(
+    (p) => !isValidId(p.agentPpPokerId),
+  );
 
   // Chip balance breakdown
-  const chipBalanceWithAgent = playersWithAgent.reduce((sum, p) => sum + (p.chipBalance || 0), 0);
-  const chipBalanceWithoutAgent = playersWithoutAgent.reduce((sum, p) => sum + (p.chipBalance || 0), 0);
+  const chipBalanceWithAgent = playersWithAgent.reduce(
+    (sum, p) => sum + (p.chipBalance || 0),
+    0,
+  );
+  const chipBalanceWithoutAgent = playersWithoutAgent.reduce(
+    (sum, p) => sum + (p.chipBalance || 0),
+    0,
+  );
   const totalChipBalance = chipBalanceWithAgent + chipBalanceWithoutAgent;
 
   // Credit balance breakdown
-  const agentCreditWithAgent = playersWithAgent.reduce((sum, p) => sum + (p.agentCreditBalance || 0), 0);
-  const superAgentCreditBalance = players.reduce((sum, p) => sum + (p.superAgentCreditBalance || 0), 0);
+  const agentCreditWithAgent = playersWithAgent.reduce(
+    (sum, p) => sum + (p.agentCreditBalance || 0),
+    0,
+  );
+  const superAgentCreditBalance = players.reduce(
+    (sum, p) => sum + (p.superAgentCreditBalance || 0),
+    0,
+  );
 
   if (players.length === 0) {
     return (
@@ -97,11 +150,15 @@ export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioT
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Com Agente:</span>
-            <span className="text-sm font-semibold">{playersWithAgent.length}</span>
+            <span className="text-sm font-semibold">
+              {playersWithAgent.length}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Sem Agente:</span>
-            <span className="text-sm font-semibold">{playersWithoutAgent.length}</span>
+            <span className="text-sm font-semibold">
+              {playersWithoutAgent.length}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Agentes:</span>
@@ -109,38 +166,83 @@ export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioT
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Superagentes:</span>
-            <span className="text-sm font-semibold">{uniqueSuperAgents.size}</span>
+            <span className="text-sm font-semibold">
+              {uniqueSuperAgents.size}
+            </span>
           </div>
         </div>
 
         {/* Row 2: Saldos */}
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Saldo Total (F):</span>
-            <span className={`text-sm font-semibold font-mono ${totalChipBalance >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {totalChipBalance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Saldo Total (F):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${totalChipBalance >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {totalChipBalance.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Crédito Agentes (I):</span>
-            <span className={`text-sm font-semibold font-mono ${agentCreditWithAgent >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {agentCreditWithAgent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Crédito Agentes (I):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${agentCreditWithAgent >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {agentCreditWithAgent.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Crédito Super (L):</span>
-            <span className={`text-sm font-semibold font-mono ${superAgentCreditBalance >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {superAgentCreditBalance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Crédito Super (L):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${superAgentCreditBalance >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {superAgentCreditBalance.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
         </div>
 
         {/* Row 3: Detalhado */}
         <div className="pt-3 border-t border-border/50">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">DETALHADO</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+            DETALHADO
+          </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-            <span>Fichas c/ Agente: <span className={`font-mono font-medium ${chipBalanceWithAgent >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>{chipBalanceWithAgent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
-            <span>Fichas s/ Agente: <span className={`font-mono font-medium ${chipBalanceWithoutAgent >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>{chipBalanceWithoutAgent.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></span>
+            <span>
+              Fichas c/ Agente:{" "}
+              <span
+                className={`font-mono font-medium ${chipBalanceWithAgent >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+              >
+                {chipBalanceWithAgent.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
+            <span>
+              Fichas s/ Agente:{" "}
+              <span
+                className={`font-mono font-medium ${chipBalanceWithoutAgent >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+              >
+                {chipBalanceWithoutAgent.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </span>
           </div>
         </div>
       </div>
@@ -178,7 +280,9 @@ export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioT
 
       <div className="border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className={`w-full text-xs ${expanded ? "min-w-[1400px]" : "min-w-[800px]"}`}>
+          <table
+            className={`w-full text-xs ${expanded ? "min-w-[1400px]" : "min-w-[800px]"}`}
+          >
             <thead>
               <tr className="border-b bg-muted/50">
                 {columns.map((col) => (
@@ -197,7 +301,10 @@ export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioT
             </thead>
             <tbody className="divide-y">
               {filteredData.map((row, idx) => (
-                <tr key={`${row.ppPokerId}-${idx}`} className="hover:bg-muted/30">
+                <tr
+                  key={`${row.ppPokerId}-${idx}`}
+                  className="hover:bg-muted/30"
+                >
                   {columns.map((col) => (
                     <td
                       key={col.key}
@@ -205,13 +312,16 @@ export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioT
                         col.type === "currency" || col.type === "number"
                           ? "text-right font-mono"
                           : col.type === "id"
-                          ? "font-mono text-[#878787]"
-                          : col.type === "datetime"
-                          ? "text-[#878787]"
-                          : ""
+                            ? "font-mono text-[#878787]"
+                            : col.type === "datetime"
+                              ? "text-[#878787]"
+                              : ""
                       }`}
                     >
-                      {formatValue(row[col.key as keyof ParsedPlayer], col.type)}
+                      {formatValue(
+                        row[col.key as keyof ParsedPlayer],
+                        col.type,
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -226,7 +336,7 @@ export function LeagueDetalhesDoUsuarioTab({ players }: LeagueDetalhesDoUsuarioT
 
 function formatValue(
   value: string | number | null | undefined,
-  type: string
+  type: string,
 ): string {
   if (value === null || value === undefined) return "-";
 

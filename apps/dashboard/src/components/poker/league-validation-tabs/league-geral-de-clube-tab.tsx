@@ -38,9 +38,13 @@ const PLAYER_COLUMNS = [
   { key: "feeGeneral", label: "Taxa", type: "currency" },
 ] as const;
 
-export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps) {
+export function LeagueGeralDeClubeTab({
+  summaries,
+}: LeagueGeralDeClubeTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedClubs, setExpandedClubs] = useState<Record<string, boolean>>({});
+  const [expandedClubs, setExpandedClubs] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Group players by club
   const clubGroups = useMemo(() => {
@@ -83,7 +87,7 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
       const uniqueAgents = new Set(
         group.players
           .map((p) => p.agentPpPokerId)
-          .filter((id) => id && id !== "None" && id.trim() !== "")
+          .filter((id) => id && id !== "None" && id.trim() !== ""),
       );
       group.totalAgents = uniqueAgents.size;
     }
@@ -103,8 +107,8 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
           (p) =>
             p.nickname.toLowerCase().includes(query) ||
             p.ppPokerId.includes(query) ||
-            p.memoName?.toLowerCase().includes(query)
-        )
+            p.memoName?.toLowerCase().includes(query),
+        ),
     );
   }, [clubGroups, searchQuery]);
 
@@ -114,7 +118,7 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
     const uniqueAgents = new Set(
       summaries
         .map((s) => s.agentPpPokerId)
-        .filter((id) => id && id !== "None" && id.trim() !== "")
+        .filter((id) => id && id !== "None" && id.trim() !== ""),
     );
     // Calculate players by region
     const playersByRegion = new Map<string, number>();
@@ -123,17 +127,24 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
       playersByRegion.set(region, (playersByRegion.get(region) || 0) + 1);
     }
     // Sort by count descending
-    const regionBreakdown = Array.from(playersByRegion.entries())
-      .sort((a, b) => b[1] - a[1]);
+    const regionBreakdown = Array.from(playersByRegion.entries()).sort(
+      (a, b) => b[1] - a[1],
+    );
 
     return {
       totalClubs: clubGroups.length,
       totalPlayers: summaries.length,
       totalAgents: uniqueAgents.size,
-      totalWinnings: summaries.reduce((sum, s) => sum + (s.playerWinningsTotal || 0), 0),
+      totalWinnings: summaries.reduce(
+        (sum, s) => sum + (s.playerWinningsTotal || 0),
+        0,
+      ),
       totalRake: summaries.reduce((sum, s) => sum + (s.feeGeneral || 0), 0),
       totalFee: summaries.reduce((sum, s) => sum + (s.fee || 0), 0),
-      totalGap: summaries.reduce((sum, s) => sum + ((s.generalTotal || 0) - (s.feeGeneral || 0)), 0),
+      totalGap: summaries.reduce(
+        (sum, s) => sum + ((s.generalTotal || 0) - (s.feeGeneral || 0)),
+        0,
+      ),
       regionBreakdown,
     };
   }, [clubGroups, summaries]);
@@ -170,53 +181,87 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Clubes:</span>
-            <span className="text-sm font-semibold">{globalTotals.totalClubs}</span>
+            <span className="text-sm font-semibold">
+              {globalTotals.totalClubs}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Jogadores:</span>
-            <span className="text-sm font-semibold">{globalTotals.totalPlayers}</span>
+            <span className="text-sm font-semibold">
+              {globalTotals.totalPlayers}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Agentes (G):</span>
-            <span className="text-sm font-semibold">{globalTotals.totalAgents}</span>
+            <span className="text-sm font-semibold">
+              {globalTotals.totalAgents}
+            </span>
           </div>
         </div>
 
         {/* Row 2: Valores */}
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Ganhos Total (J):</span>
-            <span className={`text-sm font-semibold font-mono ${globalTotals.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {globalTotals.totalWinnings.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Ganhos Total (J):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${globalTotals.totalWinnings >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {globalTotals.totalWinnings.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Taxa Total (AB):</span>
+            <span className="text-xs text-muted-foreground">
+              Taxa Total (AB):
+            </span>
             <span className="text-sm font-semibold font-mono">
-              {globalTotals.totalRake.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              {globalTotals.totalRake.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Taxa (AC):</span>
             <span className="text-sm font-semibold font-mono text-[#00C969]">
-              {globalTotals.totalFee.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              {globalTotals.totalFee.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Gap Total (O-AB):</span>
-            <span className={`text-sm font-semibold font-mono ${globalTotals.totalGap >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {globalTotals.totalGap.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span className="text-xs text-muted-foreground">
+              Gap Total (O-AB):
+            </span>
+            <span
+              className={`text-sm font-semibold font-mono ${globalTotals.totalGap >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {globalTotals.totalGap.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
         </div>
 
         {/* Row 3: Jogadores por Região */}
         <div className="pt-3 border-t border-border/50">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">JOGADORES POR REGIÃO (Col. C)</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+            JOGADORES POR REGIÃO (Col. C)
+          </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
             {globalTotals.regionBreakdown.map(([region, count]) => (
-              <span key={region} className="text-muted-foreground whitespace-nowrap">
-                {region}: <span className="font-semibold text-foreground">{count}</span>
+              <span
+                key={region}
+                className="text-muted-foreground whitespace-nowrap"
+              >
+                {region}:{" "}
+                <span className="font-semibold text-foreground">{count}</span>
               </span>
             ))}
           </div>
@@ -226,7 +271,9 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <p className="text-sm text-[#878787]">{filteredClubs.length} clubes</p>
+          <p className="text-sm text-[#878787]">
+            {filteredClubs.length} clubes
+          </p>
           <Button variant="ghost" size="sm" onClick={expandAll}>
             Expandir todos
           </Button>
@@ -266,7 +313,8 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
                 <span className="font-medium">{club.clubName}</span>
                 {club.periodStart && club.periodEnd && (
                   <span className="text-sm text-muted-foreground">
-                    {club.periodStart.replace(/\//g, "-")} - {club.periodEnd.replace(/\//g, "-")}
+                    {club.periodStart.replace(/\//g, "-")} -{" "}
+                    {club.periodEnd.replace(/\//g, "-")}
                   </span>
                 )}
               </div>
@@ -278,10 +326,14 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
                   {club.totalAgents} agentes
                 </span>
                 <div className="text-right">
-                  <span className="text-sm text-muted-foreground mr-1">Saldo:</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    Saldo:
+                  </span>
                   <span
                     className={`font-mono font-medium ${
-                      club.totalBalance >= 0 ? "text-[#00C969]" : "text-[#FF3638]"
+                      club.totalBalance >= 0
+                        ? "text-[#00C969]"
+                        : "text-[#FF3638]"
                     }`}
                   >
                     {club.totalBalance.toLocaleString("pt-BR", {
@@ -291,7 +343,9 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm text-muted-foreground mr-1">Taxa:</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    Taxa:
+                  </span>
                   <span
                     className={`font-mono font-medium ${
                       club.totalFee >= 0 ? "text-[#00C969]" : "text-[#FF3638]"
@@ -304,7 +358,9 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
                   </span>
                 </div>
                 <div className="text-right min-w-[120px]">
-                  <span className="text-sm text-muted-foreground mr-1">Gap:</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    Gap:
+                  </span>
                   <span
                     className={`font-mono font-medium ${
                       club.totalGap >= 0 ? "text-[#00C969]" : "text-[#FF3638]"
@@ -353,20 +409,22 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
                                 col.type === "currency" || col.type === "number"
                                   ? "text-right font-mono"
                                   : col.type === "id"
-                                  ? "font-mono text-[#878787]"
-                                  : ""
+                                    ? "font-mono text-[#878787]"
+                                    : ""
                               } ${
                                 col.type === "currency" &&
-                                (player[col.key as keyof ParsedClubSummary] as number) < 0
+                                (player[
+                                  col.key as keyof ParsedClubSummary
+                                ] as number) < 0
                                   ? "text-[#FF3638]"
                                   : col.type === "currency"
-                                  ? "text-[#00C969]"
-                                  : ""
+                                    ? "text-[#00C969]"
+                                    : ""
                               }`}
                             >
                               {formatValue(
                                 player[col.key as keyof ParsedClubSummary],
-                                col.type
+                                col.type,
                               )}
                             </td>
                           ))}
@@ -387,19 +445,20 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
                             {col.key === "ppPokerId"
                               ? "TOTAL"
                               : col.key === "nickname"
-                              ? `${club.players.length} jogadores`
-                              : col.type === "currency"
-                              ? formatValue(
-                                  club.players.reduce(
-                                    (sum, row) =>
-                                      sum +
-                                      ((row[col.key as keyof ParsedClubSummary] as number) ||
-                                        0),
-                                    0
-                                  ),
-                                  "currency"
-                                )
-                              : ""}
+                                ? `${club.players.length} jogadores`
+                                : col.type === "currency"
+                                  ? formatValue(
+                                      club.players.reduce(
+                                        (sum, row) =>
+                                          sum +
+                                          ((row[
+                                            col.key as keyof ParsedClubSummary
+                                          ] as number) || 0),
+                                        0,
+                                      ),
+                                      "currency",
+                                    )
+                                  : ""}
                           </td>
                         ))}
                       </tr>
@@ -417,7 +476,7 @@ export function LeagueGeralDeClubeTab({ summaries }: LeagueGeralDeClubeTabProps)
 
 function formatValue(
   value: string | number | null | undefined,
-  type: string
+  type: string,
 ): string {
   if (value === null || value === undefined) return "-";
 

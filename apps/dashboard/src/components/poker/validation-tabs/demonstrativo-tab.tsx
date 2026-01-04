@@ -2,9 +2,9 @@
 
 import type { ParsedDemonstrativo } from "@/lib/poker/types";
 import { Button } from "@midday/ui/button";
+import { cn } from "@midday/ui/cn";
 import { Icons } from "@midday/ui/icons";
 import { Input } from "@midday/ui/input";
-import { cn } from "@midday/ui/cn";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -15,12 +15,12 @@ type DemonstrativoTabProps = {
 
 // Type colors
 const TYPE_COLORS: Record<string, string> = {
-  "Compra": "#3B82F6",
-  "Venda": "#10B981",
-  "Transferência": "#8B5CF6",
-  "Bônus": "#F59E0B",
-  "Rake": "#EF4444",
-  "Outros": "#6B7280",
+  Compra: "#3B82F6",
+  Venda: "#10B981",
+  Transferência: "#8B5CF6",
+  Bônus: "#F59E0B",
+  Rake: "#EF4444",
+  Outros: "#6B7280",
 };
 
 function formatCurrency(value: number): string {
@@ -61,24 +61,34 @@ export function DemonstrativoTab({ demonstrativo }: DemonstrativoTabProps) {
   const totalPages = Math.ceil(filteredData.length / pageSize);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   // Calculate totals
   const totalRegistros = demonstrativo.length;
-  const uniquePlayers = new Set(demonstrativo.map((d) => d.ppPokerId).filter(Boolean));
-  const totalGastos = demonstrativo.reduce((sum, d) => sum + (d.amount || 0), 0);
+  const uniquePlayers = new Set(
+    demonstrativo.map((d) => d.ppPokerId).filter(Boolean),
+  );
+  const totalGastos = demonstrativo.reduce(
+    (sum, d) => sum + (d.amount || 0),
+    0,
+  );
 
   // Group by type
-  const byType = demonstrativo.reduce((acc, d) => {
-    const type = d.type || "Outros";
-    if (!acc[type]) acc[type] = { count: 0, total: 0 };
-    acc[type].count += 1;
-    acc[type].total += d.amount || 0;
-    return acc;
-  }, {} as Record<string, { count: number; total: number }>);
+  const byType = demonstrativo.reduce(
+    (acc, d) => {
+      const type = d.type || "Outros";
+      if (!acc[type]) acc[type] = { count: 0, total: 0 };
+      acc[type].count += 1;
+      acc[type].total += d.amount || 0;
+      return acc;
+    },
+    {} as Record<string, { count: number; total: number }>,
+  );
 
-  const typesList = Object.entries(byType).sort((a, b) => b[1].total - a[1].total);
+  const typesList = Object.entries(byType).sort(
+    (a, b) => b[1].total - a[1].total,
+  );
 
   if (demonstrativo.length === 0) {
     return (
@@ -93,20 +103,32 @@ export function DemonstrativoTab({ demonstrativo }: DemonstrativoTabProps) {
       {/* Row 1: Counters */}
       <div className="flex items-center gap-4 text-xs py-2">
         <span className="text-muted-foreground">
-          Registros <span className="text-foreground font-medium">{totalRegistros}</span>
+          Registros{" "}
+          <span className="text-foreground font-medium">{totalRegistros}</span>
         </span>
         <span className="text-border/60">·</span>
         <span className="text-muted-foreground">
-          Jogadores <span className="text-foreground font-medium">{uniquePlayers.size}</span>
+          Jogadores{" "}
+          <span className="text-foreground font-medium">
+            {uniquePlayers.size}
+          </span>
         </span>
         <span className="text-border/60">·</span>
         <span className="text-muted-foreground">
-          Tipos <span className="text-foreground font-medium">{typesList.length}</span>
+          Tipos{" "}
+          <span className="text-foreground font-medium">
+            {typesList.length}
+          </span>
         </span>
         <span className="text-border/60">·</span>
         <span className="text-muted-foreground">
           Total{" "}
-          <span className={cn("font-mono font-medium", totalGastos >= 0 ? "text-[#00C969]" : "text-[#FF3638]")}>
+          <span
+            className={cn(
+              "font-mono font-medium",
+              totalGastos >= 0 ? "text-[#00C969]" : "text-[#FF3638]",
+            )}
+          >
             {formatCurrency(totalGastos)}
           </span>
         </span>
@@ -129,7 +151,7 @@ export function DemonstrativoTab({ demonstrativo }: DemonstrativoTabProps) {
                 }}
                 className={cn(
                   "flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-muted/50",
-                  isSelected && "bg-muted/50"
+                  isSelected && "bg-muted/50",
                 )}
               >
                 <span
@@ -137,10 +159,17 @@ export function DemonstrativoTab({ demonstrativo }: DemonstrativoTabProps) {
                   style={{ backgroundColor: color }}
                 />
                 <span className="text-muted-foreground">{type}</span>
-                <span className={cn("font-mono", data.total >= 0 ? "text-[#00C969]" : "text-[#FF3638]")}>
+                <span
+                  className={cn(
+                    "font-mono",
+                    data.total >= 0 ? "text-[#00C969]" : "text-[#FF3638]",
+                  )}
+                >
                   {formatCurrency(data.total)}
                 </span>
-                <span className="text-[9px] text-muted-foreground">({data.count})</span>
+                <span className="text-[9px] text-muted-foreground">
+                  ({data.count})
+                </span>
               </button>
             );
           })}
@@ -184,42 +213,75 @@ export function DemonstrativoTab({ demonstrativo }: DemonstrativoTabProps) {
           <table className="w-full text-xs min-w-[700px]">
             <thead>
               <tr className="text-muted-foreground border-b border-border/40">
-                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Tempo</th>
-                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">ID</th>
-                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Apelido</th>
-                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Memorando</th>
-                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">Tipo</th>
-                <th className="py-1.5 px-2 font-medium text-right whitespace-nowrap">Gastos</th>
+                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                  Tempo
+                </th>
+                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                  ID
+                </th>
+                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                  Apelido
+                </th>
+                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                  Memorando
+                </th>
+                <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                  Tipo
+                </th>
+                <th className="py-1.5 px-2 font-medium text-right whitespace-nowrap">
+                  Gastos
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="py-8 text-center text-muted-foreground"
+                  >
                     Nenhum dado encontrado
                   </td>
                 </tr>
               ) : (
                 paginatedData.map((row, idx) => (
-                  <tr key={`${row.ppPokerId}-${idx}`} className="hover:bg-muted/30">
+                  <tr
+                    key={`${row.ppPokerId}-${idx}`}
+                    className="hover:bg-muted/30"
+                  >
                     <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
                       {formatDateTime(row.occurredAt)}
                     </td>
                     <td className="py-1.5 px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
                       {row.ppPokerId}
                     </td>
-                    <td className="py-1.5 px-2 whitespace-nowrap">{row.nickname}</td>
-                    <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">{row.memoName || "-"}</td>
+                    <td className="py-1.5 px-2 whitespace-nowrap">
+                      {row.nickname}
+                    </td>
+                    <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
+                      {row.memoName || "-"}
+                    </td>
                     <td className="py-1.5 px-2 whitespace-nowrap">
                       <span className="flex items-center gap-1.5">
                         <span
                           className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: TYPE_COLORS[row.type || "Outros"] || TYPE_COLORS.Outros }}
+                          style={{
+                            backgroundColor:
+                              TYPE_COLORS[row.type || "Outros"] ||
+                              TYPE_COLORS.Outros,
+                          }}
                         />
-                        <span className="text-muted-foreground">{row.type || "-"}</span>
+                        <span className="text-muted-foreground">
+                          {row.type || "-"}
+                        </span>
                       </span>
                     </td>
-                    <td className={cn("py-1.5 px-2 text-right font-mono whitespace-nowrap", row.amount >= 0 ? "text-[#00C969]" : "text-[#FF3638]")}>
+                    <td
+                      className={cn(
+                        "py-1.5 px-2 text-right font-mono whitespace-nowrap",
+                        row.amount >= 0 ? "text-[#00C969]" : "text-[#FF3638]",
+                      )}
+                    >
                       {formatCurrency(row.amount)}
                     </td>
                   </tr>
@@ -234,7 +296,9 @@ export function DemonstrativoTab({ demonstrativo }: DemonstrativoTabProps) {
       {totalPages > 1 && (
         <div className="border-t border-border/40 flex items-center justify-between py-2">
           <span className="text-[10px] text-muted-foreground">
-            {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredData.length)} de {filteredData.length}
+            {(currentPage - 1) * pageSize + 1}-
+            {Math.min(currentPage * pageSize, filteredData.length)} de{" "}
+            {filteredData.length}
           </span>
           <div className="flex items-center gap-1">
             <Button

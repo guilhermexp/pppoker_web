@@ -9,7 +9,10 @@ type AgentsTabProps = {
 export function AgentsTab({ agents }: AgentsTabProps) {
   const totalPlayers = agents.reduce((sum, a) => sum + a.playerCount, 0);
   const totalRake = agents.reduce((sum, a) => sum + a.totalRake, 0);
-  const totalCommission = agents.reduce((sum, a) => sum + a.estimatedCommission, 0);
+  const totalCommission = agents.reduce(
+    (sum, a) => sum + a.estimatedCommission,
+    0,
+  );
 
   if (agents.length === 0) {
     return (
@@ -64,7 +67,9 @@ export function AgentsTab({ agents }: AgentsTabProps) {
                     </span>
                   </div>
                 </td>
-                <td className="p-3 text-right font-mono">{agent.playerCount}</td>
+                <td className="p-3 text-right font-mono">
+                  {agent.playerCount}
+                </td>
                 <td className="p-3 text-right font-mono">
                   {formatCurrency(agent.totalRake)}
                 </td>

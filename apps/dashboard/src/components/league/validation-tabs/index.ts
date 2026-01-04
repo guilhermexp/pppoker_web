@@ -5,3 +5,4 @@ export { LeagueGeralPPSRTab } from "./geral-ppsr-tab";
 export { LeagueJogosPPSTTab } from "./jogos-ppst-tab";
 export { LeagueJogosPPSRTab } from "./jogos-ppsr-tab";
 export { LeagueValidationTab } from "./validation-tab";
+export { LeagueRateioTab } from "./rateio-tab";

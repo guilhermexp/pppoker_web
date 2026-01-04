@@ -9,7 +9,9 @@ type LeagueRetornoDeTaxaTabProps = {
   rakebacks: ParsedRakeback[];
 };
 
-export function LeagueRetornoDeTaxaTab({ rakebacks }: LeagueRetornoDeTaxaTabProps) {
+export function LeagueRetornoDeTaxaTab({
+  rakebacks,
+}: LeagueRetornoDeTaxaTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredData = rakebacks.filter((row) => {
@@ -25,12 +27,23 @@ export function LeagueRetornoDeTaxaTab({ rakebacks }: LeagueRetornoDeTaxaTabProp
 
   // Calculate totals
   const totalRegistros = rakebacks.length;
-  const uniqueAgents = new Set(rakebacks.map((r) => r.agentPpPokerId).filter(Boolean));
-  const uniqueSuperAgents = new Set(rakebacks.map((r) => r.superAgentPpPokerId).filter((id) => id && id.toLowerCase() !== "(none)" && id.toLowerCase() !== "none"));
+  const uniqueAgents = new Set(
+    rakebacks.map((r) => r.agentPpPokerId).filter(Boolean),
+  );
+  const uniqueSuperAgents = new Set(
+    rakebacks
+      .map((r) => r.superAgentPpPokerId)
+      .filter(
+        (id) =>
+          id && id.toLowerCase() !== "(none)" && id.toLowerCase() !== "none",
+      ),
+  );
   const totalRt = rakebacks.reduce((sum, r) => sum + (r.totalRt || 0), 0);
-  const avgRakeback = rakebacks.length > 0
-    ? rakebacks.reduce((sum, r) => sum + (r.averageRakebackPercent || 0), 0) / rakebacks.length
-    : 0;
+  const avgRakeback =
+    rakebacks.length > 0
+      ? rakebacks.reduce((sum, r) => sum + (r.averageRakebackPercent || 0), 0) /
+        rakebacks.length
+      : 0;
 
   return (
     <div className="space-y-4 pb-4">
@@ -48,7 +61,9 @@ export function LeagueRetornoDeTaxaTab({ rakebacks }: LeagueRetornoDeTaxaTabProp
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Superagentes:</span>
-            <span className="text-sm font-semibold">{uniqueSuperAgents.size}</span>
+            <span className="text-sm font-semibold">
+              {uniqueSuperAgents.size}
+            </span>
           </div>
         </div>
 
@@ -56,12 +71,19 @@ export function LeagueRetornoDeTaxaTab({ rakebacks }: LeagueRetornoDeTaxaTabProp
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Média RT:</span>
-            <span className="text-sm font-semibold font-mono">{avgRakeback.toFixed(2)}%</span>
+            <span className="text-sm font-semibold font-mono">
+              {avgRakeback.toFixed(2)}%
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Total RT:</span>
-            <span className={`text-sm font-semibold font-mono ${totalRt >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {totalRt.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span
+              className={`text-sm font-semibold font-mono ${totalRt >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {totalRt.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
         </div>
@@ -102,7 +124,10 @@ export function LeagueRetornoDeTaxaTab({ rakebacks }: LeagueRetornoDeTaxaTabProp
               </tr>
             ) : (
               filteredData.map((row, index) => (
-                <tr key={`${row.agentPpPokerId}-${index}`} className="hover:bg-muted/30">
+                <tr
+                  key={`${row.agentPpPokerId}-${index}`}
+                  className="hover:bg-muted/30"
+                >
                   <td className="p-3 font-mono text-xs text-[#878787]">
                     {row.superAgentPpPokerId || "-"}
                   </td>

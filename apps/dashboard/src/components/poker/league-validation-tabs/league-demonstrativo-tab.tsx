@@ -12,7 +12,9 @@ type LeagueDemonstrativoTabProps = {
   demonstrativo: ParsedDemonstrativo[];
 };
 
-export function LeagueDemonstrativoTab({ demonstrativo }: LeagueDemonstrativoTabProps) {
+export function LeagueDemonstrativoTab({
+  demonstrativo,
+}: LeagueDemonstrativoTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -31,21 +33,29 @@ export function LeagueDemonstrativoTab({ demonstrativo }: LeagueDemonstrativoTab
   const totalPages = Math.ceil(filteredData.length / pageSize);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   // Calculate totals
   const totalRegistros = demonstrativo.length;
-  const uniquePlayers = new Set(demonstrativo.map((d) => d.ppPokerId).filter(Boolean));
-  const totalGastos = demonstrativo.reduce((sum, d) => sum + (d.amount || 0), 0);
+  const uniquePlayers = new Set(
+    demonstrativo.map((d) => d.ppPokerId).filter(Boolean),
+  );
+  const totalGastos = demonstrativo.reduce(
+    (sum, d) => sum + (d.amount || 0),
+    0,
+  );
 
   // Group by type
-  const byType = demonstrativo.reduce((acc, d) => {
-    const type = d.type || "Outros";
-    if (!acc[type]) acc[type] = 0;
-    acc[type] += d.amount || 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const byType = demonstrativo.reduce(
+    (acc, d) => {
+      const type = d.type || "Outros";
+      if (!acc[type]) acc[type] = 0;
+      acc[type] += d.amount || 0;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   return (
     <div className="space-y-4 pb-4">
@@ -63,7 +73,9 @@ export function LeagueDemonstrativoTab({ demonstrativo }: LeagueDemonstrativoTab
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Tipos:</span>
-            <span className="text-sm font-semibold">{Object.keys(byType).length}</span>
+            <span className="text-sm font-semibold">
+              {Object.keys(byType).length}
+            </span>
           </div>
         </div>
 
@@ -71,8 +83,13 @@ export function LeagueDemonstrativoTab({ demonstrativo }: LeagueDemonstrativoTab
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Total Gastos:</span>
-            <span className={`text-sm font-semibold font-mono ${totalGastos >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-              {totalGastos.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <span
+              className={`text-sm font-semibold font-mono ${totalGastos >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+            >
+              {totalGastos.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
           </div>
         </div>
@@ -80,12 +97,20 @@ export function LeagueDemonstrativoTab({ demonstrativo }: LeagueDemonstrativoTab
         {/* Row 3: Por Tipo */}
         {Object.keys(byType).length > 0 && (
           <div className="pt-3 border-t border-border/50">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">POR TIPO</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+              POR TIPO
+            </p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
               {Object.entries(byType).map(([type, amount]) => (
                 <span key={type}>
-                  {type}: <span className={`font-mono font-medium ${amount >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}>
-                    {amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  {type}:{" "}
+                  <span
+                    className={`font-mono font-medium ${amount >= 0 ? "text-[#00C969]" : "text-[#FF3638]"}`}
+                  >
+                    {amount.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
                   </span>
                 </span>
               ))}
@@ -95,7 +120,9 @@ export function LeagueDemonstrativoTab({ demonstrativo }: LeagueDemonstrativoTab
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#878787]">{demonstrativo.length} registros</p>
+        <p className="text-sm text-[#878787]">
+          {demonstrativo.length} registros
+        </p>
         <div className="relative w-64">
           <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#878787]" />
           <Input
@@ -131,7 +158,10 @@ export function LeagueDemonstrativoTab({ demonstrativo }: LeagueDemonstrativoTab
               </tr>
             ) : (
               paginatedData.map((row, idx) => (
-                <tr key={`${row.ppPokerId}-${idx}`} className="hover:bg-muted/30">
+                <tr
+                  key={`${row.ppPokerId}-${idx}`}
+                  className="hover:bg-muted/30"
+                >
                   <td className="p-3 text-[#878787]">
                     {formatDateTime(row.occurredAt)}
                   </td>

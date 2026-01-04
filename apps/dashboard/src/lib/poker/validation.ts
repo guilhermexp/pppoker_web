@@ -1,15 +1,15 @@
 import type {
+  AgentSummary,
+  DetectedInsight,
+  ParsedDetailed,
   ParsedImportData,
   ParsedPlayer,
   ParsedSummary,
-  ParsedDetailed,
   ParsedTransaction,
   ValidationCheck,
   ValidationCheckId,
   ValidationResult,
   ValidationWarning,
-  DetectedInsight,
-  AgentSummary,
 } from "./types";
 
 // ============================================================================
@@ -57,7 +57,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
       const count = data.summaries?.length ?? 0;
       return {
         passed: count > 0,
-        details: count > 0 ? `${count} jogadores` : "Aba Geral vazia ou ausente",
+        details:
+          count > 0 ? `${count} jogadores` : "Aba Geral vazia ou ausente",
         count,
         debug: {
           logic: "Verifica se parsedData.summaries tem pelo menos 1 registro",
@@ -80,7 +81,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           passed: false,
           details: "Sem dados para validar",
           debug: {
-            logic: "Verifica se os campos obrigatórios existem no primeiro registro da aba Geral",
+            logic:
+              "Verifica se os campos obrigatórios existem no primeiro registro da aba Geral",
             expected: "26 campos obrigatórios presentes",
             actual: "Nenhum registro para validar",
           },
@@ -89,12 +91,32 @@ const STRUCTURE_RULES: ValidationRule[] = [
 
       const sample = summaries[0];
       const requiredFields = [
-        "ppPokerId", "nickname", "generalTotal", "ringGamesTotal", "mttSitNGoTotal",
-        "feeGeneral", "fee", "feePpst", "feeNonPpst", "feePpsr", "feeNonPpsr",
-        "spinUpBuyIn", "spinUpPrize", "caribbeanBets", "caribbeanPrize",
-        "colorGameBets", "colorGamePrize", "crashBets", "crashPrize",
-        "luckyDrawBets", "luckyDrawPrize", "jackpotFee", "jackpotPrize",
-        "evSplit", "ticketDeliveredValue", "ticketDeliveredBuyIn",
+        "ppPokerId",
+        "nickname",
+        "generalTotal",
+        "ringGamesTotal",
+        "mttSitNGoTotal",
+        "feeGeneral",
+        "fee",
+        "feePpst",
+        "feeNonPpst",
+        "feePpsr",
+        "feeNonPpsr",
+        "spinUpBuyIn",
+        "spinUpPrize",
+        "caribbeanBets",
+        "caribbeanPrize",
+        "colorGameBets",
+        "colorGamePrize",
+        "crashBets",
+        "crashPrize",
+        "luckyDrawBets",
+        "luckyDrawPrize",
+        "jackpotFee",
+        "jackpotPrize",
+        "evSplit",
+        "ticketDeliveredValue",
+        "ticketDeliveredBuyIn",
       ];
 
       const presentFields = requiredFields.filter((f) => f in sample);
@@ -108,7 +130,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           : `Faltando ${missingFields.length} campos`,
         count: presentFields.length,
         debug: {
-          logic: "Verifica se o primeiro registro tem todos os 26 campos obrigatórios mapeados",
+          logic:
+            "Verifica se o primeiro registro tem todos os 26 campos obrigatórios mapeados",
           expected: `${requiredFields.length} campos presentes`,
           actual: `${presentFields.length} campos encontrados`,
           failedItems: missingFields.slice(0, 10),
@@ -126,7 +149,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
       const count = data.detailed?.length ?? 0;
       return {
         passed: count > 0,
-        details: count > 0 ? `${count} registros` : "Aba Detalhado vazia ou ausente",
+        details:
+          count > 0 ? `${count} registros` : "Aba Detalhado vazia ou ausente",
         count,
         debug: {
           logic: "Verifica se parsedData.detailed tem pelo menos 1 registro",
@@ -141,7 +165,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
     category: "structure",
     severity: "critical",
     label: "Colunas da aba Detalhado completas (137 cols)",
-    description: "A aba Detalhado deve ter os campos críticos das 137 colunas (A-EG)",
+    description:
+      "A aba Detalhado deve ter os campos críticos das 137 colunas (A-EG)",
     validate: (data) => {
       const detailed = data.detailed || [];
       if (detailed.length === 0) {
@@ -149,7 +174,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           passed: false,
           details: "Sem dados para validar",
           debug: {
-            logic: "Verifica se os campos críticos do Detalhado existem no primeiro registro",
+            logic:
+              "Verifica se os campos críticos do Detalhado existem no primeiro registro",
             expected: "40+ campos obrigatórios presentes",
             actual: "Nenhum registro para validar",
           },
@@ -160,29 +186,56 @@ const STRUCTURE_RULES: ValidationRule[] = [
       // Campos críticos do Detalhado baseado na documentação (137 colunas A-EG)
       const requiredFields = [
         // Identificação (A-I)
-        "ppPokerId", "nickname",
+        "ppPokerId",
+        "nickname",
         // Ganhos NLH (J-R)
-        "nlhRegular", "nlhThreeOne", "nlhSixPlus", "nlhAof", "nlhSitNGo", "nlhSpinUp", "nlhMtt",
+        "nlhRegular",
+        "nlhThreeOne",
+        "nlhSixPlus",
+        "nlhAof",
+        "nlhSitNGo",
+        "nlhSpinUp",
+        "nlhMtt",
         // Ganhos PLO (S-AB)
-        "plo4", "plo5", "plo6", "plo4Hilo", "plo5Hilo", "ploSitNGo", "ploMttPlo4",
+        "plo4",
+        "plo5",
+        "plo6",
+        "plo4Hilo",
+        "plo5Hilo",
+        "ploSitNGo",
+        "ploMttPlo4",
         // Cassino (AP-AU)
-        "caribbean", "colorGame", "crash", "luckyDraw", "jackpot", "evSplitWinnings",
+        "caribbean",
+        "colorGame",
+        "crash",
+        "luckyDraw",
+        "jackpot",
+        "evSplitWinnings",
         // Totais (AV)
         "totalWinnings",
         // Classificações (AW-AZ)
-        "classificationPpsr", "classificationRing", "classificationMtt",
+        "classificationPpsr",
+        "classificationRing",
+        "classificationMtt",
         // Taxa Total (CJ)
         "feeTotal",
         // SPINUP (CK-CL)
-        "spinUpBuyIn", "spinUpPrize",
+        "spinUpBuyIn",
+        "spinUpPrize",
         // Jackpot (CM-CN)
-        "jackpotFee", "jackpotPrize",
+        "jackpotFee",
+        "jackpotPrize",
         // EV Split (CO-CQ)
-        "evSplitNlh", "evSplitPlo", "evSplitTotal",
+        "evSplitNlh",
+        "evSplitPlo",
+        "evSplitTotal",
         // Fichas (CT, CY)
-        "chipSent", "chipRedeemed",
+        "chipSent",
+        "chipRedeemed",
         // Crédito (CZ-DB)
-        "creditLeftClub", "creditSent", "creditRedeemed",
+        "creditLeftClub",
+        "creditSent",
+        "creditRedeemed",
         // Mãos Total (EG)
         "handsTotal",
       ];
@@ -198,7 +251,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           : `Faltando ${missingFields.length} campos`,
         count: presentFields.length,
         debug: {
-          logic: "Verifica se o primeiro registro tem pelo menos 35 dos 40 campos críticos mapeados",
+          logic:
+            "Verifica se o primeiro registro tem pelo menos 35 dos 40 campos críticos mapeados",
           expected: `≥35 de ${requiredFields.length} campos presentes`,
           actual: `${presentFields.length} campos encontrados`,
           failedItems: missingFields.slice(0, 10),
@@ -220,7 +274,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           details: "Aba Transações vazia ou ausente",
           count: 0,
           debug: {
-            logic: "Verifica se parsedData.transactions tem registros e campos obrigatórios",
+            logic:
+              "Verifica se parsedData.transactions tem registros e campos obrigatórios",
             expected: "transactions.length > 0 e 18+ campos",
             actual: "Nenhuma transação encontrada",
           },
@@ -229,12 +284,27 @@ const STRUCTURE_RULES: ValidationRule[] = [
 
       const sample = data.transactions![0];
       const requiredFields = [
-        "occurredAt", "senderClubId", "senderPlayerId", "senderNickname", "senderMemoName",
-        "recipientPlayerId", "recipientNickname", "recipientMemoName",
-        "creditSent", "creditRedeemed", "creditLeftClub",
-        "chipsSent", "classificationPpsr", "classificationRing", "classificationCustomRing", "classificationMtt",
-        "chipsRedeemed", "chipsLeftClub",
-        "ticketSent", "ticketRedeemed", "ticketExpired",
+        "occurredAt",
+        "senderClubId",
+        "senderPlayerId",
+        "senderNickname",
+        "senderMemoName",
+        "recipientPlayerId",
+        "recipientNickname",
+        "recipientMemoName",
+        "creditSent",
+        "creditRedeemed",
+        "creditLeftClub",
+        "chipsSent",
+        "classificationPpsr",
+        "classificationRing",
+        "classificationCustomRing",
+        "classificationMtt",
+        "chipsRedeemed",
+        "chipsLeftClub",
+        "ticketSent",
+        "ticketRedeemed",
+        "ticketExpired",
       ];
 
       const presentFields = requiredFields.filter((f) => f in sample);
@@ -246,7 +316,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
         details: `${count} transações, ${presentFields.length}/21 colunas`,
         count,
         debug: {
-          logic: "Verifica se o primeiro registro tem pelo menos 18 dos 21 campos obrigatórios",
+          logic:
+            "Verifica se o primeiro registro tem pelo menos 18 dos 21 campos obrigatórios",
           expected: "≥18 campos presentes",
           actual: `${presentFields.length} campos encontrados`,
           failedItems: missingFields.slice(0, 10),
@@ -268,7 +339,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           details: "Aba Detalhes do usuário vazia ou ausente",
           count: 0,
           debug: {
-            logic: "Verifica se parsedData.players tem registros e campos obrigatórios",
+            logic:
+              "Verifica se parsedData.players tem registros e campos obrigatórios",
             expected: "players.length > 0 e 10+ campos",
             actual: "Nenhum jogador encontrado",
           },
@@ -277,9 +349,18 @@ const STRUCTURE_RULES: ValidationRule[] = [
 
       const sample = data.players![0];
       const requiredFields = [
-        "lastActiveAt", "ppPokerId", "country", "nickname", "memoName", "chipBalance",
-        "agentNickname", "agentPpPokerId", "agentCreditBalance",
-        "superAgentNickname", "superAgentPpPokerId", "superAgentCreditBalance",
+        "lastActiveAt",
+        "ppPokerId",
+        "country",
+        "nickname",
+        "memoName",
+        "chipBalance",
+        "agentNickname",
+        "agentPpPokerId",
+        "agentCreditBalance",
+        "superAgentNickname",
+        "superAgentPpPokerId",
+        "superAgentCreditBalance",
       ];
 
       const presentFields = requiredFields.filter((f) => f in sample);
@@ -291,7 +372,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
         details: `${count} jogadores, ${presentFields.length}/12 colunas`,
         count,
         debug: {
-          logic: "Verifica se o primeiro registro tem pelo menos 10 dos 12 campos obrigatórios",
+          logic:
+            "Verifica se o primeiro registro tem pelo menos 10 dos 12 campos obrigatórios",
           expected: "≥10 campos presentes",
           actual: `${presentFields.length} campos encontrados`,
           failedItems: missingFields.slice(0, 10),
@@ -309,7 +391,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
       const count = data.sessions?.length ?? 0;
       return {
         passed: count > 0,
-        details: count > 0 ? `${count} partidas` : "Aba Partidas vazia ou ausente",
+        details:
+          count > 0 ? `${count} partidas` : "Aba Partidas vazia ou ausente",
         count,
         debug: {
           logic: "Verifica se parsedData.sessions tem pelo menos 1 registro",
@@ -324,7 +407,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
     category: "structure",
     severity: "critical",
     label: "Estrutura das Partidas válida",
-    description: "Cada sessão deve ter estrutura correta por tipo (CASH 14 cols, MTT/SITNG 8 cols, SPIN 7 cols)",
+    description:
+      "Cada sessão deve ter estrutura correta por tipo (CASH 14 cols, MTT/SITNG 8 cols, SPIN 7 cols)",
     validate: (data) => {
       const sessions = data.sessions || [];
       if (sessions.length === 0) {
@@ -332,7 +416,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           passed: false,
           details: "Sem sessões para validar",
           debug: {
-            logic: "Verifica se cada sessão tem os campos obrigatórios por tipo",
+            logic:
+              "Verifica se cada sessão tem os campos obrigatórios por tipo",
             expected: "Todas as sessões com estrutura válida",
             actual: "Nenhuma sessão para validar",
           },
@@ -350,7 +435,9 @@ const STRUCTURE_RULES: ValidationRule[] = [
         const hasBasicFields = session.externalId && session.startedAt;
 
         if (!hasBasicFields) {
-          invalidSessions.push(`${session.externalId || "?"}: falta externalId ou startedAt`);
+          invalidSessions.push(
+            `${session.externalId || "?"}: falta externalId ou startedAt`,
+          );
           continue;
         }
 
@@ -358,25 +445,41 @@ const STRUCTURE_RULES: ValidationRule[] = [
         if (hasPlayers) {
           const player = session.players![0];
 
-          if (type === "cash_game" || type === "ring" || type.includes("ppsr")) {
+          if (
+            type === "cash_game" ||
+            type === "ring" ||
+            type.includes("ppsr")
+          ) {
             // CASH/PPSR: precisa de 14 colunas - buyIn, hands, winnings, rake
             const hasCashFields = "buyIn" in player && "hands" in player;
             if (!hasCashFields) {
-              invalidSessions.push(`${session.externalId}: CASH sem buyIn/hands`);
+              invalidSessions.push(
+                `${session.externalId}: CASH sem buyIn/hands`,
+              );
               continue;
             }
           } else if (type === "mtt" || type === "sit_n_go" || type === "sng") {
             // MTT/SITNG: precisa de 8 colunas - ranking, buyInChips, buyInTicket, winnings, rake
-            const hasMttFields = "ranking" in player || "buyInChips" in player || "buyInTicket" in player;
+            const hasMttFields =
+              "ranking" in player ||
+              "buyInChips" in player ||
+              "buyInTicket" in player;
             if (!hasMttFields) {
-              invalidSessions.push(`${session.externalId}: MTT/SITNG sem ranking/buyIn`);
+              invalidSessions.push(
+                `${session.externalId}: MTT/SITNG sem ranking/buyIn`,
+              );
               continue;
             }
           } else if (type === "spin" || type.includes("spinup")) {
             // SPIN: precisa de 7 colunas - ranking, buyInChips, prize (sem rake)
-            const hasSpinFields = "ranking" in player || "buyInChips" in player || "prize" in player;
+            const hasSpinFields =
+              "ranking" in player ||
+              "buyInChips" in player ||
+              "prize" in player;
             if (!hasSpinFields) {
-              invalidSessions.push(`${session.externalId}: SPIN sem ranking/prize`);
+              invalidSessions.push(
+                `${session.externalId}: SPIN sem ranking/prize`,
+              );
               continue;
             }
           }
@@ -394,7 +497,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           : `${invalidSessions.length} sessões com estrutura inválida`,
         count: validCount,
         debug: {
-          logic: "Verifica estrutura por tipo: CASH (14 cols com buyIn/hands), MTT/SITNG (8 cols com ranking), SPIN (7 cols com prize)",
+          logic:
+            "Verifica estrutura por tipo: CASH (14 cols com buyIn/hands), MTT/SITNG (8 cols com ranking), SPIN (7 cols com prize)",
           expected: "Todas as sessões com campos corretos por tipo",
           actual: passed
             ? `${validCount} sessões válidas`
@@ -414,7 +518,10 @@ const STRUCTURE_RULES: ValidationRule[] = [
       const count = data.rakebacks?.length ?? 0;
       return {
         passed: count > 0,
-        details: count > 0 ? `${count} agentes` : "Aba Retorno de taxa vazia ou ausente",
+        details:
+          count > 0
+            ? `${count} agentes`
+            : "Aba Retorno de taxa vazia ou ausente",
         count,
         debug: {
           logic: "Verifica se parsedData.rakebacks tem pelo menos 1 registro",
@@ -429,7 +536,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
     category: "structure",
     severity: "warning",
     label: "Colunas da aba Retorno de taxa completas (7 cols)",
-    description: "A aba Retorno de taxa deve ter os 7 campos obrigatórios (B-H)",
+    description:
+      "A aba Retorno de taxa deve ter os 7 campos obrigatórios (B-H)",
     validate: (data) => {
       const rakebacks = data.rakebacks || [];
       if (rakebacks.length === 0) {
@@ -447,13 +555,13 @@ const STRUCTURE_RULES: ValidationRule[] = [
       const sample = rakebacks[0];
       // Campos obrigatórios do Retorno de taxa baseado na documentação (7 colunas B-H)
       const requiredFields = [
-        "superAgentPpPokerId",  // B - ID do superagente
-        "agentPpPokerId",       // C - ID do agente
-        "country",              // D - País
-        "agentNickname",        // E - Apelido do agente
-        "memoName",             // F - Memorando
+        "superAgentPpPokerId", // B - ID do superagente
+        "agentPpPokerId", // C - ID do agente
+        "country", // D - País
+        "agentNickname", // E - Apelido do agente
+        "memoName", // F - Memorando
         "averageRakebackPercent", // G - % médio de rakeback
-        "totalRt",              // H - Total RT
+        "totalRt", // H - Total RT
       ];
 
       const presentFields = requiredFields.filter((f) => f in sample);
@@ -467,7 +575,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           : `Faltando ${missingFields.length} campos`,
         count: presentFields.length,
         debug: {
-          logic: "Verifica se o primeiro registro tem pelo menos 5 dos 7 campos obrigatórios",
+          logic:
+            "Verifica se o primeiro registro tem pelo menos 5 dos 7 campos obrigatórios",
           expected: "≥5 de 7 campos presentes",
           actual: `${presentFields.length} campos encontrados`,
           failedItems: missingFields.slice(0, 10),
@@ -491,7 +600,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
           passed: false,
           details: "Período não detectado",
           debug: {
-            logic: "Verifica se periodStart e periodEnd foram extraídos e são válidos (≤31 dias)",
+            logic:
+              "Verifica se periodStart e periodEnd foram extraídos e são válidos (≤31 dias)",
             expected: "periodStart e periodEnd definidos, período ≤ 31 dias",
             actual: `periodStart=${data.periodStart || "null"}, periodEnd=${data.periodEnd || "null"}`,
           },
@@ -500,14 +610,17 @@ const STRUCTURE_RULES: ValidationRule[] = [
 
       const start = new Date(data.periodStart!);
       const end = new Date(data.periodEnd!);
-      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      const days = Math.ceil(
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+      );
 
       return {
         passed: days > 0 && days <= 31,
         details: `${data.periodStart} - ${data.periodEnd} (${days} dias)`,
         count: days,
         debug: {
-          logic: "Verifica se periodStart e periodEnd foram extraídos e são válidos (≤31 dias)",
+          logic:
+            "Verifica se periodStart e periodEnd foram extraídos e são válidos (≤31 dias)",
           expected: "Período entre 1 e 31 dias",
           actual: `${days} dias (${data.periodStart} → ${data.periodEnd})`,
         },
@@ -534,12 +647,14 @@ const INTEGRITY_RULES: ValidationRule[] = [
 
       return {
         passed: invalidIds.length === 0,
-        details: invalidIds.length === 0
-          ? `${validIds.length} IDs válidos`
-          : `${invalidIds.length} IDs inválidos de ${allIds.length}`,
+        details:
+          invalidIds.length === 0
+            ? `${validIds.length} IDs válidos`
+            : `${invalidIds.length} IDs inválidos de ${allIds.length}`,
         count: validIds.length,
         debug: {
-          logic: "Coleta todos os IDs de jogadores de todas as abas e verifica se são apenas dígitos (regex /^\\d+$/)",
+          logic:
+            "Coleta todos os IDs de jogadores de todas as abas e verifica se são apenas dígitos (regex /^\\d+$/)",
           expected: "Todos os IDs devem ser numéricos (ex: 12345678)",
           actual: `${validIds.length} válidos, ${invalidIds.length} inválidos`,
           failedItems: invalidIds.slice(0, 10).map((id) => `"${id}"`),
@@ -557,12 +672,17 @@ const INTEGRITY_RULES: ValidationRule[] = [
       const { errors, details } = countNumericErrorsWithDetails(data);
       return {
         passed: errors === 0,
-        details: errors === 0 ? "Todos os valores são numéricos" : `${errors} valores inválidos`,
+        details:
+          errors === 0
+            ? "Todos os valores são numéricos"
+            : `${errors} valores inválidos`,
         count: errors,
         debug: {
-          logic: "Verifica se campos monetários (chipBalance, generalTotal, feeGeneral, etc.) são typeof number e não NaN",
+          logic:
+            "Verifica se campos monetários (chipBalance, generalTotal, feeGeneral, etc.) são typeof number e não NaN",
           expected: "Todos os valores monetários devem ser números válidos",
-          actual: errors === 0 ? "Todos válidos" : `${errors} valores inválidos`,
+          actual:
+            errors === 0 ? "Todos válidos" : `${errors} valores inválidos`,
           failedItems: details.slice(0, 10),
         },
       };
@@ -578,11 +698,16 @@ const INTEGRITY_RULES: ValidationRule[] = [
       const { errors, details } = countDateErrorsWithDetails(data);
       return {
         passed: errors === 0,
-        details: errors === 0 ? "Todas as datas são válidas" : `${errors} datas inválidas`,
+        details:
+          errors === 0
+            ? "Todas as datas são válidas"
+            : `${errors} datas inválidas`,
         count: errors,
         debug: {
-          logic: "Verifica se campos de data (lastActiveAt, occurredAt, startedAt, endedAt) podem ser parseados com Date.parse()",
-          expected: "Todas as datas devem ser parseáveis (ISO 8601 ou formato reconhecido)",
+          logic:
+            "Verifica se campos de data (lastActiveAt, occurredAt, startedAt, endedAt) podem ser parseados com Date.parse()",
+          expected:
+            "Todas as datas devem ser parseáveis (ISO 8601 ou formato reconhecido)",
           actual: errors === 0 ? "Todas válidas" : `${errors} datas inválidas`,
           failedItems: details.slice(0, 10),
         },
@@ -596,15 +721,22 @@ const INTEGRITY_RULES: ValidationRule[] = [
     label: "Sem transações duplicadas",
     description: "Não deve haver transações duplicadas",
     validate: (data) => {
-      const { duplicates, details } = findDuplicateTransactionsWithDetails(data.transactions || []);
+      const { duplicates, details } = findDuplicateTransactionsWithDetails(
+        data.transactions || [],
+      );
       return {
         passed: duplicates === 0,
-        details: duplicates === 0 ? "Sem duplicatas" : `${duplicates} duplicatas encontradas`,
+        details:
+          duplicates === 0
+            ? "Sem duplicatas"
+            : `${duplicates} duplicatas encontradas`,
         count: duplicates,
         debug: {
-          logic: "Gera chave única por transação (data_sender_recipient_valor) e verifica se há repetições",
+          logic:
+            "Gera chave única por transação (data_sender_recipient_valor) e verifica se há repetições",
           expected: "Nenhuma transação duplicada",
-          actual: duplicates === 0 ? "Sem duplicatas" : `${duplicates} duplicatas`,
+          actual:
+            duplicates === 0 ? "Sem duplicatas" : `${duplicates} duplicatas`,
           failedItems: details.slice(0, 10),
         },
       };
@@ -629,7 +761,10 @@ const MATH_RULES: ValidationRule[] = [];
 // ============================================================================
 
 export function runValidations(data: ParsedImportData): ValidationCheck[] {
-  const allRules: { rules: ValidationRule[]; category: ValidationCheck["category"] }[] = [
+  const allRules: {
+    rules: ValidationRule[];
+    category: ValidationCheck["category"];
+  }[] = [
     { rules: STRUCTURE_RULES, category: "structure" },
     { rules: INTEGRITY_RULES, category: "integrity" },
     { rules: CONSISTENCY_RULES, category: "consistency" },
@@ -646,7 +781,11 @@ export function runValidations(data: ParsedImportData): ValidationCheck[] {
           id: rule.id as ValidationCheckId,
           label: rule.label,
           description: rule.description,
-          status: result.passed ? "passed" : rule.severity === "critical" ? "failed" : "warning",
+          status: result.passed
+            ? "passed"
+            : rule.severity === "critical"
+              ? "failed"
+              : "warning",
           details: result.details,
           count: result.count,
           category,
@@ -676,14 +815,19 @@ export function runValidations(data: ParsedImportData): ValidationCheck[] {
 }
 
 // Calculate data quality score (0-100) - Só 100% se todas críticas passarem
-export function calculateDataQuality(checks: ValidationCheck[]): { score: number; passed: number; total: number; criticalFailed: number } {
+export function calculateDataQuality(checks: ValidationCheck[]): {
+  score: number;
+  passed: number;
+  total: number;
+  criticalFailed: number;
+} {
   const total = checks.length;
   const passed = checks.filter((c) => c.status === "passed").length;
   const failed = checks.filter((c) => c.status === "failed").length;
   const warnings = checks.filter((c) => c.status === "warning").length;
 
   // Score: passed = 100%, warning = 50%, failed = 0%
-  const score = Math.round(((passed * 100) + (warnings * 50)) / total);
+  const score = Math.round((passed * 100 + warnings * 50) / total);
 
   return {
     score: Math.min(100, score),
@@ -700,7 +844,9 @@ export function detectInsights(data: ParsedImportData): DetectedInsight[] {
   const summaries = data.summaries || [];
 
   // Top winners based on Geral total
-  const sortedByWinnings = [...summaries].sort((a, b) => b.generalTotal - a.generalTotal);
+  const sortedByWinnings = [...summaries].sort(
+    (a, b) => b.generalTotal - a.generalTotal,
+  );
   const winners = sortedByWinnings.filter((s) => s.generalTotal > 0);
   const losers = sortedByWinnings.filter((s) => s.generalTotal < 0);
 
@@ -721,7 +867,9 @@ export function detectInsights(data: ParsedImportData): DetectedInsight[] {
 
   // Top losers
   if (losers.length > 0) {
-    const topLosers = [...losers].sort((a, b) => a.generalTotal - b.generalTotal);
+    const topLosers = [...losers].sort(
+      (a, b) => a.generalTotal - b.generalTotal,
+    );
     insights.push({
       id: "top_losers",
       type: "debtor",
@@ -778,7 +926,10 @@ export function detectInsights(data: ParsedImportData): DetectedInsight[] {
 }
 
 // Generate warnings from data
-export function generateWarnings(data: ParsedImportData, checks: ValidationCheck[]): ValidationWarning[] {
+export function generateWarnings(
+  data: ParsedImportData,
+  checks: ValidationCheck[],
+): ValidationWarning[] {
   const warnings: ValidationWarning[] = [];
 
   // Warning for failed checks (critical)
@@ -820,7 +971,9 @@ export function generateWarnings(data: ParsedImportData, checks: ValidationCheck
 }
 
 // Calculate agent summaries
-export function calculateAgentSummaries(data: ParsedImportData): AgentSummary[] {
+export function calculateAgentSummaries(
+  data: ParsedImportData,
+): AgentSummary[] {
   const summaries = data.summaries || [];
   const rakebacks = data.rakebacks || [];
 
@@ -837,7 +990,9 @@ export function calculateAgentSummaries(data: ParsedImportData): AgentSummary[] 
       existing.playerCount += 1;
       existing.totalRake += playerRake;
     } else {
-      const rakeback = rakebacks.find((r) => r.agentPpPokerId === summary.agentPpPokerId);
+      const rakeback = rakebacks.find(
+        (r) => r.agentPpPokerId === summary.agentPpPokerId,
+      );
       agentMap.set(summary.agentPpPokerId, {
         agentPpPokerId: summary.agentPpPokerId,
         agentNickname: summary.agentNickname || "Unknown",
@@ -855,7 +1010,9 @@ export function calculateAgentSummaries(data: ParsedImportData): AgentSummary[] 
     agent.estimatedCommission = agent.totalRake * (agent.rakebackPercent / 100);
   }
 
-  return Array.from(agentMap.values()).sort((a, b) => b.totalRake - a.totalRake);
+  return Array.from(agentMap.values()).sort(
+    (a, b) => b.totalRake - a.totalRake,
+  );
 }
 
 // Calculate full validation result
@@ -875,15 +1032,25 @@ export function validateImportData(data: ParsedImportData): ValidationResult {
 
   const generalIds = new Set(summaries.map((s) => s.ppPokerId));
   const newPlayers = players.filter((p) => !generalIds.has(p.ppPokerId)).length;
-  const existingPlayers = players.length > 0 ? Math.max(players.length - newPlayers, 0) : summaries.length;
+  const existingPlayers =
+    players.length > 0
+      ? Math.max(players.length - newPlayers, 0)
+      : summaries.length;
 
   // Calculate stats
   const winners = summaries.filter((s) => s.generalTotal > 0).length;
   const losers = summaries.filter((s) => s.generalTotal < 0).length;
   const totalWinnings = summaries.reduce((sum, s) => sum + s.generalTotal, 0);
-  const totalRakeFromSessions = sessions.reduce((sum, s) => sum + (s.totalRake ?? 0), 0);
-  const totalRakeFromSummaries = summaries.reduce((sum, s) => sum + (s.feeGeneral ?? 0), 0);
-  const totalRake = totalRakeFromSessions > 0 ? totalRakeFromSessions : totalRakeFromSummaries;
+  const totalRakeFromSessions = sessions.reduce(
+    (sum, s) => sum + (s.totalRake ?? 0),
+    0,
+  );
+  const totalRakeFromSummaries = summaries.reduce(
+    (sum, s) => sum + (s.feeGeneral ?? 0),
+    0,
+  );
+  const totalRake =
+    totalRakeFromSessions > 0 ? totalRakeFromSessions : totalRakeFromSummaries;
   const transactionVolume = transactions.reduce(
     (sum, t) =>
       sum +
@@ -896,7 +1063,7 @@ export function validateImportData(data: ParsedImportData): ValidationResult {
       t.ticketSent +
       t.ticketRedeemed +
       t.ticketExpired,
-    0
+    0,
   );
 
   // Game type distribution
@@ -967,10 +1134,13 @@ export function validateImportData(data: ParsedImportData): ValidationResult {
       });
     }
   }
-  const totalGameValue = Array.from(gameTypes.values()).reduce((a, b) => a + b.value, 0) || 1;
+  const totalGameValue =
+    Array.from(gameTypes.values()).reduce((a, b) => a + b.value, 0) || 1;
 
   // Top performers
-  const sortedByWinnings = [...summaries].sort((a, b) => b.generalTotal - a.generalTotal);
+  const sortedByWinnings = [...summaries].sort(
+    (a, b) => b.generalTotal - a.generalTotal,
+  );
   const majorWinner = sortedByWinnings[0];
   const majorLoser = sortedByWinnings[sortedByWinnings.length - 1];
 
@@ -979,7 +1149,10 @@ export function validateImportData(data: ParsedImportData): ValidationResult {
   if (data.periodStart && data.periodEnd) {
     const start = new Date(data.periodStart);
     const end = new Date(data.periodEnd);
-    periodDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    periodDays = Math.max(
+      1,
+      Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
+    );
   }
 
   // IMPORTANTE: hasBlockingErrors = true se QUALQUER check crítico falhou
@@ -1009,14 +1182,20 @@ export function validateImportData(data: ParsedImportData): ValidationResult {
       losers,
       totalWinnings,
       totalRake,
-      avgWinningsPerPlayer: allPlayerData.length > 0 ? totalWinnings / allPlayerData.length : 0,
+      avgWinningsPerPlayer:
+        allPlayerData.length > 0 ? totalWinnings / allPlayerData.length : 0,
       totalTransactions: transactions.length,
       transactionVolume,
-      avgTransactionValue: transactions.length > 0 ? transactionVolume / transactions.length : 0,
+      avgTransactionValue:
+        transactions.length > 0 ? transactionVolume / transactions.length : 0,
       totalSessions: sessions.length,
-      cashGameSessions: sessions.filter((s) => s.sessionType === "cash_game" || s.sessionType === "ring").length,
+      cashGameSessions: sessions.filter(
+        (s) => s.sessionType === "cash_game" || s.sessionType === "ring",
+      ).length,
       mttSessions: sessions.filter((s) => s.sessionType === "mtt").length,
-      sitNGoSessions: sessions.filter((s) => s.sessionType === "sit_n_go" || s.sessionType === "sng").length,
+      sitNGoSessions: sessions.filter(
+        (s) => s.sessionType === "sit_n_go" || s.sessionType === "sng",
+      ).length,
     },
 
     agents,
@@ -1068,16 +1247,23 @@ function collectAllPlayerIds(data: ParsedImportData): string[] {
   }
   // Filtra valores falsy e não-IDs óbvios (/, -, none, etc.)
   const invalidPatterns = ["/", "-", "none", "(none)", "null", "undefined", ""];
-  return [...new Set(ids.filter((id) => {
-    if (!id) return false;
-    const normalized = String(id).trim().toLowerCase();
-    if (invalidPatterns.includes(normalized)) return false;
-    // Precisa ter pelo menos um dígito para ser considerado um ID
-    return /\d/.test(id);
-  }))];
+  return [
+    ...new Set(
+      ids.filter((id) => {
+        if (!id) return false;
+        const normalized = String(id).trim().toLowerCase();
+        if (invalidPatterns.includes(normalized)) return false;
+        // Precisa ter pelo menos um dígito para ser considerado um ID
+        return /\d/.test(id);
+      }),
+    ),
+  ];
 }
 
-function countNumericErrorsWithDetails(data: ParsedImportData): { errors: number; details: string[] } {
+function countNumericErrorsWithDetails(data: ParsedImportData): {
+  errors: number;
+  details: string[];
+} {
   let errors = 0;
   const details: string[] = [];
   const players = data.players || [];
@@ -1090,61 +1276,88 @@ function countNumericErrorsWithDetails(data: ParsedImportData): { errors: number
   for (const p of players) {
     if (typeof p.chipBalance !== "number" || isNaN(p.chipBalance)) {
       errors++;
-      if (details.length < 10) details.push(`players[${p.ppPokerId}].chipBalance = ${p.chipBalance}`);
+      if (details.length < 10)
+        details.push(`players[${p.ppPokerId}].chipBalance = ${p.chipBalance}`);
     }
-    if (typeof p.agentCreditBalance !== "number" || isNaN(p.agentCreditBalance)) {
+    if (
+      typeof p.agentCreditBalance !== "number" ||
+      isNaN(p.agentCreditBalance)
+    ) {
       errors++;
-      if (details.length < 10) details.push(`players[${p.ppPokerId}].agentCreditBalance = ${p.agentCreditBalance}`);
+      if (details.length < 10)
+        details.push(
+          `players[${p.ppPokerId}].agentCreditBalance = ${p.agentCreditBalance}`,
+        );
     }
   }
   for (const s of summaries) {
     if (typeof s.generalTotal !== "number" || isNaN(s.generalTotal)) {
       errors++;
-      if (details.length < 10) details.push(`summaries[${s.ppPokerId}].generalTotal = ${s.generalTotal}`);
+      if (details.length < 10)
+        details.push(
+          `summaries[${s.ppPokerId}].generalTotal = ${s.generalTotal}`,
+        );
     }
     if (typeof s.feeGeneral !== "number" || isNaN(s.feeGeneral)) {
       errors++;
-      if (details.length < 10) details.push(`summaries[${s.ppPokerId}].feeGeneral = ${s.feeGeneral}`);
+      if (details.length < 10)
+        details.push(`summaries[${s.ppPokerId}].feeGeneral = ${s.feeGeneral}`);
     }
   }
   for (const d of detailed) {
     if (typeof d.totalWinnings !== "number" || isNaN(d.totalWinnings)) {
       errors++;
-      if (details.length < 10) details.push(`detailed[${d.ppPokerId}].totalWinnings = ${d.totalWinnings}`);
+      if (details.length < 10)
+        details.push(
+          `detailed[${d.ppPokerId}].totalWinnings = ${d.totalWinnings}`,
+        );
     }
   }
   for (const d of demonstrativo) {
     if (typeof d.amount !== "number" || isNaN(d.amount)) {
       errors++;
-      if (details.length < 10) details.push(`demonstrativo[${d.ppPokerId}].amount = ${d.amount}`);
+      if (details.length < 10)
+        details.push(`demonstrativo[${d.ppPokerId}].amount = ${d.amount}`);
     }
   }
   for (let i = 0; i < transactions.length; i++) {
     const t = transactions[i];
     if (typeof t.chipsSent !== "number" || isNaN(t.chipsSent)) {
       errors++;
-      if (details.length < 10) details.push(`transactions[${i}].chipsSent = ${t.chipsSent}`);
+      if (details.length < 10)
+        details.push(`transactions[${i}].chipsSent = ${t.chipsSent}`);
     }
     if (typeof t.creditSent !== "number" || isNaN(t.creditSent)) {
       errors++;
-      if (details.length < 10) details.push(`transactions[${i}].creditSent = ${t.creditSent}`);
+      if (details.length < 10)
+        details.push(`transactions[${i}].creditSent = ${t.creditSent}`);
     }
   }
   for (const r of rakebacks) {
-    if (typeof r.averageRakebackPercent !== "number" || isNaN(r.averageRakebackPercent)) {
+    if (
+      typeof r.averageRakebackPercent !== "number" ||
+      isNaN(r.averageRakebackPercent)
+    ) {
       errors++;
-      if (details.length < 10) details.push(`rakebacks[${r.agentPpPokerId}].averageRakebackPercent = ${r.averageRakebackPercent}`);
+      if (details.length < 10)
+        details.push(
+          `rakebacks[${r.agentPpPokerId}].averageRakebackPercent = ${r.averageRakebackPercent}`,
+        );
     }
     if (typeof r.totalRt !== "number" || isNaN(r.totalRt)) {
       errors++;
-      if (details.length < 10) details.push(`rakebacks[${r.agentPpPokerId}].totalRt = ${r.totalRt}`);
+      if (details.length < 10)
+        details.push(`rakebacks[${r.agentPpPokerId}].totalRt = ${r.totalRt}`);
     }
   }
 
   return { errors, details };
 }
 
-function countDateErrorsWithDetails(data: ParsedImportData): { errors: number; details: string[] } {
+function countDateErrorsWithDetails(data: ParsedImportData): {
+  errors: number;
+  details: string[];
+} {
   let errors = 0;
   const details: string[] = [];
   const players = data.players || [];
@@ -1155,38 +1368,50 @@ function countDateErrorsWithDetails(data: ParsedImportData): { errors: number; d
   for (const p of players) {
     if (p.lastActiveAt && isNaN(Date.parse(p.lastActiveAt))) {
       errors++;
-      if (details.length < 10) details.push(`players[${p.ppPokerId}].lastActiveAt = "${p.lastActiveAt}"`);
+      if (details.length < 10)
+        details.push(
+          `players[${p.ppPokerId}].lastActiveAt = "${p.lastActiveAt}"`,
+        );
     }
   }
   for (let i = 0; i < transactions.length; i++) {
     const t = transactions[i];
     if (t.occurredAt && isNaN(Date.parse(t.occurredAt))) {
       errors++;
-      if (details.length < 10) details.push(`transactions[${i}].occurredAt = "${t.occurredAt}"`);
+      if (details.length < 10)
+        details.push(`transactions[${i}].occurredAt = "${t.occurredAt}"`);
     }
   }
   for (const d of demonstrativo) {
     if (d.occurredAt && isNaN(Date.parse(d.occurredAt))) {
       errors++;
-      if (details.length < 10) details.push(`demonstrativo[${d.ppPokerId}].occurredAt = "${d.occurredAt}"`);
+      if (details.length < 10)
+        details.push(
+          `demonstrativo[${d.ppPokerId}].occurredAt = "${d.occurredAt}"`,
+        );
     }
   }
   for (const s of sessions) {
     if (s.startedAt && isNaN(Date.parse(s.startedAt))) {
       errors++;
-      if (details.length < 10) details.push(`sessions[${s.externalId}].startedAt = "${s.startedAt}"`);
+      if (details.length < 10)
+        details.push(`sessions[${s.externalId}].startedAt = "${s.startedAt}"`);
     }
     if (s.endedAt && isNaN(Date.parse(s.endedAt))) {
       errors++;
-      if (details.length < 10) details.push(`sessions[${s.externalId}].endedAt = "${s.endedAt}"`);
+      if (details.length < 10)
+        details.push(`sessions[${s.externalId}].endedAt = "${s.endedAt}"`);
     }
   }
 
   return { errors, details };
 }
 
-function findDuplicateTransactionsWithDetails(transactions: ParsedTransaction[]): { duplicates: number; details: string[] } {
-  if (!transactions || transactions.length === 0) return { duplicates: 0, details: [] };
+function findDuplicateTransactionsWithDetails(
+  transactions: ParsedTransaction[],
+): { duplicates: number; details: string[] } {
+  if (!transactions || transactions.length === 0)
+    return { duplicates: 0, details: [] };
   const seen = new Map<string, number>();
   let duplicates = 0;
   const details: string[] = [];

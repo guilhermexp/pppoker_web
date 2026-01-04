@@ -19,14 +19,14 @@ import { useMemo, useState } from "react";
 
 // Import league validation tabs
 import {
+  LeagueDemonstrativoTab,
+  LeagueDetalhesDeClubeTab,
+  LeagueDetalhesDoUsuarioTab,
   LeagueGeralDaLigaTab,
   LeagueGeralDeClubeTab,
-  LeagueDetalhesDeClubeTab,
   LeaguePartidasTab,
-  LeagueTransacoesTab,
-  LeagueDemonstrativoTab,
-  LeagueDetalhesDoUsuarioTab,
   LeagueRetornoDeTaxaTab,
+  LeagueTransacoesTab,
 } from "./league-validation-tabs";
 
 // Helper to get week number from date string
@@ -395,13 +395,14 @@ export function LeagueImportValidationModal({
                 {/* Description */}
                 <div className="text-muted-foreground/70 text-[10px] italic mt-1">
                   Dados da liga completa
-                  {validationResult.period.start && validationResult.period.end && (
-                    <span className="ml-1">
-                      — Período: {validationResult.period.start} a{" "}
-                      {validationResult.period.end}
-                      {periodDays && ` (${periodDays})`}
-                    </span>
-                  )}
+                  {validationResult.period.start &&
+                    validationResult.period.end && (
+                      <span className="ml-1">
+                        — Período: {validationResult.period.start} a{" "}
+                        {validationResult.period.end}
+                        {periodDays && ` (${periodDays})`}
+                      </span>
+                    )}
                 </div>
               </div>
             );
@@ -409,7 +410,11 @@ export function LeagueImportValidationModal({
 
           {/* Actions Bar */}
           <div className="flex items-center justify-between px-6 py-3">
-            <Button variant="outline" onClick={onReject} disabled={isProcessing}>
+            <Button
+              variant="outline"
+              onClick={onReject}
+              disabled={isProcessing}
+            >
               Cancelar
             </Button>
 

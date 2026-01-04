@@ -20,7 +20,9 @@ export function AnalyticsTab({ insights }: AnalyticsTabProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-[#878787]">{insights.length} insights detectados</p>
+      <p className="text-sm text-[#878787]">
+        {insights.length} insights detectados
+      </p>
 
       <div className="space-y-3">
         {insights.map((insight) => (
@@ -41,8 +43,11 @@ export function AnalyticsTab({ insights }: AnalyticsTabProps) {
                         className="flex items-center justify-between text-sm"
                       >
                         <span className="text-[#878787]">{entity.name}</span>
-                        <span className={`font-mono ${entity.value >= 0 ? "text-[#00C969]" : ""}`}>
-                          {entity.value >= 0 ? "+" : ""}{formatCurrency(entity.value)}
+                        <span
+                          className={`font-mono ${entity.value >= 0 ? "text-[#00C969]" : ""}`}
+                        >
+                          {entity.value >= 0 ? "+" : ""}
+                          {formatCurrency(entity.value)}
                         </span>
                       </div>
                     ))}

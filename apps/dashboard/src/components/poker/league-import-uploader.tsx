@@ -1,29 +1,29 @@
 "use client";
 
-import { useI18n } from "@/locales/client";
 import type {
-  ParsedLeagueImportData,
   LeagueValidationResult,
-  ParsedLeagueSummary,
   ParsedLeagueClubRow,
+  ParsedLeagueImportData,
+  ParsedLeagueSummary,
 } from "@/lib/poker/league-types";
 import type {
+  ParsedDemonstrativo,
+  ParsedDetailed,
   ParsedPlayer,
-  ParsedTransaction,
+  ParsedRakeback,
   ParsedSession,
   ParsedSummary,
-  ParsedDetailed,
-  ParsedDemonstrativo,
-  ParsedRakeback,
+  ParsedTransaction,
 } from "@/lib/poker/types";
+import { useI18n } from "@/locales/client";
 import { cn } from "@midday/ui/cn";
 import { Skeleton } from "@midday/ui/skeleton";
 import { useToast } from "@midday/ui/use-toast";
 import { Suspense, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
-import { LeagueImportValidationModal } from "./league-import-validation-modal";
 import { ImportsList } from "./imports-list";
+import { LeagueImportValidationModal } from "./league-import-validation-modal";
 
 // Helper to convert values to numbers
 function toNumber(value: string | number | null | undefined): number {
@@ -47,7 +47,7 @@ function columnLetterToIndex(letter: string): number {
 function getCellValue(
   sheet: XLSX.Sheet,
   address: string,
-  visited: Set<string> = new Set()
+  visited: Set<string> = new Set(),
 ): number {
   if (visited.has(address)) return 0;
   visited.add(address);
@@ -57,12 +57,12 @@ function getCellValue(
 
   if (cell.v !== undefined && cell.v !== null) {
     if (typeof cell.v === "number") return cell.v;
-    const parsed = parseFloat(cell.v.replace(/,/g, "."));
+    const parsed = Number.parseFloat(cell.v.replace(/,/g, "."));
     if (!isNaN(parsed)) return parsed;
   }
 
   if (cell.w !== undefined && cell.w !== null) {
-    const parsed = parseFloat(String(cell.w).replace(/,/g, "."));
+    const parsed = Number.parseFloat(String(cell.w).replace(/,/g, "."));
     if (!isNaN(parsed)) return parsed;
   }
 
@@ -77,7 +77,7 @@ function getCellValue(
 function calculateFormula(
   sheet: XLSX.Sheet,
   formula: string,
-  visited: Set<string> = new Set()
+  visited: Set<string> = new Set(),
 ): number {
   const cleanFormula = formula.trim().replace(/^=/, "");
 
@@ -87,8 +87,8 @@ function calculateFormula(
     const [, startCol, startRowStr, endCol, endRowStr] = sumMatch;
     const startColIdx = columnLetterToIndex(startCol);
     const endColIdx = columnLetterToIndex(endCol);
-    const startRowIdx = parseInt(startRowStr, 10) - 1;
-    const endRowIdx = parseInt(endRowStr, 10) - 1;
+    const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
+    const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
 
     let sum = 0;
     for (let row = startRowIdx; row <= endRowIdx; row++) {
@@ -101,13 +101,15 @@ function calculateFormula(
   }
 
   // SUBTOTAL(9,range) - same as SUM
-  const subtotalMatch = cleanFormula.match(/^SUBTOTAL\s*\(\s*\d+\s*,\s*([A-Z]+)(\d+):([A-Z]+)(\d+)\s*\)$/i);
+  const subtotalMatch = cleanFormula.match(
+    /^SUBTOTAL\s*\(\s*\d+\s*,\s*([A-Z]+)(\d+):([A-Z]+)(\d+)\s*\)$/i,
+  );
   if (subtotalMatch) {
     const [, startCol, startRowStr, endCol, endRowStr] = subtotalMatch;
     const startColIdx = columnLetterToIndex(startCol);
     const endColIdx = columnLetterToIndex(endCol);
-    const startRowIdx = parseInt(startRowStr, 10) - 1;
-    const endRowIdx = parseInt(endRowStr, 10) - 1;
+    const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
+    const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
 
     let sum = 0;
     for (let row = startRowIdx; row <= endRowIdx; row++) {
@@ -120,14 +122,16 @@ function calculateFormula(
   }
 
   // Simple SUM with single column range like SUM(G:G) or SUM(G5:G999)
-  const colSumMatch = cleanFormula.match(/^SUM\(([A-Z]+)(?:(\d+))?:([A-Z]+)(?:(\d+))?\)$/i);
+  const colSumMatch = cleanFormula.match(
+    /^SUM\(([A-Z]+)(?:(\d+))?:([A-Z]+)(?:(\d+))?\)$/i,
+  );
   if (colSumMatch) {
     const [, startCol, startRowStr, endCol, endRowStr] = colSumMatch;
     if (startCol === endCol) {
       const colIdx = columnLetterToIndex(startCol);
       const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
-      const startRow = startRowStr ? parseInt(startRowStr, 10) - 1 : 0;
-      const endRow = endRowStr ? parseInt(endRowStr, 10) - 1 : range.e.r;
+      const startRow = startRowStr ? Number.parseInt(startRowStr, 10) - 1 : 0;
+      const endRow = endRowStr ? Number.parseInt(endRowStr, 10) - 1 : range.e.r;
 
       let sum = 0;
       for (let row = startRow; row <= endRow; row++) {
@@ -150,11 +154,14 @@ function calculateFormula(
     const trueVal = ifMatch[2].trim();
     const cellRef = trueVal.match(/^([A-Z]+)(\d+)$/i);
     if (cellRef) {
-      const addr = XLSX.utils.encode_cell({ r: parseInt(cellRef[2], 10) - 1, c: columnLetterToIndex(cellRef[1]) });
+      const addr = XLSX.utils.encode_cell({
+        r: Number.parseInt(cellRef[2], 10) - 1,
+        c: columnLetterToIndex(cellRef[1]),
+      });
       return getCellValue(sheet, addr, new Set(visited));
     }
     // Try as number
-    const num = parseFloat(trueVal);
+    const num = Number.parseFloat(trueVal);
     if (!isNaN(num)) return num;
     return 0;
   }
@@ -164,13 +171,15 @@ function calculateFormula(
   if (cellRefMatch) {
     const [, col, rowStr] = cellRefMatch;
     const colIdx = columnLetterToIndex(col);
-    const rowIdx = parseInt(rowStr, 10) - 1;
+    const rowIdx = Number.parseInt(rowStr, 10) - 1;
     const addr = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
     return getCellValue(sheet, addr, visited);
   }
 
   // Multiple cell arithmetic: A1+B1+C1 or A1-B1-C1 or A1+B1-C1 etc
-  const multiArithMatch = cleanFormula.match(/^([A-Z]+\d+(?:\s*[+\-]\s*[A-Z]+\d+)+)$/i);
+  const multiArithMatch = cleanFormula.match(
+    /^([A-Z]+\d+(?:\s*[+\-]\s*[A-Z]+\d+)+)$/i,
+  );
   if (multiArithMatch) {
     const parts = cleanFormula.split(/([+\-])/);
     let result = 0;
@@ -183,7 +192,10 @@ function calculateFormula(
       } else {
         const ref = trimmed.match(/^([A-Z]+)(\d+)$/i);
         if (ref) {
-          const addr = XLSX.utils.encode_cell({ r: parseInt(ref[2], 10) - 1, c: columnLetterToIndex(ref[1]) });
+          const addr = XLSX.utils.encode_cell({
+            r: Number.parseInt(ref[2], 10) - 1,
+            c: columnLetterToIndex(ref[1]),
+          });
           const val = getCellValue(sheet, addr, new Set(visited));
           result = currentOp === "+" ? result + val : result - val;
         }
@@ -193,22 +205,38 @@ function calculateFormula(
   }
 
   // Simple arithmetic: A1+B1 or A1-B1
-  const arithmeticMatch = cleanFormula.match(/^([A-Z]+)(\d+)\s*([+\-])\s*([A-Z]+)(\d+)$/i);
+  const arithmeticMatch = cleanFormula.match(
+    /^([A-Z]+)(\d+)\s*([+\-])\s*([A-Z]+)(\d+)$/i,
+  );
   if (arithmeticMatch) {
     const [, col1, row1, op, col2, row2] = arithmeticMatch;
-    const addr1 = XLSX.utils.encode_cell({ r: parseInt(row1, 10) - 1, c: columnLetterToIndex(col1) });
-    const addr2 = XLSX.utils.encode_cell({ r: parseInt(row2, 10) - 1, c: columnLetterToIndex(col2) });
+    const addr1 = XLSX.utils.encode_cell({
+      r: Number.parseInt(row1, 10) - 1,
+      c: columnLetterToIndex(col1),
+    });
+    const addr2 = XLSX.utils.encode_cell({
+      r: Number.parseInt(row2, 10) - 1,
+      c: columnLetterToIndex(col2),
+    });
     const val1 = getCellValue(sheet, addr1, new Set(visited));
     const val2 = getCellValue(sheet, addr2, new Set(visited));
     return op === "+" ? val1 + val2 : val1 - val2;
   }
 
   // Multiplication/Division: A1*B1 or A1/B1
-  const multDivMatch = cleanFormula.match(/^([A-Z]+)(\d+)\s*([*\/])\s*([A-Z]+)(\d+)$/i);
+  const multDivMatch = cleanFormula.match(
+    /^([A-Z]+)(\d+)\s*([*\/])\s*([A-Z]+)(\d+)$/i,
+  );
   if (multDivMatch) {
     const [, col1, row1, op, col2, row2] = multDivMatch;
-    const addr1 = XLSX.utils.encode_cell({ r: parseInt(row1, 10) - 1, c: columnLetterToIndex(col1) });
-    const addr2 = XLSX.utils.encode_cell({ r: parseInt(row2, 10) - 1, c: columnLetterToIndex(col2) });
+    const addr1 = XLSX.utils.encode_cell({
+      r: Number.parseInt(row1, 10) - 1,
+      c: columnLetterToIndex(col1),
+    });
+    const addr2 = XLSX.utils.encode_cell({
+      r: Number.parseInt(row2, 10) - 1,
+      c: columnLetterToIndex(col2),
+    });
     const val1 = getCellValue(sheet, addr1, new Set(visited));
     const val2 = getCellValue(sheet, addr2, new Set(visited));
     if (op === "*") return val1 * val2;
@@ -217,21 +245,29 @@ function calculateFormula(
   }
 
   // Number with cell: A1*100 or 100*A1 or A1/100
-  const numCellMatch = cleanFormula.match(/^(?:([A-Z]+)(\d+)\s*([*\/])\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*([*\/])\s*([A-Z]+)(\d+))$/i);
+  const numCellMatch = cleanFormula.match(
+    /^(?:([A-Z]+)(\d+)\s*([*\/])\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*([*\/])\s*([A-Z]+)(\d+))$/i,
+  );
   if (numCellMatch) {
     if (numCellMatch[1]) {
       // Cell first: A1*100
-      const addr = XLSX.utils.encode_cell({ r: parseInt(numCellMatch[2], 10) - 1, c: columnLetterToIndex(numCellMatch[1]) });
+      const addr = XLSX.utils.encode_cell({
+        r: Number.parseInt(numCellMatch[2], 10) - 1,
+        c: columnLetterToIndex(numCellMatch[1]),
+      });
       const cellVal = getCellValue(sheet, addr, new Set(visited));
-      const num = parseFloat(numCellMatch[4]);
+      const num = Number.parseFloat(numCellMatch[4]);
       const op = numCellMatch[3];
       if (op === "*") return cellVal * num;
       if (op === "/" && num !== 0) return cellVal / num;
     } else {
       // Number first: 100*A1
-      const addr = XLSX.utils.encode_cell({ r: parseInt(numCellMatch[8], 10) - 1, c: columnLetterToIndex(numCellMatch[7]) });
+      const addr = XLSX.utils.encode_cell({
+        r: Number.parseInt(numCellMatch[8], 10) - 1,
+        c: columnLetterToIndex(numCellMatch[7]),
+      });
       const cellVal = getCellValue(sheet, addr, new Set(visited));
-      const num = parseFloat(numCellMatch[5]);
+      const num = Number.parseFloat(numCellMatch[5]);
       const op = numCellMatch[6];
       if (op === "*") return num * cellVal;
       if (op === "/" && cellVal !== 0) return num / cellVal;
@@ -240,7 +276,7 @@ function calculateFormula(
   }
 
   // Plain number
-  const plainNum = parseFloat(cleanFormula);
+  const plainNum = Number.parseFloat(cleanFormula);
   if (!isNaN(plainNum)) return plainNum;
 
   return 0;
@@ -250,8 +286,8 @@ function calculateFormula(
 function parseSheetByPosition(
   sheet: XLSX.Sheet,
   columnMap: Record<string, number>,
-  headerRows: number = 4,
-  rowFilter?: (rowData: Record<string, any>) => boolean
+  headerRows = 4,
+  rowFilter?: (rowData: Record<string, any>) => boolean,
 ): any[] {
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
   const result: any[] = [];
@@ -277,7 +313,7 @@ function parseSheetByPosition(
         // Priority 3: Try formatted text value
         else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
           const trimmed = String(cell.w).trim().replace(/,/g, ".");
-          const parsed = parseFloat(trimmed);
+          const parsed = Number.parseFloat(trimmed);
           value = !isNaN(parsed) ? parsed : cell.w;
         }
 
@@ -319,66 +355,66 @@ function parseSheetByPosition(
 // Note: Multiple clubs in the same sheet - Column A identifies which club each player belongs to
 const GERAL_COLUMNS = {
   // Section 1: Player Info (A-I)
-  clubIdentifier: 0,           // A: Club name with ID (e.g., "C.P.C. OnLine (962181)") - merged cells
-  ppPokerId: 1,                // B: ID do jogador
-  country: 2,                  // C: País/região
-  nickname: 3,                 // D: Apelido
-  memoName: 4,                 // E: Nome de memorando
-  agentNickname: 5,            // F: Agente
-  agentPpPokerId: 6,           // G: ID do agente
-  superAgentNickname: 7,       // H: Superagente
-  superAgentPpPokerId: 8,      // I: ID do superagente
+  clubIdentifier: 0, // A: Club name with ID (e.g., "C.P.C. OnLine (962181)") - merged cells
+  ppPokerId: 1, // B: ID do jogador
+  country: 2, // C: País/região
+  nickname: 3, // D: Apelido
+  memoName: 4, // E: Nome de memorando
+  agentNickname: 5, // F: Agente
+  agentPpPokerId: 6, // G: ID do agente
+  superAgentNickname: 7, // H: Superagente
+  superAgentPpPokerId: 8, // I: ID do superagente
 
   // Section 2: Player Winnings Summary (J)
-  playerWinningsTotal: 9,      // J: Ganhos de jogador gerais (FORMULA: SUM(K:O) or similar)
+  playerWinningsTotal: 9, // J: Ganhos de jogador gerais (FORMULA: SUM(K:O) or similar)
 
   // Section 3: Classifications (K-N)
-  classificationPpsr: 10,      // K: Classificação PPSR
-  classificationRing: 11,      // L: Classificação Ring Game
+  classificationPpsr: 10, // K: Classificação PPSR
+  classificationRing: 11, // L: Classificação Ring Game
   classificationCustomRing: 12, // M: Classificação de RG Personalizado
-  classificationMtt: 13,       // N: Classificação MTT
+  classificationMtt: 13, // N: Classificação MTT
 
   // Section 4: Player Earnings by Game Type (O-X) - "Ganhos do jogador" sub-columns
-  generalTotal: 14,            // O: Geral (total)
-  ringGamesTotal: 15,          // P: Ring Games
-  mttSitNGoTotal: 16,          // Q: MTT, SitNGo
-  spinUpTotal: 17,             // R: SPINUP
-  caribbeanTotal: 18,          // S: Caribbean+ Poker
-  colorGameTotal: 19,          // T: COLOR GAME
-  crashTotal: 20,              // U: CRASH
-  luckyDrawTotal: 21,          // V: LUCKY DRAW
-  jackpotTotal: 22,            // W: Jackpot
-  evSplitTotal: 23,            // X: Dividir EV
+  generalTotal: 14, // O: Geral (total)
+  ringGamesTotal: 15, // P: Ring Games
+  mttSitNGoTotal: 16, // Q: MTT, SitNGo
+  spinUpTotal: 17, // R: SPINUP
+  caribbeanTotal: 18, // S: Caribbean+ Poker
+  colorGameTotal: 19, // T: COLOR GAME
+  crashTotal: 20, // U: CRASH
+  luckyDrawTotal: 21, // V: LUCKY DRAW
+  jackpotTotal: 22, // W: Jackpot
+  evSplitTotal: 23, // X: Dividir EV
 
   // Section 5: Tickets (Y-AA)
-  ticketValueWon: 24,          // Y: Valor do ticket ganho
-  ticketBuyIn: 25,             // Z: Buy-in de ticket
-  customPrizeValue: 26,        // AA: Valor do prêmio personalizado
+  ticketValueWon: 24, // Y: Valor do ticket ganho
+  ticketBuyIn: 25, // Z: Buy-in de ticket
+  customPrizeValue: 26, // AA: Valor do prêmio personalizado
 
   // Section 6: Club Earnings (AB-AT) - "Ganhos do clube" sub-columns
-  feeGeneral: 27,              // AB: Geral (total)
-  fee: 28,                     // AC: Taxa
-  feePpst: 29,                 // AD: Taxa (jogos PPST)
-  feeNonPpst: 30,              // AE: Taxa (jogos não PPST)
-  feePpsr: 31,                 // AF: Taxa (jogos PPSR)
-  feeNonPpsr: 32,              // AG: Taxa (jogos não PPSR)
-  spinUpBuyIn: 33,             // AH: Buy-in de SPINUP
-  spinUpPrize: 34,             // AI: Premiação de SPINUP
-  caribbeanBets: 35,           // AJ: Apostas de Caribbean+ Poker
-  caribbeanPrize: 36,          // AK: Premiação de Caribbean+ Poker
-  colorGameBets: 37,           // AL: Apostas do COLOR GAME
-  colorGamePrize: 38,          // AM: Premiação do COLOR GAME
-  crashBets: 39,               // AN: Apostas (CRASH)
-  crashPrize: 40,              // AO: Prêmios (CRASH)
-  luckyDrawBets: 41,           // AP: Apostas de LUCKY DRAW
-  luckyDrawPrize: 42,          // AQ: Premiação de LUCKY DRAW
-  jackpotFee: 43,              // AR: Taxa do Jackpot
-  jackpotPrize: 44,            // AS: Prêmios Jackpot
-  evSplit: 45,                 // AT: Dividir EV
+  feeGeneral: 27, // AB: Geral (total)
+  fee: 28, // AC: Taxa
+  feePpst: 29, // AD: Taxa (jogos PPST)
+  feeNonPpst: 30, // AE: Taxa (jogos não PPST)
+  feePpsr: 31, // AF: Taxa (jogos PPSR)
+  feeNonPpsr: 32, // AG: Taxa (jogos não PPSR)
+  spinUpBuyIn: 33, // AH: Buy-in de SPINUP
+  spinUpPrize: 34, // AI: Premiação de SPINUP
+  caribbeanBets: 35, // AJ: Apostas de Caribbean+ Poker
+  caribbeanPrize: 36, // AK: Premiação de Caribbean+ Poker
+  colorGameBets: 37, // AL: Apostas do COLOR GAME
+  colorGamePrize: 38, // AM: Premiação do COLOR GAME
+  crashBets: 39, // AN: Apostas (CRASH)
+  crashPrize: 40, // AO: Prêmios (CRASH)
+  luckyDrawBets: 41, // AP: Apostas de LUCKY DRAW
+  luckyDrawPrize: 42, // AQ: Premiação de LUCKY DRAW
+  jackpotFee: 43, // AR: Taxa do Jackpot
+  jackpotPrize: 44, // AS: Prêmios Jackpot
+  evSplit: 45, // AT: Dividir EV
 
   // Section 7: Final Tickets (AU-AV)
-  ticketDeliveredValue: 46,    // AU: Valor do ticket entregue
-  ticketDeliveredBuyIn: 47,    // AV: Buy-in de ticket
+  ticketDeliveredValue: 46, // AU: Valor do ticket entregue
+  ticketDeliveredBuyIn: 47, // AV: Buy-in de ticket
   // AW(48) = empty/unused
 };
 
@@ -387,72 +423,97 @@ const GERAL_COLUMNS = {
 // Lines 1-2: Description, Line 3: Section headers (merged), Line 4: Column headers, Line 5+: Data
 const GERAL_DE_LIGA_COLUMNS = {
   // Section 1: Club Info (B-C) - Column A is period info
-  clubName: 1,                    // B: Nome do Clube
-  clubId: 2,                      // C: ID de clube
+  clubName: 1, // B: Nome do Clube
+  clubId: 2, // C: ID de clube
 
   // Section 2: Classifications (D-G)
-  classificationPpsr: 3,          // D: Classificação PPSR
-  classificationRingGame: 4,      // E: Classificação Ring Game
-  classificationRgCustom: 5,      // F: Classificação de RG Personalizado
-  classificationMtt: 6,           // G: Classificação MTT
+  classificationPpsr: 3, // D: Classificação PPSR
+  classificationRingGame: 4, // E: Classificação Ring Game
+  classificationRgCustom: 5, // F: Classificação de RG Personalizado
+  classificationMtt: 6, // G: Classificação MTT
 
   // Section 3: Player Earnings - Ganhos do jogador (H-Q)
   // H = SUM(I:Q), so H is the total (index 7)
-  playerEarningsGeneral: 7,       // H: Geral (formula: SUM of I:Q)
-  playerEarningsRingGames: 8,     // I: Ring Games
-  playerEarningsMttSitNGo: 9,     // J: MTT, SitNGo
-  playerEarningsSpinUp: 10,       // K: SPINUP
+  playerEarningsGeneral: 7, // H: Geral (formula: SUM of I:Q)
+  playerEarningsRingGames: 8, // I: Ring Games
+  playerEarningsMttSitNGo: 9, // J: MTT, SitNGo
+  playerEarningsSpinUp: 10, // K: SPINUP
   playerEarningsCaribbeanPoker: 11, // L: Caribbean+ Poker
-  playerEarningsColorGame: 12,    // M: COLOR GAME
-  playerEarningsCrash: 13,        // N: CRASH
-  playerEarningsLuckyDraw: 14,    // O: LUCKY DRAW
-  playerEarningsJackpot: 15,      // P: Jackpot
-  playerEarningsSplitEv: 16,      // Q: Dividir EV
+  playerEarningsColorGame: 12, // M: COLOR GAME
+  playerEarningsCrash: 13, // N: CRASH
+  playerEarningsLuckyDraw: 14, // O: LUCKY DRAW
+  playerEarningsJackpot: 15, // P: Jackpot
+  playerEarningsSplitEv: 16, // Q: Dividir EV
 
   // Section 4: Ticket/Prize (R-T)
-  ticketValueWon: 17,             // R: Valor do ticket ganho
-  ticketBuyInPlayer: 18,          // S: Buy-in de ticket
-  customPrizeValue: 19,           // T: Valor do prêmio personalizado
+  ticketValueWon: 17, // R: Valor do ticket ganho
+  ticketBuyInPlayer: 18, // S: Buy-in de ticket
+  customPrizeValue: 19, // T: Valor do prêmio personalizado
 
   // Section 5: Club Earnings - Ganhos do clube (U-AM)
-  clubEarningsGeneral: 20,        // U: Geral
-  clubEarningsFee: 21,            // V: Taxa
-  clubEarningsFeePpst: 22,        // W: Taxa (jogos PPST)
-  clubEarningsFeeNonPpst: 23,     // X: Taxa (jogos não PPST)
-  clubEarningsFeePpsr: 24,        // Y: Taxa (jogos PPSR)
-  clubEarningsFeeNonPpsr: 25,     // Z: Taxa (jogos não PPSR)
-  clubEarningsSpinUpBuyIn: 26,    // AA: Buy-in de SPINUP
-  clubEarningsSpinUpPrize: 27,    // AB: Premiação de SPINUP
-  clubEarningsCaribbeanBets: 28,  // AC: Apostas de Caribbean+ Poker
+  clubEarningsGeneral: 20, // U: Geral
+  clubEarningsFee: 21, // V: Taxa
+  clubEarningsFeePpst: 22, // W: Taxa (jogos PPST)
+  clubEarningsFeeNonPpst: 23, // X: Taxa (jogos não PPST)
+  clubEarningsFeePpsr: 24, // Y: Taxa (jogos PPSR)
+  clubEarningsFeeNonPpsr: 25, // Z: Taxa (jogos não PPSR)
+  clubEarningsSpinUpBuyIn: 26, // AA: Buy-in de SPINUP
+  clubEarningsSpinUpPrize: 27, // AB: Premiação de SPINUP
+  clubEarningsCaribbeanBets: 28, // AC: Apostas de Caribbean+ Poker
   clubEarningsCaribbeanPrize: 29, // AD: Premiação de Caribbean+ Poker
-  clubEarningsColorGameBets: 30,  // AE: Apostas do COLOR GAME
+  clubEarningsColorGameBets: 30, // AE: Apostas do COLOR GAME
   clubEarningsColorGamePrize: 31, // AF: Premiação do COLOR GAME
-  clubEarningsCrashBets: 32,      // AG: Apostas (CRASH)
-  clubEarningsCrashPrize: 33,     // AH: Prêmios (CRASH)
-  clubEarningsLuckyDrawBets: 34,  // AI: Apostas de LUCKY DRAW
+  clubEarningsCrashBets: 32, // AG: Apostas (CRASH)
+  clubEarningsCrashPrize: 33, // AH: Prêmios (CRASH)
+  clubEarningsLuckyDrawBets: 34, // AI: Apostas de LUCKY DRAW
   clubEarningsLuckyDrawPrize: 35, // AJ: Premiação de LUCKY DRAW
-  clubEarningsJackpotFee: 36,     // AK: Taxa do Jackpot
-  clubEarningsJackpotPrize: 37,   // AL: Prêmios Jackpot
-  clubEarningsSplitEv: 38,        // AM: Dividir EV
+  clubEarningsJackpotFee: 36, // AK: Taxa do Jackpot
+  clubEarningsJackpotPrize: 37, // AL: Prêmios Jackpot
+  clubEarningsSplitEv: 38, // AM: Dividir EV
 
   // Section 6: Final Ticket/Gap (AN-AQ)
-  ticketDeliveredValue: 39,       // AN: Valor do ticket entregue
-  ticketDeliveredBuyIn: 40,       // AO: Buy-in de ticket
-  guaranteedGap: 41,              // AP/AQ: Gap garantido
+  ticketDeliveredValue: 39, // AN: Valor do ticket entregue
+  ticketDeliveredBuyIn: 40, // AO: Buy-in de ticket
+  guaranteedGap: 41, // AP/AQ: Gap garantido
 };
 
 const USER_DETAILS_COLUMNS = {
-  lastActiveAt: 0, ppPokerId: 1, country: 2, nickname: 3, memoName: 4, chipBalance: 5,
-  agentNickname: 6, agentPpPokerId: 7, agentCreditBalance: 8, superAgentNickname: 9,
-  superAgentPpPokerId: 10, superAgentCreditBalance: 11,
+  lastActiveAt: 0,
+  ppPokerId: 1,
+  country: 2,
+  nickname: 3,
+  memoName: 4,
+  chipBalance: 5,
+  agentNickname: 6,
+  agentPpPokerId: 7,
+  agentCreditBalance: 8,
+  superAgentNickname: 9,
+  superAgentPpPokerId: 10,
+  superAgentCreditBalance: 11,
 };
 
 const TRANSACOES_COLUMNS = {
-  occurredAt: 0, senderClubId: 1, senderPlayerId: 2, senderNickname: 3, senderMemoName: 4,
-  recipientPlayerId: 5, recipientNickname: 6, recipientMemoName: 7, creditSent: 8, creditRedeemed: 9,
-  creditLeftClub: 10, chipsSent: 11, classificationPpsr: 12, classificationRing: 13,
-  classificationCustomRing: 14, classificationMtt: 15, chipsRedeemed: 16, chipsLeftClub: 17,
-  ticketSent: 18, ticketRedeemed: 19, ticketExpired: 20,
+  occurredAt: 0,
+  senderClubId: 1,
+  senderPlayerId: 2,
+  senderNickname: 3,
+  senderMemoName: 4,
+  recipientPlayerId: 5,
+  recipientNickname: 6,
+  recipientMemoName: 7,
+  creditSent: 8,
+  creditRedeemed: 9,
+  creditLeftClub: 10,
+  chipsSent: 11,
+  classificationPpsr: 12,
+  classificationRing: 13,
+  classificationCustomRing: 14,
+  classificationMtt: 15,
+  chipsRedeemed: 16,
+  chipsLeftClub: 17,
+  ticketSent: 18,
+  ticketRedeemed: 19,
+  ticketExpired: 20,
 };
 
 // Helper to parse club identifier from multiline format:
@@ -467,10 +528,20 @@ type ParsedClubInfo = {
 };
 
 function parseClubIdentifier(identifier: string | null): ParsedClubInfo {
-  if (!identifier) return { clubName: null, clubId: null, periodStart: null, periodEnd: null, utcOffset: null };
+  if (!identifier)
+    return {
+      clubName: null,
+      clubId: null,
+      periodStart: null,
+      periodEnd: null,
+      utcOffset: null,
+    };
 
   const str = String(identifier).trim();
-  const lines = str.split(/\n/).map(l => l.trim()).filter(l => l && l !== "-");
+  const lines = str
+    .split(/\n/)
+    .map((l) => l.trim())
+    .filter((l) => l && l !== "-");
 
   let clubName: string | null = null;
   let clubId: string | null = null;
@@ -524,7 +595,11 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
   // Build a map of merged cells in column A to find club identifiers
   // Merged cells have value only in the first cell of the merge
   const merges = sheet["!merges"] || [];
-  const clubRanges: Array<{ startRow: number; endRow: number; identifier: string }> = [];
+  const clubRanges: Array<{
+    startRow: number;
+    endRow: number;
+    identifier: string;
+  }> = [];
 
   // Find all merged cells in column A (column 0)
   for (const merge of merges) {
@@ -549,9 +624,12 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
   console.log("=== DEBUG Geral de Clube - Merged cells in column A ===");
   console.log(`Found ${clubRanges.length} club ranges from merged cells`);
   clubRanges.slice(0, 10).forEach((c, i) => {
-    console.log(`Club ${i + 1}: rows ${c.startRow}-${c.endRow}, name="${c.identifier.substring(0, 40)}"`);
+    console.log(
+      `Club ${i + 1}: rows ${c.startRow}-${c.endRow}, name="${c.identifier.substring(0, 40)}"`,
+    );
   });
-  if (clubRanges.length > 10) console.log(`... and ${clubRanges.length - 10} more`);
+  if (clubRanges.length > 10)
+    console.log(`... and ${clubRanges.length - 10} more`);
   console.log("=== END DEBUG ===");
 
   // Helper to find club identifier for a given row
@@ -582,7 +660,7 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
           value = calculateFormula(sheet, cell.f, new Set());
         } else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
           const trimmed = String(cell.w).trim().replace(/,/g, ".");
-          const parsed = parseFloat(trimmed);
+          const parsed = Number.parseFloat(trimmed);
           value = !isNaN(parsed) ? parsed : cell.w;
         }
 
@@ -607,7 +685,9 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
 
     // Skip "Total" rows - these are club summary rows, not player rows
     // Check if superAgentPpPokerId (column I) contains "Total"
-    const superAgentValue = String(rowData.superAgentPpPokerId || "").toLowerCase();
+    const superAgentValue = String(
+      rowData.superAgentPpPokerId || "",
+    ).toLowerCase();
     if (superAgentValue === "total" || superAgentValue === "totais") {
       continue;
     }
@@ -640,9 +720,13 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
       nickname: rowData.nickname || "",
       memoName: rowData.memoName || null,
       agentNickname: rowData.agentNickname || null,
-      agentPpPokerId: rowData.agentPpPokerId ? String(rowData.agentPpPokerId) : null,
+      agentPpPokerId: rowData.agentPpPokerId
+        ? String(rowData.agentPpPokerId)
+        : null,
       superAgentNickname: rowData.superAgentNickname || null,
-      superAgentPpPokerId: rowData.superAgentPpPokerId ? String(rowData.superAgentPpPokerId) : null,
+      superAgentPpPokerId: rowData.superAgentPpPokerId
+        ? String(rowData.superAgentPpPokerId)
+        : null,
       // Classifications and earnings
       playerWinningsTotal: toNumber(rowData.playerWinningsTotal),
       classificationPpsr: toNumber(rowData.classificationPpsr),
@@ -700,21 +784,22 @@ function parseUserDetailsSheet(sheet: XLSX.Sheet): ParsedPlayer[] {
     agentNickname: row.agentNickname || null,
     agentPpPokerId: row.agentPpPokerId ? String(row.agentPpPokerId) : null,
     superAgentNickname: row.superAgentNickname || null,
-    superAgentPpPokerId: row.superAgentPpPokerId ? String(row.superAgentPpPokerId) : null,
-    chipBalance: parseFloat(row.chipBalance || 0),
-    agentCreditBalance: parseFloat(row.agentCreditBalance || 0),
-    superAgentCreditBalance: parseFloat(row.superAgentCreditBalance || 0),
+    superAgentPpPokerId: row.superAgentPpPokerId
+      ? String(row.superAgentPpPokerId)
+      : null,
+    chipBalance: Number.parseFloat(row.chipBalance || 0),
+    agentCreditBalance: Number.parseFloat(row.agentCreditBalance || 0),
+    superAgentCreditBalance: Number.parseFloat(
+      row.superAgentCreditBalance || 0,
+    ),
     lastActiveAt: row.lastActiveAt || null,
   }));
 }
 
 // Parse Transactions sheet
 function parseTransacoesSheet(sheet: XLSX.Sheet): ParsedTransaction[] {
-  const rawData = parseSheetByPosition(
-    sheet,
-    TRANSACOES_COLUMNS,
-    3,
-    (row) => Boolean(row.occurredAt)
+  const rawData = parseSheetByPosition(sheet, TRANSACOES_COLUMNS, 3, (row) =>
+    Boolean(row.occurredAt),
   );
   return rawData.map((row) => ({
     occurredAt: row.occurredAt ? String(row.occurredAt) : "",
@@ -726,7 +811,9 @@ function parseTransacoesSheet(sheet: XLSX.Sheet): ParsedTransaction[] {
     senderPlayerId: row.senderPlayerId ? String(row.senderPlayerId) : null,
     recipientNickname: row.recipientNickname || null,
     recipientMemoName: row.recipientMemoName || null,
-    recipientPlayerId: row.recipientPlayerId ? String(row.recipientPlayerId) : null,
+    recipientPlayerId: row.recipientPlayerId
+      ? String(row.recipientPlayerId)
+      : null,
     creditSent: toNumber(row.creditSent),
     creditRedeemed: toNumber(row.creditRedeemed),
     creditLeftClub: toNumber(row.creditLeftClub),
@@ -757,7 +844,9 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
   for (let r = 0; r <= Math.min(range.e.r, 20); r++) {
     const cell = sheet[XLSX.utils.encode_cell({ r, c: 0 })];
     if (cell && cell.v) {
-      const match = String(cell.v).match(/(\d{4}\/\d{2}\/\d{2})\s*UTC\s*(-?\d+)/i);
+      const match = String(cell.v).match(
+        /(\d{4}\/\d{2}\/\d{2})\s*UTC\s*(-?\d+)/i,
+      );
       if (match) {
         periodDate = match[1];
         periodUtcOffset = match[2];
@@ -791,7 +880,7 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
         // Priority 3: Try formatted text value
         else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
           const trimmed = String(cell.w).trim().replace(/,/g, ".");
-          const parsed = parseFloat(trimmed);
+          const parsed = Number.parseFloat(trimmed);
           value = !isNaN(parsed) ? parsed : cell.w;
         }
 
@@ -811,9 +900,18 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
     if (!rowData.clubId || rowData.clubId === null) continue;
 
     // Skip "Total" summary row (check both name and if ID looks like "Total")
-    const clubNameLower = String(rowData.clubName || "").toLowerCase().trim();
-    const clubIdStr = String(rowData.clubId || "").toLowerCase().trim();
-    if (clubNameLower === "total" || clubNameLower === "totais" || clubIdStr === "total") continue;
+    const clubNameLower = String(rowData.clubName || "")
+      .toLowerCase()
+      .trim();
+    const clubIdStr = String(rowData.clubId || "")
+      .toLowerCase()
+      .trim();
+    if (
+      clubNameLower === "total" ||
+      clubNameLower === "totais" ||
+      clubIdStr === "total"
+    )
+      continue;
 
     // Build parsed club row with all 42 columns
     const clubRow: ParsedLeagueClubRow = {
@@ -832,7 +930,9 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
       playerEarningsRingGames: toNumber(rowData.playerEarningsRingGames),
       playerEarningsMttSitNGo: toNumber(rowData.playerEarningsMttSitNGo),
       playerEarningsSpinUp: toNumber(rowData.playerEarningsSpinUp),
-      playerEarningsCaribbeanPoker: toNumber(rowData.playerEarningsCaribbeanPoker),
+      playerEarningsCaribbeanPoker: toNumber(
+        rowData.playerEarningsCaribbeanPoker,
+      ),
       playerEarningsColorGame: toNumber(rowData.playerEarningsColorGame),
       playerEarningsCrash: toNumber(rowData.playerEarningsCrash),
       playerEarningsLuckyDraw: toNumber(rowData.playerEarningsLuckyDraw),
@@ -882,52 +982,160 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
     totalClubs: clubs.length,
 
     // Classifications totals
-    totalClassificationPpsr: clubs.reduce((sum, c) => sum + c.classificationPpsr, 0),
-    totalClassificationRingGame: clubs.reduce((sum, c) => sum + c.classificationRingGame, 0),
-    totalClassificationRgCustom: clubs.reduce((sum, c) => sum + c.classificationRgCustom, 0),
-    totalClassificationMtt: clubs.reduce((sum, c) => sum + c.classificationMtt, 0),
+    totalClassificationPpsr: clubs.reduce(
+      (sum, c) => sum + c.classificationPpsr,
+      0,
+    ),
+    totalClassificationRingGame: clubs.reduce(
+      (sum, c) => sum + c.classificationRingGame,
+      0,
+    ),
+    totalClassificationRgCustom: clubs.reduce(
+      (sum, c) => sum + c.classificationRgCustom,
+      0,
+    ),
+    totalClassificationMtt: clubs.reduce(
+      (sum, c) => sum + c.classificationMtt,
+      0,
+    ),
 
     // Player earnings totals
-    totalPlayerEarningsGeneral: clubs.reduce((sum, c) => sum + c.playerEarningsGeneral, 0),
-    totalPlayerEarningsRingGames: clubs.reduce((sum, c) => sum + c.playerEarningsRingGames, 0),
-    totalPlayerEarningsMttSitNGo: clubs.reduce((sum, c) => sum + c.playerEarningsMttSitNGo, 0),
-    totalPlayerEarningsSpinUp: clubs.reduce((sum, c) => sum + c.playerEarningsSpinUp, 0),
-    totalPlayerEarningsCaribbeanPoker: clubs.reduce((sum, c) => sum + c.playerEarningsCaribbeanPoker, 0),
-    totalPlayerEarningsColorGame: clubs.reduce((sum, c) => sum + c.playerEarningsColorGame, 0),
-    totalPlayerEarningsCrash: clubs.reduce((sum, c) => sum + c.playerEarningsCrash, 0),
-    totalPlayerEarningsLuckyDraw: clubs.reduce((sum, c) => sum + c.playerEarningsLuckyDraw, 0),
-    totalPlayerEarningsJackpot: clubs.reduce((sum, c) => sum + c.playerEarningsJackpot, 0),
-    totalPlayerEarningsSplitEv: clubs.reduce((sum, c) => sum + c.playerEarningsSplitEv, 0),
+    totalPlayerEarningsGeneral: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsGeneral,
+      0,
+    ),
+    totalPlayerEarningsRingGames: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsRingGames,
+      0,
+    ),
+    totalPlayerEarningsMttSitNGo: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsMttSitNGo,
+      0,
+    ),
+    totalPlayerEarningsSpinUp: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsSpinUp,
+      0,
+    ),
+    totalPlayerEarningsCaribbeanPoker: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsCaribbeanPoker,
+      0,
+    ),
+    totalPlayerEarningsColorGame: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsColorGame,
+      0,
+    ),
+    totalPlayerEarningsCrash: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsCrash,
+      0,
+    ),
+    totalPlayerEarningsLuckyDraw: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsLuckyDraw,
+      0,
+    ),
+    totalPlayerEarningsJackpot: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsJackpot,
+      0,
+    ),
+    totalPlayerEarningsSplitEv: clubs.reduce(
+      (sum, c) => sum + c.playerEarningsSplitEv,
+      0,
+    ),
 
     // Ticket/Prize totals
     totalTicketValueWon: clubs.reduce((sum, c) => sum + c.ticketValueWon, 0),
-    totalTicketBuyInPlayer: clubs.reduce((sum, c) => sum + c.ticketBuyInPlayer, 0),
-    totalCustomPrizeValue: clubs.reduce((sum, c) => sum + c.customPrizeValue, 0),
+    totalTicketBuyInPlayer: clubs.reduce(
+      (sum, c) => sum + c.ticketBuyInPlayer,
+      0,
+    ),
+    totalCustomPrizeValue: clubs.reduce(
+      (sum, c) => sum + c.customPrizeValue,
+      0,
+    ),
 
     // Club earnings totals
-    totalClubEarningsGeneral: clubs.reduce((sum, c) => sum + c.clubEarningsGeneral, 0),
+    totalClubEarningsGeneral: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsGeneral,
+      0,
+    ),
     totalClubEarningsFee: clubs.reduce((sum, c) => sum + c.clubEarningsFee, 0),
-    totalClubEarningsFeePpst: clubs.reduce((sum, c) => sum + c.clubEarningsFeePpst, 0),
-    totalClubEarningsFeeNonPpst: clubs.reduce((sum, c) => sum + c.clubEarningsFeeNonPpst, 0),
-    totalClubEarningsFeePpsr: clubs.reduce((sum, c) => sum + c.clubEarningsFeePpsr, 0),
-    totalClubEarningsFeeNonPpsr: clubs.reduce((sum, c) => sum + c.clubEarningsFeeNonPpsr, 0),
-    totalClubEarningsSpinUpBuyIn: clubs.reduce((sum, c) => sum + c.clubEarningsSpinUpBuyIn, 0),
-    totalClubEarningsSpinUpPrize: clubs.reduce((sum, c) => sum + c.clubEarningsSpinUpPrize, 0),
-    totalClubEarningsCaribbeanBets: clubs.reduce((sum, c) => sum + c.clubEarningsCaribbeanBets, 0),
-    totalClubEarningsCaribbeanPrize: clubs.reduce((sum, c) => sum + c.clubEarningsCaribbeanPrize, 0),
-    totalClubEarningsColorGameBets: clubs.reduce((sum, c) => sum + c.clubEarningsColorGameBets, 0),
-    totalClubEarningsColorGamePrize: clubs.reduce((sum, c) => sum + c.clubEarningsColorGamePrize, 0),
-    totalClubEarningsCrashBets: clubs.reduce((sum, c) => sum + c.clubEarningsCrashBets, 0),
-    totalClubEarningsCrashPrize: clubs.reduce((sum, c) => sum + c.clubEarningsCrashPrize, 0),
-    totalClubEarningsLuckyDrawBets: clubs.reduce((sum, c) => sum + c.clubEarningsLuckyDrawBets, 0),
-    totalClubEarningsLuckyDrawPrize: clubs.reduce((sum, c) => sum + c.clubEarningsLuckyDrawPrize, 0),
-    totalClubEarningsJackpotFee: clubs.reduce((sum, c) => sum + c.clubEarningsJackpotFee, 0),
-    totalClubEarningsJackpotPrize: clubs.reduce((sum, c) => sum + c.clubEarningsJackpotPrize, 0),
-    totalClubEarningsSplitEv: clubs.reduce((sum, c) => sum + c.clubEarningsSplitEv, 0),
+    totalClubEarningsFeePpst: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsFeePpst,
+      0,
+    ),
+    totalClubEarningsFeeNonPpst: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsFeeNonPpst,
+      0,
+    ),
+    totalClubEarningsFeePpsr: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsFeePpsr,
+      0,
+    ),
+    totalClubEarningsFeeNonPpsr: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsFeeNonPpsr,
+      0,
+    ),
+    totalClubEarningsSpinUpBuyIn: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsSpinUpBuyIn,
+      0,
+    ),
+    totalClubEarningsSpinUpPrize: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsSpinUpPrize,
+      0,
+    ),
+    totalClubEarningsCaribbeanBets: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsCaribbeanBets,
+      0,
+    ),
+    totalClubEarningsCaribbeanPrize: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsCaribbeanPrize,
+      0,
+    ),
+    totalClubEarningsColorGameBets: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsColorGameBets,
+      0,
+    ),
+    totalClubEarningsColorGamePrize: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsColorGamePrize,
+      0,
+    ),
+    totalClubEarningsCrashBets: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsCrashBets,
+      0,
+    ),
+    totalClubEarningsCrashPrize: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsCrashPrize,
+      0,
+    ),
+    totalClubEarningsLuckyDrawBets: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsLuckyDrawBets,
+      0,
+    ),
+    totalClubEarningsLuckyDrawPrize: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsLuckyDrawPrize,
+      0,
+    ),
+    totalClubEarningsJackpotFee: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsJackpotFee,
+      0,
+    ),
+    totalClubEarningsJackpotPrize: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsJackpotPrize,
+      0,
+    ),
+    totalClubEarningsSplitEv: clubs.reduce(
+      (sum, c) => sum + c.clubEarningsSplitEv,
+      0,
+    ),
 
     // Final totals
-    totalTicketDeliveredValue: clubs.reduce((sum, c) => sum + c.ticketDeliveredValue, 0),
-    totalTicketDeliveredBuyIn: clubs.reduce((sum, c) => sum + c.ticketDeliveredBuyIn, 0),
+    totalTicketDeliveredValue: clubs.reduce(
+      (sum, c) => sum + c.ticketDeliveredValue,
+      0,
+    ),
+    totalTicketDeliveredBuyIn: clubs.reduce(
+      (sum, c) => sum + c.ticketDeliveredBuyIn,
+      0,
+    ),
     totalGuaranteedGap: clubs.reduce((sum, c) => sum + c.guaranteedGap, 0),
   };
 
@@ -944,7 +1152,7 @@ function debugSheetColumns(sheet: XLSX.Sheet, sheetName: string): void {
 
   // Column letter helper
   const colLetter = (idx: number): string => {
-    let letter = '';
+    let letter = "";
     while (idx >= 0) {
       letter = String.fromCharCode((idx % 26) + 65) + letter;
       idx = Math.floor(idx / 26) - 1;
@@ -988,7 +1196,9 @@ function debugSheetColumns(sheet: XLSX.Sheet, sheetName: string): void {
     const cell4 = sheet[XLSX.utils.encode_cell({ r: 3, c: col })];
     const header3 = cell3?.v ?? cell3?.w ?? "";
     const header4 = cell4?.v ?? cell4?.w ?? "";
-    console.log(`Col ${colLetter(col)} (${col}): Section="${String(header3).substring(0, 30)}" | Header="${String(header4).substring(0, 30)}"`);
+    console.log(
+      `Col ${colLetter(col)} (${col}): Section="${String(header3).substring(0, 30)}" | Header="${String(header4).substring(0, 30)}"`,
+    );
   }
 
   console.log(`\n========== END DEBUG: ${sheetName} ==========\n`);
@@ -1005,14 +1215,19 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
   debugSheetColumns(sheet, "Detalhes de Clube");
 
   // === DETECT CLUBS FROM MERGED CELLS IN COLUMN A ===
-  type ClubRange = { startRow: number; endRow: number; clubName: string; clubId: string | null };
+  type ClubRange = {
+    startRow: number;
+    endRow: number;
+    clubName: string;
+    clubId: string | null;
+  };
   const clubRanges: ClubRange[] = [];
 
   const merges = sheet["!merges"] || [];
   console.log("\n=== DEBUG Detalhes de Clube - Merged cells in column A ===");
 
   // Filter merges that are in column A (c: 0)
-  const columnAMerges = merges.filter(m => m.s.c === 0 && m.e.c === 0);
+  const columnAMerges = merges.filter((m) => m.s.c === 0 && m.e.c === 0);
 
   for (const merge of columnAMerges) {
     const startRow = merge.s.r;
@@ -1023,8 +1238,11 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
 
     // Extract club name and ID from format: "ClubName\n(ID)\nDate"
     // e.g., "C.P.C. OnLine\n(962181)\n2025/12/15"
-    const lines = rawValue.split("\n").map(l => l.trim()).filter(l => l);
-    let clubName = lines[0] || "";
+    const lines = rawValue
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l);
+    const clubName = lines[0] || "";
     let clubId: string | null = null;
 
     // Look for ID in parentheses
@@ -1048,7 +1266,9 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
 
   console.log(`Found ${clubRanges.length} club ranges from merged cells`);
   clubRanges.slice(0, 10).forEach((club, i) => {
-    console.log(`Club ${i + 1}: rows ${club.startRow}-${club.endRow}, name="${club.clubName.substring(0, 30)}", id="${club.clubId}"`);
+    console.log(
+      `Club ${i + 1}: rows ${club.startRow}-${club.endRow}, name="${club.clubName.substring(0, 30)}", id="${club.clubId}"`,
+    );
   });
   if (clubRanges.length > 10) {
     console.log(`... and ${clubRanges.length - 10} more`);
@@ -1056,7 +1276,9 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
   console.log("=== END DEBUG ===\n");
 
   // Helper to find club for a given row
-  const findClubForRow = (row: number): { clubId: string | null; clubName: string } | null => {
+  const findClubForRow = (
+    row: number,
+  ): { clubId: string | null; clubName: string } | null => {
     for (const club of clubRanges) {
       if (row >= club.startRow && row <= club.endRow) {
         return { clubId: club.clubId, clubName: club.clubName };
@@ -1069,179 +1291,179 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
   // The sheet has similar structure to Geral de Clube but with more detail by date
   const DETALHES_COLUMNS: Record<string, number> = {
     // Identificação do Jogador (A-I)
-    date: 0,                    // A - Data
-    ppPokerId: 1,               // B - ID do jogador
-    country: 2,                 // C - País/região
-    nickname: 3,                // D - Apelido
-    memoName: 4,                // E - Nome de memorando
-    agentNickname: 5,           // F - Agente
-    agentPpPokerId: 6,          // G - ID do agente
-    superAgentNickname: 7,      // H - Superagente
-    superAgentPpPokerId: 8,     // I - ID do superagente
+    date: 0, // A - Data
+    ppPokerId: 1, // B - ID do jogador
+    country: 2, // C - País/região
+    nickname: 3, // D - Apelido
+    memoName: 4, // E - Nome de memorando
+    agentNickname: 5, // F - Agente
+    agentPpPokerId: 6, // G - ID do agente
+    superAgentNickname: 7, // H - Superagente
+    superAgentPpPokerId: 8, // I - ID do superagente
 
     // Ganhos NLHoldem (J-R)
-    nlhRegular: 9,              // J - Regular
-    nlhThreeOne: 10,            // K - 3-1
-    nlhThreeOneF: 11,           // L - 3-1F
-    nlhSixPlus: 12,             // M - 6+
-    nlhAof: 13,                 // N - AOF
-    nlhSitNGo: 14,              // O - SitNGo
-    nlhSpinUp: 15,              // P - SPINUP
-    nlhMtt: 16,                 // Q - MTT NLH
-    nlhMttSixPlus: 17,          // R - MTT 6+
+    nlhRegular: 9, // J - Regular
+    nlhThreeOne: 10, // K - 3-1
+    nlhThreeOneF: 11, // L - 3-1F
+    nlhSixPlus: 12, // M - 6+
+    nlhAof: 13, // N - AOF
+    nlhSitNGo: 14, // O - SitNGo
+    nlhSpinUp: 15, // P - SPINUP
+    nlhMtt: 16, // Q - MTT NLH
+    nlhMttSixPlus: 17, // R - MTT 6+
 
     // Ganhos PLO (S-AB)
-    plo4: 18,                   // S - PLO4
-    plo5: 19,                   // T - PLO5
-    plo6: 20,                   // U - PLO6
-    plo4Hilo: 21,               // V - PLO4 H/L
-    plo5Hilo: 22,               // W - PLO5 H/L
-    plo6Hilo: 23,               // X - PLO6 H/L
-    ploSitNGo: 24,              // Y - SitNGo
-    ploMttPlo4: 25,             // Z - MTT/PLO4
-    ploMttPlo5: 26,             // AA - MTT/PLO5
-    ploNlh: 27,                 // AB - NLHoldem
+    plo4: 18, // S - PLO4
+    plo5: 19, // T - PLO5
+    plo6: 20, // U - PLO6
+    plo4Hilo: 21, // V - PLO4 H/L
+    plo5Hilo: 22, // W - PLO5 H/L
+    plo6Hilo: 23, // X - PLO6 H/L
+    ploSitNGo: 24, // Y - SitNGo
+    ploMttPlo4: 25, // Z - MTT/PLO4
+    ploMttPlo5: 26, // AA - MTT/PLO5
+    ploNlh: 27, // AB - NLHoldem
 
     // Ganhos do Jogador - FLASH e outros (AC-AV)
-    flashPlo4: 28,              // AC - PLO4 (FLASH)
-    flashPlo5: 29,              // AD - PLO5 (FLASH)
-    mixedGame: 30,              // AE - MIXED GAME
-    ofc: 31,                    // AF - OFC
-    seka36: 32,                 // AG - 36 (SEKA)
-    seka32: 33,                 // AH - 32 (SEKA)
-    seka21: 34,                 // AI - 21 (SEKA)
-    teenPattiRegular: 35,       // AJ - REGULAR (Teen Patti)
-    teenPattiAk47: 36,          // AK - AK47 (Teen Patti)
-    teenPattiHukam: 37,         // AL - HUKAM (Teen Patti)
-    teenPattiMuflis: 38,        // AM - MUFLIS (Teen Patti)
-    tongits: 39,                // AN - TONGITS
-    pusoy: 40,                  // AO - PUSOY
-    caribbean: 41,              // AP - Caribbean+ Poker
-    colorGame: 42,              // AQ - COLOR GAME
-    crash: 43,                  // AR - CRASH
-    luckyDraw: 44,              // AS - LUCKY DRAW
-    jackpot: 45,                // AT - Jackpot
-    evSplitWinnings: 46,        // AU - Dividir EV
-    totalWinnings: 47,          // AV - Total
+    flashPlo4: 28, // AC - PLO4 (FLASH)
+    flashPlo5: 29, // AD - PLO5 (FLASH)
+    mixedGame: 30, // AE - MIXED GAME
+    ofc: 31, // AF - OFC
+    seka36: 32, // AG - 36 (SEKA)
+    seka32: 33, // AH - 32 (SEKA)
+    seka21: 34, // AI - 21 (SEKA)
+    teenPattiRegular: 35, // AJ - REGULAR (Teen Patti)
+    teenPattiAk47: 36, // AK - AK47 (Teen Patti)
+    teenPattiHukam: 37, // AL - HUKAM (Teen Patti)
+    teenPattiMuflis: 38, // AM - MUFLIS (Teen Patti)
+    tongits: 39, // AN - TONGITS
+    pusoy: 40, // AO - PUSOY
+    caribbean: 41, // AP - Caribbean+ Poker
+    colorGame: 42, // AQ - COLOR GAME
+    crash: 43, // AR - CRASH
+    luckyDraw: 44, // AS - LUCKY DRAW
+    jackpot: 45, // AT - Jackpot
+    evSplitWinnings: 46, // AU - Dividir EV
+    totalWinnings: 47, // AV - Total
 
     // Classificação (AW-AZ)
-    classificationPpsr: 48,     // AW - Classificação PPSR
-    classificationRing: 49,     // AX - Classificação Ring Game
+    classificationPpsr: 48, // AW - Classificação PPSR
+    classificationRing: 49, // AX - Classificação Ring Game
     classificationCustomRing: 50, // AY - Classificação de RG Personalizado
-    classificationMtt: 51,      // AZ - Classificação MTT
+    classificationMtt: 51, // AZ - Classificação MTT
 
     // Valores Gerais (BA-BD)
-    generalPlusEvents: 52,      // BA - Ganhos de jogador gerais + Eventos
-    ticketValueWon: 53,         // BB - Valor do ticket ganho
-    ticketBuyIn: 54,            // BC - Buy-in de ticket
-    customPrizeValue: 55,       // BD - Valor do prêmio personalizado
+    generalPlusEvents: 52, // BA - Ganhos de jogador gerais + Eventos
+    ticketValueWon: 53, // BB - Valor do ticket ganho
+    ticketBuyIn: 54, // BC - Buy-in de ticket
+    customPrizeValue: 55, // BD - Valor do prêmio personalizado
 
     // Taxa NLHoldem (BE-BM)
-    feeNlhRegular: 56,          // BE - Regular
-    feeNlhThreeOne: 57,         // BF - 3-1
-    feeNlhThreeOneF: 58,        // BG - 3-1F
-    feeNlhSixPlus: 59,          // BH - 6+
-    feeNlhAof: 60,              // BI - AOF
-    feeNlhSitNGo: 61,           // BJ - SitNGo
-    feeNlhSpinUp: 62,           // BK - SPINUP
-    feeNlhMtt: 63,              // BL - MTT NLH
-    feeNlhMttSixPlus: 64,       // BM - MTT 6+
+    feeNlhRegular: 56, // BE - Regular
+    feeNlhThreeOne: 57, // BF - 3-1
+    feeNlhThreeOneF: 58, // BG - 3-1F
+    feeNlhSixPlus: 59, // BH - 6+
+    feeNlhAof: 60, // BI - AOF
+    feeNlhSitNGo: 61, // BJ - SitNGo
+    feeNlhSpinUp: 62, // BK - SPINUP
+    feeNlhMtt: 63, // BL - MTT NLH
+    feeNlhMttSixPlus: 64, // BM - MTT 6+
 
     // Taxa PLO (BN-BU)
-    feePlo4: 65,                // BN - PLO4
-    feePlo5: 66,                // BO - PLO5
-    feePlo4Hilo: 67,            // BP - PLO4 H/L
-    feePlo5Hilo: 68,            // BQ - PLO5 H/L
-    feePlo6Hilo: 69,            // BR - PLO6 H/L
-    feePloSitNGo: 70,           // BS - SitNGo
-    feePloMttPlo4: 71,          // BT - MTT/PLO4
-    feePloMttPlo5: 72,          // BU - MTT/PLO5
+    feePlo4: 65, // BN - PLO4
+    feePlo5: 66, // BO - PLO5
+    feePlo4Hilo: 67, // BP - PLO4 H/L
+    feePlo5Hilo: 68, // BQ - PLO5 H/L
+    feePlo6Hilo: 69, // BR - PLO6 H/L
+    feePloSitNGo: 70, // BS - SitNGo
+    feePloMttPlo4: 71, // BT - MTT/PLO4
+    feePloMttPlo5: 72, // BU - MTT/PLO5
 
     // Taxa FLASH e outros (BV-CJ)
-    feeFlashNlh: 73,            // BV - NLHoldem (FLASH)
-    feeFlashPlo4: 74,           // BW - PLO4 (FLASH)
-    feeFlashPlo5: 75,           // BX - PLO5 (FLASH)
-    feeMixedGame: 76,           // BY - MIXED GAME
-    feeOfc: 77,                 // BZ - OFC
-    feeSeka36: 78,              // CA - 36 (SEKA)
-    feeSeka32: 79,              // CB - 32 (SEKA)
-    feeSeka21: 80,              // CC - 21 (SEKA)
-    feeTeenPattiRegular: 81,    // CD - REGULAR (Teen Patti)
-    feeTeenPattiAk47: 82,       // CE - AK47 (Teen Patti)
-    feeTeenPattiHukam: 83,      // CF - HUKAM (Teen Patti)
-    feeTeenPattiMuflis: 84,     // CG - MUFLIS (Teen Patti)
-    feeTongits: 85,             // CH - TONGITS
-    feePusoy: 86,               // CI - PUSOY
-    feeTotal: 87,               // CJ - Total
+    feeFlashNlh: 73, // BV - NLHoldem (FLASH)
+    feeFlashPlo4: 74, // BW - PLO4 (FLASH)
+    feeFlashPlo5: 75, // BX - PLO5 (FLASH)
+    feeMixedGame: 76, // BY - MIXED GAME
+    feeOfc: 77, // BZ - OFC
+    feeSeka36: 78, // CA - 36 (SEKA)
+    feeSeka32: 79, // CB - 32 (SEKA)
+    feeSeka21: 80, // CC - 21 (SEKA)
+    feeTeenPattiRegular: 81, // CD - REGULAR (Teen Patti)
+    feeTeenPattiAk47: 82, // CE - AK47 (Teen Patti)
+    feeTeenPattiHukam: 83, // CF - HUKAM (Teen Patti)
+    feeTeenPattiMuflis: 84, // CG - MUFLIS (Teen Patti)
+    feeTongits: 85, // CH - TONGITS
+    feePusoy: 86, // CI - PUSOY
+    feeTotal: 87, // CJ - Total
 
     // SPINUP (CK-CL)
-    spinUpBuyIn: 88,            // CK - Buy-in
-    spinUpPrize: 89,            // CL - Premiação
+    spinUpBuyIn: 88, // CK - Buy-in
+    spinUpPrize: 89, // CL - Premiação
 
     // Jackpot (CM-CN)
-    jackpotFee: 90,             // CM - Taxa
-    jackpotPrize: 91,           // CN - Premiação
+    jackpotFee: 90, // CM - Taxa
+    jackpotPrize: 91, // CN - Premiação
 
     // Dividir EV (CO-CQ)
-    evSplitNlh: 92,             // CO - NLHoldem
-    evSplitPlo: 93,             // CP - PLO
-    evSplitTotal: 94,           // CQ - Total
+    evSplitNlh: 92, // CO - NLHoldem
+    evSplitPlo: 93, // CP - PLO
+    evSplitTotal: 94, // CQ - Total
 
     // Valor ticket entregue (CR)
-    ticketDeliveredValue: 95,   // CR - Valor do ticket entregue
+    ticketDeliveredValue: 95, // CR - Valor do ticket entregue
 
     // Fichas (CS-CY)
-    chipTicketBuyIn: 96,        // CS - Buy-in de ticket
-    chipSent: 97,               // CT - Enviado
-    chipClassPpsr: 98,          // CU - Classificação PPSR
-    chipClassRing: 99,          // CV - Classificação Ring Game
-    chipClassCustomRing: 100,   // CW - Classificação de RG Personalizado
-    chipClassMtt: 101,          // CX - Classificação MTT
-    chipRedeemed: 102,          // CY - Resgatado
+    chipTicketBuyIn: 96, // CS - Buy-in de ticket
+    chipSent: 97, // CT - Enviado
+    chipClassPpsr: 98, // CU - Classificação PPSR
+    chipClassRing: 99, // CV - Classificação Ring Game
+    chipClassCustomRing: 100, // CW - Classificação de RG Personalizado
+    chipClassMtt: 101, // CX - Classificação MTT
+    chipRedeemed: 102, // CY - Resgatado
 
     // Dar Crédito (CZ-DC)
-    creditLeftClub: 103,        // CZ - Saiu do clube
-    creditSent: 104,            // DA - Enviado
-    creditRedeemed: 105,        // DB - Resgatado
-    creditLeftClub2: 106,       // DC - Saiu do clube
+    creditLeftClub: 103, // CZ - Saiu do clube
+    creditSent: 104, // DA - Enviado
+    creditRedeemed: 105, // DB - Resgatado
+    creditLeftClub2: 106, // DC - Saiu do clube
 
     // Mãos NLH (DD-DH)
-    handsNlhRegular: 107,       // DD - Regular
-    handsNlhThreeOne: 108,      // DE - 3-1
-    handsNlhThreeOneF: 109,     // DF - 3-1F
-    handsNlhSixPlus: 110,       // DG - 6+
-    handsNlhAof: 111,           // DH - AOF
+    handsNlhRegular: 107, // DD - Regular
+    handsNlhThreeOne: 108, // DE - 3-1
+    handsNlhThreeOneF: 109, // DF - 3-1F
+    handsNlhSixPlus: 110, // DG - 6+
+    handsNlhAof: 111, // DH - AOF
 
     // Mãos PLO (DI-DN)
-    handsPlo4: 112,             // DI - PLO4
-    handsPlo5: 113,             // DJ - PLO5
-    handsPlo6: 114,             // DK - PLO6
-    handsPlo4Hilo: 115,         // DL - PLO4 H/L
-    handsPlo5Hilo: 116,         // DM - PLO5 H/L
-    handsPlo6Hilo: 117,         // DN - PLO6 H/L
+    handsPlo4: 112, // DI - PLO4
+    handsPlo5: 113, // DJ - PLO5
+    handsPlo6: 114, // DK - PLO6
+    handsPlo4Hilo: 115, // DL - PLO4 H/L
+    handsPlo5Hilo: 116, // DM - PLO5 H/L
+    handsPlo6Hilo: 117, // DN - PLO6 H/L
 
     // Mãos FLASH (DO-DQ)
-    handsFlashNlh: 118,         // DO - NLHoldem (FLASH)
-    handsFlashPlo4: 119,        // DP - PLO4 (FLASH)
-    handsFlashPlo5: 120,        // DQ - PLO5 (FLASH)
+    handsFlashNlh: 118, // DO - NLHoldem (FLASH)
+    handsFlashPlo4: 119, // DP - PLO4 (FLASH)
+    handsFlashPlo5: 120, // DQ - PLO5 (FLASH)
 
     // Mãos outros (DR-EG)
-    handsMixedGame: 121,        // DR - MIXED GAME
-    handsOfc: 122,              // DS - OFC
-    handsSeka36: 123,           // DT - 36 (SEKA)
-    handsSeka32: 124,           // DU - 32 (SEKA)
-    handsSeka21: 125,           // DV - 21 (SEKA)
+    handsMixedGame: 121, // DR - MIXED GAME
+    handsOfc: 122, // DS - OFC
+    handsSeka36: 123, // DT - 36 (SEKA)
+    handsSeka32: 124, // DU - 32 (SEKA)
+    handsSeka21: 125, // DV - 21 (SEKA)
     handsTeenPattiRegular: 126, // DW - REGULAR (Teen Patti)
-    handsTeenPattiAk47: 127,    // DX - AK47 (Teen Patti)
-    handsTeenPattiHukam: 128,   // DY - HUKAM (Teen Patti)
-    handsTeenPattiMuflis: 129,  // DZ - MUFLIS (Teen Patti)
-    handsTongits: 130,          // EA - TONGITS
-    handsPusoy: 131,            // EB - PUSOY
-    handsCaribbean: 132,        // EC - Caribbean+ Poker
-    handsColorGame: 133,        // ED - COLOR GAME
-    handsCrash: 134,            // EE - CRASH
-    handsLuckyDraw: 135,        // EF - LUCKY DRAW
-    handsTotal: 136,            // EG - Total
+    handsTeenPattiAk47: 127, // DX - AK47 (Teen Patti)
+    handsTeenPattiHukam: 128, // DY - HUKAM (Teen Patti)
+    handsTeenPattiMuflis: 129, // DZ - MUFLIS (Teen Patti)
+    handsTongits: 130, // EA - TONGITS
+    handsPusoy: 131, // EB - PUSOY
+    handsCaribbean: 132, // EC - Caribbean+ Poker
+    handsColorGame: 133, // ED - COLOR GAME
+    handsCrash: 134, // EE - CRASH
+    handsLuckyDraw: 135, // EF - LUCKY DRAW
+    handsTotal: 136, // EG - Total
   };
 
   // Start from row 4 (after headers)
@@ -1266,15 +1488,27 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
         if (cell.f && (value === null || value === undefined || value === 0)) {
           // Try calculating the formula
           const calculated = calculateFormula(sheet, cell.f, new Set());
-          if (calculated !== null && calculated !== undefined && calculated !== 0) {
+          if (
+            calculated !== null &&
+            calculated !== undefined &&
+            calculated !== 0
+          ) {
             value = calculated;
           }
         }
 
         // Fallback to formatted value (cell.w) if we still don't have a value
-        if ((value === null || value === undefined || value === 0) && cell.w !== undefined && cell.w !== null && cell.w !== "") {
-          const trimmed = String(cell.w).trim().replace(/,/g, ".").replace(/[^\d.-]/g, "");
-          const parsed = parseFloat(trimmed);
+        if (
+          (value === null || value === undefined || value === 0) &&
+          cell.w !== undefined &&
+          cell.w !== null &&
+          cell.w !== ""
+        ) {
+          const trimmed = String(cell.w)
+            .trim()
+            .replace(/,/g, ".")
+            .replace(/[^\d.-]/g, "");
+          const parsed = Number.parseFloat(trimmed);
           if (!isNaN(parsed)) {
             value = parsed;
           } else if (value === null || value === undefined) {
@@ -1295,7 +1529,8 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
 
     // Skip rows without valid player ID or "Total" rows
     const nicknameValue = String(rowData.nickname || "").toLowerCase();
-    if (!hasValidId || nicknameValue === "total" || nicknameValue === "totais") continue;
+    if (!hasValidId || nicknameValue === "total" || nicknameValue === "totais")
+      continue;
 
     // Find which club this row belongs to
     const clubContext = findClubForRow(row);
@@ -1357,9 +1592,13 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
       nickname: rowData.nickname || "",
       memoName: rowData.memoName || null,
       agentNickname: rowData.agentNickname || null,
-      agentPpPokerId: rowData.agentPpPokerId ? String(rowData.agentPpPokerId) : null,
+      agentPpPokerId: rowData.agentPpPokerId
+        ? String(rowData.agentPpPokerId)
+        : null,
       superAgentNickname: rowData.superAgentNickname || null,
-      superAgentPpPokerId: rowData.superAgentPpPokerId ? String(rowData.superAgentPpPokerId) : null,
+      superAgentPpPokerId: rowData.superAgentPpPokerId
+        ? String(rowData.superAgentPpPokerId)
+        : null,
 
       // NLH winnings
       nlhRegular: toNumber(rowData.nlhRegular),
@@ -1563,7 +1802,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
 
   // Column letter helper
   const colLetter = (idx: number): string => {
-    let letter = '';
+    let letter = "";
     let i = idx;
     while (i >= 0) {
       letter = String.fromCharCode((i % 26) + 65) + letter;
@@ -1589,9 +1828,15 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   const gameTypeMap = new Map<string, GameTypeDebugInfo>();
 
   // First pass: collect all game types and their structures
-  console.log("\n╔════════════════════════════════════════════════════════════════╗");
-  console.log("║       DEBUG: MAPEAMENTO DE TIPOS DE JOGOS E COLUNAS          ║");
-  console.log("╚════════════════════════════════════════════════════════════════╝\n");
+  console.log(
+    "\n╔════════════════════════════════════════════════════════════════╗",
+  );
+  console.log(
+    "║       DEBUG: MAPEAMENTO DE TIPOS DE JOGOS E COLUNAS          ║",
+  );
+  console.log(
+    "╚════════════════════════════════════════════════════════════════╝\n",
+  );
 
   for (let row = 0; row <= range.e.r; row++) {
     const cellB = sheet[XLSX.utils.encode_cell({ r: row, c: 1 })];
@@ -1609,8 +1854,12 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
 
     // Extract game type (PPST/NLH, PPSR/PLO5, etc.)
     const typeMatch = gameInfoStr.match(/(PPST|PPSR)\/([\w\d&+]+)/i);
-    const fullType = typeMatch ? `${typeMatch[1]}/${typeMatch[2]}` : gameInfoStr.substring(0, 30);
-    const category = typeMatch ? (typeMatch[1].toUpperCase() as "PPST" | "PPSR") : "UNKNOWN";
+    const fullType = typeMatch
+      ? `${typeMatch[1]}/${typeMatch[2]}`
+      : gameInfoStr.substring(0, 30);
+    const category = typeMatch
+      ? (typeMatch[1].toUpperCase() as "PPST" | "PPSR")
+      : "UNKNOWN";
     const subType = typeMatch ? typeMatch[2].toUpperCase() : "UNKNOWN";
 
     // Get header row (row + 2)
@@ -1628,10 +1877,14 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     const firstDataRowIdx = row + 3;
     const firstDataColumns: { col: string; value: string }[] = [];
     for (let col = 0; col <= Math.min(range.e.c, 20); col++) {
-      const cell = sheet[XLSX.utils.encode_cell({ r: firstDataRowIdx, c: col })];
+      const cell =
+        sheet[XLSX.utils.encode_cell({ r: firstDataRowIdx, c: col })];
       const val = cell?.v ?? cell?.w ?? "";
       if (val !== "" && val !== null) {
-        firstDataColumns.push({ col: colLetter(col), value: String(val).substring(0, 20) });
+        firstDataColumns.push({
+          col: colLetter(col),
+          value: String(val).substring(0, 20),
+        });
       }
     }
 
@@ -1674,27 +1927,47 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   });
 
   const printGameTypeInfo = (info: GameTypeDebugInfo, index: number) => {
-    console.log(`\n┌─────────────────────────────────────────────────────────────────┐`);
-    console.log(`│ ${index}. ${info.gameType.padEnd(20)} │ ${info.category}/${info.subType.padEnd(10)} │ ${info.count} jogos`);
-    console.log(`├─────────────────────────────────────────────────────────────────┤`);
+    console.log(
+      `\n┌─────────────────────────────────────────────────────────────────┐`,
+    );
+    console.log(
+      `│ ${index}. ${info.gameType.padEnd(20)} │ ${info.category}/${info.subType.padEnd(10)} │ ${info.count} jogos`,
+    );
+    console.log(
+      `├─────────────────────────────────────────────────────────────────┤`,
+    );
     console.log(`│ Game Info: ${info.gameInfoString.substring(0, 55)}`);
     console.log(`│ IDs: ${info.sampleGameIds.join(", ")}`);
-    console.log(`├─────────────────────────────────────────────────────────────────┤`);
+    console.log(
+      `├─────────────────────────────────────────────────────────────────┤`,
+    );
     console.log(`│ HEADER ROW (Row ${info.headerRow}):`);
-    console.log(`│   ${info.headerColumns.map(c => `[${c.col}]=${c.value}`).join(" | ")}`);
-    console.log(`├─────────────────────────────────────────────────────────────────┤`);
+    console.log(
+      `│   ${info.headerColumns.map((c) => `[${c.col}]=${c.value}`).join(" | ")}`,
+    );
+    console.log(
+      `├─────────────────────────────────────────────────────────────────┤`,
+    );
     console.log(`│ FIRST DATA ROW (Row ${info.firstDataRow}):`);
-    console.log(`│   ${info.firstDataColumns.map(c => `[${c.col}]=${c.value}`).join(" | ")}`);
-    console.log(`└─────────────────────────────────────────────────────────────────┘`);
+    console.log(
+      `│   ${info.firstDataColumns.map((c) => `[${c.col}]=${c.value}`).join(" | ")}`,
+    );
+    console.log(
+      `└─────────────────────────────────────────────────────────────────┘`,
+    );
   };
 
   if (ppstTypes.length > 0) {
-    console.log("\n\n════════════════════ PPST (Torneios) ════════════════════");
+    console.log(
+      "\n\n════════════════════ PPST (Torneios) ════════════════════",
+    );
     ppstTypes.forEach((info, idx) => printGameTypeInfo(info, idx + 1));
   }
 
   if (ppsrTypes.length > 0) {
-    console.log("\n\n════════════════════ PPSR (Cash Games) ════════════════════");
+    console.log(
+      "\n\n════════════════════ PPSR (Cash Games) ════════════════════",
+    );
     ppsrTypes.forEach((info, idx) => printGameTypeInfo(info, idx + 1));
   }
 
@@ -1704,9 +1977,15 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   }
 
   // Print column comparison
-  console.log("\n\n╔════════════════════════════════════════════════════════════════╗");
-  console.log("║              COMPARAÇÃO DE COLUNAS POR TIPO                     ║");
-  console.log("╚════════════════════════════════════════════════════════════════╝");
+  console.log(
+    "\n\n╔════════════════════════════════════════════════════════════════╗",
+  );
+  console.log(
+    "║              COMPARAÇÃO DE COLUNAS POR TIPO                     ║",
+  );
+  console.log(
+    "╚════════════════════════════════════════════════════════════════╝",
+  );
 
   const allHeaders = new Map<string, Set<string>>();
   gameTypeMap.forEach((info, type) => {
@@ -1722,7 +2001,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   allHeaders.forEach((values, col) => {
     if (values.size > 1) {
       console.log(`\n  Coluna ${col}:`);
-      values.forEach(v => console.log(`    - ${v}`));
+      values.forEach((v) => console.log(`    - ${v}`));
     }
   });
 
@@ -1732,7 +2011,12 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   // Track current session context
   let currentSession: ParsedSession | null = null;
   let currentPlayers: ParsedSession["players"] = [];
-  let currentGameCategory: "PPST_MTT" | "PPST_SPINUP" | "PPST_PKO" | "PPSR" | "MTT_OTHER" = "PPST_MTT";
+  let currentGameCategory:
+    | "PPST_MTT"
+    | "PPST_SPINUP"
+    | "PPST_PKO"
+    | "PPSR"
+    | "MTT_OTHER" = "PPST_MTT";
 
   // ============ DYNAMIC COLUMN MAPPING BY GAME TYPE ============
   // Based on debug output, columns B-F are fixed, G+ vary by type:
@@ -1755,23 +2039,23 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   //   M=Ganhos do clube, N=Taxa, O=Taxa do Jackpot, P=Prêmios Jackpot, Q=Dividir EV
 
   // Fixed columns (same for all types)
-  const COL_CLUB_ID = 1;      // B
-  const COL_CLUB_NAME = 2;    // C
-  const COL_PLAYER_ID = 3;    // D
-  const COL_NICKNAME = 4;     // E
-  const COL_MEMO_NAME = 5;    // F
+  const COL_CLUB_ID = 1; // B
+  const COL_CLUB_NAME = 2; // C
+  const COL_PLAYER_ID = 3; // D
+  const COL_NICKNAME = 4; // E
+  const COL_MEMO_NAME = 5; // F
 
   // Dynamic column configs per game category
   interface ColumnConfig {
     ranking?: number;
     buyInChips: number;
     buyInTicket?: number;
-    prize?: number;         // SPINUP: Prêmio
+    prize?: number; // SPINUP: Prêmio
     winnings: number;
-    bounty?: number;        // PKO: De recompensa
+    bounty?: number; // PKO: De recompensa
     rake?: number;
     gap?: number;
-    hands?: number;         // PPSR: Mãos
+    hands?: number; // PPSR: Mãos
     // PPSR sub-columns
     winningsFromOpponents?: number;
     winningsFromJackpot?: number;
@@ -1786,53 +2070,53 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   const COLUMN_CONFIGS: Record<string, ColumnConfig> = {
     // PPST/NLH and MTT/6+ (standard MTT)
     PPST_MTT: {
-      ranking: 6,       // G
-      buyInChips: 7,    // H
-      buyInTicket: 8,   // I
-      winnings: 9,      // J
-      rake: 10,         // K
-      gap: 11,          // L
+      ranking: 6, // G
+      buyInChips: 7, // H
+      buyInTicket: 8, // I
+      winnings: 9, // J
+      rake: 10, // K
+      gap: 11, // L
     },
     // MTT/6+ (Short Deck) - same as PPST_MTT
     MTT_OTHER: {
-      ranking: 6,       // G
-      buyInChips: 7,    // H
-      buyInTicket: 8,   // I
-      winnings: 9,      // J
-      rake: 10,         // K
-      gap: 11,          // L
+      ranking: 6, // G
+      buyInChips: 7, // H
+      buyInTicket: 8, // I
+      winnings: 9, // J
+      rake: 10, // K
+      gap: 11, // L
     },
     // PPST/SPINUP
     PPST_SPINUP: {
-      ranking: 6,       // G
-      buyInChips: 7,    // H
-      prize: 8,         // I = Prêmio (NOT buy-in ticket!)
-      winnings: 9,      // J
+      ranking: 6, // G
+      buyInChips: 7, // H
+      prize: 8, // I = Prêmio (NOT buy-in ticket!)
+      winnings: 9, // J
       // NO rake (K) or gap (L)
     },
     // PPST/PLO5 PKO (Bounty tournaments)
     PPST_PKO: {
-      ranking: 6,       // G
-      buyInChips: 7,    // H
-      buyInTicket: 8,   // I
-      winnings: 9,      // J
-      bounty: 10,       // K = De recompensa
-      rake: 11,         // L
-      gap: 12,          // M
+      ranking: 6, // G
+      buyInChips: 7, // H
+      buyInTicket: 8, // I
+      winnings: 9, // J
+      bounty: 10, // K = De recompensa
+      rake: 11, // L
+      gap: 12, // M
     },
     // PPSR (All cash games)
     PPSR: {
-      buyInChips: 6,    // G (NO ranking for cash!)
-      hands: 7,         // H = Mãos
-      winnings: 8,      // I = Ganhos do jogador (Geral) - first data row after sub-header
-      winningsFromOpponents: 9,   // J
-      winningsFromJackpot: 10,    // K
-      winningsFromEvSplit: 11,    // L
-      clubWinnings: 12,           // M
-      clubRake: 13,               // N
-      jackpotRake: 14,            // O
-      jackpotPrize: 15,           // P
-      evSplit: 16,                // Q
+      buyInChips: 6, // G (NO ranking for cash!)
+      hands: 7, // H = Mãos
+      winnings: 8, // I = Ganhos do jogador (Geral) - first data row after sub-header
+      winningsFromOpponents: 9, // J
+      winningsFromJackpot: 10, // K
+      winningsFromEvSplit: 11, // L
+      clubWinnings: 12, // M
+      clubRake: 13, // N
+      jackpotRake: 14, // O
+      jackpotPrize: 15, // P
+      evSplit: 16, // Q
     },
   };
 
@@ -1846,7 +2130,10 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   };
 
   // Helper to determine game category from gameVariant string
-  function getGameCategory(gameVariant: string, gameInfoStr: string): "PPST_MTT" | "PPST_SPINUP" | "PPST_PKO" | "PPSR" | "MTT_OTHER" {
+  function getGameCategory(
+    gameVariant: string,
+    gameInfoStr: string,
+  ): "PPST_MTT" | "PPST_SPINUP" | "PPST_PKO" | "PPSR" | "MTT_OTHER" {
     const upperVariant = gameVariant.toUpperCase();
     const upperInfo = gameInfoStr.toUpperCase();
 
@@ -1861,7 +2148,11 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     }
 
     // PKO (Bounty) detection - check game info string for PKO keyword
-    if (upperInfo.includes("PKO") || upperInfo.includes("BOUNTY") || upperInfo.includes("RECOMPENSA")) {
+    if (
+      upperInfo.includes("PKO") ||
+      upperInfo.includes("BOUNTY") ||
+      upperInfo.includes("RECOMPENSA")
+    ) {
       return "PPST_PKO";
     }
 
@@ -1907,9 +2198,18 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
       if (currentSession && currentPlayers.length > 0) {
         currentSession.players = currentPlayers;
         currentSession.playerCount = currentPlayers.length;
-        currentSession.totalBuyIn = currentPlayers.reduce((sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0), 0);
-        currentSession.totalWinnings = currentPlayers.reduce((sum, p) => sum + (p.winnings ?? 0), 0);
-        currentSession.totalRake = currentPlayers.reduce((sum, p) => sum + (p.rake ?? 0), 0);
+        currentSession.totalBuyIn = currentPlayers.reduce(
+          (sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0),
+          0,
+        );
+        currentSession.totalWinnings = currentPlayers.reduce(
+          (sum, p) => sum + (p.winnings ?? 0),
+          0,
+        );
+        currentSession.totalRake = currentPlayers.reduce(
+          (sum, p) => sum + (p.rake ?? 0),
+          0,
+        );
         result.push(currentSession);
       }
 
@@ -1938,15 +2238,19 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
       }
 
       // Extract buy-in (handles both "9+1" and just "15" formats)
-      const buyInMatch = gameInfoStr.match(/Buy-in:\s*([\d.]+)(?:\s*\+\s*([\d.]+))?/i);
+      const buyInMatch = gameInfoStr.match(
+        /Buy-in:\s*([\d.]+)(?:\s*\+\s*([\d.]+))?/i,
+      );
       if (buyInMatch) {
-        buyInAmount = parseFloat(buyInMatch[1]) + (buyInMatch[2] ? parseFloat(buyInMatch[2]) : 0);
+        buyInAmount =
+          Number.parseFloat(buyInMatch[1]) +
+          (buyInMatch[2] ? Number.parseFloat(buyInMatch[2]) : 0);
       }
 
       // Extract guaranteed prize
       const prizeMatch = gameInfoStr.match(/Premiação Garantida:\s*([\d.]+)/i);
       if (prizeMatch) {
-        guaranteedPrize = parseFloat(prizeMatch[1]);
+        guaranteedPrize = Number.parseFloat(prizeMatch[1]);
       }
 
       // Extract blinds for cash games (e.g., "0.5/1")
@@ -1988,7 +2292,12 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     }
 
     // Check for player data row (column D has numeric player ID)
-    if (currentSession && !isTotalRow && /^\d+$/.test(valD) && valD.length > 4) {
+    if (
+      currentSession &&
+      !isTotalRow &&
+      /^\d+$/.test(valD) &&
+      valD.length > 4
+    ) {
       const getNumericValue = (colIdx: number | undefined): number => {
         if (colIdx === undefined) return 0;
         const cell = sheet[XLSX.utils.encode_cell({ r: row, c: colIdx })];
@@ -1997,7 +2306,9 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
         if (cell.f && (val === 0 || val === null || val === undefined)) {
           val = calculateFormula(sheet, cell.f, new Set()) || 0;
         }
-        return typeof val === "number" ? val : parseFloat(String(val).replace(",", ".")) || 0;
+        return typeof val === "number"
+          ? val
+          : Number.parseFloat(String(val).replace(",", ".")) || 0;
       };
 
       const getStringValue = (colIdx: number): string => {
@@ -2006,7 +2317,8 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
       };
 
       // Get column config for current game category
-      const colConfig = COLUMN_CONFIGS[currentGameCategory] || COLUMN_CONFIGS.PPST_MTT;
+      const colConfig =
+        COLUMN_CONFIGS[currentGameCategory] || COLUMN_CONFIGS.PPST_MTT;
 
       // Build player object with dynamic columns
       const player: NonNullable<ParsedSession["players"]>[number] & {
@@ -2029,10 +2341,16 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
       };
 
       // Add type-specific fields
-      if (currentGameCategory === "PPST_SPINUP" && colConfig.prize !== undefined) {
+      if (
+        currentGameCategory === "PPST_SPINUP" &&
+        colConfig.prize !== undefined
+      ) {
         player.prize = getNumericValue(colConfig.prize);
       }
-      if (currentGameCategory === "PPST_PKO" && colConfig.bounty !== undefined) {
+      if (
+        currentGameCategory === "PPST_PKO" &&
+        colConfig.bounty !== undefined
+      ) {
         player.bounty = getNumericValue(colConfig.bounty);
       }
       if (currentGameCategory === "PPSR" && colConfig.hands !== undefined) {
@@ -2048,9 +2366,18 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     if (isTotalRow && currentSession && currentPlayers.length > 0) {
       currentSession.players = currentPlayers;
       currentSession.playerCount = currentPlayers.length;
-      currentSession.totalBuyIn = currentPlayers.reduce((sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0), 0);
-      currentSession.totalWinnings = currentPlayers.reduce((sum, p) => sum + (p.winnings ?? 0), 0);
-      currentSession.totalRake = currentPlayers.reduce((sum, p) => sum + (p.rake ?? 0), 0);
+      currentSession.totalBuyIn = currentPlayers.reduce(
+        (sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0),
+        0,
+      );
+      currentSession.totalWinnings = currentPlayers.reduce(
+        (sum, p) => sum + (p.winnings ?? 0),
+        0,
+      );
+      currentSession.totalRake = currentPlayers.reduce(
+        (sum, p) => sum + (p.rake ?? 0),
+        0,
+      );
       result.push(currentSession);
       currentSession = null;
       currentPlayers = [];
@@ -2061,9 +2388,18 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   if (currentSession && currentPlayers.length > 0) {
     currentSession.players = currentPlayers;
     currentSession.playerCount = currentPlayers.length;
-    currentSession.totalBuyIn = currentPlayers.reduce((sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0), 0);
-    currentSession.totalWinnings = currentPlayers.reduce((sum, p) => sum + (p.winnings ?? 0), 0);
-    currentSession.totalRake = currentPlayers.reduce((sum, p) => sum + (p.rake ?? 0), 0);
+    currentSession.totalBuyIn = currentPlayers.reduce(
+      (sum, p) => sum + (p.buyInChips ?? p.buyIn ?? 0),
+      0,
+    );
+    currentSession.totalWinnings = currentPlayers.reduce(
+      (sum, p) => sum + (p.winnings ?? 0),
+      0,
+    );
+    currentSession.totalRake = currentPlayers.reduce(
+      (sum, p) => sum + (p.rake ?? 0),
+      0,
+    );
     result.push(currentSession);
   }
 
@@ -2077,7 +2413,10 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   console.log(`  MTT_OTHER (MTT/6+ etc): ${categoryCounts.MTT_OTHER}`);
   if (result.length > 0) {
     console.log(`\nFirst session:`, JSON.stringify(result[0], null, 2));
-    const totalPlayers = result.reduce((sum, s) => sum + (s.playerCount || 0), 0);
+    const totalPlayers = result.reduce(
+      (sum, s) => sum + (s.playerCount || 0),
+      0,
+    );
     console.log(`Total players across all sessions: ${totalPlayers}`);
   }
   console.log(`========== END PARSED PARTIDAS ==========\n`);
@@ -2099,11 +2438,8 @@ const DEMONSTRATIVO_COLUMNS = {
 function parseDemonstrativoSheet(sheet: XLSX.Sheet): ParsedDemonstrativo[] {
   debugSheetColumns(sheet, "Demonstrativo");
 
-  const rawData = parseSheetByPosition(
-    sheet,
-    DEMONSTRATIVO_COLUMNS,
-    2,
-    (row) => Boolean(row.ppPokerId || row.occurredAt)
+  const rawData = parseSheetByPosition(sheet, DEMONSTRATIVO_COLUMNS, 2, (row) =>
+    Boolean(row.ppPokerId || row.occurredAt),
   );
 
   const result = rawData.map((row) => ({
@@ -2140,11 +2476,8 @@ const RAKEBACK_COLUMNS = {
 function parseRakebackSheet(sheet: XLSX.Sheet): ParsedRakeback[] {
   debugSheetColumns(sheet, "Retorno de taxa");
 
-  const rawData = parseSheetByPosition(
-    sheet,
-    RAKEBACK_COLUMNS,
-    2,
-    (row) => Boolean(row.agentPpPokerId)
+  const rawData = parseSheetByPosition(sheet, RAKEBACK_COLUMNS, 2, (row) =>
+    Boolean(row.agentPpPokerId),
   );
 
   const result = rawData
@@ -2172,7 +2505,9 @@ function parseRakebackSheet(sheet: XLSX.Sheet): ParsedRakeback[] {
 }
 
 // Parse League Excel workbook
-function parseLeagueExcelWorkbook(workbook: XLSX.WorkBook): ParsedLeagueImportData {
+function parseLeagueExcelWorkbook(
+  workbook: XLSX.WorkBook,
+): ParsedLeagueImportData {
   const result: ParsedLeagueImportData = {};
 
   // Log all sheet names for debugging
@@ -2183,33 +2518,73 @@ function parseLeagueExcelWorkbook(workbook: XLSX.WorkBook): ParsedLeagueImportDa
   // Parse each known sheet
   const sheetParsers: Record<string, (sheet: XLSX.Sheet) => void> = {
     // League-level sheet (NEW - first tab)
-    "Geral de liga": (sheet) => { result.leagueSummary = parseGeralDeLigaSheet(sheet); },
-    "Geral da liga": (sheet) => { result.leagueSummary = parseGeralDeLigaSheet(sheet); },
-    "League General": (sheet) => { result.leagueSummary = parseGeralDeLigaSheet(sheet); },
+    "Geral de liga": (sheet) => {
+      result.leagueSummary = parseGeralDeLigaSheet(sheet);
+    },
+    "Geral da liga": (sheet) => {
+      result.leagueSummary = parseGeralDeLigaSheet(sheet);
+    },
+    "League General": (sheet) => {
+      result.leagueSummary = parseGeralDeLigaSheet(sheet);
+    },
     // Standard club sheets
-    "Geral": (sheet) => { result.clubSummaries = parseGeralSheet(sheet); },
-    "General": (sheet) => { result.clubSummaries = parseGeralSheet(sheet); },
-    "Geral de clube": (sheet) => { result.clubSummaries = parseGeralSheet(sheet); },
+    Geral: (sheet) => {
+      result.clubSummaries = parseGeralSheet(sheet);
+    },
+    General: (sheet) => {
+      result.clubSummaries = parseGeralSheet(sheet);
+    },
+    "Geral de clube": (sheet) => {
+      result.clubSummaries = parseGeralSheet(sheet);
+    },
     // Detalhes de Clube (NEW)
-    "Detalhado": (sheet) => { result.clubDetailed = parseDetalhesDeClubeSheet(sheet); },
-    "Detalhes de clube": (sheet) => { result.clubDetailed = parseDetalhesDeClubeSheet(sheet); },
-    "Club Details": (sheet) => { result.clubDetailed = parseDetalhesDeClubeSheet(sheet); },
+    Detalhado: (sheet) => {
+      result.clubDetailed = parseDetalhesDeClubeSheet(sheet);
+    },
+    "Detalhes de clube": (sheet) => {
+      result.clubDetailed = parseDetalhesDeClubeSheet(sheet);
+    },
+    "Club Details": (sheet) => {
+      result.clubDetailed = parseDetalhesDeClubeSheet(sheet);
+    },
     // Partidas (Sessions)
-    "Partidas": (sheet) => { result.sessions = parsePartidasSheet(sheet); },
-    "Sessions": (sheet) => { result.sessions = parsePartidasSheet(sheet); },
+    Partidas: (sheet) => {
+      result.sessions = parsePartidasSheet(sheet);
+    },
+    Sessions: (sheet) => {
+      result.sessions = parsePartidasSheet(sheet);
+    },
     // User details
-    "Detalhes do usuário": (sheet) => { result.players = parseUserDetailsSheet(sheet); },
-    "User Details": (sheet) => { result.players = parseUserDetailsSheet(sheet); },
+    "Detalhes do usuário": (sheet) => {
+      result.players = parseUserDetailsSheet(sheet);
+    },
+    "User Details": (sheet) => {
+      result.players = parseUserDetailsSheet(sheet);
+    },
     // Transactions
-    "Transações": (sheet) => { result.transactions = parseTransacoesSheet(sheet); },
-    "Transactions": (sheet) => { result.transactions = parseTransacoesSheet(sheet); },
+    Transações: (sheet) => {
+      result.transactions = parseTransacoesSheet(sheet);
+    },
+    Transactions: (sheet) => {
+      result.transactions = parseTransacoesSheet(sheet);
+    },
     // Demonstrativo (Statement)
-    "Demonstrativo": (sheet) => { result.demonstrativo = parseDemonstrativoSheet(sheet); },
-    "Statement": (sheet) => { result.demonstrativo = parseDemonstrativoSheet(sheet); },
+    Demonstrativo: (sheet) => {
+      result.demonstrativo = parseDemonstrativoSheet(sheet);
+    },
+    Statement: (sheet) => {
+      result.demonstrativo = parseDemonstrativoSheet(sheet);
+    },
     // Retorno de taxa (Rakeback)
-    "Retorno de taxa": (sheet) => { result.rakebacks = parseRakebackSheet(sheet); },
-    "Fee Return": (sheet) => { result.rakebacks = parseRakebackSheet(sheet); },
-    "Rakeback": (sheet) => { result.rakebacks = parseRakebackSheet(sheet); },
+    "Retorno de taxa": (sheet) => {
+      result.rakebacks = parseRakebackSheet(sheet);
+    },
+    "Fee Return": (sheet) => {
+      result.rakebacks = parseRakebackSheet(sheet);
+    },
+    Rakeback: (sheet) => {
+      result.rakebacks = parseRakebackSheet(sheet);
+    },
   };
 
   for (const sheetName of workbook.SheetNames) {
@@ -2232,7 +2607,9 @@ function parseLeagueExcelWorkbook(workbook: XLSX.WorkBook): ParsedLeagueImportDa
 }
 
 // Validate league import data
-function validateLeagueImportData(data: ParsedLeagueImportData): LeagueValidationResult {
+function validateLeagueImportData(
+  data: ParsedLeagueImportData,
+): LeagueValidationResult {
   const checks: any[] = [];
   const warnings: any[] = [];
   let passedChecks = 0;
@@ -2335,12 +2712,11 @@ function validateLeagueImportData(data: ParsedLeagueImportData): LeagueValidatio
   }
 
   const hasBlockingErrors = checks.some(
-    (c) => c.status === "failed" && c.severity === "critical"
+    (c) => c.status === "failed" && c.severity === "critical",
   );
 
-  const qualityScore = totalChecks > 0
-    ? Math.round((passedChecks / totalChecks) * 100)
-    : 0;
+  const qualityScore =
+    totalChecks > 0 ? Math.round((passedChecks / totalChecks) * 100) : 0;
 
   // Calculate stats from league summary if available
   const leagueClubs = data.leagueSummary?.clubs || [];
@@ -2349,10 +2725,14 @@ function validateLeagueImportData(data: ParsedLeagueImportData): LeagueValidatio
   const totalTransactions = data.transactions?.length || 0;
 
   // Use league summary totals if available
-  const totalWinnings = data.leagueSummary?.totalPlayerEarningsGeneral ??
-    data.clubSummaries?.reduce((sum, s) => sum + (s.generalTotal || 0), 0) ?? 0;
-  const totalRake = data.leagueSummary?.totalClubEarningsJackpotFee ??
-    data.clubSummaries?.reduce((sum, s) => sum + (s.feeGeneral || 0), 0) ?? 0;
+  const totalWinnings =
+    data.leagueSummary?.totalPlayerEarningsGeneral ??
+    data.clubSummaries?.reduce((sum, s) => sum + (s.generalTotal || 0), 0) ??
+    0;
+  const totalRake =
+    data.leagueSummary?.totalClubEarningsJackpotFee ??
+    data.clubSummaries?.reduce((sum, s) => sum + (s.feeGeneral || 0), 0) ??
+    0;
 
   // Build club distribution from league summary
   const clubDistribution = leagueClubs.map((club) => ({
@@ -2360,37 +2740,96 @@ function validateLeagueImportData(data: ParsedLeagueImportData): LeagueValidatio
     clubName: club.clubName,
     playerCount: 0, // Not available at league level
     totalRake: club.clubEarningsJackpotFee,
-    percentage: totalWinnings !== 0
-      ? Math.abs(club.playerEarningsGeneral / totalWinnings) * 100
-      : 0,
+    percentage:
+      totalWinnings !== 0
+        ? Math.abs(club.playerEarningsGeneral / totalWinnings) * 100
+        : 0,
   }));
 
   // Game type distribution from league summary
-  const gameTypeDistribution = data.leagueSummary ? [
-    { type: "ring_games", label: "Ring Games", value: data.leagueSummary.totalPlayerEarningsRingGames, percentage: 0 },
-    { type: "mtt_sitng", label: "MTT/SitNGo", value: data.leagueSummary.totalPlayerEarningsMttSitNGo, percentage: 0 },
-    { type: "spinup", label: "SpinUp", value: data.leagueSummary.totalPlayerEarningsSpinUp, percentage: 0 },
-    { type: "caribbean", label: "Caribbean+", value: data.leagueSummary.totalPlayerEarningsCaribbeanPoker, percentage: 0 },
-    { type: "color_game", label: "Color Game", value: data.leagueSummary.totalPlayerEarningsColorGame, percentage: 0 },
-    { type: "crash", label: "Crash", value: data.leagueSummary.totalPlayerEarningsCrash, percentage: 0 },
-    { type: "lucky_draw", label: "Lucky Draw", value: data.leagueSummary.totalPlayerEarningsLuckyDraw, percentage: 0 },
-    { type: "jackpot", label: "Jackpot", value: data.leagueSummary.totalPlayerEarningsJackpot, percentage: 0 },
-  ].filter(g => g.value !== 0) : [];
+  const gameTypeDistribution = data.leagueSummary
+    ? [
+        {
+          type: "ring_games",
+          label: "Ring Games",
+          value: data.leagueSummary.totalPlayerEarningsRingGames,
+          percentage: 0,
+        },
+        {
+          type: "mtt_sitng",
+          label: "MTT/SitNGo",
+          value: data.leagueSummary.totalPlayerEarningsMttSitNGo,
+          percentage: 0,
+        },
+        {
+          type: "spinup",
+          label: "SpinUp",
+          value: data.leagueSummary.totalPlayerEarningsSpinUp,
+          percentage: 0,
+        },
+        {
+          type: "caribbean",
+          label: "Caribbean+",
+          value: data.leagueSummary.totalPlayerEarningsCaribbeanPoker,
+          percentage: 0,
+        },
+        {
+          type: "color_game",
+          label: "Color Game",
+          value: data.leagueSummary.totalPlayerEarningsColorGame,
+          percentage: 0,
+        },
+        {
+          type: "crash",
+          label: "Crash",
+          value: data.leagueSummary.totalPlayerEarningsCrash,
+          percentage: 0,
+        },
+        {
+          type: "lucky_draw",
+          label: "Lucky Draw",
+          value: data.leagueSummary.totalPlayerEarningsLuckyDraw,
+          percentage: 0,
+        },
+        {
+          type: "jackpot",
+          label: "Jackpot",
+          value: data.leagueSummary.totalPlayerEarningsJackpot,
+          percentage: 0,
+        },
+      ].filter((g) => g.value !== 0)
+    : [];
 
   // Calculate percentages
-  const totalGameValue = gameTypeDistribution.reduce((sum, g) => sum + Math.abs(g.value), 0);
-  gameTypeDistribution.forEach(g => {
-    g.percentage = totalGameValue > 0 ? (Math.abs(g.value) / totalGameValue) * 100 : 0;
+  const totalGameValue = gameTypeDistribution.reduce(
+    (sum, g) => sum + Math.abs(g.value),
+    0,
+  );
+  gameTypeDistribution.forEach((g) => {
+    g.percentage =
+      totalGameValue > 0 ? (Math.abs(g.value) / totalGameValue) * 100 : 0;
   });
 
   // Find top performers from league clubs (by player earnings)
-  const sortedByGeneral = [...leagueClubs].sort((a, b) => b.playerEarningsGeneral - a.playerEarningsGeneral);
-  const majorWinner = sortedByGeneral.length > 0 && sortedByGeneral[0].playerEarningsGeneral > 0
-    ? { name: sortedByGeneral[0].clubName, value: sortedByGeneral[0].playerEarningsGeneral }
-    : null;
-  const majorLoser = sortedByGeneral.length > 0 && sortedByGeneral[sortedByGeneral.length - 1].playerEarningsGeneral < 0
-    ? { name: sortedByGeneral[sortedByGeneral.length - 1].clubName, value: sortedByGeneral[sortedByGeneral.length - 1].playerEarningsGeneral }
-    : null;
+  const sortedByGeneral = [...leagueClubs].sort(
+    (a, b) => b.playerEarningsGeneral - a.playerEarningsGeneral,
+  );
+  const majorWinner =
+    sortedByGeneral.length > 0 && sortedByGeneral[0].playerEarningsGeneral > 0
+      ? {
+          name: sortedByGeneral[0].clubName,
+          value: sortedByGeneral[0].playerEarningsGeneral,
+        }
+      : null;
+  const majorLoser =
+    sortedByGeneral.length > 0 &&
+    sortedByGeneral[sortedByGeneral.length - 1].playerEarningsGeneral < 0
+      ? {
+          name: sortedByGeneral[sortedByGeneral.length - 1].clubName,
+          value:
+            sortedByGeneral[sortedByGeneral.length - 1].playerEarningsGeneral,
+        }
+      : null;
 
   return {
     qualityScore,
@@ -2411,18 +2850,23 @@ function validateLeagueImportData(data: ParsedLeagueImportData): LeagueValidatio
       totalPlayers,
       newPlayers: totalPlayers,
       existingPlayers: 0,
-      winners: leagueClubs.filter((c) => c.playerEarningsGeneral > 0).length ||
-        data.clubSummaries?.filter((s) => s.generalTotal > 0).length || 0,
-      losers: leagueClubs.filter((c) => c.playerEarningsGeneral < 0).length ||
-        data.clubSummaries?.filter((s) => s.generalTotal < 0).length || 0,
+      winners:
+        leagueClubs.filter((c) => c.playerEarningsGeneral > 0).length ||
+        data.clubSummaries?.filter((s) => s.generalTotal > 0).length ||
+        0,
+      losers:
+        leagueClubs.filter((c) => c.playerEarningsGeneral < 0).length ||
+        data.clubSummaries?.filter((s) => s.generalTotal < 0).length ||
+        0,
       totalWinnings,
       totalRake,
       avgWinningsPerPlayer: totalPlayers > 0 ? totalWinnings / totalPlayers : 0,
       totalTransactions,
-      transactionVolume: data.transactions?.reduce(
-        (sum, t) => sum + Math.abs(t.creditSent) + Math.abs(t.chipsSent),
-        0
-      ) || 0,
+      transactionVolume:
+        data.transactions?.reduce(
+          (sum, t) => sum + Math.abs(t.creditSent) + Math.abs(t.chipsSent),
+          0,
+        ) || 0,
       avgTransactionValue: 0,
       totalSessions: data.sessions?.length || 0,
       cashGameSessions: 0,
@@ -2506,9 +2950,9 @@ export function LeagueImportUploader() {
           cellFormula: true,
           cellStyles: true,
           cellDates: true,
-          cellNF: true,      // Preserve number formats
-          sheetStubs: true,  // Include empty cells for formula evaluation
-          dense: false,      // Use sparse array format for better formula access
+          cellNF: true, // Preserve number formats
+          sheetStubs: true, // Include empty cells for formula evaluation
+          dense: false, // Use sparse array format for better formula access
         });
 
         let parsedData: ParsedLeagueImportData = {};
@@ -2523,7 +2967,7 @@ export function LeagueImportUploader() {
           const periodCell = geralSheet["A3"];
           if (periodCell && periodCell.v) {
             const periodMatch = periodCell.v.match(
-              /(\d{4}\/\d{2}\/\d{2})\s*-\s*(\d{4}\/\d{2}\/\d{2})/
+              /(\d{4}\/\d{2}\/\d{2})\s*-\s*(\d{4}\/\d{2}\/\d{2})/,
             );
             if (periodMatch) {
               parsedData.periodStart = periodMatch[1].replace(/\//g, "-");
@@ -2575,7 +3019,7 @@ export function LeagueImportUploader() {
         setIsProcessing(false);
       }
     },
-    [toast, update, t]
+    [toast, update, t],
   );
 
   const onDrop = useCallback(
@@ -2583,7 +3027,7 @@ export function LeagueImportUploader() {
       if (acceptedFiles.length === 0) return;
       processFile(acceptedFiles[0]);
     },
-    [processFile]
+    [processFile],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -2610,7 +3054,7 @@ export function LeagueImportUploader() {
           <div
             className={cn(
               "bg-background dark:bg-[#1A1A1A] h-full w-full flex items-center justify-center text-center transition-opacity",
-              isDragActive ? "visible opacity-100" : "invisible opacity-0"
+              isDragActive ? "visible opacity-100" : "invisible opacity-0",
             )}
           >
             <input {...getInputProps()} id="upload-poker-file" />
@@ -2640,7 +3084,9 @@ export function LeagueImportUploader() {
 
               <button
                 type="button"
-                onClick={() => document.getElementById("upload-poker-file")?.click()}
+                onClick={() =>
+                  document.getElementById("upload-poker-file")?.click()
+                }
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 mx-auto"
               >
                 {t("poker.leagueImport.upload")}
