@@ -2,10 +2,10 @@
 
 import { OAuthApplicationForm } from "@/components/forms/oauth-application-form";
 import { useOAuthApplicationParams } from "@/hooks/use-oauth-application-params";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import React from "react";
 
 export function OAuthApplicationCreateSheet() {

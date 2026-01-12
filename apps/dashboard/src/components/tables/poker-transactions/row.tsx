@@ -1,6 +1,6 @@
 "use client";
 
-import { TableCell, TableRow } from "@midday/ui/table";
+import { TableCell, TableRow } from "@midpoker/ui/table";
 import type { Row } from "@tanstack/react-table";
 import { flexRender } from "@tanstack/react-table";
 import type { PokerTransaction } from "./columns";

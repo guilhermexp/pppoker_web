@@ -5,7 +5,7 @@ import {
   TableHead,
   TableRow,
   TableHeader as UITableHeader,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import { columns } from "./columns";
 
 type Props = {

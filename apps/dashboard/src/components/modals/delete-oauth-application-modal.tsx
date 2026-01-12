@@ -11,9 +11,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@midday/ui/alert-dialog";
-import { Input } from "@midday/ui/input";
-import { Label } from "@midday/ui/label";
+} from "@midpoker/ui/alert-dialog";
+import { Input } from "@midpoker/ui/input";
+import { Label } from "@midpoker/ui/label";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";

@@ -21,7 +21,7 @@ import {
 } from "@api/schemas/widgets";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { widgetPreferencesCache } from "@midday/cache/widget-preferences-cache";
+import { widgetPreferencesCache } from "@midpoker/cache/widget-preferences-cache";
 import {
   getBillableHours,
   getInboxStats,
@@ -33,7 +33,7 @@ import {
   getSpendingForPeriod,
   getTaxSummary,
   getTrackedTime,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 
 export const widgetsRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues

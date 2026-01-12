@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import { Controller, useFormContext } from "react-hook-form";
 import { Editor } from "./editor";
 import type { InvoiceFormValues } from "./form-context";

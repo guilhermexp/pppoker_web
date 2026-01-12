@@ -4,11 +4,7 @@
     Plataforma Completa de Gestao Financeira para Clubes de Poker
     <br />
     <br />
-    <a href="https://mid.poker">Website</a>
-    ·
-    <a href="https://app.mid.poker">Dashboard</a>
-    ·
-    <a href="https://docs.mid.poker">Docs</a>
+    <a href="https://middaydashboard-production.up.railway.app">Dashboard</a>
   </p>
 </p>
 
@@ -355,5 +351,4 @@ Este projeto e baseado em codigo open-source. Consulte o arquivo LICENSE para ma
 
 ## Contato
 
-- Email: contato@mid.poker
-- Website: https://mid.poker
+- Dashboard: https://middaydashboard-production.up.railway.app

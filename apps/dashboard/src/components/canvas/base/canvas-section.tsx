@@ -1,7 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/canvas/base/skeleton";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 
 interface CanvasSectionProps {
   title?: string;

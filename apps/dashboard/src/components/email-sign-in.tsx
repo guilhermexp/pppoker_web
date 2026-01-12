@@ -1,7 +1,7 @@
 "use client";
 
-import { createClient } from "@midday/supabase/client";
-import { Icons } from "@midday/ui/icons";
+import { createClient } from "@midpoker/supabase/client";
+import { Icons } from "@midpoker/ui/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 

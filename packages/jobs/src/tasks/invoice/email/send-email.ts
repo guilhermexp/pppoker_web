@@ -1,6 +1,6 @@
 import { getDb } from "@jobs/init";
-import { Notifications } from "@midday/notifications";
-import { createClient } from "@midday/supabase/job";
+import { Notifications } from "@midpoker/notifications";
+import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 

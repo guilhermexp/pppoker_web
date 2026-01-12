@@ -6,8 +6,8 @@ import type {
   ValidationCheck,
 } from "@/lib/poker/types";
 import { useTRPC } from "@/trpc/client";
-import { Icons } from "@midday/ui/icons";
-import { Spinner } from "@midday/ui/spinner";
+import { Icons } from "@midpoker/ui/icons";
+import { Spinner } from "@midpoker/ui/spinner";
 import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";

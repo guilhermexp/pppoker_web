@@ -3,7 +3,7 @@
 import { useUserQuery } from "@/hooks/use-user";
 import { useI18n } from "@/locales/client";
 import { getTrialDaysLeft, isTrialExpired } from "@/utils/trial";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import Link from "next/link";
 import { FeedbackForm } from "./feedback-form";
 

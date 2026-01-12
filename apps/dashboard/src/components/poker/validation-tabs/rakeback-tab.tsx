@@ -1,9 +1,9 @@
 "use client";
 
 import type { ParsedRakeback } from "@/lib/poker/types";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import { useState } from "react";
 
 type RakebackTabProps = {

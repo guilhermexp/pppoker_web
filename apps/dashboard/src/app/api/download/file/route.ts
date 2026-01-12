@@ -1,5 +1,5 @@
-import { createClient } from "@midday/supabase/server";
-import { download } from "@midday/supabase/storage";
+import { createClient } from "@midpoker/supabase/server";
+import { download } from "@midpoker/supabase/storage";
 import type { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest, res: NextResponse) {

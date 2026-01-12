@@ -4,7 +4,7 @@ import { FormatAmount } from "@/components/format-amount";
 import { TransactionStatus } from "@/components/transaction-status";
 import { useTransactionParams } from "@/hooks/use-transaction-params";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 
 type Props = {
   transaction: NonNullable<

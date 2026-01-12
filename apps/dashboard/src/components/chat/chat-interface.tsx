@@ -4,14 +4,14 @@ import { Canvas } from "@/components/canvas";
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useChatStatus } from "@/hooks/use-chat-status";
 import { useChat, useChatActions, useDataPart } from "@ai-sdk-tools/store";
-import type { UIChatMessage } from "@midday/api/ai/types";
-import { createClient } from "@midday/supabase/client";
-import { cn } from "@midday/ui/cn";
+import type { UIChatMessage } from "@midpoker/api/ai/types";
+import { createClient } from "@midpoker/supabase/client";
+import { cn } from "@midpoker/ui/cn";
 import {
   Conversation,
   ConversationContent,
   ConversationScrollButton,
-} from "@midday/ui/conversation";
+} from "@midpoker/ui/conversation";
 import type { Geo } from "@vercel/functions";
 import { DefaultChatTransport, generateId } from "ai";
 import { parseAsString, useQueryState } from "nuqs";

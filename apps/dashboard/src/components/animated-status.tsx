@@ -1,7 +1,7 @@
 "use client";
 
 import type { IconComponent } from "@/lib/tool-config";
-import { TextShimmer } from "@midday/ui/text-shimmer";
+import { TextShimmer } from "@midpoker/ui/text-shimmer";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface AnimatedStatusProps {

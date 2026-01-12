@@ -3,7 +3,7 @@
 import { useCustomerParams } from "@/hooks/use-customer-params";
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
 import { useTRPC } from "@/trpc/client";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -11,8 +11,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@midday/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
+} from "@midpoker/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@midpoker/ui/popover";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 

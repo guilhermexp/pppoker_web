@@ -2,7 +2,7 @@
 
 import { AssignedUser } from "@/components/assigned-user";
 import { useTRPC } from "@/trpc/client";
-import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@midpoker/ui/popover";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 

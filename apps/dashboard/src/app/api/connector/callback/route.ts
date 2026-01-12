@@ -1,5 +1,5 @@
 import { getQueryClient, trpc } from "@/trpc/server";
-import type { InitialInboxSetupPayload } from "@midday/jobs/schema";
+import type { InitialInboxSetupPayload } from "@midpoker/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 import { NextResponse } from "next/server";
 

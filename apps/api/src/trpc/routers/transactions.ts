@@ -13,8 +13,8 @@ import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import {
   getSimilarTransactions,
   searchTransactionMatch,
-} from "@midday/db/queries";
-import type { EmbedTransactionPayload } from "@midday/jobs/schema";
+} from "@midpoker/db/queries";
+import type { EmbedTransactionPayload } from "@midpoker/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 
 export const transactionsRouter = createTRPCRouter({

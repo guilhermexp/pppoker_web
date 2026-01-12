@@ -1,7 +1,7 @@
 import { getDb } from "@jobs/init";
 import { initialInboxSetupSchema } from "@jobs/schema";
 import { generateQuarterDailyCronTag } from "@jobs/utils/generate-cron-tag";
-import { updateInboxAccount } from "@midday/db/queries";
+import { updateInboxAccount } from "@midpoker/db/queries";
 import { schedules, schemaTask } from "@trigger.dev/sdk";
 import { inboxSyncScheduler } from "./sheduler";
 import { syncInboxAccount } from "./sync-account";

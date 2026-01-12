@@ -1,6 +1,6 @@
-import { cn } from "@midday/ui/cn";
-import { Skeleton } from "@midday/ui/skeleton";
-import { Table, TableBody, TableCell, TableRow } from "@midday/ui/table";
+import { cn } from "@midpoker/ui/cn";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { Table, TableBody, TableCell, TableRow } from "@midpoker/ui/table";
 import { DataTableHeader } from "./table-header";
 
 export function TeamsSkeleton() {

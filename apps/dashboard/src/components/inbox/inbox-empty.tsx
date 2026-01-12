@@ -1,8 +1,8 @@
 "use client";
 
 import { useInboxFilterParams } from "@/hooks/use-inbox-filter-params";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 
 export function NoResults() {
   const { setParams } = useInboxFilterParams();

@@ -3,8 +3,8 @@
 import { useUserQuery } from "@/hooks/use-user";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Button } from "@midday/ui/button";
-import { Calendar } from "@midday/ui/calendar";
+import { Button } from "@midpoker/ui/button";
+import { Calendar } from "@midpoker/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -14,10 +14,10 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
-import { SubmitButton as BaseSubmitButton } from "@midday/ui/submit-button";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
+import { SubmitButton as BaseSubmitButton } from "@midpoker/ui/submit-button";
 import { useMutation } from "@tanstack/react-query";
 import {
   addHours,

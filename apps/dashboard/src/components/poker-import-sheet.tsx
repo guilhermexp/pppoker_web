@@ -1,6 +1,6 @@
 "use client";
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@midday/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@midpoker/ui/sheet";
 import { LeagueImportUploader as SUUploader } from "./league/league-import-uploader";
 import { ImportUploader } from "./poker/import-uploader";
 import { LeagueImportUploader as PokerLeagueUploader } from "./poker/league-import-uploader";

@@ -1,10 +1,14 @@
 {
-  "name": "@midday/ui",
+  "name": "@midpoker/ui",
   "version": "1.0.0",
   "type": "module",
   "private": true,
   "sideEffects": false,
-  "files": ["tailwind.config.ts", "postcss.config.cjs", "globals.css"],
+  "files": [
+    "tailwind.config.ts",
+    "postcss.config.cjs",
+    "globals.css"
+  ],
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
     "lint": "biome check .",
@@ -85,6 +89,7 @@
     "./web-search-sources": "./src/components/web-search-sources.tsx"
   },
   "dependencies": {
+    "@midpoker/utils": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -110,13 +115,14 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
+    "@tiptap/core": "^3.15.3",
     "@tiptap/extension-bold": "^2.12.0",
-    "@tiptap/extension-link": "^2.12.0",
+    "@tiptap/extension-link": "^3.15.3",
     "@tiptap/extension-placeholder": "^2.12.0",
-    "@tiptap/extension-underline": "^2.12.0",
+    "@tiptap/extension-underline": "^3.15.3",
     "@tiptap/pm": "^2.12.0",
     "@tiptap/react": "^2.12.0",
-    "@tiptap/starter-kit": "^2.12.0",
+    "@tiptap/starter-kit": "^3.15.3",
     "@uidotdev/usehooks": "^2.4.1",
     "ai": "5.0.87",
     "class-variance-authority": "^0.7.1",
@@ -127,23 +133,25 @@
     "framer-motion": "^12.23.22",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.542.0",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.6",
     "react-day-picker": "9.8.0",
+    "react-hook-form": "^7.71.0",
     "react-icons": "^5.5.0",
     "react-number-format": "^5.4.4",
     "react-syntax-highlighter": "^15.6.6",
     "recharts": "^2.15.3",
     "streamdown": "1.2.0",
     "tailwind-merge": "2.5.3",
-    "tailwindcss": "^3.4.13",
+    "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "use-stick-to-bottom": "^1.1.1",
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.4.23",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

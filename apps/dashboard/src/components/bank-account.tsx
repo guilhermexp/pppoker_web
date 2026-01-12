@@ -13,20 +13,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@midday/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@midday/ui/avatar";
-import { cn } from "@midday/ui/cn";
+} from "@midpoker/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
+import { cn } from "@midpoker/ui/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Input } from "@midday/ui/input";
-import { Label } from "@midday/ui/label";
-import { Switch } from "@midday/ui/switch";
-import { getInitials } from "@midday/utils/format";
+} from "@midpoker/ui/dropdown-menu";
+import { Input } from "@midpoker/ui/input";
+import { Label } from "@midpoker/ui/label";
+import { Switch } from "@midpoker/ui/switch";
+import { getInitials } from "@midpoker/utils/format";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal } from "lucide-react";
 import { Loader2 } from "lucide-react";

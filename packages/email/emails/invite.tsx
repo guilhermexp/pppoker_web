@@ -1,4 +1,4 @@
-import { getAppUrl } from "@midday/utils/envs";
+import { getAppUrl } from "@midpoker/utils/envs";
 import {
   Body,
   Container,

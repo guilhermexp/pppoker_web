@@ -1,7 +1,7 @@
 import { getDb } from "@jobs/init";
-import { updateDocumentByFileName } from "@midday/db/queries";
-import { limitWords } from "@midday/documents";
-import { DocumentClassifier } from "@midday/documents/classifier";
+import { updateDocumentByFileName } from "@midpoker/db/queries";
+import { limitWords } from "@midpoker/documents";
+import { DocumentClassifier } from "@midpoker/documents/classifier";
 import { schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { embedDocumentTags } from "./embed-document-tags";

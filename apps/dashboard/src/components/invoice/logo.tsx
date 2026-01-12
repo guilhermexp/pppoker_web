@@ -3,9 +3,9 @@
 import { useUpload } from "@/hooks/use-upload";
 import { useUserQuery } from "@/hooks/use-user";
 import { useTRPC } from "@/trpc/client";
-import { Icons } from "@midday/ui/icons";
-import { Skeleton } from "@midday/ui/skeleton";
-import { useToast } from "@midday/ui/use-toast";
+import { Icons } from "@midpoker/ui/icons";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useFormContext } from "react-hook-form";
 

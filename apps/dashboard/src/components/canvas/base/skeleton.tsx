@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@midday/ui/cn";
-import { Skeleton as UISkeleton } from "@midday/ui/skeleton";
+import { cn } from "@midpoker/ui/cn";
+import { Skeleton as UISkeleton } from "@midpoker/ui/skeleton";
 
 interface SkeletonProps {
   className?: string;

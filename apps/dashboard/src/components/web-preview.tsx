@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { Input } from "@midday/ui/input";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { Input } from "@midpoker/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import type { ComponentProps, ReactNode } from "react";
 
 export type WebPreviewProps = ComponentProps<"div">;

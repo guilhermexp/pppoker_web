@@ -12,11 +12,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
-import { Avatar, AvatarFallback, AvatarImageNext } from "@midday/ui/avatar";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/accordion";
+import { Avatar, AvatarFallback, AvatarImageNext } from "@midpoker/ui/avatar";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CopyInput } from "./copy-input";

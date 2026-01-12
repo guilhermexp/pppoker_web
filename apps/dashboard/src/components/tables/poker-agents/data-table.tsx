@@ -5,9 +5,9 @@ import { usePokerPlayerParams } from "@/hooks/use-poker-player-params";
 import { useSortParams } from "@/hooks/use-sort-params";
 import { useTableScroll } from "@/hooks/use-table-scroll";
 import { useTRPC } from "@/trpc/client";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { Table, TableBody, TableCell, TableRow } from "@midday/ui/table";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { Table, TableBody, TableCell, TableRow } from "@midpoker/ui/table";
 import {
   useMutation,
   useQuery,

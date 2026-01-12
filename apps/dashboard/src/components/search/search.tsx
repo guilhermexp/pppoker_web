@@ -18,10 +18,10 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@midday/ui/command";
-import { Icons } from "@midday/ui/icons";
-import { Spinner } from "@midday/ui/spinner";
-import { formatDate } from "@midday/utils/format";
+} from "@midpoker/ui/command";
+import { Icons } from "@midpoker/ui/icons";
+import { Spinner } from "@midpoker/ui/spinner";
+import { formatDate } from "@midpoker/utils/format";
 import { useQuery } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import { useRouter } from "next/navigation";

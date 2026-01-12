@@ -11,7 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@midday/ui/select";
+} from "@midpoker/ui/select";
 
 type Theme = "dark" | "system" | "light";
 

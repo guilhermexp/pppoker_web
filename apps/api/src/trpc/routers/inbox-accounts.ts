@@ -6,8 +6,8 @@ import {
 } from "@api/schemas/inbox-accounts";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { deleteInboxAccount } from "@midday/db/queries";
-import { InboxConnector } from "@midday/inbox/connector";
+import { deleteInboxAccount } from "@midpoker/db/queries";
+import { InboxConnector } from "@midpoker/inbox/connector";
 import { schedules, tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 

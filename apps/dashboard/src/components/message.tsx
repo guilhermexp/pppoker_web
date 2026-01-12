@@ -1,8 +1,8 @@
-import { TextShimmer } from "@midday/ui/text-shimmer";
+import { TextShimmer } from "@midpoker/ui/text-shimmer";
 import {
   type SupportedToolName,
   ToolCallIndicator,
-} from "@midday/ui/tool-call-indicator";
+} from "@midpoker/ui/tool-call-indicator";
 import React from "react";
 
 export const ThinkingMessage = () => {

@@ -4,9 +4,9 @@ import { growthRateArtifact } from "@api/ai/artifacts/growth-rate";
 import { generateArtifactDescription } from "@api/ai/utils/artifact-title";
 import { getToolDateDefaults } from "@api/ai/utils/tool-date-defaults";
 import { checkBankAccountsRequired } from "@api/ai/utils/tool-helpers";
-import { db } from "@midday/db/client";
-import { getGrowthRate } from "@midday/db/queries";
-import { formatAmount } from "@midday/utils/format";
+import { db } from "@midpoker/db/client";
+import { getGrowthRate } from "@midpoker/db/queries";
+import { formatAmount } from "@midpoker/utils/format";
 import { tool } from "ai";
 import { z } from "zod";
 

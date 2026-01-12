@@ -28,8 +28,8 @@ import {
   matchTransaction,
   unmatchTransaction,
   updateInbox,
-} from "@midday/db/queries";
-import type { ProcessAttachmentPayload } from "@midday/jobs/schema";
+} from "@midpoker/db/queries";
+import type { ProcessAttachmentPayload } from "@midpoker/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 
 export const inboxRouter = createTRPCRouter({

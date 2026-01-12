@@ -2,14 +2,14 @@
 
 import { useTRPC } from "@/trpc/client";
 import { useChatActions, useChatId } from "@ai-sdk-tools/store";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 

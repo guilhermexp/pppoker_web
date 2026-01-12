@@ -1,8 +1,8 @@
 "use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@midday/ui/alert";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Alert, AlertDescription, AlertTitle } from "@midpoker/ui/alert";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

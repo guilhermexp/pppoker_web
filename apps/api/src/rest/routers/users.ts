@@ -2,7 +2,7 @@ import type { Context } from "@api/rest/types";
 import { updateUserSchema, userSchema } from "@api/schemas/users";
 import { validateResponse } from "@api/utils/validate-response";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { getUserById, updateUser } from "@midday/db/queries";
+import { getUserById, updateUser } from "@midpoker/db/queries";
 import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();

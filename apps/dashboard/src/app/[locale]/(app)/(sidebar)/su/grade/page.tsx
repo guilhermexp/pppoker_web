@@ -9,9 +9,9 @@ import {
   groupEventsByDay,
   parseTournamentSchedule,
 } from "@/lib/league/tournament-schedule";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 import {
   Table,
   TableBody,
@@ -19,8 +19,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
-import { useToast } from "@midday/ui/use-toast";
+} from "@midpoker/ui/table";
+import { useToast } from "@midpoker/ui/use-toast";
 import { getWeek, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

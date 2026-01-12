@@ -5,7 +5,7 @@ import { usePokerSettlementParams } from "@/hooks/use-poker-settlement-params";
 import { useSortParams } from "@/hooks/use-sort-params";
 import { useTableScroll } from "@/hooks/use-table-scroll";
 import { useTRPC } from "@/trpc/client";
-import { Table, TableBody, TableCell, TableRow } from "@midday/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@midpoker/ui/table";
 import { useMutation, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import {
   flexRender,

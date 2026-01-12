@@ -2,7 +2,7 @@
 
 import { useCustomerParams } from "@/hooks/use-customer-params";
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 
 export function EmptyState() {
   const { setParams } = useCustomerParams();

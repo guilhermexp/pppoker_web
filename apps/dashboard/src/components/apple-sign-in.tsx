@@ -1,9 +1,9 @@
 "use client";
 
 import { getUrl } from "@/utils/environment";
-import { createClient } from "@midday/supabase/client";
-import { Icons } from "@midday/ui/icons";
-import { SubmitButton } from "@midday/ui/submit-button";
+import { createClient } from "@midpoker/supabase/client";
+import { Icons } from "@midpoker/ui/icons";
+import { SubmitButton } from "@midpoker/ui/submit-button";
 import { useState } from "react";
 
 type Props = {

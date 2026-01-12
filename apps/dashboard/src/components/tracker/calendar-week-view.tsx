@@ -5,7 +5,7 @@ import { secondsToHoursAndMinutes } from "@/utils/format";
 import { createSafeDate, formatHour, getSlotFromDate } from "@/utils/tracker";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import { TZDate } from "@date-fns/tz";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import { format } from "date-fns";
 import { memo, useEffect, useMemo, useState } from "react";
 

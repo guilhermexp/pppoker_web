@@ -1,4 +1,4 @@
-import { formatAmount } from "@midday/utils/format";
+import { formatAmount } from "@midpoker/utils/format";
 
 /**
  * Workaround for react-pdf negative currency formatting issue.

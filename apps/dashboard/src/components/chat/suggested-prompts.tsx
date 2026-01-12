@@ -3,7 +3,7 @@
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { extractBankAccountRequired } from "@/lib/chat-utils";
 import { useChat, useChatActions, useDataPart } from "@ai-sdk-tools/store";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 
 type SuggestionsData = {

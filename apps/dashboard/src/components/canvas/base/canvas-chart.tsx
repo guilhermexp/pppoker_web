@@ -1,7 +1,7 @@
 "use client";
 
 import { SkeletonChart } from "@/components/canvas/base/skeleton";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import type { ReactNode } from "react";
 
 interface CanvasChartProps {

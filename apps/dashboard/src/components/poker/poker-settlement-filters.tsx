@@ -3,7 +3,7 @@
 import { PokerDateFilter } from "@/components/poker/poker-date-filter";
 import { usePokerSettlementParams } from "@/hooks/use-poker-settlement-params";
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -11,8 +11,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
 
 export function PokerSettlementFilters() {
   const t = useI18n();

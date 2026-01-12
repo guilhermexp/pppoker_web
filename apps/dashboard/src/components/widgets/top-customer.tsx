@@ -2,7 +2,7 @@ import { FormatAmount } from "@/components/format-amount";
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useTRPC } from "@/trpc/client";
 import { useChatActions, useChatId } from "@ai-sdk-tools/store";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { BaseWidget } from "./base";
 import { WIDGET_POLLING_CONFIG } from "./widget-config";

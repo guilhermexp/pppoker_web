@@ -2,8 +2,8 @@
 
 import { usePokerPlayerParams } from "@/hooks/use-poker-player-params";
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 
 export function EmptyState() {
   const { setParams } = usePokerPlayerParams();

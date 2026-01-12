@@ -1,6 +1,6 @@
 "use client";
 
-import { getAppUrl } from "@midday/utils/envs";
+import { getAppUrl } from "@midpoker/utils/envs";
 import Link from "next/link";
 import { type ComponentProps, memo } from "react";
 import { Streamdown } from "streamdown";

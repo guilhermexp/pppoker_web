@@ -1,10 +1,10 @@
-import type { Database } from "@midday/db/client";
+import type { Database } from "@midpoker/db/client";
 import {
   createActivity,
   getTeamById,
   getTeamMembers,
   shouldSendNotification,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 import type {
   EmailInput,
   NotificationOptions,

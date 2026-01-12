@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import type { Context } from "@api/rest/types";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { logger } from "@midday/logger";
+import { logger } from "@midpoker/logger";
 import { experimental_transcribe as transcribe } from "ai";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";

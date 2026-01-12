@@ -1,5 +1,5 @@
 {
-  "name": "@midday/logger",
+  "name": "@midpoker/logger",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,6 +13,7 @@
     "pino-pretty": "^13.1.2"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

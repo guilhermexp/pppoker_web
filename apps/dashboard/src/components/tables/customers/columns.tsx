@@ -4,16 +4,16 @@ import { useCustomerParams } from "@/hooks/use-customer-params";
 import { useI18n } from "@/locales/client";
 import { getWebsiteLogo } from "@/utils/logos";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Avatar, AvatarFallback, AvatarImageNext } from "@midday/ui/avatar";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Avatar, AvatarFallback, AvatarImageNext } from "@midpoker/ui/avatar";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { ScrollArea, ScrollBar } from "@midday/ui/scroll-area";
+} from "@midpoker/ui/dropdown-menu";
+import { ScrollArea, ScrollBar } from "@midpoker/ui/scroll-area";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";

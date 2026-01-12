@@ -2,9 +2,9 @@
 
 import { useTRPC } from "@/trpc/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Avatar, AvatarFallback } from "@midday/ui/avatar";
-import { AvatarImage } from "@midday/ui/avatar";
-import { SubmitButton } from "@midday/ui/submit-button";
+import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
+import { AvatarImage } from "@midpoker/ui/avatar";
+import { SubmitButton } from "@midpoker/ui/submit-button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 

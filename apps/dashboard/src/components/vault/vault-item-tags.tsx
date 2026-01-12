@@ -2,8 +2,8 @@
 
 import { useDocumentFilterParams } from "@/hooks/use-document-filter-params";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Badge } from "@midday/ui/badge";
-import { Skeleton } from "@midday/ui/skeleton";
+import { Badge } from "@midpoker/ui/badge";
+import { Skeleton } from "@midpoker/ui/skeleton";
 
 type Props = {
   tags: RouterOutputs["documents"]["get"]["data"][number]["documentTagAssignments"];

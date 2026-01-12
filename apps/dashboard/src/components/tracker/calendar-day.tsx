@@ -1,6 +1,6 @@
 import type { RouterOutputs } from "@api/trpc/routers/_app";
 import { TZDate } from "@date-fns/tz";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import { format, formatISO, isToday } from "date-fns";
 import type React from "react";
 import { useCallback } from "react";

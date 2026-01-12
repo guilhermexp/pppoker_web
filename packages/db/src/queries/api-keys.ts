@@ -1,7 +1,7 @@
 import type { Database } from "../client";
 import { apiKeys, users } from "../schema";
 import { generateApiKey } from "../utils/api-keys";
-import { encrypt, hash } from "@midday/encryption";
+import { encrypt, hash } from "@midpoker/encryption";
 import { and, eq } from "drizzle-orm";
 
 export type ApiKey = {

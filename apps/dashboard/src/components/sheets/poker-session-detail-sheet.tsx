@@ -3,21 +3,21 @@
 import { usePokerSessionParams } from "@/hooks/use-poker-session-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Avatar, AvatarFallback } from "@midday/ui/avatar";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
-import { Icons } from "@midday/ui/icons";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Separator } from "@midday/ui/separator";
-import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
-import { Skeleton } from "@midday/ui/skeleton";
+} from "@midpoker/ui/card";
+import { Icons } from "@midpoker/ui/icons";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Separator } from "@midpoker/ui/separator";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -25,8 +25,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
+} from "@midpoker/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";

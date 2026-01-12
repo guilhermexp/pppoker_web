@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@midday/ui/cn";
-import { Skeleton } from "@midday/ui/skeleton";
-import { Table, TableBody, TableCell, TableRow } from "@midday/ui/table";
+import { cn } from "@midpoker/ui/cn";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { Table, TableBody, TableCell, TableRow } from "@midpoker/ui/table";
 
 const data = [...Array(10)].map((_, i) => ({ id: i.toString() }));
 

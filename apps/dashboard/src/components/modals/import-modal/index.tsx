@@ -8,19 +8,19 @@ import { useUserQuery } from "@/hooks/use-user";
 import { useZodForm } from "@/hooks/use-zod-form";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { uniqueCurrencies } from "@midday/location/currencies";
-import { AnimatedSizeContainer } from "@midday/ui/animated-size-container";
+import { uniqueCurrencies } from "@midpoker/location/currencies";
+import { AnimatedSizeContainer } from "@midpoker/ui/animated-size-container";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
-import { Icons } from "@midday/ui/icons";
-import { SubmitButton } from "@midday/ui/submit-button";
-import { useToast } from "@midday/ui/use-toast";
-import { stripSpecialCharacters } from "@midday/utils";
+} from "@midpoker/ui/dialog";
+import { Icons } from "@midpoker/ui/icons";
+import { SubmitButton } from "@midpoker/ui/submit-button";
+import { useToast } from "@midpoker/ui/use-toast";
+import { stripSpecialCharacters } from "@midpoker/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAction } from "next-safe-action/hooks";
 import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";

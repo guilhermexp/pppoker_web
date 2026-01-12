@@ -5,8 +5,8 @@ import {
   upsertDocumentTagAssignments,
   upsertDocumentTagEmbeddings,
   upsertDocumentTags,
-} from "@midday/db/queries";
-import { Embed } from "@midday/documents/embed";
+} from "@midpoker/db/queries";
+import { Embed } from "@midpoker/documents/embed";
 import slugify from "@sindresorhus/slugify";
 import { schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";

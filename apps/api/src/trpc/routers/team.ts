@@ -35,12 +35,12 @@ import {
   leaveTeam,
   updateTeamById,
   updateTeamMember,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 import type {
   DeleteTeamPayload,
   InviteTeamMembersPayload,
   UpdateBaseCurrencyPayload,
-} from "@midday/jobs/schema";
+} from "@midpoker/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 

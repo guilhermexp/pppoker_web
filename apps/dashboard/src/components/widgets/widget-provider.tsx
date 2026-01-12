@@ -1,7 +1,7 @@
 "use client";
 
-import type { AppRouter } from "@midday/api/trpc/routers/_app";
-import type { WidgetConfig } from "@midday/cache/widget-preferences-cache";
+import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
+import type { WidgetConfig } from "@midpoker/cache/widget-preferences-cache";
 import type { inferRouterOutputs } from "@trpc/server";
 import { type ReactNode, createContext, useContext, useRef } from "react";
 import { useStore } from "zustand";

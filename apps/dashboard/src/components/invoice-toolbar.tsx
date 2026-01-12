@@ -1,13 +1,13 @@
 "use client";
 
 import { downloadFile } from "@/lib/download";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import { motion } from "framer-motion";
 import { MdContentCopy, MdOutlineFileDownload } from "react-icons/md";
 import { useCopyToClipboard } from "usehooks-ts";

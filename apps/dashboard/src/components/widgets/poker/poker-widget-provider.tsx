@@ -3,7 +3,7 @@
 import type {
   PokerWidgetPreferences,
   PokerWidgetType,
-} from "@midday/cache/poker-widget-preferences-cache";
+} from "@midpoker/cache/poker-widget-preferences-cache";
 import { type ReactNode, createContext, useContext, useRef } from "react";
 import { useStore } from "zustand";
 import { devtools } from "zustand/middleware";

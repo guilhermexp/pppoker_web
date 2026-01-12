@@ -4,7 +4,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { useSUDashboardParams } from "@/hooks/use-su-dashboard-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { SUStatCard } from "./su-stat-card";
 import {

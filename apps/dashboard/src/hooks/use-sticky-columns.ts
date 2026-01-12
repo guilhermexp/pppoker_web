@@ -1,4 +1,4 @@
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import type { VisibilityState } from "@tanstack/react-table";
 import { useMemo } from "react";
 

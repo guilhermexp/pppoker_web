@@ -2,15 +2,15 @@
 
 import { useTRPC } from "@/trpc/client";
 import { getConnectionsStatus } from "@/utils/connection-status";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 

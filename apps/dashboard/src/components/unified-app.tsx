@@ -1,29 +1,29 @@
 import { useTRPC } from "@/trpc/client";
 import { getScopeDescription } from "@/utils/scopes";
-import type { UnifiedApp } from "@midday/app-store/types";
+import type { UnifiedApp } from "@midpoker/app-store/types";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
+} from "@midpoker/ui/accordion";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@midpoker/ui/card";
 import {
   Carousel,
   type CarouselApi,
   CarouselContent,
   CarouselItem,
-} from "@midday/ui/carousel";
+} from "@midpoker/ui/carousel";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
+} from "@midpoker/ui/dropdown-menu";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";

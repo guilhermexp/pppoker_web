@@ -4,7 +4,7 @@ import { InvoiceSuccess } from "@/components/invoice-success";
 import { Form } from "@/components/invoice/form";
 import { SettingsMenu } from "@/components/invoice/settings-menu";
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
-import { SheetContent, SheetHeader } from "@midday/ui/sheet";
+import { SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { useFormContext } from "react-hook-form";
 
 export function InvoiceContent() {

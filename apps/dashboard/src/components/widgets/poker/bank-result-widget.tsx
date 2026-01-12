@@ -1,8 +1,8 @@
 "use client";
 
 import { useI18n } from "@/locales/client";
-import { Icons } from "@midday/ui/icons";
-import { Skeleton } from "@midday/ui/skeleton";
+import { Icons } from "@midpoker/ui/icons";
+import { Skeleton } from "@midpoker/ui/skeleton";
 
 export function BankResultWidget() {
   const t = useI18n();

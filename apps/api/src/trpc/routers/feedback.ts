@@ -3,7 +3,7 @@ import {
   deleteChatFeedbackSchema,
 } from "@api/schemas/feedback";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { chatFeedbackCache } from "@midday/cache/chat-feedback-cache";
+import { chatFeedbackCache } from "@midpoker/cache/chat-feedback-cache";
 
 export const chatFeedbackRouter = createTRPCRouter({
   create: protectedProcedure

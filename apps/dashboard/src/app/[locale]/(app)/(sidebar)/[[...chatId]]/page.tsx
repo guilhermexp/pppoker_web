@@ -4,7 +4,7 @@ import { ClientOnly } from "@/components/client-only";
 import { Widgets } from "@/components/widgets";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import { Provider as ChatProvider } from "@ai-sdk-tools/store";
-import { createClient } from "@midday/supabase/server";
+import { createClient } from "@midpoker/supabase/server";
 import { geolocation } from "@vercel/functions";
 import type { Metadata } from "next";
 import { headers } from "next/headers";

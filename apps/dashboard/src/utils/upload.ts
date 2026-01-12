@@ -1,4 +1,4 @@
-import { stripSpecialCharacters } from "@midday/utils";
+import { stripSpecialCharacters } from "@midpoker/utils";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import * as tus from "tus-js-client";
 

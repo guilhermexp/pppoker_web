@@ -2,7 +2,7 @@ import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { useChatActions, useChatId } from "@ai-sdk-tools/store";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { BaseWidget } from "./base";

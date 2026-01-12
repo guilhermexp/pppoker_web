@@ -1,5 +1,5 @@
 {
-  "name": "@midday/encryption",
+  "name": "@midpoker/encryption",
   "version": "1.0.0",
   "private": true,
   "main": "src/index.ts",
@@ -9,5 +9,8 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "bun test src"
+  },
+  "devDependencies": {
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

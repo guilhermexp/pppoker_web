@@ -5,7 +5,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
+} from "@midpoker/ui/dialog";
 import { InviteForm } from "../forms/invite-form";
 
 type InviteTeamMembersModalProps = {

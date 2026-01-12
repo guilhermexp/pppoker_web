@@ -1,10 +1,10 @@
-import type { Database } from "@midday/db/client";
+import type { Database } from "@midpoker/db/client";
 import {
   getInboxById,
   getTransactionById,
   hasSuggestion,
-} from "@midday/db/queries";
-import type { MatchResult } from "@midday/db/queries";
+} from "@midpoker/db/queries";
+import type { MatchResult } from "@midpoker/db/queries";
 import { logger, tasks } from "@trigger.dev/sdk";
 
 // Helper function to trigger appropriate notifications based on matching results

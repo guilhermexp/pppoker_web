@@ -1,7 +1,7 @@
 import { trpcServer } from "@hono/trpc-server";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { getConnectionPoolStats } from "@midday/db/client";
-import { db } from "@midday/db/client";
+import { getConnectionPoolStats } from "@midpoker/db/client";
+import { db } from "@midpoker/db/client";
 import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
 import { cors } from "hono/cors";

@@ -1,5 +1,5 @@
 {
-  "name": "@midday/categories",
+  "name": "@midpoker/categories",
   "version": "0.1.0",
   "description": "Transaction categories with parent-child structure for financial reports",
   "main": "./src/index.ts",
@@ -18,10 +18,11 @@
     "zod": "^4.1.13",
     "ai": "^5.0.101",
     "@ai-sdk/google": "^2.0.42",
-    "@midday/logger": "workspace:*"
+    "@midpoker/logger": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

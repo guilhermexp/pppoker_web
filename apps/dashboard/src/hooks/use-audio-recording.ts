@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@midday/supabase/client";
+import { createClient } from "@midpoker/supabase/client";
 import { useCallback, useRef, useState } from "react";
 
 interface UseAudioRecordingReturn {

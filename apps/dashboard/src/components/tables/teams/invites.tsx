@@ -2,8 +2,8 @@
 
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Avatar, AvatarFallback, AvatarImageNext } from "@midday/ui/avatar";
-import { SubmitButton } from "@midday/ui/submit-button";
+import { Avatar, AvatarFallback, AvatarImageNext } from "@midpoker/ui/avatar";
+import { SubmitButton } from "@midpoker/ui/submit-button";
 import {
   useMutation,
   useQueryClient,

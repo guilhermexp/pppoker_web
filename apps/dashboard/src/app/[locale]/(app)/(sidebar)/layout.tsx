@@ -8,7 +8,7 @@ import { TimezoneDetector } from "@/components/timezone-detector";
 import { UpgradeContent } from "@/components/upgrade-content";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import { shouldShowUpgradeContent } from "@/utils/trial";
-import { createClient } from "@midday/supabase/server";
+import { createClient } from "@midpoker/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 

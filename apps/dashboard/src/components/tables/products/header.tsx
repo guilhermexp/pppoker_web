@@ -1,9 +1,9 @@
 "use client";
 
 import { useProductParams } from "@/hooks/use-product-params";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import type { Table } from "@tanstack/react-table";
 import type { Product } from "./columns";
 

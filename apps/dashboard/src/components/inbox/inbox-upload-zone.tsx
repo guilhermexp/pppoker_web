@@ -3,10 +3,10 @@
 import { useUserQuery } from "@/hooks/use-user";
 import { useTRPC } from "@/trpc/client";
 import { resumableUpload } from "@/utils/upload";
-import { createClient } from "@midday/supabase/client";
-import { cn } from "@midday/ui/cn";
-import { useToast } from "@midday/ui/use-toast";
-import { stripSpecialCharacters } from "@midday/utils";
+import { createClient } from "@midpoker/supabase/client";
+import { cn } from "@midpoker/ui/cn";
+import { useToast } from "@midpoker/ui/use-toast";
+import { stripSpecialCharacters } from "@midpoker/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";

@@ -4,11 +4,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
-import { Button } from "@midday/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
+} from "@midpoker/ui/accordion";
+import { Button } from "@midpoker/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@midpoker/ui/card";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";

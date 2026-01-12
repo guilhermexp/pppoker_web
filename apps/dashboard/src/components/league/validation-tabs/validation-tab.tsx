@@ -4,8 +4,8 @@ import type {
   LeagueValidationCheck,
   LeagueValidationWarning,
 } from "@/lib/league/types";
-import { Badge } from "@midday/ui/badge";
-import { Icons } from "@midday/ui/icons";
+import { Badge } from "@midpoker/ui/badge";
+import { Icons } from "@midpoker/ui/icons";
 import { useState } from "react";
 
 interface LeagueValidationTabProps {

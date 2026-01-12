@@ -1,4 +1,4 @@
-import type { WidgetPeriod } from "@midday/cache/widget-preferences-cache";
+import type { WidgetPeriod } from "@midpoker/cache/widget-preferences-cache";
 import {
   endOfMonth,
   endOfQuarter,

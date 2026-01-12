@@ -1,4 +1,4 @@
-import { getEmailUrl } from "@midday/utils/envs";
+import { getEmailUrl } from "@midpoker/utils/envs";
 import { Img, Section } from "@react-email/components";
 
 const baseUrl = getEmailUrl();

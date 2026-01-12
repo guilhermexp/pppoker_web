@@ -1,4 +1,4 @@
-import { createClient } from "@midday/supabase/server";
+import { createClient } from "@midpoker/supabase/server";
 
 export async function createApp(params: any) {
   const client = await createClient({ admin: true });

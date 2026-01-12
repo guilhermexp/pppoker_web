@@ -2,14 +2,14 @@
 
 import type { ArtifactType } from "@/lib/artifact-config";
 import { useArtifacts } from "@ai-sdk-tools/artifacts/client";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import { parseAsString, useQueryState } from "nuqs";
 import { useCallback } from "react";
 

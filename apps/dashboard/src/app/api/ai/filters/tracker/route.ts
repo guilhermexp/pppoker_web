@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import { getSession } from "@midday/supabase/cached-queries";
+import { getSession } from "@midpoker/supabase/cached-queries";
 import { streamObject } from "ai";
 import type { NextRequest } from "next/server";
 import { z } from "zod";

@@ -5,16 +5,16 @@ import type {
   RevenueType,
   WidgetConfig,
   WidgetPeriod,
-} from "@midday/cache/widget-preferences-cache";
-import { Button } from "@midday/ui/button";
-import { Label } from "@midday/ui/label";
+} from "@midpoker/cache/widget-preferences-cache";
+import { Button } from "@midpoker/ui/button";
+import { Label } from "@midpoker/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@midday/ui/select";
+} from "@midpoker/ui/select";
 import { useState } from "react";
 
 interface WidgetSettingsProps {

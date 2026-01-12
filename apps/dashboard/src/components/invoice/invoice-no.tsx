@@ -3,13 +3,13 @@
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";

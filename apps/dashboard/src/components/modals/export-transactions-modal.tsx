@@ -11,28 +11,28 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
-import { Button } from "@midday/ui/button";
+} from "@midpoker/ui/accordion";
+import { Button } from "@midpoker/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
+} from "@midpoker/ui/dialog";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-} from "@midday/ui/form";
-import { Input } from "@midday/ui/input";
-import { Label } from "@midday/ui/label";
-import { RadioGroup, RadioGroupItem } from "@midday/ui/radio-group";
-import { Separator } from "@midday/ui/separator";
-import { Spinner } from "@midday/ui/spinner";
-import { Switch } from "@midday/ui/switch";
+} from "@midpoker/ui/form";
+import { Input } from "@midpoker/ui/input";
+import { Label } from "@midpoker/ui/label";
+import { RadioGroup, RadioGroupItem } from "@midpoker/ui/radio-group";
+import { Separator } from "@midpoker/ui/separator";
+import { Spinner } from "@midpoker/ui/spinner";
+import { Switch } from "@midpoker/ui/switch";
 import NumberFlow from "@number-flow/react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect } from "react";

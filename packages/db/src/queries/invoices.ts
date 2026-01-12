@@ -10,9 +10,9 @@ import {
   trackerEntries,
   trackerProjects,
 } from "../schema";
-import { buildSearchQuery } from "@midday/db/utils/search-query";
-import { generateToken } from "@midday/invoice/token";
-import type { EditorDoc, LineItem } from "@midday/invoice/types";
+import { buildSearchQuery } from "@midpoker/db/utils/search-query";
+import { generateToken } from "@midpoker/invoice/token";
+import type { EditorDoc, LineItem } from "@midpoker/invoice/types";
 import camelcaseKeys from "camelcase-keys";
 import {
   addMonths,

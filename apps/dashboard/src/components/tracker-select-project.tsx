@@ -2,8 +2,8 @@
 
 import { useLatestProjectId } from "@/hooks/use-latest-project-id";
 import { useTRPC } from "@/trpc/client";
-import { Combobox } from "@midday/ui/combobox";
-import { useToast } from "@midday/ui/use-toast";
+import { Combobox } from "@midpoker/ui/combobox";
+import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 

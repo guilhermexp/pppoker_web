@@ -1,9 +1,9 @@
 "use client";
 
 import { useDocumentParams } from "@/hooks/use-document-params";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 
 export function VaultViewSwitch() {
   const { params, setParams } = useDocumentParams();

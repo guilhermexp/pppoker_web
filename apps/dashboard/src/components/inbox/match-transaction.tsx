@@ -4,16 +4,16 @@ import { useInboxParams } from "@/hooks/use-inbox-params";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useUserQuery } from "@/hooks/use-user";
 import { useTRPC } from "@/trpc/client";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { Combobox } from "@midday/ui/combobox";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { Combobox } from "@midpoker/ui/combobox";
+import { Icons } from "@midpoker/ui/icons";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";

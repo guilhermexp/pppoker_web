@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@midday/ui/select";
+} from "@midpoker/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AssignedUser } from "./assigned-user";

@@ -4,12 +4,12 @@ import { cashFlowStressTestArtifact } from "@api/ai/artifacts/cash-flow-stress-t
 import { generateArtifactDescription } from "@api/ai/utils/artifact-title";
 import { getToolDateDefaults } from "@api/ai/utils/tool-date-defaults";
 import { checkBankAccountsRequired } from "@api/ai/utils/tool-helpers";
-import { db } from "@midday/db/client";
+import { db } from "@midpoker/db/client";
 import {
   getCashFlow,
   getCombinedAccountBalance,
   getRunway,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 import { tool } from "ai";
 import { z } from "zod";
 

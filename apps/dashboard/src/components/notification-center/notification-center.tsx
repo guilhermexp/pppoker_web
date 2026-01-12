@@ -2,11 +2,11 @@
 
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useNotifications } from "@/hooks/use-notifications";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@midpoker/ui/popover";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EmptyState } from "./empty-state";

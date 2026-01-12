@@ -1,12 +1,12 @@
 import { onboardTeamSchema } from "@jobs/schema";
 import { shouldSendEmail } from "@jobs/utils/check-team-plan";
 import { resend } from "@jobs/utils/resend";
-import { GetStartedEmail } from "@midday/email/emails/get-started";
-import { TrialEndedEmail } from "@midday/email/emails/trial-ended";
-import { TrialExpiringEmail } from "@midday/email/emails/trial-expiring";
-import { WelcomeEmail } from "@midday/email/emails/welcome";
-import { render } from "@midday/email/render";
-import { createClient } from "@midday/supabase/job";
+import { GetStartedEmail } from "@midpoker/email/emails/get-started";
+import { TrialEndedEmail } from "@midpoker/email/emails/trial-ended";
+import { TrialExpiringEmail } from "@midpoker/email/emails/trial-expiring";
+import { WelcomeEmail } from "@midpoker/email/emails/welcome";
+import { render } from "@midpoker/email/render";
+import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask, wait } from "@trigger.dev/sdk";
 
 export const onboardTeam = schemaTask({

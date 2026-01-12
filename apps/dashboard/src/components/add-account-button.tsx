@@ -1,7 +1,7 @@
 "use client";
 
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import { parseAsBoolean, useQueryState } from "nuqs";
 
 export function AddAccountButton({ onClick }: { onClick?: () => void }) {

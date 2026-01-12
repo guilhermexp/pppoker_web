@@ -25,10 +25,10 @@ import {
   revokeUserApplicationTokens,
   updateOAuthApplication,
   updateOAuthApplicationstatus,
-} from "@midday/db/queries";
-import { AppInstalledEmail } from "@midday/email/emails/app-installed";
-import { AppReviewRequestEmail } from "@midday/email/emails/app-review-request";
-import { render } from "@midday/email/render";
+} from "@midpoker/db/queries";
+import { AppInstalledEmail } from "@midpoker/email/emails/app-installed";
+import { AppReviewRequestEmail } from "@midpoker/email/emails/app-review-request";
+import { render } from "@midpoker/email/render";
 
 export const oauthApplicationsRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues (v2)

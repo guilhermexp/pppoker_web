@@ -1,6 +1,6 @@
 import { EmailSignIn } from "@/components/email-sign-in";
 import LoginTestimonials from "@/components/login-testimonials";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 

@@ -1,6 +1,6 @@
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
-import { getInstallUrl } from "@midday/app-store/slack";
+import { getInstallUrl } from "@midpoker/app-store/slack";
 import { NextResponse } from "next/server";
 
 export async function GET() {

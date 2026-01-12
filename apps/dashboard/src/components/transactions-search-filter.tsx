@@ -17,8 +17,8 @@ import { useTransactionFilterParams } from "@/hooks/use-transaction-filter-param
 import { useTransactionFilterParamsWithPersistence } from "@/hooks/use-transaction-filter-params-with-persistence";
 import { useTRPC } from "@/trpc/client";
 import { formatAccountName } from "@/utils/format";
-import { Calendar } from "@midday/ui/calendar";
-import { cn } from "@midday/ui/cn";
+import { Calendar } from "@midpoker/ui/calendar";
+import { cn } from "@midpoker/ui/cn";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -29,9 +29,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import { useCallback, useEffect, useRef, useState } from "react";

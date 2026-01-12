@@ -1,4 +1,4 @@
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 
 type OAuthApplicationStatus =
   | "approved"

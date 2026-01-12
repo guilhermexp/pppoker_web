@@ -1,4 +1,4 @@
-import { logger } from "@midday/logger";
+import { logger } from "@midpoker/logger";
 import type { ZodSchema } from "zod";
 
 export const validateResponse = <T>(data: any, schema: ZodSchema<T>): T => {

@@ -1,15 +1,15 @@
 import { useUserQuery } from "@/hooks/use-user";
 import { useTRPC } from "@/trpc/client";
 import { secondsToHoursAndMinutes } from "@/utils/format";
-import { Button } from "@midday/ui/button";
-import { Calendar } from "@midday/ui/calendar";
+import { Button } from "@midpoker/ui/button";
+import { Calendar } from "@midpoker/ui/calendar";
 import {
   DropdownMenuGroup,
   DropdownMenuPortal,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "@midday/ui/dropdown-menu";
+} from "@midpoker/ui/dropdown-menu";
 import { useQueryClient } from "@tanstack/react-query";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import Papa from "papaparse";

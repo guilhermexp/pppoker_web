@@ -1,18 +1,18 @@
 "use client";
 
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@midday/ui/collapsible";
+} from "@midpoker/ui/collapsible";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@midday/ui/select";
+} from "@midpoker/ui/select";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {

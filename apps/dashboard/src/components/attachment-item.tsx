@@ -2,8 +2,8 @@
 
 import { useDocumentParams } from "@/hooks/use-document-params";
 import { formatSize } from "@/utils/format";
-import { Button } from "@midday/ui/button";
-import { Skeleton } from "@midday/ui/skeleton";
+import { Button } from "@midpoker/ui/button";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import { X } from "lucide-react";
 import { FilePreview } from "./file-preview";
 

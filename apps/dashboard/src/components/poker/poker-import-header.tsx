@@ -1,6 +1,6 @@
 import { getI18n } from "@/locales/server";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 
 export async function PokerImportHeader() {
   const t = await getI18n();

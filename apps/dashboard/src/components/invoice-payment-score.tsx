@@ -2,8 +2,8 @@
 
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
-import { Skeleton } from "@midday/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@midpoker/ui/card";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PaymentScoreVisualizer } from "./payment-score-visualizer";
 

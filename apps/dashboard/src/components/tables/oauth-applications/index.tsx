@@ -2,8 +2,8 @@
 
 import { useOAuthApplicationParams } from "@/hooks/use-oauth-application-params";
 import { useTRPC } from "@/trpc/client";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   flexRender,

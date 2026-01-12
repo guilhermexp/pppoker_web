@@ -6,7 +6,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
+} from "@midpoker/ui/card";
 import { Suspense } from "react";
 import { BankAccountListSkeleton } from "./bank-account-list-skeleton";
 

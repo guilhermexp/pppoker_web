@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
+} from "@midpoker/ui/dialog";
 import Link from "next/link";
 
 export function ChoosePlanModal({

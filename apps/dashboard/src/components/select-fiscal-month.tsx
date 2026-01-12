@@ -1,5 +1,5 @@
-import { ComboboxDropdown } from "@midday/ui/combobox-dropdown";
-import { getFiscalYearLabel } from "@midday/utils";
+import { ComboboxDropdown } from "@midpoker/ui/combobox-dropdown";
+import { getFiscalYearLabel } from "@midpoker/utils";
 
 type Props = {
   value?: number | null;

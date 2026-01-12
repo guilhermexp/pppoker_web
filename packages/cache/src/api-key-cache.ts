@@ -1,4 +1,4 @@
-import type { ApiKey } from "@midday/db/queries";
+import type { ApiKey } from "@midpoker/db/queries";
 import { RedisCache } from "./redis-client";
 
 // Redis-based cache for API keys shared across all server instances

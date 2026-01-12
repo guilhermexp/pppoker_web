@@ -1,7 +1,7 @@
 "use client";
 
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Table, TableBody } from "@midday/ui/table";
+import { Table, TableBody } from "@midpoker/ui/table";
 import { TableRow } from "./table-row";
 
 type Props = {

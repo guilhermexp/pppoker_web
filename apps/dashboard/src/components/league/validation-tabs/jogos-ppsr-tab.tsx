@@ -1,13 +1,13 @@
 "use client";
 
 import type { ParsedLeagueJogoPPSR } from "@/lib/league/types";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@midday/ui/collapsible";
+} from "@midpoker/ui/collapsible";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import {
   AlertTriangle,
   Ban,

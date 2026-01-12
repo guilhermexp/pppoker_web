@@ -1,7 +1,7 @@
 import { getQueryClient, trpc } from "@/trpc/server";
 import { formatSize } from "@/utils/format";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 import type { Metadata } from "next";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { notFound, redirect } from "next/navigation";

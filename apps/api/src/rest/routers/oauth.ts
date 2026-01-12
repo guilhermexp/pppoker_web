@@ -15,7 +15,7 @@ import { verifyAccessToken } from "@api/utils/auth";
 import { validateClientCredentials } from "@api/utils/oauth";
 import { validateResponse } from "@api/utils/validate-response";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import type { Database } from "@midday/db/client";
+import type { Database } from "@midpoker/db/client";
 import {
   createAuthorizationCode,
   exchangeAuthorizationCode,
@@ -24,9 +24,9 @@ import {
   hasUserEverAuthorizedApp,
   refreshAccessToken,
   revokeAccessToken,
-} from "@midday/db/queries";
-import { AppInstalledEmail } from "@midday/email/emails/app-installed";
-import { render } from "@midday/email/render";
+} from "@midpoker/db/queries";
+import { AppInstalledEmail } from "@midpoker/email/emails/app-installed";
+import { render } from "@midpoker/email/render";
 import { rateLimiter } from "hono-rate-limiter";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";

@@ -20,9 +20,9 @@ import type {
 } from "@/lib/league/types";
 import { validateLeagueImportData } from "@/lib/league/validation";
 import { useTRPC } from "@/trpc/client";
-import { cn } from "@midday/ui/cn";
-import { Skeleton } from "@midday/ui/skeleton";
-import { useToast } from "@midday/ui/use-toast";
+import { cn } from "@midpoker/ui/cn";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";

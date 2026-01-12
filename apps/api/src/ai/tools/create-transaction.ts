@@ -1,13 +1,13 @@
 import type { AppContext } from "@api/ai/agents/config/shared";
-import { db } from "@midday/db/client";
+import { db } from "@midpoker/db/client";
 import {
   createTransaction,
   getBankAccounts,
   getCategories,
-} from "@midday/db/queries";
-import type { EmbedTransactionPayload } from "@midday/jobs/schema";
-import { getAppUrl } from "@midday/utils/envs";
-import { formatAmount, formatDate } from "@midday/utils/format";
+} from "@midpoker/db/queries";
+import type { EmbedTransactionPayload } from "@midpoker/jobs/schema";
+import { getAppUrl } from "@midpoker/utils/envs";
+import { formatAmount, formatDate } from "@midpoker/utils/format";
 import { tasks } from "@trigger.dev/sdk";
 import { tool } from "ai";
 import { z } from "zod";

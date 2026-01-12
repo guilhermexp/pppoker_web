@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
+} from "@midpoker/ui/card";
 import { Suspense } from "react";
 import { ErrorBoundary } from "./error-boundary";
 import {

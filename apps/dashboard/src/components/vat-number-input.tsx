@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@midday/ui/input";
+import { Input } from "@midpoker/ui/input";
 
 type Props = {
   value: string;

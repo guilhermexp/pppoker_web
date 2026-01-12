@@ -1,6 +1,6 @@
 "use client";
 
-import { Spinner } from "@midday/ui/spinner";
+import { Spinner } from "@midpoker/ui/spinner";
 import type { ForwardedRef } from "react";
 
 export function LoadMore({

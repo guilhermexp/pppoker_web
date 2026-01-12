@@ -1,12 +1,12 @@
 import {
   createSlackWebClient,
   downloadFile,
-} from "@midday/app-store/slack-client";
-import { DocumentClient } from "@midday/documents";
-import { inboxSlackUploadSchema } from "@midday/jobs/schema";
-import { createClient } from "@midday/supabase/job";
-import { getExtensionFromMimeType } from "@midday/utils";
-import { getAppUrl } from "@midday/utils/envs";
+} from "@midpoker/app-store/slack-client";
+import { DocumentClient } from "@midpoker/documents";
+import { inboxSlackUploadSchema } from "@midpoker/jobs/schema";
+import { createClient } from "@midpoker/supabase/job";
+import { getExtensionFromMimeType } from "@midpoker/utils";
+import { getAppUrl } from "@midpoker/utils/envs";
 import { schemaTask, tasks } from "@trigger.dev/sdk";
 import { format } from "date-fns";
 

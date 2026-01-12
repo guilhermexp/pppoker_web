@@ -7,7 +7,7 @@ import {
   transactionMatchSuggestions,
   transactions,
 } from "../schema";
-import { logger } from "@midday/logger";
+import { logger } from "@midpoker/logger";
 import {
   and,
   cosineDistance,

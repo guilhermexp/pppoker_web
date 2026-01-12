@@ -36,13 +36,13 @@ import {
   getUserById,
   searchInvoiceNumber,
   updateInvoice,
-} from "@midday/db/queries";
-import { verify } from "@midday/invoice/token";
-import { transformCustomerToContent } from "@midday/invoice/utils";
+} from "@midpoker/db/queries";
+import { verify } from "@midpoker/invoice/token";
+import { transformCustomerToContent } from "@midpoker/invoice/utils";
 import type {
   GenerateInvoicePayload,
   SendInvoiceReminderPayload,
-} from "@midday/jobs/schema";
+} from "@midpoker/jobs/schema";
 import { runs, tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 import { addMonths, format, parseISO } from "date-fns";

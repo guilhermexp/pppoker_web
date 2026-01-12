@@ -1,4 +1,4 @@
-import type { TransactionForEnrichment } from "@midday/db/queries";
+import type { TransactionForEnrichment } from "@midpoker/db/queries";
 import type {
   EnrichmentResult,
   TransactionData,

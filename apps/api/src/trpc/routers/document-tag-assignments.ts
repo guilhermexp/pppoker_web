@@ -6,7 +6,7 @@ import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import {
   createDocumentTagAssignment,
   deleteDocumentTagAssignment,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 
 export const documentTagAssignmentsRouter = createTRPCRouter({
   create: protectedProcedure

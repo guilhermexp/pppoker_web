@@ -3,7 +3,7 @@ import { AppsHeader } from "@/components/apps-header";
 import { AppsSkeleton } from "@/components/apps.skeleton";
 import { ClientOnly } from "@/components/client-only";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
-import { createClient } from "@midday/supabase/server";
+import { createClient } from "@midpoker/supabase/server";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";

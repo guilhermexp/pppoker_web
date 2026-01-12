@@ -1,5 +1,5 @@
-import { sendSlackTransactionNotifications } from "@midday/app-store/slack-notifications";
-import { createClient } from "@midday/supabase/job";
+import { sendSlackTransactionNotifications } from "@midpoker/app-store/slack-notifications";
+import { createClient } from "@midpoker/supabase/job";
 
 interface Transaction {
   id: string;

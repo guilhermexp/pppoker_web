@@ -1,5 +1,5 @@
 import { useTRPC } from "@/trpc/client";
-import { CurrencyInput } from "@midday/ui/currency-input";
+import { CurrencyInput } from "@midpoker/ui/currency-input";
 import { useMutation } from "@tanstack/react-query";
 import { useRef } from "react";
 import { useController, useFormContext } from "react-hook-form";

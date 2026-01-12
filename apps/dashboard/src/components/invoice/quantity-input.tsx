@@ -1,5 +1,5 @@
-import { cn } from "@midday/ui/cn";
-import { QuantityInput as BaseQuantityInput } from "@midday/ui/quantity-input";
+import { cn } from "@midpoker/ui/cn";
+import { QuantityInput as BaseQuantityInput } from "@midpoker/ui/quantity-input";
 import { useState } from "react";
 import { useController, useFormContext } from "react-hook-form";
 

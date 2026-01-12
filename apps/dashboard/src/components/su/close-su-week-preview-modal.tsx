@@ -2,8 +2,8 @@
 
 import { useTRPC } from "@/trpc/client";
 import { formatNumber } from "@/utils/format";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
-import { Icons } from "@midday/ui/icons";
-import { Skeleton } from "@midday/ui/skeleton";
+} from "@midpoker/ui/dialog";
+import { Icons } from "@midpoker/ui/icons";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,9 +21,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
-import { useToast } from "@midday/ui/use-toast";
+} from "@midpoker/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
+import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";

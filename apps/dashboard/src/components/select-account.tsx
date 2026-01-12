@@ -3,8 +3,8 @@ import { formatAccountName } from "@/utils/format";
 import {
   ComboboxDropdown,
   type ComboboxItem,
-} from "@midday/ui/combobox-dropdown";
-import type { PopoverContent } from "@midday/ui/popover";
+} from "@midpoker/ui/combobox-dropdown";
+import type { PopoverContent } from "@midpoker/ui/popover";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
 import { useEffect, useState } from "react";

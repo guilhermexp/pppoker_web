@@ -3,7 +3,7 @@
 import { Editor } from "@/components/invoice/editor";
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
 import { useTRPC } from "@/trpc/client";
-import { transformCustomerToContent } from "@midday/invoice/utils";
+import { transformCustomerToContent } from "@midpoker/invoice/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { JSONContent } from "@tiptap/react";
 import { useEffect } from "react";

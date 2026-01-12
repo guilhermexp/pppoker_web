@@ -1,9 +1,9 @@
 "use client";
 
 import type { ParsedPlayer } from "@/lib/poker/types";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { ComboboxDropdown } from "@midday/ui/combobox-dropdown";
+import { ComboboxDropdown } from "@midpoker/ui/combobox-dropdown";
 import { useQuery } from "@tanstack/react-query";
 
 type Props = {

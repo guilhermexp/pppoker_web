@@ -20,7 +20,7 @@ import { useUserQuery } from "@/hooks/use-user";
 import { useI18n } from "@/locales/client";
 import { useArtifact } from "@ai-sdk-tools/artifacts/client";
 import { taxSummaryArtifact } from "@api/ai/artifacts/tax-summary";
-import { getDefaultTaxType } from "@midday/utils";
+import { getDefaultTaxType } from "@midpoker/utils";
 import { parseAsInteger, useQueryState } from "nuqs";
 
 function getTaxTerminology(

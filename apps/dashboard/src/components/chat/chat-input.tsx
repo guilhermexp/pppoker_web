@@ -15,7 +15,7 @@ import {
   useChatStatus,
   useDataPart,
 } from "@ai-sdk-tools/store";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -27,7 +27,7 @@ import {
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-} from "@midday/ui/prompt-input";
+} from "@midpoker/ui/prompt-input";
 import { parseAsString, useQueryState } from "nuqs";
 import { useRef } from "react";
 

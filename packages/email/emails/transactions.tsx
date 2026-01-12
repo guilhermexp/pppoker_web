@@ -1,5 +1,5 @@
-import { cn } from "@midday/ui/cn";
-import { getAppUrl } from "@midday/utils/envs";
+import { cn } from "@midpoker/ui/cn";
+import { getAppUrl } from "@midpoker/utils/envs";
 import {
   Body,
   Container,

@@ -3,8 +3,8 @@
 import { usePokerDashboardParams } from "@/hooks/use-poker-dashboard-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Icons } from "@midday/ui/icons";
-import { Skeleton } from "@midday/ui/skeleton";
+import { Icons } from "@midpoker/ui/icons";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 
 function formatCurrency(value: number) {

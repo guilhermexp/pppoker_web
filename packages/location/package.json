@@ -1,5 +1,5 @@
 {
-  "name": "@midday/location",
+  "name": "@midpoker/location",
   "version": "1.0.0",
   "main": "src/index.ts",
   "private": true,
@@ -19,6 +19,7 @@
     "./timezones": "./src/timezones.ts"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

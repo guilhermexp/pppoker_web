@@ -1,6 +1,6 @@
 import type { Database } from "../client";
 import { bankAccounts, bankConnections } from "../schema";
-import { chatCache } from "@midday/cache/chat-cache";
+import { chatCache } from "@midpoker/cache/chat-cache";
 import { and, eq } from "drizzle-orm";
 
 export type GetBankConnectionsParams = {

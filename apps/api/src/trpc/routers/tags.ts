@@ -4,7 +4,7 @@ import {
   updateTagSchema,
 } from "@api/schemas/tags";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { createTag, deleteTag, getTags, updateTag } from "@midday/db/queries";
+import { createTag, deleteTag, getTags, updateTag } from "@midpoker/db/queries";
 
 export const tagsRouter = createTRPCRouter({
   get: protectedProcedure.query(async ({ ctx: { db, teamId } }) => {

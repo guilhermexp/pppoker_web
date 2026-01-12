@@ -1,9 +1,9 @@
 import { importTransactionsSchema } from "@jobs/schema";
 import { processBatch } from "@jobs/utils/process-batch";
-import { mapTransactions } from "@midday/import/mappings";
-import { transform } from "@midday/import/transform";
-import { validateTransactions } from "@midday/import/validate";
-import { createClient } from "@midday/supabase/job";
+import { mapTransactions } from "@midpoker/import/mappings";
+import { transform } from "@midpoker/import/transform";
+import { validateTransactions } from "@midpoker/import/validate";
+import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import Papa from "papaparse";
 import { embedTransaction } from "./embed-transaction";

@@ -1,5 +1,5 @@
 import { useInboxFilterParams } from "@/hooks/use-inbox-filter-params";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +11,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 

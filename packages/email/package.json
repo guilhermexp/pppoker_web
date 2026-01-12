@@ -1,5 +1,5 @@
 {
-  "name": "@midday/email",
+  "name": "@midpoker/email",
   "version": "1.0.0",
   "private": true,
   "main": "index.ts",
@@ -14,12 +14,12 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "dev": "email dev -p 3003",
-    "build": "email build",
+    "build": "echo 'Email templates do not need build'",
     "start": "email start"
   },
   "dependencies": {
-    "@midday/ui": "workspace:*",
-    "@midday/utils": "workspace:*",
+    "@midpoker/ui": "workspace:*",
+    "@midpoker/utils": "workspace:*",
     "@react-email/components": "1.0.1",
     "@react-email/render": "2.0.0",
     "@react-email/tailwind": "2.0.1",
@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@react-email/preview-server": "5.0.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

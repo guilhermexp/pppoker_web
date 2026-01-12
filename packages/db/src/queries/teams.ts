@@ -6,12 +6,12 @@ import {
   users,
   usersOnTeam,
 } from "../schema";
-import { teamPermissionsCache } from "@midday/cache/team-permissions-cache";
+import { teamPermissionsCache } from "@midpoker/cache/team-permissions-cache";
 import {
   CATEGORIES,
   getTaxRateForCategory,
   getTaxTypeForCountry,
-} from "@midday/categories";
+} from "@midpoker/categories";
 import { and, eq } from "drizzle-orm";
 
 export const hasTeamAccess = async (

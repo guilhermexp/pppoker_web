@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import {
   CommandEmpty,
   CommandGroup,
@@ -8,7 +8,7 @@ import {
   CommandItem,
   CommandList,
   Command as CommandPrimitive,
-} from "@midday/ui/command";
+} from "@midpoker/ui/command";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { Check } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";

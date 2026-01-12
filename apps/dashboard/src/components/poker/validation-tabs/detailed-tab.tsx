@@ -1,11 +1,11 @@
 "use client";
 
 import type { ParsedDetailed, ParsedSummary } from "@/lib/poker/types";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import { useState } from "react";
 
 type DetailedTabProps = {

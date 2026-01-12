@@ -3,13 +3,13 @@
 import { ConnectGmail } from "@/components/inbox/connect-gmail";
 import { useUserQuery } from "@/hooks/use-user";
 import { useI18n } from "@/locales/client";
-import { getInboxEmail } from "@midday/inbox";
+import { getInboxEmail } from "@midpoker/inbox";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
+} from "@midpoker/ui/accordion";
 import { useRouter } from "next/navigation";
 import { CopyInput } from "../copy-input";
 import { UploadZone } from "./inbox-upload-zone";

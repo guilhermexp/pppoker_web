@@ -1,5 +1,5 @@
 import { Section } from "@react-email/components";
-import { getAppUrl } from "@midday/utils/envs";
+import { getAppUrl } from "@midpoker/utils/envs";
 import { Button } from "./theme";
 
 export function GetStarted() {

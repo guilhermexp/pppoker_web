@@ -6,11 +6,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
-import { Input } from "@midday/ui/input";
-import { Label } from "@midday/ui/label";
-import MultipleSelector from "@midday/ui/multiple-selector";
-import { SubmitButton } from "@midday/ui/submit-button";
+} from "@midpoker/ui/dialog";
+import { Input } from "@midpoker/ui/input";
+import { Label } from "@midpoker/ui/label";
+import MultipleSelector from "@midpoker/ui/multiple-selector";
+import { SubmitButton } from "@midpoker/ui/submit-button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 

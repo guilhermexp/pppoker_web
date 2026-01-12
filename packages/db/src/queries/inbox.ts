@@ -8,8 +8,8 @@ import {
   transactionMatchSuggestions,
   transactions,
 } from "../schema";
-import { buildSearchQuery } from "@midday/db/utils/search-query";
-import { logger } from "@midday/logger";
+import { buildSearchQuery } from "@midpoker/db/utils/search-query";
+import { logger } from "@midpoker/logger";
 import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm/sql/sql";
 

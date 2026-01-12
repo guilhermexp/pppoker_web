@@ -11,11 +11,11 @@ import { useUpdateTransactionCategory } from "@/hooks/use-update-transaction-cat
 import { useTransactionsStore } from "@/store/transactions";
 import { useTRPC } from "@/trpc/client";
 import { Cookies } from "@/utils/constants";
-import { cn } from "@midday/ui/cn";
-import { Table, TableBody, TableCell, TableRow } from "@midday/ui/table";
-import { ToastAction } from "@midday/ui/toast";
-import { Tooltip, TooltipProvider } from "@midday/ui/tooltip";
-import { toast } from "@midday/ui/use-toast";
+import { cn } from "@midpoker/ui/cn";
+import { Table, TableBody, TableCell, TableRow } from "@midpoker/ui/table";
+import { ToastAction } from "@midpoker/ui/toast";
+import { Tooltip, TooltipProvider } from "@midpoker/ui/tooltip";
+import { toast } from "@midpoker/ui/use-toast";
 import {
   useMutation,
   useQueryClient,

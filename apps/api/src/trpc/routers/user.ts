@@ -7,7 +7,7 @@ import {
   getUserById,
   getUserInvites,
   updateUser,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 
 // Helper to get user via Supabase REST API (fallback when Drizzle connection fails)
 // Uses admin client to bypass RLS

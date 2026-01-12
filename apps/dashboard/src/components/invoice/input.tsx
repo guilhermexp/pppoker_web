@@ -1,5 +1,5 @@
-import { cn } from "@midday/ui/cn";
-import { Input as BaseInput, type InputProps } from "@midday/ui/input";
+import { cn } from "@midpoker/ui/cn";
+import { Input as BaseInput, type InputProps } from "@midpoker/ui/input";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 

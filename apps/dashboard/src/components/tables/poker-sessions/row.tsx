@@ -1,8 +1,8 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { Skeleton } from "@midday/ui/skeleton";
-import { TableCell, TableRow } from "@midday/ui/table";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { TableCell, TableRow } from "@midpoker/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { flexRender } from "@tanstack/react-table";

@@ -1,5 +1,5 @@
 {
-  "name": "@midday/db",
+  "name": "@midpoker/db",
   "private": true,
   "scripts": {
     "test": "bun test",
@@ -25,10 +25,10 @@
   },
   "dependencies": {
     "@date-fns/utc": "^2.1.1",
-    "@midday/categories": "workspace:*",
-    "@midday/encryption": "workspace:*",
-    "@midday/invoice": "workspace:*",
-    "@midday/logger": "workspace:*",
+    "@midpoker/categories": "workspace:*",
+    "@midpoker/encryption": "workspace:*",
+    "@midpoker/invoice": "workspace:*",
+    "@midpoker/logger": "workspace:*",
     "@types/pg": "^8.15.6",
     "drizzle-orm": "^0.44.7",
     "camelcase-keys": "^10.0.1",
@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.7",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

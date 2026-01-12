@@ -2,7 +2,7 @@ import { useTRPC } from "@/trpc/client";
 import type {
   WidgetConfig,
   WidgetType,
-} from "@midday/cache/widget-preferences-cache";
+} from "@midpoker/cache/widget-preferences-cache";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useWidgetActions, useWidgetConfig } from "./widget-provider";

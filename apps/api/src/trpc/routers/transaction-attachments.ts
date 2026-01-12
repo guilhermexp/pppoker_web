@@ -5,8 +5,8 @@ import {
 } from "@api/schemas/transaction-attachments";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import type { ProcessTransactionAttachmentPayload } from "@jobs/schema";
-import { createAttachments, deleteAttachment } from "@midday/db/queries";
-import { allowedMimeTypes } from "@midday/documents/utils";
+import { createAttachments, deleteAttachment } from "@midpoker/db/queries";
+import { allowedMimeTypes } from "@midpoker/documents/utils";
 import { tasks } from "@trigger.dev/sdk";
 
 export const transactionAttachmentsRouter = createTRPCRouter({

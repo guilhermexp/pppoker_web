@@ -3,15 +3,15 @@
 import { useTeamQuery } from "@/hooks/use-team";
 import { useI18n } from "@/locales/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
-import { Icons } from "@midday/ui/icons";
-import { Skeleton } from "@midday/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@midpoker/ui/card";
+import { Icons } from "@midpoker/ui/icons";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
+} from "@midpoker/ui/tooltip";
 import { AnimatedNumber } from "./animated-number";
 import { FormatAmount } from "./format-amount";
 

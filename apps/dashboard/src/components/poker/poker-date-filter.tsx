@@ -1,10 +1,10 @@
 "use client";
 
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
-import { Calendar } from "@midday/ui/calendar";
-import { Icons } from "@midday/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
+import { Button } from "@midpoker/ui/button";
+import { Calendar } from "@midpoker/ui/calendar";
+import { Icons } from "@midpoker/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@midpoker/ui/popover";
 import { endOfMonth, format, startOfMonth, subDays, subMonths } from "date-fns";
 import type { DateRange } from "react-day-picker";
 

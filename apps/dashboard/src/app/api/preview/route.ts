@@ -1,5 +1,5 @@
 import { getPdfImage } from "@/utils/pdf-to-img";
-import { createClient } from "@midday/supabase/server";
+import { createClient } from "@midpoker/supabase/server";
 import type { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {

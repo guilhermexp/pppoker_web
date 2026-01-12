@@ -1,8 +1,8 @@
 "use client";
 
 import type { ParsedRakeback } from "@/lib/poker/types";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import { useState } from "react";
 
 type LeagueRetornoDeTaxaTabProps = {

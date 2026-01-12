@@ -1,8 +1,8 @@
 "use client";
 
 import { useInvoiceParams } from "@/hooks/use-invoice-params";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 
 export function OpenInvoiceSheet() {
   const { setParams } = useInvoiceParams();

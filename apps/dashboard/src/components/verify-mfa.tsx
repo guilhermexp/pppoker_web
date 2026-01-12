@@ -1,6 +1,6 @@
-import { createClient } from "@midday/supabase/client";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@midday/ui/input-otp";
-import { Spinner } from "@midday/ui/spinner";
+import { createClient } from "@midpoker/supabase/client";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@midpoker/ui/input-otp";
+import { Spinner } from "@midpoker/ui/spinner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 

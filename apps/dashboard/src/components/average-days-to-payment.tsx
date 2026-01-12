@@ -1,7 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@midpoker/ui/card";
 import NumberFlow from "@number-flow/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 

@@ -1,14 +1,14 @@
 "use client";
 
-import { Badge } from "@midday/ui/badge";
-import { Icons } from "@midday/ui/icons";
+import { Badge } from "@midpoker/ui/badge";
+import { Icons } from "@midpoker/ui/icons";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
-import { formatDate } from "@midday/utils/format";
+} from "@midpoker/ui/tooltip";
+import { formatDate } from "@midpoker/utils/format";
 import { FormatAmount } from "../format-amount";
 
 type Props = {

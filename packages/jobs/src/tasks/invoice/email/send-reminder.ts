@@ -1,7 +1,7 @@
 import { getDb } from "@jobs/init";
 import { sendInvoiceReminderSchema } from "@jobs/schema";
-import { Notifications } from "@midday/notifications";
-import { createClient } from "@midday/supabase/job";
+import { Notifications } from "@midpoker/notifications";
+import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 
 export const sendInvoiceReminder = schemaTask({

@@ -1,7 +1,7 @@
 import type { Session } from "@api/utils/auth";
 import { createAdminClient } from "@api/services/supabase";
-import { teamCache } from "@midday/cache/team-cache";
-import type { Database } from "@midday/db/client";
+import { teamCache } from "@midpoker/cache/team-cache";
+import type { Database } from "@midpoker/db/client";
 import { TRPCError } from "@trpc/server";
 
 // Helper to get user team data via Supabase REST API (fallback when Drizzle fails)

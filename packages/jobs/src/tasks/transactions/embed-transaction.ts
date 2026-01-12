@@ -6,7 +6,7 @@ import {
   type CreateTransactionEmbeddingParams,
   createTransactionEmbeddings,
   getTransactionsForEmbedding,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { enrichTransactions } from "./enrich-transaction";

@@ -1,6 +1,6 @@
 import { CreateTeamForm } from "@/components/forms/create-team-form";
-import { getCountryCode, getCurrency } from "@midday/location";
-import { Icons } from "@midday/ui/icons";
+import { getCountryCode, getCurrency } from "@midpoker/location";
+import { Icons } from "@midpoker/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 

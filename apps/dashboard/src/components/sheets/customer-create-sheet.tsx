@@ -1,9 +1,9 @@
 "use client";
 
 import { useCustomerParams } from "@/hooks/use-customer-params";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import React from "react";
 import { CustomerForm } from "../forms/customer-form";
 

@@ -2,8 +2,8 @@
 
 import { useTransactionParams } from "@/hooks/use-transaction-params";
 import { useI18n } from "@/locales/client";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@midday/ui/sheet";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@midpoker/ui/sheet";
 import { TransactionCreateForm } from "../forms/transaction-create-form";
 
 export function TransactionCreateSheet() {

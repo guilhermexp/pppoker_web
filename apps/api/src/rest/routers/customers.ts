@@ -14,7 +14,7 @@ import {
   getCustomerById,
   getCustomers,
   upsertCustomer,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 
 const app = new OpenAPIHono<Context>();
 

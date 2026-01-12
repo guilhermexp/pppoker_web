@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
+} from "@midpoker/ui/dialog";
 
 export function EditApiKeyModal() {
   const { setData, data, type } = useTokenModalStore();

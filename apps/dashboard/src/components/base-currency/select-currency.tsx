@@ -5,9 +5,9 @@ import { useSyncStatus } from "@/hooks/use-sync-status";
 import { useTeamMutation } from "@/hooks/use-team";
 import { useTeamQuery } from "@/hooks/use-team";
 import { useTRPC } from "@/trpc/client";
-import { uniqueCurrencies } from "@midday/location/currencies";
-import { Button } from "@midday/ui/button";
-import { useToast } from "@midday/ui/use-toast";
+import { uniqueCurrencies } from "@midpoker/location/currencies";
+import { Button } from "@midpoker/ui/button";
+import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 

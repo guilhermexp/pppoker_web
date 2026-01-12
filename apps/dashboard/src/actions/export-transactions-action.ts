@@ -1,6 +1,6 @@
 "use server";
 
-import type { ExportTransactionsPayload } from "@midday/jobs/schema";
+import type { ExportTransactionsPayload } from "@midpoker/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { authActionClient } from "./safe-action";

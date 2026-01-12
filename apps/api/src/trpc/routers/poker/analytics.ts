@@ -8,7 +8,7 @@ import {
   POKER_WIDGET_TYPES,
   type PokerWidgetType,
   pokerWidgetPreferencesCache,
-} from "@midday/cache/poker-widget-preferences-cache";
+} from "@midpoker/cache/poker-widget-preferences-cache";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
 

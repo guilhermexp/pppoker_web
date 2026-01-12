@@ -1,4 +1,4 @@
-import { createClient } from "@midday/supabase/job";
+import { createClient } from "@midpoker/supabase/job";
 import { schemaTask } from "@trigger.dev/sdk";
 import convert from "heic-convert";
 import sharp from "sharp";

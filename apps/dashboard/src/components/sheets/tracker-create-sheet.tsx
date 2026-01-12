@@ -3,8 +3,8 @@
 import { TrackerProjectForm } from "@/components/forms/tracker-project-form";
 import { useTeamQuery } from "@/hooks/use-team";
 import { useTrackerParams } from "@/hooks/use-tracker-params";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import React from "react";
 
 export function TrackerCreateSheet() {

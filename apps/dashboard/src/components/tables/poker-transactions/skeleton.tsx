@@ -1,7 +1,7 @@
 "use client";
 
-import { Skeleton } from "@midday/ui/skeleton";
-import { Table, TableBody, TableCell, TableRow } from "@midday/ui/table";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { Table, TableBody, TableCell, TableRow } from "@midpoker/ui/table";
 
 export function DataTableSkeleton() {
   return (

@@ -3,19 +3,19 @@
 import { useSyncStatus } from "@/hooks/use-sync-status";
 import { useTRPC } from "@/trpc/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Avatar, AvatarFallback } from "@midday/ui/avatar";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
-import { Icons } from "@midday/ui/icons";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@midday/ui/tooltip";
-import { useToast } from "@midday/ui/use-toast";
+} from "@midpoker/ui/card";
+import { Icons } from "@midpoker/ui/icons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@midpoker/ui/tooltip";
+import { useToast } from "@midpoker/ui/use-toast";
 import {
   useMutation,
   useQueryClient,

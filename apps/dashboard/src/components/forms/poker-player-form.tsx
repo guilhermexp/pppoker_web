@@ -10,9 +10,9 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
-import { Button } from "@midday/ui/button";
-import { Checkbox } from "@midday/ui/checkbox";
+} from "@midpoker/ui/accordion";
+import { Button } from "@midpoker/ui/button";
+import { Checkbox } from "@midpoker/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -21,17 +21,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@midday/ui/form";
-import { Input } from "@midday/ui/input";
+} from "@midpoker/ui/form";
+import { Input } from "@midpoker/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@midday/ui/select";
-import { SubmitButton } from "@midday/ui/submit-button";
-import { Textarea } from "@midday/ui/textarea";
+} from "@midpoker/ui/select";
+import { SubmitButton } from "@midpoker/ui/submit-button";
+import { Textarea } from "@midpoker/ui/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod/v3";
 

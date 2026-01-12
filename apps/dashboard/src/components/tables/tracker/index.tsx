@@ -6,7 +6,7 @@ import { useSortParams } from "@/hooks/use-sort-params";
 import { useTableScroll } from "@/hooks/use-table-scroll";
 import { useTrackerFilterParams } from "@/hooks/use-tracker-filter-params";
 import { useTRPC } from "@/trpc/client";
-import { Table, TableBody } from "@midday/ui/table";
+import { Table, TableBody } from "@midpoker/ui/table";
 import { useMutation, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useDeferredValue, useEffect } from "react";
 import { useInView } from "react-intersection-observer";

@@ -4,15 +4,13 @@ export function getAppUrl() {
     return process.env.NEXT_PUBLIC_APP_URL;
   }
 
-  if (
-    process.env.VERCEL_ENV === "production" ||
-    process.env.NODE_ENV === "production"
-  ) {
-    return "https://app.mid.poker";
+  // Railway environment
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   }
 
-  if (process.env.VERCEL_ENV === "preview") {
-    return `https://${process.env.VERCEL_URL}`;
+  if (process.env.NODE_ENV === "production") {
+    return "https://middaydashboard-production.up.railway.app";
   }
 
   return "http://localhost:3001";
@@ -28,7 +26,7 @@ export function getEmailUrl() {
     return "http://localhost:3000";
   }
 
-  return "https://mid.poker";
+  return "https://middaydashboard-production.up.railway.app";
 }
 
 export function getWebsiteUrl() {
@@ -37,15 +35,13 @@ export function getWebsiteUrl() {
     return process.env.NEXT_PUBLIC_WEBSITE_URL;
   }
 
-  if (
-    process.env.VERCEL_ENV === "production" ||
-    process.env.NODE_ENV === "production"
-  ) {
-    return "https://mid.poker";
+  // Railway environment
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   }
 
-  if (process.env.VERCEL_ENV === "preview") {
-    return `https://${process.env.VERCEL_URL}`;
+  if (process.env.NODE_ENV === "production") {
+    return "https://middaydashboard-production.up.railway.app";
   }
 
   return "http://localhost:3000";
@@ -57,5 +53,6 @@ export function getCdnUrl() {
     return process.env.NEXT_PUBLIC_CDN_URL;
   }
 
-  return "https://cdn.mid.poker";
+  // Fallback to app URL if no CDN configured
+  return getAppUrl();
 }

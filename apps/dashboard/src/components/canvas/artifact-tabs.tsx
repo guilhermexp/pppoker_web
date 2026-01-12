@@ -1,14 +1,14 @@
 "use client";
 
 import { useArtifacts } from "@ai-sdk-tools/artifacts/client";
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useCallback } from "react";
 import { useHotkeys } from "react-hotkeys-hook";

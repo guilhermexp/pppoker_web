@@ -9,7 +9,7 @@ import {
   getNotificationSettings,
   getUserNotificationPreferences,
   upsertNotificationSetting,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 
 export const notificationSettingsRouter = createTRPCRouter({
   get: protectedProcedure

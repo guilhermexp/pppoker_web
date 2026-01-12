@@ -6,8 +6,8 @@ import { downloadFile } from "@/lib/download";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { getUrl } from "@/utils/environment";
-import { Button } from "@midday/ui/button";
-import { Calendar } from "@midday/ui/calendar";
+import { Button } from "@midpoker/ui/button";
+import { Calendar } from "@midpoker/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +16,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { useToast } from "@midday/ui/use-toast";
+} from "@midpoker/ui/dropdown-menu";
+import { useToast } from "@midpoker/ui/use-toast";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCopyToClipboard } from "usehooks-ts";

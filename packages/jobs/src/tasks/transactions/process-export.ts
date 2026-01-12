@@ -1,9 +1,9 @@
 import { blobToSerializable } from "@jobs/utils/blob";
 import { processBatch } from "@jobs/utils/process-batch";
-import { createClient } from "@midday/supabase/job";
-import { download } from "@midday/supabase/storage";
-import { ensureFileExtension } from "@midday/utils";
-import { getTaxTypeLabel, resolveTaxValues } from "@midday/utils/tax";
+import { createClient } from "@midpoker/supabase/job";
+import { download } from "@midpoker/supabase/storage";
+import { ensureFileExtension } from "@midpoker/utils";
+import { getTaxTypeLabel, resolveTaxValues } from "@midpoker/utils/tax";
 import { schemaTask } from "@trigger.dev/sdk";
 import { format, parseISO } from "date-fns";
 import { z } from "zod";

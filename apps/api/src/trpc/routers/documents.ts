@@ -15,10 +15,10 @@ import {
   getDocumentById,
   getRelatedDocuments,
   updateDocuments,
-} from "@midday/db/queries";
-import { isMimeTypeSupportedForProcessing } from "@midday/documents/utils";
-import type { ProcessDocumentPayload } from "@midday/jobs/schema";
-import { remove, signedUrl } from "@midday/supabase/storage";
+} from "@midpoker/db/queries";
+import { isMimeTypeSupportedForProcessing } from "@midpoker/documents/utils";
+import type { ProcessDocumentPayload } from "@midpoker/jobs/schema";
+import { remove, signedUrl } from "@midpoker/supabase/storage";
 import { tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 

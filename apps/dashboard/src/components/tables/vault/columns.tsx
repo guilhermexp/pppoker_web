@@ -3,16 +3,16 @@ import { useDocumentParams } from "@/hooks/use-document-params";
 import { downloadFile } from "@/lib/download";
 import { formatSize } from "@/utils/format";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
-import { Checkbox } from "@midday/ui/checkbox";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
+import { Checkbox } from "@midpoker/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Skeleton } from "@midday/ui/skeleton";
+} from "@midpoker/ui/dropdown-menu";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 

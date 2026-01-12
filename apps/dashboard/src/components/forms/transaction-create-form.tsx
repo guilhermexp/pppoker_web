@@ -12,17 +12,17 @@ import { useZodForm } from "@/hooks/use-zod-form";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { utc } from "@date-fns/utc";
-import { uniqueCurrencies } from "@midday/location/currencies";
+import { uniqueCurrencies } from "@midpoker/location/currencies";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
-import { Button } from "@midday/ui/button";
-import { Calendar } from "@midday/ui/calendar";
-import { cn } from "@midday/ui/cn";
-import { CurrencyInput } from "@midday/ui/currency-input";
+} from "@midpoker/ui/accordion";
+import { Button } from "@midpoker/ui/button";
+import { Calendar } from "@midpoker/ui/calendar";
+import { cn } from "@midpoker/ui/cn";
+import { CurrencyInput } from "@midpoker/ui/currency-input";
 import {
   Form,
   FormControl,
@@ -31,14 +31,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@midday/ui/form";
-import { Input } from "@midday/ui/input";
-import { Label } from "@midday/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
-import { Select } from "@midday/ui/select";
-import { SubmitButton } from "@midday/ui/submit-button";
-import { Switch } from "@midday/ui/switch";
-import { Textarea } from "@midday/ui/textarea";
+} from "@midpoker/ui/form";
+import { Input } from "@midpoker/ui/input";
+import { Label } from "@midpoker/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@midpoker/ui/popover";
+import { Select } from "@midpoker/ui/select";
+import { SubmitButton } from "@midpoker/ui/submit-button";
+import { Switch } from "@midpoker/ui/switch";
+import { Textarea } from "@midpoker/ui/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatISO } from "date-fns";
 import { nanoid } from "nanoid";

@@ -14,10 +14,10 @@ const config = {
     ],
   },
   transpilePackages: [
-    "@midday/ui",
-    "@midday/tailwind",
-    "@midday/invoice",
-    "@midday/api",
+    "@midpoker/ui",
+    "@midpoker/tailwind",
+    "@midpoker/invoice",
+    "@midpoker/api",
   ],
   serverExternalPackages: ["@react-pdf/renderer", "pdfjs-dist"],
   typescript: {

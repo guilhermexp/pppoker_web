@@ -16,9 +16,9 @@ import type {
   ParsedTransaction,
 } from "@/lib/poker/types";
 import { useI18n } from "@/locales/client";
-import { cn } from "@midday/ui/cn";
-import { Skeleton } from "@midday/ui/skeleton";
-import { useToast } from "@midday/ui/use-toast";
+import { cn } from "@midpoker/ui/cn";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { useToast } from "@midpoker/ui/use-toast";
 import { Suspense, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";

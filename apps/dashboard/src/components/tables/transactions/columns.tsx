@@ -9,21 +9,21 @@ import { TransactionMethod } from "@/components/transaction-method";
 import { TransactionStatus } from "@/components/transaction-status";
 import { useI18n } from "@/locales/client";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
-import { Checkbox } from "@midday/ui/checkbox";
-import { cn } from "@midday/ui/cn";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
+import { Checkbox } from "@midpoker/ui/checkbox";
+import { cn } from "@midpoker/ui/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
-import { Spinner } from "@midday/ui/spinner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@midday/ui/tooltip";
-import { formatDate } from "@midday/utils/format";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
+import { Spinner } from "@midpoker/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@midpoker/ui/tooltip";
+import { formatDate } from "@midpoker/utils/format";
 import type { ColumnDef } from "@tanstack/react-table";
 import { memo, useCallback } from "react";
 

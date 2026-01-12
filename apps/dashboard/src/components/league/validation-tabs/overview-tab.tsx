@@ -4,7 +4,7 @@ import type {
   LeagueValidationResult,
   ParsedLeagueImportData,
 } from "@/lib/league/types";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 import { getWeek, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useEffect, useMemo, useState } from "react";

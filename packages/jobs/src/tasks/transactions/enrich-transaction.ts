@@ -12,7 +12,7 @@ import {
   getTransactionsForEnrichment,
   markTransactionsAsEnriched,
   updateTransactionEnrichments,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import { generateObject } from "ai";
 import { z } from "zod";

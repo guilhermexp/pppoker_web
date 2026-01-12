@@ -1,6 +1,6 @@
 import { triggerSequenceAndWait } from "@jobs/utils/trigger-sequence";
-import { updateBaseCurrencySchema } from "@midday/jobs/schema";
-import { createClient } from "@midday/supabase/job";
+import { updateBaseCurrencySchema } from "@midpoker/jobs/schema";
+import { createClient } from "@midpoker/supabase/job";
 import { schemaTask } from "@trigger.dev/sdk";
 import { updateAccountBaseCurrency } from "./update-account-base-currency";
 

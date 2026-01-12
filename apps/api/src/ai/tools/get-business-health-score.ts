@@ -4,8 +4,8 @@ import { businessHealthScoreArtifact } from "@api/ai/artifacts/business-health-s
 import { generateArtifactDescription } from "@api/ai/utils/artifact-title";
 import { getToolDateDefaults } from "@api/ai/utils/tool-date-defaults";
 import { checkBankAccountsRequired } from "@api/ai/utils/tool-helpers";
-import { db } from "@midday/db/client";
-import { getCashFlow, getExpenses, getReports } from "@midday/db/queries";
+import { db } from "@midpoker/db/client";
+import { getCashFlow, getExpenses, getReports } from "@midpoker/db/queries";
 import { tool } from "ai";
 import {
   eachMonthOfInterval,

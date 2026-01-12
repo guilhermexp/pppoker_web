@@ -1,5 +1,5 @@
 {
-  "name": "@midday/supabase",
+  "name": "@midpoker/supabase",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -19,7 +19,8 @@
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.84.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@midpoker/tsconfig": "workspace:*"
   },
   "exports": {
     "./server": "./src/client/server.ts",

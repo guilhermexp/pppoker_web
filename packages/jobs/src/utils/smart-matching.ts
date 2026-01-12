@@ -1,5 +1,5 @@
 import { getDb } from "@jobs/init";
-import { getPendingInboxForMatching } from "@midday/db/queries";
+import { getPendingInboxForMatching } from "@midpoker/db/queries";
 import { tasks } from "@trigger.dev/sdk";
 
 /**

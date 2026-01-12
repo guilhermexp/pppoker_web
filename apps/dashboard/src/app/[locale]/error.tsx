@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import Link from "next/link";
 
 export default function ErrorPage({ reset }: { reset: () => void }) {

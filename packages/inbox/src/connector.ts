@@ -1,6 +1,6 @@
-import type { Database } from "@midday/db/client";
-import { getInboxAccountById, upsertInboxAccount } from "@midday/db/queries";
-import { decrypt, encrypt } from "@midday/encryption";
+import type { Database } from "@midpoker/db/client";
+import { getInboxAccountById, upsertInboxAccount } from "@midpoker/db/queries";
+import { decrypt, encrypt } from "@midpoker/encryption";
 import { GmailProvider } from "./providers/gmail";
 import {
   type Account,

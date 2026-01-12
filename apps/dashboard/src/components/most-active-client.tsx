@@ -2,7 +2,7 @@
 
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@midday/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@midpoker/ui/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 export function MostActiveClient() {

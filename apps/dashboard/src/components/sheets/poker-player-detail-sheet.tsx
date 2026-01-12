@@ -3,23 +3,23 @@
 import { usePokerPlayerParams } from "@/hooks/use-poker-player-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Avatar, AvatarFallback } from "@midday/ui/avatar";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
-import { Progress } from "@midday/ui/progress";
-import { ScrollArea } from "@midday/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader } from "@midday/ui/sheet";
-import { Skeleton } from "@midday/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
+} from "@midpoker/ui/card";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
+import { Progress } from "@midpoker/ui/progress";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useState } from "react";

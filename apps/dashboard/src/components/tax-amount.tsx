@@ -1,9 +1,9 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { CurrencyInput } from "@midday/ui/currency-input";
-import { Input } from "@midday/ui/input";
-import { Label } from "@midday/ui/label";
+import { CurrencyInput } from "@midpoker/ui/currency-input";
+import { Input } from "@midpoker/ui/input";
+import { Label } from "@midpoker/ui/label";
 import {
   Select,
   SelectContent,
@@ -11,12 +11,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@midday/ui/select";
+} from "@midpoker/ui/select";
 import {
   calculateTaxAmount,
   calculateTaxRate,
   getTaxTypeLabel,
-} from "@midday/utils/tax";
+} from "@midpoker/utils/tax";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";

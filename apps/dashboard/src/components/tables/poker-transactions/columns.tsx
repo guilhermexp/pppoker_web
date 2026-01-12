@@ -1,16 +1,16 @@
 "use client";
 
 import { useI18n } from "@/locales/client";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { memo } from "react";

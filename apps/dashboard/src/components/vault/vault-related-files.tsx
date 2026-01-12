@@ -7,8 +7,8 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@midday/ui/accordion";
-import { Carousel, CarouselContent, CarouselItem } from "@midday/ui/carousel";
+} from "@midpoker/ui/accordion";
+import { Carousel, CarouselContent, CarouselItem } from "@midpoker/ui/carousel";
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { VaultItem } from "./vault-item";

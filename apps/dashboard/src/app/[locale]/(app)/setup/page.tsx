@@ -1,7 +1,7 @@
 import { SetupForm } from "@/components/setup-form";
 import { getQueryClient, trpc } from "@/trpc/server";
 import { HydrateClient } from "@/trpc/server";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";

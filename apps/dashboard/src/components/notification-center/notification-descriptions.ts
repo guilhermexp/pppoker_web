@@ -1,5 +1,5 @@
 import type { useI18n } from "@/locales/client";
-import { formatAmount } from "@midday/utils/format";
+import { formatAmount } from "@midpoker/utils/format";
 import { format } from "date-fns";
 
 type UseI18nReturn = ReturnType<typeof useI18n>;

@@ -3,7 +3,7 @@ import {
   trackSuggestedActionUsageSchema,
 } from "@api/schemas/suggested-actions";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { suggestedActionsCache } from "@midday/cache/suggested-actions-cache";
+import { suggestedActionsCache } from "@midpoker/cache/suggested-actions-cache";
 
 // Define the static suggested actions configuration
 const SUGGESTED_ACTIONS_CONFIG = [

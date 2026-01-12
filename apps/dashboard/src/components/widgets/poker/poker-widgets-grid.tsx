@@ -25,8 +25,8 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { PokerWidgetType } from "@midday/cache/poker-widget-preferences-cache";
-import { Icons } from "@midday/ui/icons";
+import type { PokerWidgetType } from "@midpoker/cache/poker-widget-preferences-cache";
+import { Icons } from "@midpoker/ui/icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";

@@ -2,10 +2,10 @@
 
 import type { ParsedClubSummary } from "@/lib/poker/league-types";
 import type { ParsedDetailed } from "@/lib/poker/types";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import { useMemo, useState } from "react";
 
 type LeagueDetalhesDeClubeTabProps = {

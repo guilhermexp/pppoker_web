@@ -1,10 +1,10 @@
 import { logger } from "@/utils/logger";
 import { resend } from "@api/services/resend";
-import { getAllowedAttachments } from "@midday/documents";
-import { getInboxIdFromEmail, inboxWebhookPostSchema } from "@midday/inbox";
-import type { ProcessAttachmentPayload } from "@midday/jobs/schema";
-import { createClient } from "@midday/supabase/server";
-import { getExtensionFromMimeType } from "@midday/utils";
+import { getAllowedAttachments } from "@midpoker/documents";
+import { getInboxIdFromEmail, inboxWebhookPostSchema } from "@midpoker/inbox";
+import type { ProcessAttachmentPayload } from "@midpoker/jobs/schema";
+import { createClient } from "@midpoker/supabase/server";
+import { getExtensionFromMimeType } from "@midpoker/utils";
 import { tasks } from "@trigger.dev/sdk";
 import { nanoid } from "nanoid";
 import { headers } from "next/headers";

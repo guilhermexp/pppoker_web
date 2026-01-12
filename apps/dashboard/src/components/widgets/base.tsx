@@ -1,6 +1,6 @@
 import { useLongPress } from "@/hooks/use-long-press";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import { useIsCustomizing, useWidgetActions } from "./widget-provider";
 
 interface BaseWidgetProps {

@@ -1,14 +1,14 @@
 "use client";
 
 import { useInboxParams } from "@/hooks/use-inbox-params";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
 
 export function InboxOrdering() {
   const { params, setParams } = useInboxParams();

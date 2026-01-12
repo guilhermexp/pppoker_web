@@ -9,7 +9,7 @@ import { useUserQuery } from "@/hooks/use-user";
 import { useInvoiceStore } from "@/store/invoice";
 import { useTRPC } from "@/trpc/client";
 import { Cookies } from "@/utils/constants";
-import { Table, TableBody } from "@midday/ui/table";
+import { Table, TableBody } from "@midpoker/ui/table";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import {
   type VisibilityState,

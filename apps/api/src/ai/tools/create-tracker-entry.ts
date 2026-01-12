@@ -1,9 +1,9 @@
 import type { AppContext } from "@api/ai/agents/config/shared";
 import { tz } from "@date-fns/tz";
-import { db } from "@midday/db/client";
-import { getTrackerProjects, upsertTrackerEntries } from "@midday/db/queries";
-import { getAppUrl } from "@midday/utils/envs";
-import { formatDate } from "@midday/utils/format";
+import { db } from "@midpoker/db/client";
+import { getTrackerProjects, upsertTrackerEntries } from "@midpoker/db/queries";
+import { getAppUrl } from "@midpoker/utils/envs";
+import { formatDate } from "@midpoker/utils/format";
 import { tool } from "ai";
 import { formatDistance, setHours, setMinutes } from "date-fns";
 import parseDuration from "parse-duration";

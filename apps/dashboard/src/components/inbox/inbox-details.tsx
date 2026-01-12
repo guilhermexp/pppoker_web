@@ -7,26 +7,26 @@ import { downloadFile } from "@/lib/download";
 import { useTRPC } from "@/trpc/client";
 import { getUrl } from "@/utils/environment";
 import { getWebsiteLogo } from "@/utils/logos";
-import { Avatar, AvatarFallback, AvatarImageNext } from "@midday/ui/avatar";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { DialogTrigger } from "@midday/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImageNext } from "@midpoker/ui/avatar";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { DialogTrigger } from "@midpoker/ui/dialog";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@midday/ui/dropdown-menu";
-import { DropdownMenu, DropdownMenuTrigger } from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
-import { Separator } from "@midday/ui/separator";
-import { Skeleton } from "@midday/ui/skeleton";
+} from "@midpoker/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger } from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
+import { Separator } from "@midpoker/ui/separator";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@midday/ui/tooltip";
-import { useToast } from "@midday/ui/use-toast";
-import { formatDate, getInitials } from "@midday/utils/format";
+} from "@midpoker/ui/tooltip";
+import { useToast } from "@midpoker/ui/use-toast";
+import { formatDate, getInitials } from "@midpoker/utils/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { MoreVertical, Trash2 } from "lucide-react";

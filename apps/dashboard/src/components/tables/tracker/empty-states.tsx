@@ -2,7 +2,7 @@
 
 import { useTrackerFilterParams } from "@/hooks/use-tracker-filter-params";
 import { useTrackerParams } from "@/hooks/use-tracker-params";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 
 export function EmptyState() {
   const { setParams } = useTrackerParams();

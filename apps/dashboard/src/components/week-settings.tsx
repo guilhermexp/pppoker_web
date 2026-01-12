@@ -7,8 +7,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
-import { Switch } from "@midday/ui/switch";
+} from "@midpoker/ui/card";
+import { Switch } from "@midpoker/ui/switch";
 
 export function WeekSettings() {
   const { data: user } = useUserQuery();

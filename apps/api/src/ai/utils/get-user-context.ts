@@ -3,9 +3,9 @@ import {
   type ChatTeamContext,
   type ChatUserContext,
   chatCache,
-} from "@midday/cache/chat-cache";
-import { getBankAccounts, getTeamById, getUserById } from "@midday/db/queries";
-import { logger } from "@midday/logger";
+} from "@midpoker/cache/chat-cache";
+import { getBankAccounts, getTeamById, getUserById } from "@midpoker/db/queries";
+import { logger } from "@midpoker/logger";
 import { HTTPException } from "hono/http-exception";
 
 interface GetUserContextParams {

@@ -1,5 +1,5 @@
 import { scheduleInvoiceJobSchema } from "@jobs/schema";
-import { createClient } from "@midday/supabase/job";
+import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import { generateInvoice } from "../operations/generate-invoice";
 

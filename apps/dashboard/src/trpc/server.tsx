@@ -1,8 +1,8 @@
 import "server-only";
 
-import type { AppRouter } from "@midday/api/trpc/routers/_app";
-import { getCountryCode, getLocale, getTimezone } from "@midday/location";
-import { createClient } from "@midday/supabase/server";
+import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
+import { getCountryCode, getLocale, getTimezone } from "@midpoker/location";
+import { createClient } from "@midpoker/supabase/server";
 import { dehydrate } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
 import {

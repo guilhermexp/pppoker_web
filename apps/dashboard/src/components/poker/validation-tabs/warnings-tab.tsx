@@ -1,7 +1,7 @@
 "use client";
 
 import type { ValidationWarning } from "@/lib/poker/types";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 
 type WarningsTabProps = {
   warnings: ValidationWarning[];

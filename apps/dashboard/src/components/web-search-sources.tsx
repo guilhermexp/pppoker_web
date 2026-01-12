@@ -1,7 +1,7 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@midday/ui/avatar";
-import { cn } from "@midday/ui/cn";
+import { Avatar, AvatarFallback, AvatarImage } from "@midpoker/ui/avatar";
+import { cn } from "@midpoker/ui/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import type { ComponentProps } from "react";
 import { useEffect, useState } from "react";

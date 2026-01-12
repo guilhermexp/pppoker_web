@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@midday/ui/cn";
+import { cn } from "@midpoker/ui/cn";
 import { useFormContext } from "react-hook-form";
 
 type Props = {

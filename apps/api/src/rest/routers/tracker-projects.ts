@@ -14,7 +14,7 @@ import {
   getTrackerProjectById,
   getTrackerProjects,
   upsertTrackerProject,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();

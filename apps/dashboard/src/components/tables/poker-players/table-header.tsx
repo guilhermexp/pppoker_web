@@ -3,13 +3,13 @@
 import { HorizontalPagination } from "@/components/horizontal-pagination";
 import { useSortParams } from "@/hooks/use-sort-params";
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
 import {
   TableHeader as BaseTableHeader,
   TableHead,
   TableRow,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import { ArrowDown, ArrowUp } from "lucide-react";
 
 interface Props {

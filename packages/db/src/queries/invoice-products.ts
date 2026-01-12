@@ -1,6 +1,6 @@
 import type { Database } from "../client";
 import { invoiceProducts } from "../schema";
-import type { LineItem } from "@midday/invoice/types";
+import type { LineItem } from "@midpoker/invoice/types";
 import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 
 export type InvoiceProduct = {

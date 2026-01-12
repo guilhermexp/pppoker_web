@@ -1,7 +1,7 @@
 "use client";
 
 import { useTrackerParams } from "@/hooks/use-tracker-params";
-import { Sheet, SheetContent } from "@midday/ui/sheet";
+import { Sheet, SheetContent } from "@midpoker/ui/sheet";
 import React from "react";
 import { TrackerSchedule } from "../tracker-schedule";
 

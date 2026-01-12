@@ -1,13 +1,13 @@
 "use client";
 
 import type { ParsedLeagueGeralPPSTBloco } from "@/lib/league/types";
-import { Badge } from "@midday/ui/badge";
+import { Badge } from "@midpoker/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@midday/ui/collapsible";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/collapsible";
+import { Icons } from "@midpoker/ui/icons";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 

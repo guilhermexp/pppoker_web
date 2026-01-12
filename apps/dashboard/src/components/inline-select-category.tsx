@@ -2,7 +2,7 @@
 
 import { Category } from "@/components/category";
 import { SelectCategory } from "@/components/select-category";
-import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@midpoker/ui/popover";
 import { useState } from "react";
 
 type Selected = {

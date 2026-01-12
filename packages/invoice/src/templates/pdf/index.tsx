@@ -1,4 +1,4 @@
-import { getAppUrl } from "@midday/utils/envs";
+import { getAppUrl } from "@midpoker/utils/envs";
 import { Document, Font, Image, Page, Text, View } from "@react-pdf/renderer";
 import QRCodeUtil from "qrcode";
 import type { Invoice } from "../../types";

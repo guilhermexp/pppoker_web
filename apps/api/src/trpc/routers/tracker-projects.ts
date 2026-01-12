@@ -10,7 +10,7 @@ import {
   deleteTrackerProject,
   getTrackerProjectById,
   upsertTrackerProject,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 
 export const trackerProjectsRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues

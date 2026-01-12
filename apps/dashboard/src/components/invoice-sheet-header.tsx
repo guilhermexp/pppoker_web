@@ -1,7 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { SheetHeader } from "@midday/ui/sheet";
+import { SheetHeader } from "@midpoker/ui/sheet";
 import { useQuery } from "@tanstack/react-query";
 
 type Props = {

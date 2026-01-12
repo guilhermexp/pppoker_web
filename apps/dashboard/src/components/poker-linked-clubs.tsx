@@ -6,14 +6,14 @@ import {
   useRemoveLinkedClubMutation,
 } from "@/hooks/use-team";
 import { useZodForm } from "@/hooks/use-zod-form";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
+} from "@midpoker/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@midday/ui/dialog";
+} from "@midpoker/ui/dialog";
 import {
   Form,
   FormControl,
@@ -30,8 +30,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@midday/ui/form";
-import { Input } from "@midday/ui/input";
+} from "@midpoker/ui/form";
+import { Input } from "@midpoker/ui/input";
 import {
   Table,
   TableBody,
@@ -39,7 +39,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod/v3";

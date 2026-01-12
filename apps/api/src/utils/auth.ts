@@ -1,4 +1,4 @@
-import type { Database } from "@midday/supabase/types";
+import type { Database } from "@midpoker/supabase/types";
 import { createClient } from "@supabase/supabase-js";
 
 export type Session = {

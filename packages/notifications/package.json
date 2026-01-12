@@ -1,5 +1,5 @@
 {
-  "name": "@midday/notifications",
+  "name": "@midpoker/notifications",
   "version": "0.1.0",
   "private": true,
   "main": "src/index.ts",
@@ -14,15 +14,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@midday/email": "workspace:*",
-    "@midday/inbox": "workspace:*",
-    "@midday/db": "workspace:*",
+    "@midpoker/email": "workspace:*",
+    "@midpoker/inbox": "workspace:*",
+    "@midpoker/db": "workspace:*",
     "nanoid": "^5.1.6",
     "resend": "^6.4.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@midday/tsconfig": "workspace:*",
+    "@midpoker/tsconfig": "workspace:*",
     "typescript": "^5.9.3"
   }
 }

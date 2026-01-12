@@ -1,4 +1,4 @@
-import { Avatar } from "@midday/ui/avatar";
+import { Avatar } from "@midpoker/ui/avatar";
 import Image from "next/image";
 
 type Props = {

@@ -5,9 +5,9 @@ import { burnRateArtifact } from "@api/ai/artifacts/burn-rate";
 import { generateArtifactDescription } from "@api/ai/utils/artifact-title";
 import { getToolDateDefaults } from "@api/ai/utils/tool-date-defaults";
 import { checkBankAccountsRequired } from "@api/ai/utils/tool-helpers";
-import { db } from "@midday/db/client";
-import { getBurnRate, getRunway, getSpending } from "@midday/db/queries";
-import { formatAmount } from "@midday/utils/format";
+import { db } from "@midpoker/db/client";
+import { getBurnRate, getRunway, getSpending } from "@midpoker/db/queries";
+import { formatAmount } from "@midpoker/utils/format";
 import { generateText } from "ai";
 import { tool } from "ai";
 import {

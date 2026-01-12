@@ -19,8 +19,8 @@ import {
   getInbox,
   getInboxById,
   updateInbox,
-} from "@midday/db/queries";
-import { signedUrl } from "@midday/supabase/storage";
+} from "@midpoker/db/queries";
+import { signedUrl } from "@midpoker/supabase/storage";
 import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();

@@ -2,9 +2,9 @@
 
 import { downloadFile } from "@/lib/download";
 import { useInvoiceStore } from "@/store/invoice";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { SubmitButton } from "@midday/ui/submit-button";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { SubmitButton } from "@midpoker/ui/submit-button";
 import NumberFlow from "@number-flow/react";
 import { motion } from "framer-motion";
 import { useState } from "react";

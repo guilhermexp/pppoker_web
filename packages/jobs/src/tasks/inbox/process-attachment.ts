@@ -5,10 +5,10 @@ import {
   getInboxByFilePath,
   updateInbox,
   updateInboxWithProcessedData,
-} from "@midday/db/queries";
-import { getTeamById } from "@midday/db/queries";
-import { DocumentClient } from "@midday/documents";
-import { createClient } from "@midday/supabase/job";
+} from "@midpoker/db/queries";
+import { getTeamById } from "@midpoker/db/queries";
+import { DocumentClient } from "@midpoker/documents";
+import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask, tasks } from "@trigger.dev/sdk";
 import { convertHeic } from "../document/convert-heic";
 import { processDocument } from "../document/process-document";

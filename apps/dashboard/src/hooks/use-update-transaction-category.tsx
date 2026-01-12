@@ -1,8 +1,8 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { ToastAction } from "@midday/ui/toast";
-import { toast } from "@midday/ui/use-toast";
+import { ToastAction } from "@midpoker/ui/toast";
+import { toast } from "@midpoker/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Category = {

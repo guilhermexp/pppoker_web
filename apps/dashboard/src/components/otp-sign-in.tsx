@@ -2,13 +2,13 @@
 
 import { verifyOtpAction } from "@/actions/verify-otp-action";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createClient } from "@midday/supabase/client";
-import { cn } from "@midday/ui/cn";
-import { Form, FormControl, FormField, FormItem } from "@midday/ui/form";
-import { Input } from "@midday/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@midday/ui/input-otp";
-import { Spinner } from "@midday/ui/spinner";
-import { SubmitButton } from "@midday/ui/submit-button";
+import { createClient } from "@midpoker/supabase/client";
+import { cn } from "@midpoker/ui/cn";
+import { Form, FormControl, FormField, FormItem } from "@midpoker/ui/form";
+import { Input } from "@midpoker/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@midpoker/ui/input-otp";
+import { Spinner } from "@midpoker/ui/spinner";
+import { SubmitButton } from "@midpoker/ui/submit-button";
 import { useAction } from "next-safe-action/hooks";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";

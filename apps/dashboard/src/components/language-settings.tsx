@@ -12,8 +12,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@midday/ui/card";
-import { ComboboxDropdown } from "@midday/ui/combobox-dropdown";
+} from "@midpoker/ui/card";
+import { ComboboxDropdown } from "@midpoker/ui/combobox-dropdown";
 
 const languageNames: Record<string, string> = {
   en: "English",

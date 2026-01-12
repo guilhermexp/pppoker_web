@@ -8,7 +8,7 @@ import { VaultRelatedFiles } from "@/components/vault/vault-related-files";
 import { useDocumentParams } from "@/hooks/use-document-params";
 import { useTRPC } from "@/trpc/client";
 import { formatSize } from "@/utils/format";
-import { SheetHeader } from "@midday/ui/sheet";
+import { SheetHeader } from "@midpoker/ui/sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function DocumentDetails() {

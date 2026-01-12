@@ -4,12 +4,12 @@ import { runwayArtifact } from "@api/ai/artifacts/runway";
 import { generateArtifactDescription } from "@api/ai/utils/artifact-title";
 import { getToolDateDefaults } from "@api/ai/utils/tool-date-defaults";
 import { checkBankAccountsRequired } from "@api/ai/utils/tool-helpers";
-import { db } from "@midday/db/client";
+import { db } from "@midpoker/db/client";
 import {
   getBurnRate,
   getCombinedAccountBalance,
   getRunway,
-} from "@midday/db/queries";
+} from "@midpoker/db/queries";
 import { tool } from "ai";
 import { z } from "zod";
 

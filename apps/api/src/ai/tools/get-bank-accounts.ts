@@ -1,9 +1,9 @@
 import type { AppContext } from "@api/ai/agents/config/shared";
 import { checkBankAccountsRequired } from "@api/ai/utils/tool-helpers";
-import { db } from "@midday/db/client";
-import { getBankAccounts } from "@midday/db/queries";
-import { getAppUrl } from "@midday/utils/envs";
-import { formatAmount } from "@midday/utils/format";
+import { db } from "@midpoker/db/client";
+import { getBankAccounts } from "@midpoker/db/queries";
+import { getAppUrl } from "@midpoker/utils/envs";
+import { formatAmount } from "@midpoker/utils/format";
 import { tool } from "ai";
 import { z } from "zod";
 

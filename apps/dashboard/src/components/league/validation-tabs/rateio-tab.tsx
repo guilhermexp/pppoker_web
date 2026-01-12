@@ -8,8 +8,8 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@midday/ui/collapsible";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/collapsible";
+import { Icons } from "@midpoker/ui/icons";
 import { useMemo, useState } from "react";
 
 // Configuração das ligas e seus percentuais de meta

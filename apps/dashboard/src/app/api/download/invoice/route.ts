@@ -1,7 +1,7 @@
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { PdfTemplate, renderToStream } from "@midday/invoice";
+import { PdfTemplate, renderToStream } from "@midpoker/invoice";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 

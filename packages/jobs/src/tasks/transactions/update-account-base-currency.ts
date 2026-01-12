@@ -3,7 +3,7 @@ import {
   getTransactionAmount,
 } from "@jobs/utils/base-currency";
 import { processBatch } from "@jobs/utils/process-batch";
-import { createClient } from "@midday/supabase/job";
+import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 

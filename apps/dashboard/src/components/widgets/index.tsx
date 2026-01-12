@@ -1,8 +1,8 @@
 "use client";
 
 import { useChatInterface } from "@/hooks/use-chat-interface";
-import type { AppRouter } from "@midday/api/trpc/routers/_app";
-import { Skeleton } from "@midday/ui/skeleton";
+import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import type { inferRouterOutputs } from "@trpc/server";
 import { Suspense } from "react";
 import { ClientOnly } from "../client-only";

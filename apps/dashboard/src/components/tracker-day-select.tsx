@@ -2,9 +2,9 @@ import { useTrackerParams } from "@/hooks/use-tracker-params";
 import { formatDateRange } from "@/utils/format";
 import { getTrackerDates } from "@/utils/tracker";
 import { TZDate } from "@date-fns/tz";
-import { Button } from "@midday/ui/button";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import { addDays, formatISO, subDays } from "date-fns";
 import { useHotkeys } from "react-hotkeys-hook";
 

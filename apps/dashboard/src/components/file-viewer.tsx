@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@midday/ui/skeleton";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import dynamic from "next/dynamic";
 import { FilePreviewIcon } from "./file-preview-icon";
 

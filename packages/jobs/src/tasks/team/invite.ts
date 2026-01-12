@@ -1,8 +1,8 @@
 import { resend } from "@jobs/utils/resend";
-import { InviteEmail } from "@midday/email/emails/invite";
-import { getI18n } from "@midday/email/locales";
-import { render } from "@midday/email/render";
-import { inviteTeamMembersSchema } from "@midday/jobs/schema";
+import { InviteEmail } from "@midpoker/email/emails/invite";
+import { getI18n } from "@midpoker/email/locales";
+import { render } from "@midpoker/email/render";
+import { inviteTeamMembersSchema } from "@midpoker/jobs/schema";
 import { schemaTask } from "@trigger.dev/sdk";
 import { nanoid } from "nanoid";
 

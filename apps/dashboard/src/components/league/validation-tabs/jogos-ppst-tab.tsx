@@ -1,20 +1,20 @@
 "use client";
 
 import type { ParsedLeagueJogoPPST } from "@/lib/league/types";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@midday/ui/collapsible";
+} from "@midpoker/ui/collapsible";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@midday/ui/select";
+} from "@midpoker/ui/select";
 import {
   Table,
   TableBody,
@@ -22,7 +22,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@midday/ui/table";
+} from "@midpoker/ui/table";
 import {
   AlertTriangle,
   Ban,

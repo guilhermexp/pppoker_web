@@ -15,7 +15,7 @@ import {
 } from "@/lib/artifact-config";
 import { getToolIcon } from "@/lib/tool-config";
 import type { AgentStatus } from "@/types/agents";
-import { Loader } from "@midday/ui/loader";
+import { Loader } from "@midpoker/ui/loader";
 
 interface ChatStatusIndicatorsProps {
   agentStatus: AgentStatus | null;

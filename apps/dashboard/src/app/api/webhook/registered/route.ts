@@ -1,5 +1,5 @@
 import * as crypto from "node:crypto";
-import type { OnboardTeamPayload } from "@midday/jobs/schema";
+import type { OnboardTeamPayload } from "@midpoker/jobs/schema";
 import { tasks } from "@trigger.dev/sdk";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";

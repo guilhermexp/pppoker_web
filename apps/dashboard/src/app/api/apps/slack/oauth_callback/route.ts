@@ -1,9 +1,9 @@
-import { createApp } from "@midday/app-store/db";
+import { createApp } from "@midpoker/app-store/db";
 import {
   config,
   createSlackApp,
   getSlackInstaller,
-} from "@midday/app-store/slack";
+} from "@midpoker/app-store/slack";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v3";
 

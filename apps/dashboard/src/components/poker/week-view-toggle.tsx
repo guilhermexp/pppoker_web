@@ -1,8 +1,8 @@
 "use client";
 
 import type { ViewMode } from "@/hooks/use-poker-dashboard-params";
-import { Icons } from "@midday/ui/icons";
-import { Tabs, TabsList, TabsTrigger } from "@midday/ui/tabs";
+import { Icons } from "@midpoker/ui/icons";
+import { Tabs, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 
 interface WeekViewToggleProps {
   value: ViewMode;

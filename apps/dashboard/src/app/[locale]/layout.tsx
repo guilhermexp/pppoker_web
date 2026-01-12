@@ -1,8 +1,8 @@
 import "@/styles/globals.css";
-import { cn } from "@midday/ui/cn";
-import "@midday/ui/globals.css";
+import { cn } from "@midpoker/ui/cn";
+import "@midpoker/ui/globals.css";
 import { isDesktopApp } from "@/utils/desktop";
-import { Toaster } from "@midday/ui/toaster";
+import { Toaster } from "@midpoker/ui/toaster";
 import type { Metadata } from "next";
 import { Hedvig_Letters_Sans, Hedvig_Letters_Serif } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";

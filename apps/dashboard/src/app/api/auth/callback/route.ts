@@ -1,6 +1,6 @@
 import { Cookies } from "@/utils/constants";
-import { getSession } from "@midday/supabase/cached-queries";
-import { createClient } from "@midday/supabase/server";
+import { getSession } from "@midpoker/supabase/cached-queries";
+import { createClient } from "@midpoker/supabase/server";
 import { addYears } from "date-fns";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";

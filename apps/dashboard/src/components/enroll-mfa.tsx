@@ -1,12 +1,12 @@
-import { createClient } from "@midday/supabase/client";
-import { Button } from "@midday/ui/button";
+import { createClient } from "@midpoker/supabase/client";
+import { Button } from "@midpoker/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@midday/ui/collapsible";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@midday/ui/input-otp";
-import { Spinner } from "@midday/ui/spinner";
+} from "@midpoker/ui/collapsible";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@midpoker/ui/input-otp";
+import { Spinner } from "@midpoker/ui/spinner";
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

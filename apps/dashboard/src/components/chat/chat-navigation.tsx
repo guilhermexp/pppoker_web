@@ -2,7 +2,7 @@
 
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useChatActions } from "@ai-sdk-tools/store";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 

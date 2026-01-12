@@ -1,4 +1,4 @@
-import { logger } from "@midday/logger";
+import { logger } from "@midpoker/logger";
 
 // Configuration constants
 export const EMBEDDING_THRESHOLDS = {

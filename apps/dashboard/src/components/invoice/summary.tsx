@@ -1,5 +1,5 @@
 import { useTRPC } from "@/trpc/client";
-import { calculateTotal } from "@midday/invoice/calculate";
+import { calculateTotal } from "@midpoker/invoice/calculate";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";

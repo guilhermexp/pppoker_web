@@ -3,8 +3,8 @@
 import { AddAccountButton } from "@/components/add-account-button";
 import { useTransactionFilterParamsWithPersistence } from "@/hooks/use-transaction-filter-params-with-persistence";
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
 
 export function NoResults() {
   const t = useI18n();

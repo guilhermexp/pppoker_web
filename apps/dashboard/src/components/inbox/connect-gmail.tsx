@@ -2,8 +2,8 @@
 
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
-import { Icons } from "@midday/ui/icons";
-import { SubmitButton } from "@midday/ui/submit-button";
+import { Icons } from "@midpoker/ui/icons";
+import { SubmitButton } from "@midpoker/ui/submit-button";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 

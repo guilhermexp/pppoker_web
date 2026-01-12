@@ -2,14 +2,14 @@
 
 import { useTransactionParams } from "@/hooks/use-transaction-params";
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@midday/ui/dropdown-menu";
-import { Icons } from "@midday/ui/icons";
+} from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
 import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
 
 export function AddTransactions() {

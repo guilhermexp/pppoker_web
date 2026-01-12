@@ -1,9 +1,9 @@
 "use client";
 
 import { FilePreviewIcon } from "@/components/file-preview-icon";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
-import { Skeleton } from "@midday/ui/skeleton";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import { useEffect, useState } from "react";
 
 type Props = {

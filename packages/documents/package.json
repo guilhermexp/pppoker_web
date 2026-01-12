@@ -1,5 +1,5 @@
 {
-  "name": "@midday/documents",
+  "name": "@midpoker/documents",
   "version": "1.0.0",
   "private": true,
   "main": "src/index.ts",
@@ -22,7 +22,7 @@
     "@ai-sdk/mistral": "^2.0.24",
     "@langchain/community": "1.0.3",
     "@langchain/core": "1.0.5",
-    "@midday/utils": "workspace:*",
+    "@midpoker/utils": "workspace:*",
     "@mistralai/mistralai": "^1.10.0",
     "ai": "5.0.87",
     "canvas": "^3.2.0",
@@ -33,6 +33,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@midpoker/tsconfig": "workspace:*"
   }
 }

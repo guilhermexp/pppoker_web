@@ -2,9 +2,9 @@
 
 import { useUserQuery } from "@/hooks/use-user";
 import { useTRPC } from "@/trpc/client";
-import { apps as appStoreApps } from "@midday/app-store";
-import type { UnifiedApp } from "@midday/app-store/types";
-import { Button } from "@midday/ui/button";
+import { apps as appStoreApps } from "@midpoker/app-store";
+import type { UnifiedApp } from "@midpoker/app-store/types";
+import { Button } from "@midpoker/ui/button";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UnifiedAppComponent } from "./unified-app";

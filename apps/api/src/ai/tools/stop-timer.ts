@@ -1,8 +1,8 @@
 import type { AppContext } from "@api/ai/agents/config/shared";
-import { db } from "@midday/db/client";
-import { stopTimer } from "@midday/db/queries";
-import { getAppUrl } from "@midday/utils/envs";
-import { formatDate } from "@midday/utils/format";
+import { db } from "@midpoker/db/client";
+import { stopTimer } from "@midpoker/db/queries";
+import { getAppUrl } from "@midpoker/utils/envs";
+import { formatDate } from "@midpoker/utils/format";
 import { tool } from "ai";
 import { formatDistance } from "date-fns";
 import { z } from "zod";

@@ -2,7 +2,7 @@
 
 import { useTransactionParams } from "@/hooks/use-transaction-params";
 import { useTRPC } from "@/trpc/client";
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useHotkeys } from "react-hotkeys-hook";

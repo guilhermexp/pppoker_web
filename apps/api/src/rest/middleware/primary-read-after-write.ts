@@ -1,8 +1,8 @@
-import { replicationCache } from "@midday/cache/replication-cache";
-import { teamPermissionsCache } from "@midday/cache/team-permissions-cache";
-import type { DatabaseWithPrimary } from "@midday/db/client";
-import { getUserTeamId } from "@midday/db/queries";
-import { logger } from "@midday/logger";
+import { replicationCache } from "@midpoker/cache/replication-cache";
+import { teamPermissionsCache } from "@midpoker/cache/team-permissions-cache";
+import type { DatabaseWithPrimary } from "@midpoker/db/client";
+import { getUserTeamId } from "@midpoker/db/queries";
+import { logger } from "@midpoker/logger";
 import type { MiddlewareHandler } from "hono";
 
 /**

@@ -1,15 +1,15 @@
 import { verifyAccessToken } from "@api/utils/auth";
 import { expandScopes } from "@api/utils/scopes";
 import { isValidApiKeyFormat } from "@db/utils/api-keys";
-import { apiKeyCache } from "@midday/cache/api-key-cache";
-import { userCache } from "@midday/cache/user-cache";
+import { apiKeyCache } from "@midpoker/cache/api-key-cache";
+import { userCache } from "@midpoker/cache/user-cache";
 import {
   getApiKeyByToken,
   getUserById,
   updateApiKeyLastUsedAt,
   validateAccessToken,
-} from "@midday/db/queries";
-import { hash } from "@midday/encryption";
+} from "@midpoker/db/queries";
+import { hash } from "@midpoker/encryption";
 import type { MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 

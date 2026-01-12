@@ -17,11 +17,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@midday/ui/form";
-import { Input } from "@midday/ui/input";
-import { SubmitButton } from "@midday/ui/submit-button";
-import { Switch } from "@midday/ui/switch";
-import { getTaxTypeForCountry, taxTypes } from "@midday/utils/tax";
+} from "@midpoker/ui/form";
+import { Input } from "@midpoker/ui/input";
+import { SubmitButton } from "@midpoker/ui/submit-button";
+import { Switch } from "@midpoker/ui/switch";
+import { getTaxTypeForCountry, taxTypes } from "@midpoker/utils/tax";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { z } from "zod/v3";

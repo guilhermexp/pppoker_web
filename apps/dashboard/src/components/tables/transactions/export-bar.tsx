@@ -1,6 +1,6 @@
 import { ExportTransactionsModal } from "@/components/modals/export-transactions-modal";
 import { useTransactionsStore } from "@/store/transactions";
-import { Button } from "@midday/ui/button";
+import { Button } from "@midpoker/ui/button";
 import NumberFlow from "@number-flow/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";

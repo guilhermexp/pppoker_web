@@ -1,4 +1,4 @@
-import type { Database } from "@midday/supabase/types";
+import type { Database } from "@midpoker/supabase/types";
 
 type TransformTransactionData = {
   transaction: Database["public"]["Tables"]["transactions"]["Row"];

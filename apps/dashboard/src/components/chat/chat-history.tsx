@@ -1,11 +1,11 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { Button } from "@midday/ui/button";
-import { Icons } from "@midday/ui/icons";
-import { Input } from "@midday/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@midday/ui/popover";
-import { Skeleton } from "@midday/ui/skeleton";
+import { Button } from "@midpoker/ui/button";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@midpoker/ui/popover";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";

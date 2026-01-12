@@ -2,10 +2,10 @@
 
 import { useSliderWithInput } from "@/hooks/use-slider-with-input";
 import { useTRPC } from "@/trpc/client";
-import { Button } from "@midday/ui/button";
-import { CurrencyInput } from "@midday/ui/currency-input";
-import { Label } from "@midday/ui/label";
-import { Slider } from "@midday/ui/slider";
+import { Button } from "@midpoker/ui/button";
+import { CurrencyInput } from "@midpoker/ui/currency-input";
+import { Label } from "@midpoker/ui/label";
+import { Slider } from "@midpoker/ui/slider";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
 import { useEffect, useRef } from "react";

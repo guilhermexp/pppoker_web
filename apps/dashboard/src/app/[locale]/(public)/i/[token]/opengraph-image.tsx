@@ -1,6 +1,6 @@
 import { getQueryClient, trpc } from "@/trpc/server";
 import { getWebsiteLogo } from "@/utils/logos";
-import { OgTemplate, isValidLogoUrl } from "@midday/invoice";
+import { OgTemplate, isValidLogoUrl } from "@midpoker/invoice";
 import { ImageResponse } from "next/og";
 
 export const contentType = "image/png";

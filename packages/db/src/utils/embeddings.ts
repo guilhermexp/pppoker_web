@@ -1,5 +1,5 @@
-import { CategoryEmbeddings } from "@midday/categories";
-import { logger } from "@midday/logger";
+import { CategoryEmbeddings } from "@midpoker/categories";
+import { logger } from "@midpoker/logger";
 import { eq, inArray } from "drizzle-orm";
 import type { Database } from "../client";
 import { upsertCategoryEmbedding } from "../queries/transaction-category-embeddings";

@@ -1,11 +1,11 @@
 import { getDb } from "@jobs/init";
 import { processBatch } from "@jobs/utils/process-batch";
-import { getInboxAccountInfo, updateInboxAccount } from "@midday/db/queries";
-import { InboxConnector } from "@midday/inbox/connector";
-import { isAuthenticationError } from "@midday/inbox/utils";
-import { createClient } from "@midday/supabase/job";
-import { getExistingInboxAttachmentsQuery } from "@midday/supabase/queries";
-import { ensureFileExtension } from "@midday/utils";
+import { getInboxAccountInfo, updateInboxAccount } from "@midpoker/db/queries";
+import { InboxConnector } from "@midpoker/inbox/connector";
+import { isAuthenticationError } from "@midpoker/inbox/utils";
+import { createClient } from "@midpoker/supabase/job";
+import { getExistingInboxAttachmentsQuery } from "@midpoker/supabase/queries";
+import { ensureFileExtension } from "@midpoker/utils";
 import { logger, schemaTask, tasks } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { processAttachment } from "../process-attachment";

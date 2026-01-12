@@ -4,10 +4,10 @@ import { HorizontalPagination } from "@/components/horizontal-pagination";
 import { useSortParams } from "@/hooks/use-sort-params";
 import { useStickyColumns } from "@/hooks/use-sticky-columns";
 import { useI18n } from "@/locales/client";
-import { Button } from "@midday/ui/button";
-import { Checkbox } from "@midday/ui/checkbox";
-import { cn } from "@midday/ui/cn";
-import { TableHead, TableHeader, TableRow } from "@midday/ui/table";
+import { Button } from "@midpoker/ui/button";
+import { Checkbox } from "@midpoker/ui/checkbox";
+import { cn } from "@midpoker/ui/cn";
+import { TableHead, TableHeader, TableRow } from "@midpoker/ui/table";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useCallback } from "react";
 

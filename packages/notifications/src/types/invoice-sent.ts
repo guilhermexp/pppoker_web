@@ -1,6 +1,6 @@
-import { getI18n } from "@midday/email/locales";
-import { encrypt } from "@midday/encryption";
-import { getAppUrl } from "@midday/utils/envs";
+import { getI18n } from "@midpoker/email/locales";
+import { encrypt } from "@midpoker/encryption";
+import { getAppUrl } from "@midpoker/utils/envs";
 import type { NotificationHandler } from "../base";
 import { invoiceSentSchema } from "../schemas";
 

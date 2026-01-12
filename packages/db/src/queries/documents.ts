@@ -4,7 +4,7 @@ import {
   documents,
   transactionAttachments,
 } from "../schema";
-import { buildSearchQuery } from "@midday/db/utils/search-query";
+import { buildSearchQuery } from "@midpoker/db/utils/search-query";
 import { and, desc, eq, gte, inArray, like, lte, not, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm/sql/sql";
 

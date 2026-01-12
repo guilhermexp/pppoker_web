@@ -1,4 +1,4 @@
-import type { InboxSlackUploadPayload } from "@midday/jobs/schema";
+import type { InboxSlackUploadPayload } from "@midpoker/jobs/schema";
 import type { FileShareMessageEvent } from "@slack/web-api";
 import { tasks } from "@trigger.dev/sdk";
 

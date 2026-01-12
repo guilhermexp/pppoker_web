@@ -5,18 +5,18 @@ import {
   isBrazilianLeague,
   parseSpreadsheetFileName,
 } from "@/lib/poker/spreadsheet-types";
-import { Badge } from "@midday/ui/badge";
-import { Button } from "@midday/ui/button";
+import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@midday/ui/dialog";
-import { Icons } from "@midday/ui/icons";
-import { Spinner } from "@midday/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midday/ui/tabs";
+} from "@midpoker/ui/dialog";
+import { Icons } from "@midpoker/ui/icons";
+import { Spinner } from "@midpoker/ui/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { getWeek, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useCallback, useMemo, useState } from "react";

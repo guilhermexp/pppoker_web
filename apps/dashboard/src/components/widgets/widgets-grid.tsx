@@ -22,7 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { AppRouter } from "@midday/api/trpc/routers/_app";
+import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
 import { useMutation } from "@tanstack/react-query";
 import type { inferRouterOutputs } from "@trpc/server";
 import { useRef, useState } from "react";

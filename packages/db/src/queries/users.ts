@@ -1,6 +1,6 @@
 import type { Database } from "../client";
 import { teams, users, usersOnTeam } from "../schema";
-import { teamPermissionsCache } from "@midday/cache/team-permissions-cache";
+import { teamPermissionsCache } from "@midpoker/cache/team-permissions-cache";
 import { eq, inArray, sql } from "drizzle-orm";
 
 export const getUserById = async (db: Database, id: string) => {

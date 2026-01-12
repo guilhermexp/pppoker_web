@@ -3,9 +3,9 @@ import { InboxStatus } from "@/components/inbox/inbox-status";
 import { useInboxParams } from "@/hooks/use-inbox-params";
 import { useUserQuery } from "@/hooks/use-user";
 import type { RouterOutputs } from "@api/trpc/routers/_app";
-import { cn } from "@midday/ui/cn";
-import { Skeleton } from "@midday/ui/skeleton";
-import { formatDate } from "@midday/utils/format";
+import { cn } from "@midpoker/ui/cn";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { formatDate } from "@midpoker/utils/format";
 import { forwardRef } from "react";
 
 type Props = {

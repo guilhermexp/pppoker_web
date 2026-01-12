@@ -3,7 +3,7 @@
 import { useRealtime } from "@/hooks/use-realtime";
 import { useUserQuery } from "@/hooks/use-user";
 import { useTRPC } from "@/trpc/client";
-import type { AppRouter } from "@midday/api/trpc/routers/_app";
+import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { useCallback, useMemo } from "react";

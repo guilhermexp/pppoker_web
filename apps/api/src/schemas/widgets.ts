@@ -1,4 +1,4 @@
-import { WIDGET_TYPES } from "@midday/cache/widget-preferences-cache";
+import { WIDGET_TYPES } from "@midpoker/cache/widget-preferences-cache";
 import { z } from "zod";
 
 export const getRunwaySchema = z.object({

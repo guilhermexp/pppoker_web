@@ -14,7 +14,7 @@ import {
   invoiceSentSchema,
   transactionsCreatedSchema,
   transactionsExportedSchema,
-} from "@midday/notifications";
+} from "@midpoker/notifications";
 import { z } from "zod";
 
 export const sendInvoiceReminderSchema = z.object({

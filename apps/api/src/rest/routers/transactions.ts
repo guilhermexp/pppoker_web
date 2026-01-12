@@ -29,8 +29,8 @@ import {
   getTransactions,
   updateTransaction,
   updateTransactions,
-} from "@midday/db/queries";
-import { signedUrl } from "@midday/supabase/storage";
+} from "@midpoker/db/queries";
+import { signedUrl } from "@midpoker/supabase/storage";
 import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();

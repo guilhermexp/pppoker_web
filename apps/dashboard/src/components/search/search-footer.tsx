@@ -1,4 +1,4 @@
-import { Icons } from "@midday/ui/icons";
+import { Icons } from "@midpoker/ui/icons";
 
 export function SearchFooter() {
   return (

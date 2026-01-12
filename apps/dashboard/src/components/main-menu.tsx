@@ -2,8 +2,8 @@
 
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useI18n } from "@/locales/client";
-import { cn } from "@midday/ui/cn";
-import { Icons } from "@midday/ui/icons";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
