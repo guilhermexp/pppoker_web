@@ -9,25 +9,15 @@ ARG NEXT_PUBLIC_SUPABASE_ID
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_URL
 
-# Debug: print build args
-RUN echo "=== BUILD ARGS DEBUG ===" && \
-    echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-NOT SET}" && \
-    echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:+SET (hidden)}" && \
-    echo "NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-NOT SET}" && \
-    echo "========================"
-
 # Copy everything
 COPY . .
 
-# Create .env.production file for Next.js build
+# Create .env.production file for Next.js build (NEXT_PUBLIC_* vars must be available at build time)
 RUN echo "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}" > apps/dashboard/.env.production && \
     echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}" >> apps/dashboard/.env.production && \
     echo "NEXT_PUBLIC_SUPABASE_ID=${NEXT_PUBLIC_SUPABASE_ID}" >> apps/dashboard/.env.production && \
     echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> apps/dashboard/.env.production && \
-    echo "NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}" >> apps/dashboard/.env.production && \
-    echo "=== .env.production contents ===" && \
-    cat apps/dashboard/.env.production && \
-    echo "================================"
+    echo "NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}" >> apps/dashboard/.env.production
 
 # Install dependencies
 RUN bun install
