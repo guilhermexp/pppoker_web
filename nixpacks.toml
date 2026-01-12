@@ -1,0 +1,10 @@
+# Nixpacks configuration for monorepo with bun
+
+[phases.setup]
+nixPkgs = ["bun"]
+
+[phases.install]
+cmds = ["bun install"]
+
+[start]
+cmd = "bun run --filter=@midpoker/api start"

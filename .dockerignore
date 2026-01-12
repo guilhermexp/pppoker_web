@@ -1,0 +1,17 @@
+# Ignore node_modules - will be installed fresh
+node_modules
+**/node_modules
+
+# Ignore build artifacts
+.next
+dist
+build
+.turbo
+
+# Ignore dev/editor files
+.git
+.vscode
+.idea
+*.log
+
+# Keep everything else including packages/ and apps/
