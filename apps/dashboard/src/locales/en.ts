@@ -572,6 +572,12 @@ export default {
     su_acertos: "Settlements",
     su_import: "Import Data",
     su_grade: "Tournament Schedule",
+    fastchips: "Fast Chips",
+    fastchips_transacoes: "Transactions",
+    fastchips_contas_vinculadas: "Linked Accounts",
+    fastchips_jogadores: "Players",
+    fastchips_movimentacao: "Movements",
+    fastchips_controle: "Control",
   },
   dashboard: {
     greeting: {
@@ -1898,5 +1904,31 @@ export default {
     account: "Account",
     method: "Method",
     assigned: "Assigned",
+  },
+  fastchips: {
+    title: "Fast Chips Panel",
+    description: "Manage your Fast Chips operations",
+    in_development: "Under Development",
+    in_development_description: "This feature is being developed and will be available soon.",
+    transacoes: {
+      title: "Transactions",
+      description: "View and manage all Fast Chips transactions",
+    },
+    contas_vinculadas: {
+      title: "Linked Accounts",
+      description: "Manage accounts linked to the Fast Chips system",
+    },
+    jogadores: {
+      title: "Players",
+      description: "Fast Chips player registration and management",
+    },
+    movimentacao: {
+      title: "Movements",
+      description: "Track chip and value movements",
+    },
+    controle: {
+      title: "Control",
+      description: "Fast Chips control panel and reports",
+    },
   },
 } as const;

@@ -589,6 +589,12 @@ export default {
     su_acertos: "Acertos",
     su_import: "Importar Dados",
     su_grade: "Grade de Torneios",
+    fastchips: "Fast Chips",
+    fastchips_transacoes: "Transacoes",
+    fastchips_contas_vinculadas: "Contas Vinculadas",
+    fastchips_jogadores: "Jogadores",
+    fastchips_movimentacao: "Movimentacao",
+    fastchips_controle: "Controle",
   },
   dashboard: {
     greeting: {
@@ -1930,5 +1936,31 @@ export default {
     account: "Conta",
     method: "Método",
     assigned: "Atribuído",
+  },
+  fastchips: {
+    title: "Painel Fast Chips",
+    description: "Gerencie suas operacoes de Fast Chips",
+    in_development: "Em Desenvolvimento",
+    in_development_description: "Esta funcionalidade esta sendo desenvolvida e estara disponivel em breve.",
+    transacoes: {
+      title: "Transacoes",
+      description: "Visualize e gerencie todas as transacoes de Fast Chips",
+    },
+    contas_vinculadas: {
+      title: "Contas Vinculadas",
+      description: "Gerencie as contas vinculadas ao sistema Fast Chips",
+    },
+    jogadores: {
+      title: "Jogadores",
+      description: "Cadastro e gestao de jogadores Fast Chips",
+    },
+    movimentacao: {
+      title: "Movimentacao",
+      description: "Acompanhe a movimentacao de fichas e valores",
+    },
+    controle: {
+      title: "Controle",
+      description: "Painel de controle e relatorios Fast Chips",
+    },
   },
 } as const;

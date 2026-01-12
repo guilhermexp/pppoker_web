@@ -4,28 +4,19 @@ import type {
   ParsedLeagueGeralPPSTBloco,
   ParsedLeagueJogoPPST,
 } from "@/lib/league/types";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@midpoker/ui/collapsible";
-import { Icons } from "@midpoker/ui/icons";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
-// Configuração das ligas e seus percentuais de meta
-const LIGAS_CONFIG: Record<
-  number,
-  { nome: string; percentual: number; tipo: "BR" | "SA" }
-> = {
-  1675: { nome: "Evolution 1", percentual: 0.15, tipo: "BR" },
-  1765: { nome: "Evolution 2", percentual: 0.15, tipo: "BR" },
-  2101: { nome: "Evolution 3", percentual: 0.15, tipo: "BR" },
-  2448: { nome: "Evolution 4", percentual: 0.15, tipo: "BR" },
-  1534: { nome: "Colombiana", percentual: 0.12, tipo: "SA" },
-  1578: { nome: "Latinos", percentual: 0.12, tipo: "SA" },
-  2006: { nome: "Evolution.", percentual: 0.08, tipo: "SA" },
-  2126: { nome: "Nuts", percentual: 0.04, tipo: "SA" },
-  2343: { nome: "Golden", percentual: 0.02, tipo: "SA" },
+// Configuração das ligas
+const LIGAS_CONFIG: Record<number, { nome: string; tipo: "BR" | "SA" }> = {
+  1675: { nome: "Evolution 1", tipo: "BR" },
+  1765: { nome: "Evolution 2", tipo: "BR" },
+  2101: { nome: "Evolution 3", tipo: "BR" },
+  2448: { nome: "Evolution 4", tipo: "BR" },
+  1534: { nome: "Colombiana", tipo: "SA" },
+  1578: { nome: "Latinos", tipo: "SA" },
+  2006: { nome: "Evolution.", tipo: "SA" },
+  2126: { nome: "Nuts", tipo: "SA" },
+  2343: { nome: "Golden", tipo: "SA" },
 };
 
 const LIGAS_BR = [1675, 1765, 2101, 2448];
@@ -37,19 +28,13 @@ interface LeagueRateioTabProps {
 }
 
 function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(Math.round(value));
-}
-
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(1)}%`;
+  return `R$ ${new Intl.NumberFormat("pt-BR").format(Math.round(value))}`;
 }
 
 export function LeagueRateioTab({
   geralPPST,
   jogosPPST,
 }: LeagueRateioTabProps) {
-  const [openLigas, setOpenLigas] = useState<Set<number>>(new Set());
-
   // Calcula estatísticas de rateio
   const stats = useMemo(() => {
     // 1. Somar GTD total de todos os torneios
@@ -64,10 +49,15 @@ export function LeagueRateioTab({
     let gtdTourneysCount = 0; // Contagem de torneios PPST com GTD
     let soOverlay = 0; // Soma apenas dos overlays (resultados negativos)
 
-    // Arrecadado por liga
+    // Arrecadado por liga (só overlay)
     const arrecadadoPorLiga: Record<number, number> = {};
+    // Arrecadado por liga (todos GTD)
+    const arrecadadoPorLigaTotal: Record<number, number> = {};
+    let arrecadadoBRTotal = 0;
+    let arrecadadoSATotal = 0;
     for (const ligaId of [...LIGAS_BR, ...LIGAS_SA]) {
       arrecadadoPorLiga[ligaId] = 0;
+      arrecadadoPorLigaTotal[ligaId] = 0;
     }
 
     // Clubes por liga (para colapsáveis)
@@ -83,6 +73,27 @@ export function LeagueRateioTab({
     const clubeMap: Record<string, { clubeNome: string; arrecadado: number }> =
       {};
 
+    // Contadores para todos os torneios com GTD
+    let overlayTourneysCount = 0;
+    let gtdTotalTodos = 0; // GTD total de TODOS os torneios (não só overlay)
+
+    // Separar ME (Main Event) de Outros
+    type TorneioInfo = {
+      nome: string;
+      data: string;
+      gtdUSD: number;
+      gtdBRL: number;
+      buyinBRL: number;
+      entradas: number;
+      overlay: number;
+    };
+    const torneisoME: TorneioInfo[] = [];
+    const torneiosOutros: TorneioInfo[] = [];
+    let arrecadadoME = 0;
+    let arrecadadoOutros = 0;
+    let gtdME = 0;
+    let gtdOutros = 0;
+
     for (const jogo of jogosPPST) {
       // GTD do torneio
       const gtd = jogo.metadata?.premiacaoGarantida ?? 0;
@@ -96,47 +107,96 @@ export function LeagueRateioTab({
       const jogoTaxa = jogo.totalGeral?.taxa ||
         jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) || 0;
 
-      // Só conta GTD de torneios PPST
-      if (isPPSTOrganized && gtd > 0) {
-        gtdTotal += gtd;
-        buyinGTD += jogoBuyin;
-        taxaGTD += jogoTaxa;
-        gtdTourneysCount++;
-
-        // Só Overlay: (Buyin - Taxa) - GTD, soma apenas se negativo
-        const buyinLiquido = jogoBuyin - jogoTaxa;
-        const resultado = buyinLiquido - gtd;
-        if (resultado < 0) {
-          soOverlay += resultado;
-        }
-      }
-
       // Arrecadado total do jogo (todos os torneios)
       arrecadadoTotal += jogoBuyin;
 
-      // Arrecadado por liga e clube
-      for (const jogador of jogo.jogadores ?? []) {
-        const ligaId = jogador.ligaId;
-        const buyin = jogador.buyinFichas ?? 0;
+      // Só conta GTD de torneios PPST
+      if (isPPSTOrganized && gtd > 0) {
+        gtdTourneysCount++;
+        gtdTotalTodos += gtd; // Soma GTD de TODOS os torneios com GTD
 
-        if (LIGAS_CONFIG[ligaId]) {
-          arrecadadoPorLiga[ligaId] += buyin;
-
-          if (LIGAS_BR.includes(ligaId)) {
-            arrecadadoBR += buyin;
-          } else if (LIGAS_SA.includes(ligaId)) {
-            arrecadadoSA += buyin;
+        // Arrecadado por liga - TODOS os torneios com GTD
+        for (const jogador of jogo.jogadores ?? []) {
+          const ligaId = jogador.ligaId;
+          const buyin = jogador.buyinFichas ?? 0;
+          if (LIGAS_CONFIG[ligaId]) {
+            arrecadadoPorLigaTotal[ligaId] += buyin;
+            if (LIGAS_BR.includes(ligaId)) {
+              arrecadadoBRTotal += buyin;
+            } else if (LIGAS_SA.includes(ligaId)) {
+              arrecadadoSATotal += buyin;
+            }
           }
+        }
 
-          // Acumular por clube
-          const clubeKey = `${ligaId}-${jogador.clubeId}`;
-          if (!clubeMap[clubeKey]) {
-            clubeMap[clubeKey] = {
-              clubeNome: jogador.clubeNome,
-              arrecadado: 0,
-            };
+        // Verificar se teve overlay: (Buyin - Taxa) - GTD < 0
+        const buyinLiquido = jogoBuyin - jogoTaxa;
+        const resultado = buyinLiquido - gtd;
+        const temOverlay = resultado < 0;
+
+        // ME = torneio das 20:00 (Main Event do dia)
+        const horaInicio = jogo.metadata?.horaInicio ?? "";
+        const isME = horaInicio === "20:00";
+        // Outros = qualquer torneio com GTD que NÃO é das 20:00
+
+        // Info do torneio
+        const torneioInfo: TorneioInfo = {
+          nome: jogo.metadata?.nomeMesa ?? "Sem nome",
+          data: jogo.metadata?.dataInicio ?? "",
+          gtdUSD: gtd / 5, // Assumindo taxa 1:5
+          gtdBRL: gtd,
+          buyinBRL: buyinLiquido,
+          entradas: jogo.jogadores?.length ?? 0,
+          overlay: temOverlay ? Math.abs(resultado) : 0,
+        };
+
+        // ME = 7 torneios específicos, Outros = resto
+        if (isME) {
+          torneisoME.push(torneioInfo);
+          arrecadadoME += buyinLiquido;
+          gtdME += gtd;
+        } else {
+          torneiosOutros.push(torneioInfo);
+          arrecadadoOutros += buyinLiquido;
+          gtdOutros += gtd;
+        }
+
+        if (temOverlay) {
+          // Só soma nos totais se teve overlay
+          gtdTotal += gtd;
+          buyinGTD += jogoBuyin;
+          taxaGTD += jogoTaxa;
+          soOverlay += resultado;
+          overlayTourneysCount++;
+
+          // Arrecadado por liga e clube - APENAS de torneios com overlay
+          // Arrecadado = Buyin - Taxa (líquido)
+          for (const jogador of jogo.jogadores ?? []) {
+            const ligaId = jogador.ligaId;
+            const buyin = jogador.buyinFichas ?? 0;
+            const taxa = jogador.taxa ?? 0;
+            const liquido = buyin - taxa; // Buyin - Taxa
+
+            if (LIGAS_CONFIG[ligaId]) {
+              arrecadadoPorLiga[ligaId] += liquido;
+
+              if (LIGAS_BR.includes(ligaId)) {
+                arrecadadoBR += liquido;
+              } else if (LIGAS_SA.includes(ligaId)) {
+                arrecadadoSA += liquido;
+              }
+
+              // Acumular por clube
+              const clubeKey = `${ligaId}-${jogador.clubeId}`;
+              if (!clubeMap[clubeKey]) {
+                clubeMap[clubeKey] = {
+                  clubeNome: jogador.clubeNome,
+                  arrecadado: 0,
+                };
+              }
+              clubeMap[clubeKey].arrecadado += liquido;
+            }
           }
-          clubeMap[clubeKey].arrecadado += buyin;
         }
       }
     }
@@ -213,22 +273,22 @@ export function LeagueRateioTab({
       buyinGTD,
       taxaGTD,
       gtdTourneysCount,
+      overlayTourneysCount,
       buyinGTDMenosTaxa: buyinGTD - taxaGTD,
       soOverlay,
+      gtdTotalTodos, // GTD total de TODOS os torneios
+      arrecadadoPorLigaTotal, // Buyins por liga de TODOS os torneios com GTD
+      arrecadadoBRTotal,
+      arrecadadoSATotal,
+      // ME vs Outros
+      torneisoME,
+      torneiosOutros,
+      arrecadadoME,
+      arrecadadoOutros,
+      gtdME,
+      gtdOutros,
     };
   }, [geralPPST, jogosPPST]);
-
-  const toggleLiga = (ligaId: number) => {
-    setOpenLigas((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(ligaId)) {
-        newSet.delete(ligaId);
-      } else {
-        newSet.add(ligaId);
-      }
-      return newSet;
-    });
-  };
 
   if (jogosPPST.length === 0) {
     return (
@@ -240,30 +300,13 @@ export function LeagueRateioTab({
 
   return (
     <div className="space-y-6">
-      {/* Resumo Principal */}
-      <div className="space-y-1 text-sm">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
-          Resumo Rateio
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+          Rateio
         </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">GTD Total ({stats.gtdTourneysCount} torneios PPST)</span>
-          <span className="font-mono text-[#00C969]">{formatNumber(stats.gtdTotal)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Buyin GTD - Taxa</span>
-          <span className="font-mono text-cyan-500">{formatNumber(stats.buyinGTDMenosTaxa)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Meta BR (60% GTD)</span>
-          <span className="font-mono text-orange-500">{formatNumber(stats.metaBR)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Arrecadado BR ({formatPercent(stats.percentualBR)})</span>
-          <span className={`font-mono ${stats.atingiuMetaBR ? "text-green-500" : "text-yellow-500"}`}>{formatNumber(stats.arrecadadoBR)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Overlay BR</span>
-          <span className={`font-mono ${stats.overlayBR > 0 ? "text-red-500" : "text-green-500"}`}>{stats.overlayBR > 0 ? formatNumber(stats.overlayBR) : "0"}</span>
+        <div className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">
+          Só Torneios c/ Overlay ({stats.overlayTourneysCount} de {stats.gtdTourneysCount})
         </div>
       </div>
 
@@ -277,211 +320,123 @@ export function LeagueRateioTab({
           <span className={`font-mono ${stats.gapPlanilha < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(stats.gapPlanilha)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Gap 60% BR</span>
-          <span className={`font-mono ${stats.gapPlanilha * 0.6 < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(stats.gapPlanilha * 0.6)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Gap 40% SA</span>
-          <span className={`font-mono ${stats.gapPlanilha * 0.4 < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(stats.gapPlanilha * 0.4)}</span>
-        </div>
-        <div className="flex justify-between border-t pt-1 mt-1">
           <span className="text-muted-foreground">Só Overlay</span>
           <span className="font-mono text-red-500">{formatNumber(stats.soOverlay)}</span>
         </div>
       </div>
 
-      {/* Rateio por Liga */}
-      <div className="space-y-3">
+      {/* Arrecadação ME vs Outros */}
+      <div className="border-t pt-4 space-y-4">
         <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-          Arrecadado por Liga
+          Arrecadação por Tipo de Torneio
         </div>
 
-        {/* Header */}
-        <div className="grid grid-cols-5 gap-2 text-xs text-muted-foreground border-b pb-2">
-          <span>Liga</span>
-          <span className="text-right">Meta %</span>
-          <span className="text-right">Arrecadado</span>
-          <span className="text-right">% do Grupo</span>
-          <span className="text-right">Clubes</span>
-        </div>
+        {/* Resumo lado a lado */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* ME */}
+          <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
+            <div className="text-xs text-purple-400 font-medium mb-2">
+              ME (Main Event) - {stats.torneisoME.length} torneios
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">GTD</span>
+                <span className="font-mono text-purple-400">{formatNumber(stats.gtdME)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Arrecadado</span>
+                <span className="font-mono text-green-500">{formatNumber(stats.arrecadadoME)}</span>
+              </div>
+              <div className="flex justify-between border-t border-purple-500/20 pt-1 mt-1">
+                <span className="text-muted-foreground">Resultado</span>
+                <span className={`font-mono ${stats.arrecadadoME >= stats.gtdME ? "text-green-500" : "text-red-500"}`}>
+                  {formatNumber(stats.arrecadadoME - stats.gtdME)}
+                </span>
+              </div>
+            </div>
+          </div>
 
-        {/* Ligas Brasileiras */}
-        <div className="space-y-1">
-          {LIGAS_BR.map((ligaId) => {
-            const config = LIGAS_CONFIG[ligaId];
-            const arrecadado = stats.arrecadadoPorLiga[ligaId] ?? 0;
-            const percentual =
-              stats.arrecadadoBR > 0 ? arrecadado / stats.arrecadadoBR : 0;
-            const clubes = stats.clubesPorLiga[ligaId] ?? [];
-            const isOpen = openLigas.has(ligaId);
-
-            return (
-              <Collapsible
-                key={ligaId}
-                open={isOpen}
-                onOpenChange={() => toggleLiga(ligaId)}
-              >
-                <CollapsibleTrigger className="w-full">
-                  <div className="grid grid-cols-5 gap-2 text-sm py-1.5 px-2 hover:bg-muted/30 rounded cursor-pointer">
-                    <span className="flex items-center gap-1 text-left">
-                      <Icons.ChevronRight
-                        className={`w-3 h-3 transition-transform ${isOpen ? "rotate-90" : ""}`}
-                      />
-                      {config.nome}
-                      <span className="text-[10px] text-muted-foreground">
-                        ({ligaId})
-                      </span>
-                    </span>
-                    <span className="text-right font-mono">
-                      {formatPercent(config.percentual)}
-                    </span>
-                    <span className="text-right font-mono text-green-500">
-                      {formatNumber(arrecadado)}
-                    </span>
-                    <span className="text-right font-mono">
-                      {formatPercent(percentual)}
-                    </span>
-                    <span className="text-right text-muted-foreground">
-                      {clubes.length}
-                    </span>
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-muted pl-3">
-                    {clubes.map((clube) => (
-                      <div
-                        key={clube.clubeId}
-                        className="grid grid-cols-3 gap-2 text-xs py-1 text-muted-foreground"
-                      >
-                        <span className="truncate">
-                          {clube.clubeNome || `Clube ${clube.clubeId}`}
-                        </span>
-                        <span className="text-right font-mono">
-                          {clube.clubeId}
-                        </span>
-                        <span className="text-right font-mono text-foreground">
-                          {formatNumber(clube.arrecadado)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })}
-          {/* Subtotal BR */}
-          <div className="grid grid-cols-5 gap-2 text-sm py-1.5 px-2 bg-blue-500/10 rounded font-medium">
-            <span>Total Brasil</span>
-            <span className="text-right font-mono">60%</span>
-            <span
-              className={`text-right font-mono ${stats.atingiuMetaBR ? "text-green-500" : "text-yellow-500"}`}
-            >
-              {formatNumber(stats.arrecadadoBR)}
-            </span>
-            <span className="text-right font-mono">100%</span>
-            <span className="text-right">
-              {LIGAS_BR.reduce((sum, ligaId) => sum + (stats.clubesPorLiga[ligaId]?.length ?? 0), 0)}
-            </span>
+          {/* Outros */}
+          <div className="bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
+            <div className="text-xs text-orange-400 font-medium mb-2">
+              Outros - {stats.torneiosOutros.length} torneios
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">GTD</span>
+                <span className="font-mono text-orange-400">{formatNumber(stats.gtdOutros)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Arrecadado</span>
+                <span className="font-mono text-green-500">{formatNumber(stats.arrecadadoOutros)}</span>
+              </div>
+              <div className="flex justify-between border-t border-orange-500/20 pt-1 mt-1">
+                <span className="text-muted-foreground">Resultado</span>
+                <span className={`font-mono ${stats.arrecadadoOutros >= stats.gtdOutros ? "text-green-500" : "text-red-500"}`}>
+                  {formatNumber(stats.arrecadadoOutros - stats.gtdOutros)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Separador */}
-        <div className="border-t my-2" />
-
-        {/* Ligas Sul-Americanas */}
-        <div className="space-y-1">
-          {LIGAS_SA.map((ligaId) => {
-            const config = LIGAS_CONFIG[ligaId];
-            const arrecadado = stats.arrecadadoPorLiga[ligaId] ?? 0;
-            const percentual =
-              stats.arrecadadoSA > 0 ? arrecadado / stats.arrecadadoSA : 0;
-            const clubes = stats.clubesPorLiga[ligaId] ?? [];
-            const isOpen = openLigas.has(ligaId);
-
-            return (
-              <Collapsible
-                key={ligaId}
-                open={isOpen}
-                onOpenChange={() => toggleLiga(ligaId)}
-              >
-                <CollapsibleTrigger className="w-full">
-                  <div className="grid grid-cols-5 gap-2 text-sm py-1.5 px-2 hover:bg-muted/30 rounded cursor-pointer">
-                    <span className="flex items-center gap-1 text-left">
-                      <Icons.ChevronRight
-                        className={`w-3 h-3 transition-transform ${isOpen ? "rotate-90" : ""}`}
-                      />
-                      {config.nome}
-                      <span className="text-[10px] text-muted-foreground">
-                        ({ligaId})
-                      </span>
-                    </span>
-                    <span className="text-right font-mono">
-                      {formatPercent(config.percentual)}
-                    </span>
-                    <span className="text-right font-mono text-green-500">
-                      {formatNumber(arrecadado)}
-                    </span>
-                    <span className="text-right font-mono">
-                      {formatPercent(percentual)}
-                    </span>
-                    <span className="text-right text-muted-foreground">
-                      {clubes.length}
-                    </span>
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-muted pl-3">
-                    {clubes.map((clube) => (
-                      <div
-                        key={clube.clubeId}
-                        className="grid grid-cols-3 gap-2 text-xs py-1 text-muted-foreground"
-                      >
-                        <span className="truncate">
-                          {clube.clubeNome || `Clube ${clube.clubeId}`}
-                        </span>
-                        <span className="text-right font-mono">
-                          {clube.clubeId}
-                        </span>
-                        <span className="text-right font-mono text-foreground">
-                          {formatNumber(clube.arrecadado)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })}
-          {/* Subtotal SA */}
-          <div className="grid grid-cols-5 gap-2 text-sm py-1.5 px-2 bg-orange-500/10 rounded font-medium">
-            <span>Total Sul-Americanas</span>
-            <span className="text-right font-mono">40%</span>
-            <span
-              className={`text-right font-mono ${stats.atingiuMetaSA ? "text-green-500" : "text-yellow-500"}`}
-            >
-              {formatNumber(stats.arrecadadoSA)}
-            </span>
-            <span className="text-right font-mono">100%</span>
-            <span className="text-right">
-              {LIGAS_SA.reduce((sum, ligaId) => sum + (stats.clubesPorLiga[ligaId]?.length ?? 0), 0)}
-            </span>
+        {/* Lista ME */}
+        {stats.torneisoME.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-[10px] text-purple-400 uppercase tracking-wide">
+              Detalhes ME ({stats.torneisoME.length})
+            </div>
+            <div className="text-xs">
+              <div className="grid grid-cols-5 gap-2 text-muted-foreground border-b pb-1 mb-1">
+                <span>Nome</span>
+                <span className="text-right">GTD</span>
+                <span className="text-right">Arrecadado</span>
+                <span className="text-right">Entradas</span>
+                <span className="text-right">Overlay</span>
+              </div>
+              {stats.torneisoME.map((t, i) => (
+                <div key={i} className="grid grid-cols-5 gap-2 py-0.5">
+                  <span className="truncate">{t.nome}</span>
+                  <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
+                  <span className="text-right font-mono text-green-500">{formatNumber(t.buyinBRL)}</span>
+                  <span className="text-right font-mono">{t.entradas}</span>
+                  <span className={`text-right font-mono ${t.overlay > 0 ? "text-red-500" : "text-green-500"}`}>
+                    {t.overlay > 0 ? formatNumber(t.overlay) : "-"}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Total Geral */}
-        <div className="border-t pt-2">
-          <div className="grid grid-cols-5 gap-2 text-sm py-1.5 px-2 bg-muted/30 rounded font-bold">
-            <span>TOTAL GERAL</span>
-            <span className="text-right font-mono">100%</span>
-            <span className="text-right font-mono text-green-500">
-              {formatNumber(stats.arrecadadoBR + stats.arrecadadoSA)}
-            </span>
-            <span />
-            <span className="text-right">
-              {[...LIGAS_BR, ...LIGAS_SA].reduce((sum, ligaId) => sum + (stats.clubesPorLiga[ligaId]?.length ?? 0), 0)}
-            </span>
+        {/* Lista Outros */}
+        {stats.torneiosOutros.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-[10px] text-orange-400 uppercase tracking-wide">
+              Detalhes Outros ({stats.torneiosOutros.length})
+            </div>
+            <div className="text-xs">
+              <div className="grid grid-cols-5 gap-2 text-muted-foreground border-b pb-1 mb-1">
+                <span>Nome</span>
+                <span className="text-right">GTD</span>
+                <span className="text-right">Arrecadado</span>
+                <span className="text-right">Entradas</span>
+                <span className="text-right">Overlay</span>
+              </div>
+              {stats.torneiosOutros.map((t, i) => (
+                <div key={i} className="grid grid-cols-5 gap-2 py-0.5">
+                  <span className="truncate">{t.nome}</span>
+                  <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
+                  <span className="text-right font-mono text-green-500">{formatNumber(t.buyinBRL)}</span>
+                  <span className="text-right font-mono">{t.entradas}</span>
+                  <span className={`text-right font-mono ${t.overlay > 0 ? "text-red-500" : "text-green-500"}`}>
+                    {t.overlay > 0 ? formatNumber(t.overlay) : "-"}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Dados Geral PPST */}
@@ -494,16 +449,12 @@ export function LeagueRateioTab({
           <span className="font-mono">{formatNumber(stats.geralPPST.ganhosJogador)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Ganhos Liga (I)</span>
+          <span className="text-muted-foreground">Ganhos Liga - taxa geral + eventos (I)</span>
           <span className="font-mono">{formatNumber(stats.geralPPST.ganhosLigaGeral)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Taxa (J)</span>
           <span className="font-mono text-green-500">{formatNumber(stats.geralPPST.ganhosLigaTaxa)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Arrecadado Total</span>
-          <span className="font-mono text-blue-500">{formatNumber(stats.arrecadadoTotal)}</span>
         </div>
       </div>
     </div>

@@ -71,6 +71,7 @@ Qualquer mudanca em um nivel pode quebrar os outros.
 - `transactions.ts` - Schemas de transacoes
 - `imports.ts` - Schemas de importacao
 - `team-settings.ts` - Configuracoes do time
+- `week-periods.ts` - Schemas de periodos semanais
 - `index.ts` - Exportacoes
 
 **Routers** (`apps/api/src/trpc/routers/poker/`):
@@ -80,6 +81,7 @@ Qualquer mudanca em um nivel pode quebrar os outros.
 - `transactions.ts` - CRUD de transacoes
 - `imports.ts` - Processamento de importacao
 - `analytics.ts` - Metricas e dashboards
+- `week-periods.ts` - Gestao de periodos semanais
 - `index.ts` - Registro dos routers
 
 ### Paginas Existentes
@@ -93,7 +95,8 @@ Qualquer mudanca em um nivel pode quebrar os outros.
 | `/poker/settlements` | `poker/settlements/page.tsx` |
 | `/poker/transactions` | `poker/transactions/page.tsx` |
 | `/poker/import` | `poker/import/page.tsx` |
-| `/poker/league-import` | `poker/league-import/page.tsx` |
+| `/poker/leagues` | `poker/leagues/page.tsx` (Dashboard de Ligas) |
+| `/poker/leagues/import` | `poker/leagues/import/page.tsx` (Importacao de Liga) |
 
 ### Widgets Existentes
 
@@ -108,13 +111,25 @@ Qualquer mudanca em um nivel pode quebrar os outros.
 | Recent Transactions | `recent-transactions-widget.tsx` |
 | Sessions by Type | `sessions-by-type-widget.tsx` |
 | Rake Trend | `rake-trend-widget.tsx` |
+| Agents Breakdown | `agents-breakdown-widget.tsx` |
+| Agents Overview | `agents-overview-widget.tsx` |
+| Sessions Overview | `sessions-overview-widget.tsx` |
+| Sessions Breakdown | `sessions-breakdown-widget.tsx` |
+
+**Arquivos de Suporte de Widgets:**
+- `poker-customize.tsx` - Customizacao do dashboard
+- `poker-widget-provider.tsx` - Provider de contexto dos widgets
+- `poker-widgets-grid.tsx` - Grid layout dos widgets
+- `poker-stat-card.tsx` - Card de estatisticas reutilizavel
+- `index.tsx` - Exportacoes
 
 ### Hooks Existentes
 
-- `use-poker-player-params.ts`
-- `use-poker-session-params.ts`
-- `use-poker-settlement-params.ts`
-- `use-poker-transaction-params.ts`
+- `use-poker-player-params.ts` - Parametros de jogadores
+- `use-poker-session-params.ts` - Parametros de sessoes
+- `use-poker-settlement-params.ts` - Parametros de acertos
+- `use-poker-transaction-params.ts` - Parametros de transacoes
+- `use-poker-dashboard-params.ts` - Parametros do dashboard
 
 ### Modulo Liga (Importacao de SuperUnion)
 
@@ -128,13 +143,17 @@ Qualquer mudanca em um nivel pode quebrar os outros.
 **Arquivos de Liga:**
 - `league-import-uploader.tsx` - Parser e upload
 - `league-import-validation-modal.tsx` - Modal de validacao
+- `su-widgets-grid.tsx` - Grid de widgets da SuperUnion
+- `su-dashboard-header.tsx` - Header do dashboard de SuperUnion
 
 **Validation Tabs de Liga:**
 - `overview-tab.tsx` - Visao geral
-- `geral-ppst-tab.tsx` - Aba Geral PPST
-- `jogos-ppst-tab.tsx` - Jogos PPST
-- `jogos-ppsr-tab.tsx` - Jogos PPSR (pendente)
-- `validation-tab.tsx` - Validacao
+- `geral-ppst-tab.tsx` - Aba Geral PPST (torneios)
+- `geral-ppsr-tab.tsx` - Aba Geral PPSR (cash/spin)
+- `jogos-ppst-tab.tsx` - Jogos PPST (torneios)
+- `jogos-ppsr-tab.tsx` - Jogos PPSR (cash/spin)
+- `rateio-tab.tsx` - Aba de rateio/divisao
+- `validation-tab.tsx` - Validacao e erros
 
 ### Validation Tabs de Clube (15 abas)
 
@@ -545,3 +564,4 @@ Se algo quebrar e voce nao conseguir resolver:
 | Data | Mudanca |
 |------|---------|
 | 2025-12-22 | Criacao inicial com dados verificados do codigo |
+| 2026-01-12 | Atualizacao: adicionados week-periods (schemas/routers), novos widgets (agents-breakdown, agents-overview, sessions-overview, sessions-breakdown, arquivos de suporte), novo hook (use-poker-dashboard-params), corrigidas rotas de liga (/poker/leagues), atualizadas validation tabs de liga (geral-ppsr, rateio), adicionados componentes de liga (su-widgets-grid, su-dashboard-header) |

@@ -270,19 +270,53 @@ export function LeagueOverviewTab({
     return { totalBuyin, totalGTD, totalGanhos, totalTaxa };
   }, [parsedData.jogosPPST]);
 
+  // Calculate overlay stats - torneios onde (Buyin - Taxa) < GTD
+  const overlayStats = useMemo(() => {
+    let overlayCount = 0;
+    let totalOverlay = 0;
+
+    for (const jogo of parsedData.jogosPPST) {
+      // Só considera torneios com GTD
+      if (!jogo.metadata.premiacaoGarantida || jogo.metadata.premiacaoGarantida <= 0) {
+        continue;
+      }
+
+      const buyinFichas = jogo.totalGeral?.buyinFichas || jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
+      const taxa = jogo.totalGeral?.taxa || jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
+      const buyinLiquido = buyinFichas - taxa;
+      const gtd = jogo.metadata.premiacaoGarantida;
+      const resultado = buyinLiquido - gtd;
+
+      // Overlay = quando resultado é negativo (arrecadação menor que GTD)
+      if (resultado < 0) {
+        overlayCount++;
+        totalOverlay += resultado; // valor negativo
+      }
+    }
+
+    return { overlayCount, totalOverlay };
+  }, [parsedData.jogosPPST]);
+
   // Calculate totals from Geral PPST - busca o bloco com ratio 1:5
   const geralPPSTTotals = useMemo(() => {
     // Procura o bloco com taxaCambio 1:5 (geralmente o primeiro)
     const bloco = parsedData.geralPPST?.find(b => b.contexto?.taxaCambio === "1:5")
       || parsedData.geralPPST?.[0];
     if (!bloco?.total) {
-      return { ganhosJogador: 0, ganhosLigaTaxa: 0, ganhosLigaGeral: 0, gapGarantido: 0 };
+      return {
+        ganhosJogador: 0,
+        ganhosLigaTaxa: 0,
+        ganhosLigaGeral: 0,
+        gapGarantido: 0,
+        contexto: null,
+      };
     }
     return {
       ganhosJogador: bloco.total.ganhosJogador ?? 0,
       ganhosLigaTaxa: bloco.total.ganhosLigaTaxa ?? 0,
       ganhosLigaGeral: bloco.total.ganhosLigaGeral ?? 0,
       gapGarantido: bloco.total.gapGarantido ?? 0,
+      contexto: bloco.contexto,
     };
   }, [parsedData.geralPPST]);
 
@@ -312,10 +346,42 @@ export function LeagueOverviewTab({
     <div className="space-y-4">
       {/* Two Column Layout */}
       <div className="grid grid-cols-2 gap-8">
-        {/* Left Column - Main Metric */}
+        {/* Left Column - Main Metrics */}
         <div>
-          <div className="text-sm text-muted-foreground">Taxa Total</div>
-          <div className="text-4xl font-bold text-[#00C969]">{formatNumber(totalTaxa)}</div>
+          {/* Context Header - Liga e Taxa de Câmbio */}
+          {geralPPSTTotals.contexto && (
+            <div className="mb-2 px-3 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 inline-flex items-center gap-2">
+              <span className="text-sm font-medium text-amber-500">
+                Liga {geralPPSTTotals.contexto.entidadeId}
+              </span>
+              <span className="text-amber-500/50">•</span>
+              <span className="text-sm text-amber-400">
+                Taxa de câmbio {geralPPSTTotals.contexto.taxaCambio}
+              </span>
+            </div>
+          )}
+
+          {/* Three main metrics */}
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Taxa Total</div>
+              <div className="text-3xl font-bold text-[#00C969]">{formatNumber(totalTaxa)}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Ganhos do Jogador</div>
+              <div className={`text-3xl font-bold ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-[#00C969]"}`}>
+                {formatNumber(geralPPSTTotals.ganhosJogador)}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">
+                Overlay <span className="text-xs text-muted-foreground/70">({overlayStats.overlayCount})</span>
+              </div>
+              <div className="text-3xl font-bold text-red-500">
+                {formatNumber(Math.abs(overlayStats.totalOverlay))}
+              </div>
+            </div>
+          </div>
 
           {/* Soma das Partidas (Jogos PPST) */}
           <div className="mt-4 space-y-1 text-sm border-t pt-3">

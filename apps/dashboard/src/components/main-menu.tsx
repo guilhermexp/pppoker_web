@@ -22,6 +22,7 @@ const icons = {
   "/poker/league-import": () => <Icons.Globle size={20} />,
   "/poker/leagues": () => <Icons.Link size={20} />,
   "/su": () => <Icons.GridView size={20} />,
+  "/fastchips": () => <Icons.Accounts size={20} />,
 } as const;
 
 const getItems = (t: ReturnType<typeof useI18n>) => [
@@ -100,6 +101,17 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
     ],
   },
   {
+    path: "/fastchips",
+    name: t("sidebar.fastchips"),
+    children: [
+      { path: "/fastchips/transacoes", name: t("sidebar.fastchips_transacoes") },
+      { path: "/fastchips/contas-vinculadas", name: t("sidebar.fastchips_contas_vinculadas") },
+      { path: "/fastchips/jogadores", name: t("sidebar.fastchips_jogadores") },
+      { path: "/fastchips/movimentacao", name: t("sidebar.fastchips_movimentacao") },
+      { path: "/fastchips/controle", name: t("sidebar.fastchips_controle") },
+    ],
+  },
+  {
     path: "/su",
     name: t("sidebar.su"),
     children: [
@@ -142,6 +154,7 @@ const KNOWN_MENU_PATHS = [
   "/poker",
   "/poker/league-import",
   "/poker/leagues",
+  "/fastchips",
   "/su",
   "/apps",
   "/settings",
