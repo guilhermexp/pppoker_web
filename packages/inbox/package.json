@@ -16,8 +16,10 @@
     "test": "bun test src"
   },
   "dependencies": {
+    "@midpoker/db": "workspace:*",
     "@midpoker/encryption": "workspace:*",
     "@midpoker/supabase": "workspace:*",
+    "@midpoker/utils": "workspace:*",
     "googleapis": "^166.0.0",
     "zod": "^4.1.12"
   },
