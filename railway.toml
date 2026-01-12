@@ -1,0 +1,3 @@
+[build]
+builder = "railpack"
+installCommand = "bun install"
