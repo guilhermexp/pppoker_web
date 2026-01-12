@@ -256,12 +256,12 @@ function RakeBreakdownWidget({ data }: { data: any }) {
         {
           label: `PPST (Torneios) - ${ppstPercent}%`,
           value: formatCurrency(rakePpst),
-          color: "blue" as const,
+          color: "green" as const,
         },
         {
           label: `PPSR (Cash) - ${ppsrPercent}%`,
           value: formatCurrency(rakePpsr),
-          color: "purple" as const,
+          color: "green" as const,
         },
       ]}
     >
@@ -295,16 +295,16 @@ function TotalRakebackWidget({ data }: { data: any }) {
         {
           label: "PPST (Torneios)",
           value: formatCurrency(data?.rakebackBreakdown?.ppst ?? 0),
-          color: "orange" as const,
+          color: "green" as const,
         },
         {
           label: "PPSR (Cash)",
           value: formatCurrency(data?.rakebackBreakdown?.ppsr ?? 0),
-          color: "orange" as const,
+          color: "green" as const,
         },
       ]}
     >
-      <h2 className="text-2xl font-normal mb-2 text-orange-500">
+      <h2 className="text-2xl font-normal mb-2 text-green-500">
         {formatCurrency(data?.totalRakeback ?? 0)}
       </h2>
       <div className="text-xs text-muted-foreground mb-2">

@@ -41,22 +41,22 @@ export function PokerStatCard({
     >
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[#666666]">{icon}</span>
-          <h3 className="text-xs text-[#666666] font-medium">{title}</h3>
+          <span className="text-muted-foreground">{icon}</span>
+          <h3 className="text-xs text-muted-foreground font-medium">{title}</h3>
         </div>
-        {description && <p className="text-sm text-[#666666]">{description}</p>}
+        {description && <p className="text-xs text-muted-foreground/70">{description}</p>}
       </div>
 
       <div>
         {children}
         {breakdown && breakdown.length > 0 && (
-          <div className="mt-2 space-y-1">
+          <div className="mt-auto pt-3 border-t border-[#1d1d1d] space-y-1.5">
             {breakdown.map((item, idx) => (
               <div key={idx} className="flex justify-between text-xs">
-                <span className="text-[#666666]">{item.label}</span>
+                <span className="text-muted-foreground">{item.label}</span>
                 <span
                   className={cn(
-                    "font-medium",
+                    "font-mono",
                     item.color === "green" && "text-green-500",
                     item.color === "red" && "text-red-500",
                     item.color === "orange" && "text-orange-500",
@@ -75,7 +75,7 @@ export function PokerStatCard({
           </div>
         )}
         {action && (
-          <span className="text-xs text-[#666666] group-hover:text-primary transition-colors duration-300 mt-2 block">
+          <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors duration-300 mt-2 block">
             {action}
           </span>
         )}

@@ -66,7 +66,7 @@ export function SUStatCard({
 
       {/* Breakdown */}
       {breakdown && breakdown.length > 0 && (
-        <div className="mt-auto pt-3 border-t border-border/50 space-y-1.5">
+        <div className="mt-auto pt-3 border-t border-[#1d1d1d] space-y-1.5">
           {breakdown.map((item, index) => (
             <div
               key={index}
@@ -90,7 +90,7 @@ export function SUStatCard({
       {action && actionHref && (
         <Link
           href={actionHref}
-          className="mt-3 pt-3 border-t border-border/50 text-xs text-primary hover:underline flex items-center gap-1"
+          className="mt-3 pt-3 border-t border-[#1d1d1d] text-xs text-primary hover:underline flex items-center gap-1"
         >
           {action}
           <Icons.ChevronRight className="h-3 w-3" />
