@@ -1,4 +1,7 @@
 import { getI18n } from "@/locales/server";
+import { FastChipsTransactionDetailSheet } from "@/components/fastchips/transaction-detail-sheet";
+import { FastChipsTransactionsTable } from "@/components/fastchips/transactions-table";
+import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import type { Metadata } from "next";
 
@@ -22,22 +25,14 @@ export default async function FastChipsTransacoesPage() {
             {t("fastchips.transacoes.description")}
           </p>
         </div>
+        <Button variant="outline" size="sm" className="gap-2">
+          <Icons.Refresh className="h-4 w-4" />
+          {t("fastchips.transacoes.refresh")}
+        </Button>
       </div>
 
-      {/* Em Desenvolvimento */}
-      <div className="flex flex-col items-center justify-center min-h-[400px] border border-dashed border-border rounded-lg bg-muted/30">
-        <div className="flex flex-col items-center gap-4 text-center p-8">
-          <div className="p-4 bg-primary/10 rounded-full">
-            <Icons.Transactions className="w-8 h-8 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">{t("fastchips.in_development")}</h2>
-            <p className="text-sm text-muted-foreground mt-2 max-w-md">
-              {t("fastchips.in_development_description")}
-            </p>
-          </div>
-        </div>
-      </div>
+      <FastChipsTransactionsTable />
+      <FastChipsTransactionDetailSheet />
     </div>
   );
 }

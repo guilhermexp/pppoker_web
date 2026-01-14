@@ -4,7 +4,8 @@ import type {
   ParsedLeagueGeralPPSTBloco,
   ParsedLeagueJogoPPST,
 } from "@/lib/league/types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Button } from "@midpoker/ui/button";
 
 // Configuração das ligas
 const LIGAS_CONFIG: Record<number, { nome: string; tipo: "BR" | "SA" }> = {
@@ -31,10 +32,74 @@ function formatNumber(value: number): string {
   return `R$ ${new Intl.NumberFormat("pt-BR").format(Math.round(value))}`;
 }
 
+function parseDateString(value: string): Date | null {
+  if (!value) {
+    return null;
+  }
+  const match = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!match) {
+    return null;
+  }
+  const [, dayStr, monthStr, yearStr] = match;
+  const day = Number(dayStr);
+  const month = Number(monthStr);
+  const yearRaw = Number(yearStr);
+  if (!day || !month || !yearRaw) {
+    return null;
+  }
+  const year = yearStr.length === 2 ? 2000 + yearRaw : yearRaw;
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date;
+}
+
+function getWeekdayLabel(value: string): string {
+  const date = parseDateString(value);
+  if (!date) {
+    return "Sem data";
+  }
+  const labels = [
+    "Domingo",
+    "Segunda feira",
+    "Terca",
+    "Quarta",
+    "Quinta",
+    "Sexta",
+    "Sabado",
+  ];
+  const label = labels[date.getDay()] ?? "Sem data";
+  return label;
+}
+
+function formatDateDisplay(value: string): string {
+  const date = parseDateString(value);
+  if (!date) {
+    return value || "-";
+  }
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
+}
+
+function getDateKey(value: string): string {
+  const date = parseDateString(value);
+  if (!date) {
+    return value || "sem-data";
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function LeagueRateioTab({
   geralPPST,
   jogosPPST,
 }: LeagueRateioTabProps) {
+  const [showAllGtd, setShowAllGtd] = useState(false);
   // Calcula estatísticas de rateio
   const stats = useMemo(() => {
     // 1. Somar GTD total de todos os torneios
@@ -89,6 +154,7 @@ export function LeagueRateioTab({
     };
     const torneisoME: TorneioInfo[] = [];
     const torneiosOutros: TorneioInfo[] = [];
+    const torneiosOverlay: TorneioInfo[] = [];
     let arrecadadoME = 0;
     let arrecadadoOutros = 0;
     let gtdME = 0;
@@ -162,6 +228,7 @@ export function LeagueRateioTab({
         }
 
         if (temOverlay) {
+          torneiosOverlay.push(torneioInfo);
           // Só soma nos totais se teve overlay
           gtdTotal += gtd;
           buyinGTD += jogoBuyin;
@@ -251,6 +318,8 @@ export function LeagueRateioTab({
     const percentualBR = metaBR > 0 ? arrecadadoBR / metaBR : 0;
     const percentualSA = metaSA > 0 ? arrecadadoSA / metaSA : 0;
 
+    torneiosOverlay.sort((a, b) => b.overlay - a.overlay);
+
     return {
       gtdTotal,
       arrecadadoTotal,
@@ -287,6 +356,7 @@ export function LeagueRateioTab({
       arrecadadoOutros,
       gtdME,
       gtdOutros,
+      torneiosOverlay,
     };
   }, [geralPPST, jogosPPST]);
 
@@ -297,6 +367,15 @@ export function LeagueRateioTab({
       </div>
     );
   }
+
+  const torneiosGtd = [...stats.torneisoME, ...stats.torneiosOutros].sort(
+    (a, b) => {
+      const timeA = parseDateString(a.data)?.getTime() ?? Number.POSITIVE_INFINITY;
+      const timeB = parseDateString(b.data)?.getTime() ?? Number.POSITIVE_INFINITY;
+      return timeA - timeB;
+    },
+  );
+  let lastDateKey = "";
 
   return (
     <div className="space-y-6">
@@ -312,132 +391,123 @@ export function LeagueRateioTab({
 
       {/* Gap da Planilha */}
       <div className="space-y-1 text-sm border-t pt-3">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
-          Gap Planilha (col O)
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Gap Total</span>
-          <span className={`font-mono ${stats.gapPlanilha < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(stats.gapPlanilha)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Só Overlay</span>
-          <span className="font-mono text-red-500">{formatNumber(stats.soOverlay)}</span>
-        </div>
-      </div>
-
-      {/* Arrecadação ME vs Outros */}
-      <div className="border-t pt-4 space-y-4">
         <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-          Arrecadação por Tipo de Torneio
+          Comparativo entre torneios com overlay geral vindo da planilha e torneios com overlay so de PPST + GTD
         </div>
-
-        {/* Resumo lado a lado */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* ME */}
-          <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
-            <div className="text-xs text-purple-400 font-medium mb-2">
-              ME (Main Event) - {stats.torneisoME.length} torneios
-            </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">GTD</span>
-                <span className="font-mono text-purple-400">{formatNumber(stats.gtdME)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Arrecadado</span>
-                <span className="font-mono text-green-500">{formatNumber(stats.arrecadadoME)}</span>
-              </div>
-              <div className="flex justify-between border-t border-purple-500/20 pt-1 mt-1">
-                <span className="text-muted-foreground">Resultado</span>
-                <span className={`font-mono ${stats.arrecadadoME >= stats.gtdME ? "text-green-500" : "text-red-500"}`}>
-                  {formatNumber(stats.arrecadadoME - stats.gtdME)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Outros */}
-          <div className="bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
-            <div className="text-xs text-orange-400 font-medium mb-2">
-              Outros - {stats.torneiosOutros.length} torneios
-            </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">GTD</span>
-                <span className="font-mono text-orange-400">{formatNumber(stats.gtdOutros)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Arrecadado</span>
-                <span className="font-mono text-green-500">{formatNumber(stats.arrecadadoOutros)}</span>
-              </div>
-              <div className="flex justify-between border-t border-orange-500/20 pt-1 mt-1">
-                <span className="text-muted-foreground">Resultado</span>
-                <span className={`font-mono ${stats.arrecadadoOutros >= stats.gtdOutros ? "text-green-500" : "text-red-500"}`}>
-                  {formatNumber(stats.arrecadadoOutros - stats.gtdOutros)}
-                </span>
-              </div>
-            </div>
-          </div>
+        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 text-xs">
+          <span className="text-muted-foreground whitespace-nowrap">
+            Gap planilha (col O) - overlay total informado na planilha (todos GTD PPST)
+          </span>
+          <span className={`font-mono tabular-nums text-right ${stats.gapPlanilha < 0 ? "text-red-500" : "text-green-500"}`}>
+            {formatNumber(stats.gapPlanilha)}
+          </span>
+          <span className="text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+            Só overlay (torneios PPST com GTD e overlay)
+          </span>
+          <span className="font-mono tabular-nums text-right text-red-500">
+            {formatNumber(stats.soOverlay)}
+          </span>
         </div>
-
-        {/* Lista ME */}
-        {stats.torneisoME.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-[10px] text-purple-400 uppercase tracking-wide">
-              Detalhes ME ({stats.torneisoME.length})
-            </div>
-            <div className="text-xs">
-              <div className="grid grid-cols-5 gap-2 text-muted-foreground border-b pb-1 mb-1">
-                <span>Nome</span>
-                <span className="text-right">GTD</span>
-                <span className="text-right">Arrecadado</span>
-                <span className="text-right">Entradas</span>
-                <span className="text-right">Overlay</span>
-              </div>
-              {stats.torneisoME.map((t, i) => (
-                <div key={i} className="grid grid-cols-5 gap-2 py-0.5">
-                  <span className="truncate">{t.nome}</span>
-                  <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
-                  <span className="text-right font-mono text-green-500">{formatNumber(t.buyinBRL)}</span>
-                  <span className="text-right font-mono">{t.entradas}</span>
-                  <span className={`text-right font-mono ${t.overlay > 0 ? "text-red-500" : "text-green-500"}`}>
-                    {t.overlay > 0 ? formatNumber(t.overlay) : "-"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Lista Outros */}
-        {stats.torneiosOutros.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-[10px] text-orange-400 uppercase tracking-wide">
-              Detalhes Outros ({stats.torneiosOutros.length})
-            </div>
-            <div className="text-xs">
-              <div className="grid grid-cols-5 gap-2 text-muted-foreground border-b pb-1 mb-1">
-                <span>Nome</span>
-                <span className="text-right">GTD</span>
-                <span className="text-right">Arrecadado</span>
-                <span className="text-right">Entradas</span>
-                <span className="text-right">Overlay</span>
-              </div>
-              {stats.torneiosOutros.map((t, i) => (
-                <div key={i} className="grid grid-cols-5 gap-2 py-0.5">
-                  <span className="truncate">{t.nome}</span>
-                  <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
-                  <span className="text-right font-mono text-green-500">{formatNumber(t.buyinBRL)}</span>
-                  <span className="text-right font-mono">{t.entradas}</span>
-                  <span className={`text-right font-mono ${t.overlay > 0 ? "text-red-500" : "text-green-500"}`}>
-                    {t.overlay > 0 ? formatNumber(t.overlay) : "-"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Torneios com overlay */}
+      {stats.torneiosOverlay.length > 0 && (
+        <div className="border-t pt-4 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              So overlay - torneios ({stats.torneiosOverlay.length})
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-[10px] uppercase tracking-wide"
+              onClick={() => setShowAllGtd((current) => !current)}
+            >
+              {showAllGtd ? "Ocultar GTD" : "Ver torneios GTD"}
+            </Button>
+          </div>
+          <div className="text-xs">
+            <div className="grid grid-cols-6 gap-2 text-muted-foreground border-b pb-1 mb-1">
+              <span>Nome</span>
+              <span>Data</span>
+              <span className="text-right">GTD</span>
+              <span className="text-right">Arrecadado</span>
+              <span className="text-right">Entradas</span>
+              <span className="text-right">Overlay</span>
+            </div>
+            {stats.torneiosOverlay.map((t, i) => (
+              <div key={`${t.nome}-${t.data}-${i}`} className="grid grid-cols-6 gap-2 py-0.5">
+                <span className="truncate">{t.nome}</span>
+                <span>{t.data || "-"}</span>
+                <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
+                <span className="text-right font-mono text-green-500">
+                  {formatNumber(t.buyinBRL)}
+                </span>
+                <span className="text-right font-mono">{t.entradas}</span>
+                <span className="text-right font-mono text-red-500">
+                  {formatNumber(t.overlay)}
+                </span>
+              </div>
+            ))}
+          </div>
+          {showAllGtd && (
+            <div className="pt-3">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
+                Torneios GTD (PPST) ({torneiosGtd.length})
+              </div>
+              <div className="text-xs">
+                <div className="grid grid-cols-6 gap-2 text-muted-foreground border-b pb-1 mb-1">
+                  <span>Nome</span>
+                  <span>Data</span>
+                  <span className="text-right">GTD</span>
+                  <span className="text-right">Arrecadado</span>
+                  <span className="text-right">Entradas</span>
+                  <span className="text-right">Overlay</span>
+                </div>
+                {torneiosGtd.map((t, i) => {
+                  const dateKey = getDateKey(t.data);
+                  const weekdayLabel = getWeekdayLabel(t.data);
+                  const dateLabel = formatDateDisplay(t.data);
+                  const showWeekday = dateKey !== lastDateKey;
+                  if (showWeekday) {
+                    lastDateKey = dateKey;
+                  }
+                  return (
+                    <div key={`${t.nome}-${t.data}-${i}`}>
+                      {showWeekday && (
+                        <div className="flex items-center gap-2 py-2">
+                          <div className="h-px flex-1 bg-border/70" />
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            {weekdayLabel} • {dateLabel}
+                          </div>
+                          <div className="h-px flex-1 bg-border/70" />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-6 gap-2 py-0.5">
+                        <span className="truncate">{t.nome}</span>
+                        <span>{t.data || "-"}</span>
+                        <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
+                        <span className="text-right font-mono text-green-500">
+                          {formatNumber(t.buyinBRL)}
+                        </span>
+                        <span className="text-right font-mono">{t.entradas}</span>
+                        <span
+                          className={`text-right font-mono ${
+                            t.overlay > 0 ? "text-red-500" : "text-muted-foreground"
+                          }`}
+                        >
+                          {t.overlay > 0 ? formatNumber(t.overlay) : "-"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Dados Geral PPST */}
       <div className="border-t pt-4 space-y-1 text-sm">
