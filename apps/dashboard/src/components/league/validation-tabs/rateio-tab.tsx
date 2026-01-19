@@ -509,24 +509,6 @@ export function LeagueRateioTab({
         </div>
       )}
 
-      {/* Dados Geral PPST */}
-      <div className="border-t pt-4 space-y-1 text-sm">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
-          Geral PPST 1:5
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Ganhos Jogador (E)</span>
-          <span className="font-mono">{formatNumber(stats.geralPPST.ganhosJogador)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Ganhos Liga - taxa geral + eventos (I)</span>
-          <span className="font-mono">{formatNumber(stats.geralPPST.ganhosLigaGeral)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Taxa (J)</span>
-          <span className="font-mono text-green-500">{formatNumber(stats.geralPPST.ganhosLigaTaxa)}</span>
-        </div>
-      </div>
     </div>
   );
 }
