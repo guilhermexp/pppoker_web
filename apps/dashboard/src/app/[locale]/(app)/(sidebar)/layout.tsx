@@ -3,7 +3,7 @@ import { ExportStatus } from "@/components/export-status";
 import { GlobalTimerProvider } from "@/components/global-timer-provider";
 import { Header } from "@/components/header";
 import { GlobalSheets } from "@/components/sheets/global-sheets";
-import { Sidebar } from "@/components/sidebar";
+import { TwoLevelSidebar } from "@/components/ui/two-level-sidebar";
 import { TimezoneDetector } from "@/components/timezone-detector";
 import { UpgradeContent } from "@/components/upgrade-content";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
@@ -76,10 +76,10 @@ export default async function Layout({
       <div className="relative">
         {/* Sidebar and Header use client-only hooks (useTRPC, useQueryState, useI18n) */}
         <ClientOnly>
-          <Sidebar />
+          <TwoLevelSidebar />
         </ClientOnly>
 
-        <div className="md:ml-[70px] pb-4">
+        <div className="md:ml-[384px] pb-4">
           <ClientOnly>
             <Header />
           </ClientOnly>
