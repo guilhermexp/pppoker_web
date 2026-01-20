@@ -17,7 +17,7 @@ export function TwoLevelSidebar() {
 
   // State management
   const [activeSection, setActiveSection] = useState("overview");
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Começa colapsado
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   // Auto-detectar seção ativa baseada no pathname
@@ -27,8 +27,6 @@ export function TwoLevelSidebar() {
   }, [pathname]);
 
   // Handlers
-  const toggleCollapse = () => setIsCollapsed((s) => !s);
-
   const toggleExpanded = (itemKey: string) => {
     setExpandedItems((prev) => {
       const next = new Set(prev);
@@ -53,7 +51,11 @@ export function TwoLevelSidebar() {
   const content = getSidebarContent(activeSection, t, pathname);
 
   return (
-    <aside className="fixed top-0 left-0 h-screen hidden md:flex z-50">
+    <aside
+      className="fixed top-0 left-0 h-screen hidden md:flex z-50"
+      onMouseEnter={() => setIsCollapsed(false)}
+      onMouseLeave={() => setIsCollapsed(true)}
+    >
       <div className="flex flex-row h-full">
         {/* Icon Navigation Rail (64px) */}
         <IconNavigation
@@ -65,7 +67,6 @@ export function TwoLevelSidebar() {
         <DetailSidebar
           content={content}
           isCollapsed={isCollapsed}
-          onToggleCollapse={toggleCollapse}
           expandedItems={expandedItems}
           onToggleExpanded={toggleExpanded}
         />

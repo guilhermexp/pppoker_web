@@ -48,8 +48,8 @@ function TotalLeaguesWidget({ data }: { data: any }) {
       action="Ver ligas"
       actionHref="/su/ligas"
       breakdown={[
-        { label: "Com jogos PPST", value: data?.leaguesWithPPST ?? 0 },
-        { label: "Com jogos PPSR", value: data?.leaguesWithPPSR ?? 0 },
+        { label: "Com jogos PPST", value: formatNumber(data?.leaguesWithPPST ?? 0) },
+        { label: "Com jogos PPSR", value: formatNumber(data?.leaguesWithPPSR ?? 0) },
       ]}
     >
       <h2 className="text-2xl font-normal mb-2">

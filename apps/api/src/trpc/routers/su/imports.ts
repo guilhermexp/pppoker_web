@@ -231,6 +231,17 @@ export const suImportsRouter = createTRPCRouter({
         let totalPlayersPPST = 0;
         let totalPlayersPPSR = 0;
 
+        // Helper to split array into chunks for batch operations
+        const chunkArray = <T>(array: T[], size: number): T[][] => {
+          const chunks: T[][] = [];
+          for (let i = 0; i < array.length; i += size) {
+            chunks.push(array.slice(i, i + size));
+          }
+          return chunks;
+        };
+
+        const BATCH_SIZE = 500; // Supabase recommends max 1000, using 500 for safety
+
         // Process Geral PPST - create league summaries
         if (geralPPST && geralPPST.length > 0) {
           for (const bloco of geralPPST) {
@@ -288,13 +299,20 @@ export const suImportsRouter = createTRPCRouter({
           }
         }
 
-        // Process Jogos PPST - create games and game players
+        // Process Jogos PPST - create games and game players (with batching)
         if (jogosPPST && jogosPPST.length > 0) {
+          // Phase 1: Collect all games to insert
+          const gamesToInsert: any[] = [];
+          const gameMetadataMap = new Map<string, any>(); // game_id -> {metadata, jogadores}
+
           for (const jogo of jogosPPST) {
             totalGamesPPST++;
             const metadata = jogo.metadata ?? {};
             const jogadores = jogo.jogadores ?? [];
             totalPlayersPPST += jogadores.length;
+
+            // Store for later use
+            gameMetadataMap.set(metadata.idJogo, { metadata, jogadores });
 
             // Determine game variant
             let gameVariant = "nlh";
@@ -331,73 +349,108 @@ export const suImportsRouter = createTRPCRouter({
               0,
             );
 
-            // Insert game
-            const { data: gameRecord, error: gameError } = await supabase
-              .from("poker_su_games")
-              .upsert(
-                {
-                  team_id: teamId,
-                  import_id: input.importId,
-                  week_period_id: importRecord.week_period_id,
-                  game_type: "ppst",
-                  game_variant: gameVariant,
-                  game_id: metadata.idJogo,
-                  table_name: metadata.nomeMesa,
-                  started_at: `${metadata.dataInicio}T${metadata.horaInicio ?? "00:00"}:00`,
-                  ended_at: metadata.dataFim
-                    ? `${metadata.dataFim}T${metadata.horaFim ?? "23:59"}:00`
-                    : null,
-                  creator_id: metadata.criadorId,
-                  creator_name: metadata.criadorNome,
-                  buyin_base: metadata.buyInBase ?? 0,
-                  buyin_bounty: metadata.buyInBounty ?? 0,
-                  buyin_taxa: metadata.buyInTaxa ?? 0,
-                  premiacao_garantida: metadata.premiacaoGarantida ?? 0,
-                  is_satellite: metadata.subtipo === "satellite",
-                  player_count: jogadores.length,
-                  total_buyin: totalBuyin,
-                  total_ganhos_jogador: totalGanhosJogador,
-                  total_taxa: totalTaxa,
-                  total_gap_garantido: totalGapGarantido,
-                  total_recompensa: totalRecompensa,
-                },
-                { onConflict: "team_id,game_type,game_id" },
-              )
-              .select()
-              .single();
+            gamesToInsert.push({
+              team_id: teamId,
+              import_id: input.importId,
+              week_period_id: importRecord.week_period_id,
+              game_type: "ppst",
+              game_variant: gameVariant,
+              game_id: metadata.idJogo,
+              table_name: metadata.nomeMesa,
+              started_at: `${metadata.dataInicio}T${metadata.horaInicio ?? "00:00"}:00`,
+              ended_at: metadata.dataFim
+                ? `${metadata.dataFim}T${metadata.horaFim ?? "23:59"}:00`
+                : null,
+              creator_id: metadata.criadorId,
+              creator_name: metadata.criadorNome,
+              buyin_base: metadata.buyInBase ?? 0,
+              buyin_bounty: metadata.buyInBounty ?? 0,
+              buyin_taxa: metadata.buyInTaxa ?? 0,
+              premiacao_garantida: metadata.premiacaoGarantida ?? 0,
+              is_satellite: metadata.subtipo === "satellite",
+              player_count: jogadores.length,
+              total_buyin: totalBuyin,
+              total_ganhos_jogador: totalGanhosJogador,
+              total_taxa: totalTaxa,
+              total_gap_garantido: totalGapGarantido,
+              total_recompensa: totalRecompensa,
+            });
+          }
 
-            if (gameError || !gameRecord) {
-              console.error("Failed to insert game:", gameError);
+          // Phase 2: Batch insert games
+          for (const batch of chunkArray(gamesToInsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_su_games")
+              .upsert(batch, { onConflict: "team_id,game_type,game_id" });
+
+            if (error) {
+              console.error("Failed to insert PPST games batch:", error);
+            }
+          }
+
+          // Phase 3: Fetch inserted game IDs (map game_id -> id)
+          const gameIdMap = new Map<string, string>();
+          const gameIds = Array.from(gameMetadataMap.keys());
+
+          for (const batch of chunkArray(gameIds, 1000)) {
+            const { data: games } = await supabase
+              .from("poker_su_games")
+              .select("id, game_id")
+              .eq("team_id", teamId)
+              .eq("game_type", "ppst")
+              .in("game_id", batch);
+
+            if (games) {
+              for (const game of games) {
+                gameIdMap.set(game.game_id, game.id);
+              }
+            }
+          }
+
+          // Phase 4: Collect all game players
+          const gamePlayersToInsert: any[] = [];
+
+          for (const [externalGameId, data] of gameMetadataMap) {
+            const dbGameId = gameIdMap.get(externalGameId);
+            if (!dbGameId) {
+              console.error(`Game ID not found for external ID: ${externalGameId}`);
               continue;
             }
 
-            // Insert game players
-            const gamePlayers = jogadores.map((j: any) => ({
-              team_id: teamId,
-              game_id: gameRecord.id,
-              super_union_id: j.superUnionId ?? null,
-              liga_id: j.ligaId,
-              clube_id: j.clubeId,
-              clube_nome: j.clubeNome,
-              jogador_id: j.jogadorId,
-              apelido: j.apelido,
-              nome_memorado: j.nomeMemorado,
-              ranking: j.ranking ?? null,
-              buyin_fichas: j.buyinFichas ?? 0,
-              buyin_ticket: j.buyinTicket ?? 0,
-              ganhos: j.ganhos ?? 0,
-              taxa: j.taxa ?? 0,
-              gap_garantido: j.gapGarantido ?? 0,
-              premio: j.premio ?? 0,
-              recompensa: j.recompensa ?? 0,
-              nome_ticket: j.nomeTicket ?? null,
-              valor_ticket: j.valorTicket ?? 0,
-            }));
-
-            if (gamePlayers.length > 0) {
-              await supabase.from("poker_su_game_players").upsert(gamePlayers, {
-                onConflict: "game_id,jogador_id",
+            const { jogadores } = data;
+            for (const j of jogadores) {
+              gamePlayersToInsert.push({
+                team_id: teamId,
+                game_id: dbGameId,
+                super_union_id: j.superUnionId ?? null,
+                liga_id: j.ligaId,
+                clube_id: j.clubeId,
+                clube_nome: j.clubeNome,
+                jogador_id: j.jogadorId,
+                apelido: j.apelido,
+                nome_memorado: j.nomeMemorado,
+                ranking: j.ranking ?? null,
+                buyin_fichas: j.buyinFichas ?? 0,
+                buyin_ticket: j.buyinTicket ?? 0,
+                ganhos: j.ganhos ?? 0,
+                taxa: j.taxa ?? 0,
+                gap_garantido: j.gapGarantido ?? 0,
+                premio: j.premio ?? 0,
+                recompensa: j.recompensa ?? 0,
+                nome_ticket: j.nomeTicket ?? null,
+                valor_ticket: j.valorTicket ?? 0,
               });
+            }
+          }
+
+          // Phase 5: Batch insert game players
+          for (const batch of chunkArray(gamePlayersToInsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_su_game_players")
+              .upsert(batch, { onConflict: "game_id,jogador_id" });
+
+            if (error) {
+              console.error("Failed to insert PPST game players batch:", error);
             }
           }
         }
@@ -473,13 +526,20 @@ export const suImportsRouter = createTRPCRouter({
           }
         }
 
-        // Process Jogos PPSR (Cash Games)
+        // Process Jogos PPSR (Cash Games) - with batching
         if (jogosPPSR && jogosPPSR.length > 0) {
+          // Phase 1: Collect all games to insert
+          const gamesPPSRToInsert: any[] = [];
+          const gamePPSRMetadataMap = new Map<string, any>(); // game_id -> {metadata, jogadores}
+
           for (const jogo of jogosPPSR) {
             totalGamesPPSR++;
             const metadata = jogo.metadata ?? {};
             const jogadores = jogo.jogadores ?? [];
             totalPlayersPPSR += jogadores.length;
+
+            // Store for later use
+            gamePPSRMetadataMap.set(metadata.idJogo, { metadata, jogadores });
 
             // Determine game variant from tipoCash
             let gameVariant = "nlh";
@@ -505,78 +565,116 @@ export const suImportsRouter = createTRPCRouter({
               0,
             );
 
-            // Insert game
-            const { data: gameRecord, error: gameError } = await supabase
-              .from("poker_su_games")
-              .upsert(
-                {
-                  team_id: teamId,
-                  import_id: input.importId,
-                  week_period_id: importRecord.week_period_id,
-                  game_type: "ppsr",
-                  game_variant: gameVariant,
-                  game_id: metadata.idJogo,
-                  table_name: metadata.nomeMesa,
-                  started_at: `${metadata.dataInicio}T${metadata.horaInicio ?? "00:00"}:00`,
-                  ended_at: metadata.dataFim
-                    ? `${metadata.dataFim}T${metadata.horaFim ?? "23:59"}:00`
-                    : null,
-                  creator_id: metadata.criadorId,
-                  creator_name: metadata.criadorNome,
-                  // PPSR-specific fields
-                  blinds: metadata.blinds,
-                  min_buyin: metadata.smallBlind ?? 0,
-                  max_buyin: metadata.bigBlind ?? 0,
-                  // Aggregated stats
-                  player_count: jogadores.length,
-                  total_buyin: totalBuyin,
-                  total_ganhos_jogador: totalGanhosJogador,
-                  total_taxa: totalTaxa,
-                },
-                { onConflict: "team_id,game_type,game_id" },
-              )
-              .select()
-              .single();
+            gamesPPSRToInsert.push({
+              team_id: teamId,
+              import_id: input.importId,
+              week_period_id: importRecord.week_period_id,
+              game_type: "ppsr",
+              game_variant: gameVariant,
+              game_id: metadata.idJogo,
+              table_name: metadata.nomeMesa,
+              started_at: `${metadata.dataInicio}T${metadata.horaInicio ?? "00:00"}:00`,
+              ended_at: metadata.dataFim
+                ? `${metadata.dataFim}T${metadata.horaFim ?? "23:59"}:00`
+                : null,
+              creator_id: metadata.criadorId,
+              creator_name: metadata.criadorNome,
+              // PPSR-specific fields
+              blinds: metadata.blinds,
+              min_buyin: metadata.smallBlind ?? 0,
+              max_buyin: metadata.bigBlind ?? 0,
+              // Aggregated stats
+              player_count: jogadores.length,
+              total_buyin: totalBuyin,
+              total_ganhos_jogador: totalGanhosJogador,
+              total_taxa: totalTaxa,
+            });
+          }
 
-            if (gameError || !gameRecord) {
-              console.error("Failed to insert PPSR game:", gameError);
+          // Phase 2: Batch insert games
+          for (const batch of chunkArray(gamesPPSRToInsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_su_games")
+              .upsert(batch, { onConflict: "team_id,game_type,game_id" });
+
+            if (error) {
+              console.error("Failed to insert PPSR games batch:", error);
+            }
+          }
+
+          // Phase 3: Fetch inserted game IDs (map game_id -> id)
+          const gamePPSRIdMap = new Map<string, string>();
+          const gamePPSRIds = Array.from(gamePPSRMetadataMap.keys());
+
+          for (const batch of chunkArray(gamePPSRIds, 1000)) {
+            const { data: games } = await supabase
+              .from("poker_su_games")
+              .select("id, game_id")
+              .eq("team_id", teamId)
+              .eq("game_type", "ppsr")
+              .in("game_id", batch);
+
+            if (games) {
+              for (const game of games) {
+                gamePPSRIdMap.set(game.game_id, game.id);
+              }
+            }
+          }
+
+          // Phase 4: Collect all game players
+          const gamePlayersPPSRToInsert: any[] = [];
+
+          for (const [externalGameId, data] of gamePPSRMetadataMap) {
+            const dbGameId = gamePPSRIdMap.get(externalGameId);
+            if (!dbGameId) {
+              console.error(`PPSR Game ID not found for external ID: ${externalGameId}`);
               continue;
             }
 
-            // Insert game players
-            const gamePlayers = jogadores.map((j: any) => ({
-              team_id: teamId,
-              game_id: gameRecord.id,
-              super_union_id: j.superUnionId ?? null,
-              liga_id: j.ligaId,
-              clube_id: j.clubeId,
-              clube_nome: j.clubeNome,
-              jogador_id: j.jogadorId,
-              apelido: j.apelido,
-              nome_memorado: j.nomeMemorado,
-              buyin_fichas: j.buyinFichas ?? 0,
-              ganhos: j.ganhosJogadorGeral ?? 0,
-              taxa: j.taxa ?? 0,
-              // PPSR-specific fields
-              hands_played: j.maos ?? 0,
-              rake_paid: j.taxa ?? 0,
-            }));
-
-            if (gamePlayers.length > 0) {
-              await supabase.from("poker_su_game_players").upsert(gamePlayers, {
-                onConflict: "game_id,jogador_id",
+            const { jogadores } = data;
+            for (const j of jogadores) {
+              gamePlayersPPSRToInsert.push({
+                team_id: teamId,
+                game_id: dbGameId,
+                super_union_id: j.superUnionId ?? null,
+                liga_id: j.ligaId,
+                clube_id: j.clubeId,
+                clube_nome: j.clubeNome,
+                jogador_id: j.jogadorId,
+                apelido: j.apelido,
+                nome_memorado: j.nomeMemorado,
+                buyin_fichas: j.buyinFichas ?? 0,
+                ganhos: j.ganhosJogadorGeral ?? 0,
+                taxa: j.taxa ?? 0,
+                // PPSR-specific fields
+                hands_played: j.maos ?? 0,
+                rake_paid: j.taxa ?? 0,
               });
+            }
+          }
+
+          // Phase 5: Batch insert game players
+          for (const batch of chunkArray(gamePlayersPPSRToInsert, BATCH_SIZE)) {
+            const { error } = await supabase
+              .from("poker_su_game_players")
+              .upsert(batch, { onConflict: "game_id,jogador_id" });
+
+            if (error) {
+              console.error("Failed to insert PPSR game players batch:", error);
             }
           }
         }
 
         // Update import with stats and mark as completed
+        // IMPORTANT: committed = false means data is processed but not yet finalized
+        // It will only appear in "current week" view until week is closed
         await supabase
           .from("poker_su_imports")
           .update({
             status: "completed",
             processed_at: new Date().toISOString(),
             processed_by_id: userId,
+            committed: false, // Mark as uncommitted - will be committed when week closes
             total_leagues: totalLeagues,
             total_games_ppst: totalGamesPPST,
             total_games_ppsr: totalGamesPPSR,
@@ -635,12 +733,30 @@ export const suImportsRouter = createTRPCRouter({
         });
       }
 
-      // Delete associated data (cascades will handle most)
+      // Delete associated data (need to delete game_players first due to FK constraints)
+      // Step 1: Get all game IDs for this import
+      const { data: games } = await supabase
+        .from("poker_su_games")
+        .select("id")
+        .eq("import_id", input.id);
+
+      const gameIds = games?.map((g) => g.id) ?? [];
+
+      // Step 2: Delete game players for these games
+      if (gameIds.length > 0) {
+        await supabase
+          .from("poker_su_game_players")
+          .delete()
+          .in("game_id", gameIds);
+      }
+
+      // Step 3: Delete league summaries
       await supabase
         .from("poker_su_league_summary")
         .delete()
         .eq("import_id", input.id);
 
+      // Step 4: Delete games
       await supabase.from("poker_su_games").delete().eq("import_id", input.id);
 
       // Delete the import

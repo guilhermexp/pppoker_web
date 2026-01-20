@@ -1,71 +1,16 @@
 "use client";
 
-import { ChevronDown } from "@carbon/icons-react";
 import { cn } from "@midpoker/ui/cn";
-import { BrandBadge, softSpringEasing } from "@/lib/sidebar-svg-paths";
+import { softSpringEasing } from "@/lib/sidebar-svg-paths";
 import { SearchContainer } from "./search-container";
 import { MenuSection } from "./menu-items";
 import type { SidebarContent } from "@/lib/sidebar-types";
-
-interface SectionTitleProps {
-  title: string;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
-}
-
-/**
- * Título da seção com botão de collapse
- */
-function SectionTitle({
-  title,
-  isCollapsed,
-  onToggleCollapse,
-}: SectionTitleProps) {
-  return (
-    <div className="flex items-center justify-between px-3 py-2">
-      {/* Título - só mostra quando não está colapsado */}
-      <div
-        className={cn(
-          "text-lg font-semibold text-neutral-50 transition-opacity duration-500",
-          isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
-        )}
-        style={{ transitionTimingFunction: softSpringEasing }}
-      >
-        {title}
-      </div>
-
-      {/* Botão de collapse */}
-      <button
-        type="button"
-        onClick={onToggleCollapse}
-        className={cn(
-          "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-500",
-          "hover:bg-neutral-800 text-neutral-400",
-          isCollapsed ? "mx-auto" : ""
-        )}
-        style={{ transitionTimingFunction: softSpringEasing }}
-        title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        <ChevronDown
-          size={20}
-          className="transition-transform duration-500"
-          style={{
-            transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
-            transitionTimingFunction: softSpringEasing,
-          }}
-        />
-      </button>
-    </div>
-  );
-}
 
 interface DetailSidebarProps {
   /** Conteúdo do sidebar para a seção atual */
   content: SidebarContent;
   /** Se o sidebar está colapsado */
   isCollapsed: boolean;
-  /** Callback para toggle do collapse */
-  onToggleCollapse: () => void;
   /** Set de items expandidos */
   expandedItems: Set<string>;
   /** Callback para toggle de item expandido */
@@ -79,7 +24,6 @@ interface DetailSidebarProps {
 export function DetailSidebar({
   content,
   isCollapsed,
-  onToggleCollapse,
   expandedItems,
   onToggleExpanded,
 }: DetailSidebarProps) {
@@ -91,22 +35,8 @@ export function DetailSidebar({
       )}
       style={{ transitionTimingFunction: softSpringEasing }}
     >
-      {/* Brand Badge */}
-      <div className="px-2 py-3 border-b border-neutral-800">
-        <BrandBadge isCollapsed={isCollapsed} />
-      </div>
-
-      {/* Section Title com botão de collapse */}
-      <div className="border-b border-neutral-800">
-        <SectionTitle
-          title={content.title}
-          isCollapsed={isCollapsed}
-          onToggleCollapse={onToggleCollapse}
-        />
-      </div>
-
       {/* Search Container */}
-      <div className="px-3 py-3">
+      <div className="px-3 py-3 border-b border-neutral-800">
         <SearchContainer isCollapsed={isCollapsed} />
       </div>
 

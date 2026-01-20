@@ -155,16 +155,19 @@ export function SUImportsList({ compact = false }: SUImportsListProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {importItem.status !== "processing" && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteMutation.mutate({ id: importItem.id })}
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => deleteMutation.mutate({ id: importItem.id })}
+                disabled={deleteMutation.isPending}
+                title={
+                  importItem.status === "processing"
+                    ? "Deletar importação travada"
+                    : "Deletar importação"
+                }
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"

@@ -433,6 +433,29 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         });
       }
 
+      // 🔥 COMMIT ALL IMPORTS FOR THIS WEEK PERIOD 🔥
+      // This marks them as finalized and visible in historical reports
+      // Imports remain uncommitted during the week (current week view only)
+      // After closing, they become committed and visible everywhere
+      const { error: commitError } = await supabase
+        .from("poker_su_imports")
+        .update({
+          committed: true,
+          committed_at: new Date().toISOString(),
+          committed_by_id: userId,
+        })
+        .eq("team_id", teamId)
+        .eq("status", "completed")
+        .eq("week_period_id", weekPeriod.id);
+
+      if (commitError) {
+        // Log but don't fail - imports can be committed manually if needed
+        console.error(
+          "[suWeekPeriods.close] Failed to commit imports:",
+          commitError.message,
+        );
+      }
+
       return {
         success: true,
         settlementsCreated,

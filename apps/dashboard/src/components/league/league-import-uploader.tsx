@@ -28,6 +28,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
 import { LeagueImportValidationModal } from "./league-import-validation-modal";
+import { LeagueImportProgressModal } from "./league-import-progress-modal";
 import { SUImportsList } from "../su/su-imports-list";
 
 // ============================================================================
@@ -1409,6 +1410,8 @@ export function LeagueImportUploader() {
   const [validationResult, setValidationResult] =
     useState<LeagueValidationResult | null>(null);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [currentImportId, setCurrentImportId] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const toastIdRef = useRef<string | null>(null);
 
@@ -1620,13 +1623,21 @@ export function LeagueImportUploader() {
           jogosPPSRCount: parsedData.jogosPPSRCount ?? 0,
         },
         validationPassed: !validationResult.hasBlockingErrors,
-        validationErrors: validationResult.errors,
+        validationErrors: validationResult.checks,
         validationWarnings: validationResult.warnings,
         qualityScore: validationResult.qualityScore,
       });
 
-      // Step 2: Process the import data
-      await processImportMutation.mutateAsync({
+      // Step 2: Save import ID and show progress modal
+      if (!importRecord?.id) {
+        throw new Error("Failed to create import record");
+      }
+      setCurrentImportId(importRecord.id);
+      setShowValidationModal(false);
+      setShowProgressModal(true);
+
+      // Step 3: Start processing in background (don't await)
+      processImportMutation.mutate({
         importId: importRecord.id,
         data: {
           geralPPST: parsedData.geralPPST,
@@ -1636,13 +1647,12 @@ export function LeagueImportUploader() {
         },
       });
 
-      setShowValidationModal(false);
+      // Clear parsed data
       setParsedData(null);
       setValidationResult(null);
     } catch (error) {
       console.error("Error saving import:", error);
       // Error toast is handled by mutation callbacks
-    } finally {
       setIsProcessing(false);
     }
   }, [parsedData, validationResult, createImportMutation, processImportMutation]);
@@ -1652,6 +1662,31 @@ export function LeagueImportUploader() {
     setParsedData(null);
     setValidationResult(null);
   }, []);
+
+  const handleProgressComplete = useCallback(() => {
+    setIsProcessing(false);
+    setCurrentImportId(null);
+    queryClient.invalidateQueries({
+      queryKey: trpc.su.imports.list.queryKey(),
+    });
+    toast({
+      title: "Importação concluída!",
+      description: "Seus dados foram processados com sucesso.",
+    });
+  }, [queryClient, trpc.su.imports.list, toast]);
+
+  const handleProgressError = useCallback(
+    (error: string) => {
+      setIsProcessing(false);
+      setCurrentImportId(null);
+      toast({
+        variant: "destructive",
+        title: "Erro na importação",
+        description: error,
+      });
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -1730,6 +1765,15 @@ export function LeagueImportUploader() {
           isProcessing={isProcessing}
         />
       )}
+
+      {/* Progress modal - shows real-time import progress */}
+      <LeagueImportProgressModal
+        open={showProgressModal}
+        onOpenChange={setShowProgressModal}
+        importId={currentImportId}
+        onComplete={handleProgressComplete}
+        onError={handleProgressError}
+      />
     </>
   );
 }
