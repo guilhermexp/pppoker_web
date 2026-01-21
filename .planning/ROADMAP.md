@@ -10,7 +10,7 @@ None
 
 ## Phases
 
-- [ ] **Phase 1: Mapeamento do Fluxo UX** - Mapear jornada completa do usuário e identificar todos os componentes envolvidos
+- [x] **Phase 1: Mapeamento do Fluxo UX** - Mapear jornada completa do usuário e identificar todos os componentes envolvidos
 - [ ] **Phase 2: Auditoria de Validação** - Auditar sistema de validação de planilhas e lógica de importação
 - [ ] **Phase 3: Auditoria de Fechamento Semanal** - Auditar lógica crítica de settlements, cálculos de rake e transações
 - [ ] **Phase 4: Verificação de Consistência** - Verificar alinhamento com banco de dados e integridade dos dados
@@ -28,8 +28,8 @@ None
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Mapear fluxo frontend (componentes, rotas, actions, hooks)
-- [ ] 01-02: Mapear fluxo backend (routers tRPC, schemas, queries do banco)
+- [x] 01-01: Mapear fluxo frontend (componentes, rotas, actions, hooks)
+- [x] 01-02: Mapear fluxo backend (routers tRPC, schemas, queries do banco)
 
 ### Phase 2: Auditoria de Validação
 **Goal**: Auditar completamente o sistema de validação de planilhas (12+ regras), verificando corretude, completude, e identificando gaps.
@@ -87,7 +87,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Mapeamento do Fluxo UX | 0/2 | Not started | - |
+| 1. Mapeamento do Fluxo UX | 2/2 | Complete | 2026-01-21 |
 | 2. Auditoria de Validação | 0/2 | Not started | - |
 | 3. Auditoria de Fechamento Semanal | 0/3 | Not started | - |
 | 4. Verificação de Consistência | 0/2 | Not started | - |
