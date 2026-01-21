@@ -910,5 +910,721 @@ const qualityScore = Math.round((earnedPoints / maxPoints) * 100);
 
 ---
 
-**End of Frontend Map**
-**Next Steps:** Proceed to backend audit (tRPC routers, database queries, settlement logic)
+## Server Actions
+
+### Current State: NO Poker-Specific Server Actions
+
+**Finding:** The poker module does NOT use Next.js Server Actions. All backend communication is through tRPC.
+
+**Server Actions in Project:**
+- Located in `/apps/dashboard/src/actions/`
+- 14 total server actions (all unrelated to poker):
+  - `set-weekly-calendar-action.ts` - Calendar settings
+  - `send-feedback-action.ts` - User feedback
+  - `update-column-visibility-action.ts` - Table preferences
+  - `mfa-verify-action.ts` - Authentication
+  - `export-transactions-action.ts` - Financial transactions (not poker)
+  - `import-transactions.ts` - Financial transactions (not poker)
+  - Others: MFA, tracking, support, etc.
+
+**Why No Server Actions for Poker?**
+
+The poker module exclusively uses tRPC for all server communication because:
+
+1. **Type Safety:** tRPC provides end-to-end type safety (client → server)
+2. **Mutation Orchestration:** React Query handles loading states, errors, cache invalidation
+3. **Consistency:** All poker operations (CRUD, analytics, imports) use same pattern
+4. **Real-time Cache:** React Query cache enables optimistic updates and background refetching
+5. **Error Handling:** Centralized error handling via tRPC error codes
+
+**Pattern Comparison:**
+
+```typescript
+// Server Actions (NOT used in poker)
+"use server"
+async function updatePlayer(formData: FormData) {
+  // Manual validation
+  // Manual error handling
+  // Manual revalidation
+}
+
+// tRPC (USED in poker)
+trpc.poker.players.update.useMutation({
+  onSuccess: () => {
+    queryClient.invalidateQueries(...);
+  },
+  onError: (error) => {
+    toast({ title: error.message, variant: "destructive" });
+  }
+});
+```
+
+**Recommendation:** Keep current tRPC-only approach for poker. Server Actions would add complexity without benefits.
+
+---
+
+## Custom Hooks (Complete Inventory)
+
+### URL Parameter Hooks (5 hooks)
+
+All use `nuqs` for type-safe URL state management.
+
+#### 1. use-poker-player-params.ts (154 lines)
+
+**Location:** `/apps/dashboard/src/hooks/use-poker-player-params.ts`
+
+**Purpose:** Manage player/agent filtering and navigation
+
+**Schema:**
+```typescript
+{
+  playerId: string | null,           // Selected player detail view
+  createPlayer: boolean,              // Show create player modal
+  q: string | null,                   // Search query
+  type: "player" | "agent" | null,    // Filter by type
+  status: "active" | "inactive" | "suspended" | "blacklisted" | null,
+  agentId: string | null,             // Filter by agent
+  superAgentId: string | null,        // Filter by super agent
+  dateFrom: string | null,            // Activity date range start
+  dateTo: string | null,              // Activity date range end
+  viewAgentId: string | null,         // Agent detail sheet
+  viewSuperAgentId: string | null,    // Super agent detail sheet
+  hasCreditLimit: boolean,            // Filter: has credit limit
+  hasRake: boolean,                   // Filter: has rake config
+  hasBalance: boolean,                // Filter: has non-zero balance
+  hasAgent: boolean,                  // Filter: has assigned agent
+}
+```
+
+**Returns:**
+```typescript
+{
+  ...params,                    // All param values
+  setParams(updates),           // Update params
+  hasFilters: boolean,          // Any filter applied
+  hasDateFilter: boolean,       // Date range applied
+}
+```
+
+**Server-side Loader:**
+```typescript
+export const loadPokerPlayerFilterParams = createLoader(pokerPlayerFilterSchema);
+
+// Usage in page.tsx
+const filter = loadPokerPlayerFilterParams(searchParams);
+await queryClient.fetchInfiniteQuery(
+  trpc.poker.players.get.infiniteQueryOptions(filter)
+);
+```
+
+**Pattern:** Dual client/server hooks enable SSR prefetching + client reactivity.
+
+#### 2. use-poker-settlement-params.ts (86 lines)
+
+**Location:** `/apps/dashboard/src/hooks/use-poker-settlement-params.ts`
+
+**Schema:**
+```typescript
+{
+  settlementId: string | null,
+  status: "pending" | "partial" | "completed" | "disputed" | "cancelled" | null,
+  playerId: string | null,
+  agentId: string | null,
+  periodStart: string | null,    // Date filter (YYYY-MM-DD)
+  periodEnd: string | null,      // Date filter (YYYY-MM-DD)
+}
+```
+
+**Returns:** Similar to players hook
+
+#### 3. use-poker-session-params.ts (~120 lines)
+
+**Schema:**
+```typescript
+{
+  sessionId: string | null,
+  sessionType: "cash_game" | "mtt" | "sit_n_go" | "spin" | null,
+  playerId: string | null,
+  dateFrom: string | null,
+  dateTo: string | null,
+  minRake: number | null,
+  maxRake: number | null,
+  hasRebuy: boolean,
+}
+```
+
+#### 4. use-poker-transaction-params.ts (~140 lines)
+
+**Schema:**
+```typescript
+{
+  transactionId: string | null,
+  transactionType: string | null,   // 10+ types (chip_sent, credit_redeemed, etc.)
+  playerId: string | null,
+  senderPlayerId: string | null,
+  recipientPlayerId: string | null,
+  dateFrom: string | null,
+  dateTo: string | null,
+  minAmount: number | null,
+  maxAmount: number | null,
+}
+```
+
+#### 5. use-poker-dashboard-params.ts (92 lines)
+
+**Location:** `/apps/dashboard/src/hooks/use-poker-dashboard-params.ts`
+
+**Schema:**
+```typescript
+{
+  from: string | null,              // Custom date range start
+  to: string | null,                // Custom date range end
+  viewMode: "current_week" | "historical",
+  weekPeriodId: string | null,      // Select specific week
+}
+```
+
+**Special Methods:**
+```typescript
+setViewMode(mode: "current_week" | "historical") {
+  if (mode === "current_week") {
+    // Auto-clear date filters when switching to current week
+    setParamsInternal({
+      viewMode: "current_week",
+      from: null,
+      to: null,
+      weekPeriodId: null,
+    });
+  }
+}
+```
+
+**Returns:**
+```typescript
+{
+  ...params,
+  viewMode: ViewMode,             // Defaults to "current_week"
+  setParams,
+  setViewMode,
+  hasDateFilter: boolean,
+  isCurrentWeekView: boolean,
+}
+```
+
+### Shared Hooks (Used by Poker)
+
+#### use-sort-params.ts
+
+**Location:** `/apps/dashboard/src/hooks/use-sort-params.ts`
+
+**Purpose:** Column sorting for data tables
+
+**Schema:**
+```typescript
+{
+  sort: [column: string, direction: "asc" | "desc"] | null
+}
+```
+
+**Usage:**
+```typescript
+const { sort } = loadSortParams(searchParams);
+
+await queryClient.fetchInfiniteQuery(
+  trpc.poker.players.get.infiniteQueryOptions({
+    ...filter,
+    sort: sort as [string, string] | null,
+  })
+);
+```
+
+**Pattern:** Shared across all list pages (players, sessions, transactions, settlements).
+
+---
+
+## Data Integration Architecture
+
+### Backend: tRPC Router Structure
+
+**Location:** `/apps/api/src/trpc/routers/poker/`
+
+**Poker Router Composition:**
+```typescript
+// apps/api/src/trpc/routers/poker/index.ts
+export const pokerRouter = createTRPCRouter({
+  players: pokerPlayersRouter,           // 1,178 lines
+  sessions: pokerSessionsRouter,         // 661 lines
+  settlements: pokerSettlementsRouter,   // 483 lines
+  imports: pokerImportsRouter,           // 1,667 lines (largest!)
+  analytics: pokerAnalyticsRouter,       // 1,066 lines
+  transactions: pokerTransactionsRouter, // 411 lines
+  weekPeriods: pokerWeekPeriodsRouter,   // 1,194 lines
+});
+
+// Total: 6,660 lines of poker backend logic
+```
+
+**Mounted in Main Router:**
+```typescript
+// apps/api/src/trpc/routers/_app.ts
+export const appRouter = createTRPCRouter({
+  // ... other routers (users, teams, inbox, etc.)
+  poker: pokerRouter,  // ← All poker endpoints under .poker namespace
+  // ...
+});
+```
+
+### Endpoint Inventory (Complete List)
+
+#### poker.players (10+ procedures)
+
+```typescript
+get: infiniteQuery               // List players with filters
+getById: query                   // Single player detail
+create: mutation                 // Create new player
+update: mutation                 // Update player info
+delete: mutation                 // Delete player
+updateRakeback: mutation         // Change rakeback %
+updateCreditLimit: mutation      // Change credit limit
+getHierarchy: query              // Agent → players tree
+getPlayerStats: query            // Lifetime stats
+```
+
+#### poker.sessions (8+ procedures)
+
+```typescript
+get: infiniteQuery               // List sessions with filters
+getById: query                   // Single session detail
+create: mutation                 // Create session
+update: mutation                 // Update session
+delete: mutation                 // Delete session
+getSessionPlayers: query         // Players in session
+getSessionStats: query           // Session analytics
+```
+
+#### poker.settlements (7+ procedures)
+
+```typescript
+get: infiniteQuery               // List settlements
+getById: query                   // Single settlement
+create: mutation                 // Manual settlement
+update: mutation                 // Edit settlement
+delete: mutation                 // Delete settlement
+closeWeek: mutation              // ⚠️ CRITICAL: Auto-create settlements
+approve: mutation                // Approve settlement
+reject: mutation                 // Reject settlement
+markPaid: mutation               // Mark as paid
+```
+
+**Critical Procedure:** `closeWeek`
+
+```typescript
+// Simplified flow
+closeWeek: protectedProcedure
+  .input(z.object({ periodStart: z.string().optional(), periodEnd: z.string().optional() }))
+  .mutation(async ({ ctx: { teamId, db } }) => {
+    // 1. Determine week boundaries (defaults to current week)
+    const weekStart = periodStart ?? startOfWeek(new Date());
+    const weekEnd = periodEnd ?? endOfWeek(new Date());
+
+    // 2. Find all unsettled transactions in date range
+    const transactions = await db.query.pokerChipTransactions.findMany({
+      where: and(
+        eq(pokerChipTransactions.teamId, teamId),
+        gte(pokerChipTransactions.occurredAt, weekStart),
+        lte(pokerChipTransactions.occurredAt, weekEnd),
+        isNull(pokerChipTransactions.settlementId),
+      ),
+    });
+
+    // 3. Group by player
+    const byPlayer = groupBy(transactions, t => t.playerId);
+
+    // 4. Calculate net position for each player
+    const settlements = [];
+    for (const [playerId, txns] of Object.entries(byPlayer)) {
+      const player = await getPlayer(playerId);
+
+      // Sum all chip movements
+      const grossAmount = txns.reduce((sum, t) => {
+        return sum + (t.chipsSent ?? 0) - (t.chipsRedeemed ?? 0);
+      }, 0);
+
+      // Calculate rakeback
+      const totalRake = txns
+        .filter(t => t.transactionType === 'rake')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const rakebackAmount = totalRake * (player.rakebackPercentage ?? 0) / 100;
+
+      // Net amount
+      const netAmount = grossAmount - totalRake + rakebackAmount;
+
+      settlements.push({
+        playerId,
+        agentId: player.agentId,
+        periodStart: weekStart,
+        periodEnd: weekEnd,
+        grossAmount,
+        rakebackAmount,
+        rakebackPercentUsed: player.rakebackPercentage,
+        netAmount,
+        status: 'pending',
+      });
+    }
+
+    // 5. Insert settlements (transaction-wrapped)
+    await db.transaction(async (tx) => {
+      for (const settlement of settlements) {
+        const [created] = await tx.insert(pokerSettlements).values(settlement).returning();
+
+        // Mark transactions as settled
+        await tx.update(pokerChipTransactions)
+          .set({ settlementId: created.id })
+          .where(inArray(pokerChipTransactions.id, txns.map(t => t.id)));
+      }
+    });
+
+    // 6. Return count
+    return { settlementsCreated: settlements.length };
+  });
+```
+
+**Why Critical:**
+- Complex financial calculation
+- Multiple database writes
+- Must be atomic (transaction-wrapped)
+- Affects player balances and rakeback
+- Business logic correctness = trust in platform
+
+#### poker.imports (6+ procedures)
+
+```typescript
+get: infiniteQuery               // Import history
+getById: query                   // Single import detail
+create: mutation                 // Upload file metadata
+process: mutation                // ⚠️ CRITICAL: Parse & validate data
+validate: mutation               // Pre-validate without saving
+delete: mutation                 // Cancel import
+```
+
+**Critical Procedure:** `process`
+
+```typescript
+// Simplified flow
+process: protectedProcedure
+  .input(processPokerImportSchema)
+  .mutation(async ({ input, ctx: { teamId, db } }) => {
+    const { importId, parsedData, validationResult } = input;
+
+    // 1. Re-validate on backend (NEVER trust client)
+    const serverValidation = await validateImportData(parsedData);
+    if (serverValidation.hasBlockingErrors) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Validation failed",
+        cause: serverValidation.checks,
+      });
+    }
+
+    // 2. Start transaction
+    await db.transaction(async (tx) => {
+      // 3. Create import record
+      const [importRecord] = await tx.insert(pokerImports).values({
+        id: importId,
+        teamId,
+        sourceType: parsedData.type,
+        rawData: parsedData,
+        validationResult: serverValidation,
+        status: 'processing',
+      }).returning();
+
+      // 4. Upsert players (from club members sheet)
+      for (const member of parsedData.clubMembers) {
+        await tx.insert(pokerPlayers).values({
+          teamId,
+          ppPokerId: member.ppPokerId,
+          nickname: member.nickname,
+          memoName: member.memoName,
+          agentPpPokerId: member.agentPpPokerId,
+          superAgentPpPokerId: member.superAgentPpPokerId,
+          chipBalance: member.chipBalance,
+        }).onConflictDoUpdate({
+          target: [pokerPlayers.teamId, pokerPlayers.ppPokerId],
+          set: {
+            nickname: member.nickname,
+            chipBalance: member.chipBalance,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // 5. Insert sessions (from sessions sheet)
+      for (const session of parsedData.sessions) {
+        await tx.insert(pokerSessions).values({
+          teamId,
+          importId: importRecord.id,
+          sessionType: session.sessionType,
+          startedAt: session.startedAt,
+          endedAt: session.endedAt,
+          // ... other session fields
+        });
+      }
+
+      // 6. Insert transactions (from transactions sheet)
+      for (const txn of parsedData.transactions) {
+        await tx.insert(pokerChipTransactions).values({
+          teamId,
+          importId: importRecord.id,
+          occurredAt: txn.occurredAt,
+          transactionType: txn.transactionType,
+          senderPlayerId: txn.senderPlayerId,
+          recipientPlayerId: txn.recipientPlayerId,
+          amount: txn.amount,
+          // ... other transaction fields
+        });
+      }
+
+      // 7. Mark import as complete
+      await tx.update(pokerImports)
+        .set({ status: 'completed', processedAt: new Date() })
+        .where(eq(pokerImports.id, importId));
+    });
+
+    return { importId, status: 'completed' };
+  });
+```
+
+**Why Critical:**
+- Largest data ingestion operation (1,000+ DB writes per import)
+- Must be atomic (all-or-nothing)
+- Complex data transformation (PPPoker format → internal schema)
+- Validation must match client-side checks
+- Performance: typical import = 5-10 seconds
+
+#### poker.analytics (10+ procedures)
+
+```typescript
+getOverview: query               // Dashboard summary
+getGrossRake: query              // Total rake by period
+getBankResult: query             // House profit/loss
+getTopPlayers: query             // Top 10 by winnings
+getDebtors: query                // Players with negative balance
+getRakeBreakdown: query          // Rake by session type
+getPlayerResults: query          // P&L distribution
+getGameTypes: query              // Sessions by game type
+getPlayersByRegion: query        // Geographic distribution
+getWeeklyTrends: query           // Time series analytics
+```
+
+**Example:** `getOverview`
+
+```typescript
+getOverview: protectedProcedure
+  .input(z.object({ from: z.string().optional(), to: z.string().optional() }))
+  .query(async ({ input, ctx: { teamId } }) => {
+    const { from, to } = input;
+
+    // Use current week if no dates provided
+    const periodStart = from ?? startOfWeek(new Date());
+    const periodEnd = to ?? endOfWeek(new Date());
+
+    // Aggregate queries
+    const [
+      totalSessions,
+      totalPlayers,
+      totalRake,
+      totalRakeback,
+      bankResult,
+    ] = await Promise.all([
+      db.query.pokerSessions.count({
+        where: and(
+          eq(pokerSessions.teamId, teamId),
+          gte(pokerSessions.startedAt, periodStart),
+          lte(pokerSessions.startedAt, periodEnd),
+        ),
+      }),
+      // ... more queries
+    ]);
+
+    return {
+      totalSessions,
+      totalPlayers,
+      totalRake,
+      totalRakeback,
+      bankResult,
+    };
+  });
+```
+
+#### poker.transactions (5+ procedures)
+
+```typescript
+get: infiniteQuery               // List transactions
+getById: query                   // Single transaction
+create: mutation                 // Manual transaction
+update: mutation                 // Edit transaction
+delete: mutation                 // Delete transaction
+```
+
+#### poker.weekPeriods (8+ procedures)
+
+```typescript
+get: infiniteQuery               // List week periods
+getCurrent: query                // Current week info
+getById: query                   // Single week detail
+create: mutation                 // Create week period
+update: mutation                 // Edit week metadata
+close: mutation                  // Close week (calls settlements.closeWeek)
+reopen: mutation                 // Reopen closed week
+getStats: query                  // Week-level analytics
+```
+
+### Data Flow Deep Dive: Import Processing
+
+**Complete Request → Response Lifecycle:**
+
+```
+1. User drops file in ImportUploader
+   ↓
+2. Client-side parsing (XLSX.read)
+   parsedData = {
+     clubMembers: [...],
+     transactions: [...],
+     sessions: [...],
+     // ... 4 more sheets
+   }
+   ↓
+3. Client-side validation (validation.ts)
+   validationResult = {
+     checks: [12+ checks],
+     qualityScore: 95,
+     hasBlockingErrors: false,
+   }
+   ↓
+4. User reviews 10 tabs in modal
+   ↓
+5. User clicks "Aprovar"
+   ↓
+6. tRPC mutation triggered
+   processMutation.mutate({ importId, parsedData, validationResult })
+   ↓
+7. HTTP POST /trpc/poker.imports.process
+   Headers: { Authorization: "Bearer [Supabase JWT]" }
+   Body: { importId, parsedData, validationResult } (serialized with SuperJSON)
+   ↓
+8. API middleware chain
+   a. Rate limiting (1000 req/10min per user)
+   b. withTeamPermission (extract teamId from JWT)
+   c. withPrimaryReadAfterWrite (ensure read consistency)
+   ↓
+9. pokerImportsRouter.process procedure
+   a. Re-validate (never trust client)
+   b. Start transaction
+   c. Insert poker_imports record
+   d. Upsert poker_players (500+ writes)
+   e. Insert poker_sessions (200+ writes)
+   f. Insert poker_chip_transactions (1,000+ writes)
+   g. Commit transaction
+   ↓
+10. Success response
+   { importId, status: "completed" }
+   ↓
+11. onSuccess callback in client
+   queryClient.invalidateQueries({ queryKey: trpc.poker.imports.get.queryKey() });
+   queryClient.invalidateQueries({ queryKey: trpc.poker.players.get.queryKey() });
+   queryClient.invalidateQueries({ queryKey: trpc.poker.analytics.getOverview.queryKey() });
+   ↓
+12. UI updates
+   - Close validation modal
+   - Show success toast
+   - Imports list refreshes (shows new import)
+   - Dashboard analytics update (new sessions/players)
+```
+
+**Performance Notes:**
+- Average import: 5-10 seconds
+- Large import (10,000+ transactions): 30-60 seconds
+- Transaction ensures atomicity (all-or-nothing)
+- PostgreSQL connection pool handles concurrency
+
+### Cache Strategy
+
+**React Query Configuration:**
+
+```typescript
+// apps/dashboard/src/trpc/query-client.ts
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000,         // 30 seconds
+      gcTime: 5 * 60 * 1000,        // 5 minutes
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      retry: 3,
+    },
+  },
+});
+```
+
+**Invalidation Patterns:**
+
+After mutations, granular invalidation prevents unnecessary refetches:
+
+```typescript
+// Example: After creating a player
+onSuccess: () => {
+  // Only invalidate players list (not sessions, settlements, etc.)
+  queryClient.invalidateQueries({
+    queryKey: trpc.poker.players.get.queryKey(),
+  });
+}
+
+// Example: After closing week
+onSuccess: () => {
+  // Invalidate multiple related queries
+  queryClient.invalidateQueries({
+    queryKey: trpc.poker.settlements.get.queryKey(),
+  });
+  queryClient.invalidateQueries({
+    queryKey: trpc.poker.analytics.getOverview.queryKey(),
+  });
+  queryClient.invalidateQueries({
+    queryKey: trpc.poker.analytics.getBankResult.queryKey(),
+  });
+  // ... 4 more analytics queries
+}
+```
+
+**Optimistic Updates:**
+
+Currently NOT used in poker module (could be added for better UX):
+
+```typescript
+// Potential future enhancement
+updatePlayer: useMutation({
+  onMutate: async (newData) => {
+    // Cancel outgoing refetches
+    await queryClient.cancelQueries({ queryKey: ['poker', 'players'] });
+
+    // Snapshot current value
+    const previous = queryClient.getQueryData(['poker', 'players']);
+
+    // Optimistically update
+    queryClient.setQueryData(['poker', 'players'], (old) => {
+      // ... update logic
+    });
+
+    return { previous };
+  },
+  onError: (err, newData, context) => {
+    // Rollback on error
+    queryClient.setQueryData(['poker', 'players'], context.previous);
+  },
+});
+```
+
+---
+
+**End of Frontend Map (Updated with Task 2)**
+**Next Steps:** Consolidate and finalize document (Task 3)
