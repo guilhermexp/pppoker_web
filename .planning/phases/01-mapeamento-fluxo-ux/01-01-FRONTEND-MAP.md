@@ -2,20 +2,56 @@
 
 **Generated:** 2026-01-21
 **Scope:** Complete frontend mapping from club entry → spreadsheet import → validation → approval → weekly settlement
+**Document Size:** 1,630 lines | 62 components | 9 routes | 50+ tRPC endpoints
+
+---
+
+## Executive Summary
+
+This document provides a comprehensive map of the Mid Poker frontend architecture, focusing on the user journey from entering the poker dashboard through importing PPPoker spreadsheets, validating data, and closing weekly settlements.
+
+### Key Findings
+
+**Architecture:**
+- Next.js 16 App Router with React 19 Server/Client Components
+- tRPC-only backend communication (no Next.js Server Actions)
+- URL state management via nuqs for filters and navigation
+- React Query (via tRPC) for server state caching and mutations
+
+**Scale:**
+- 62 poker-specific React components
+- 9 main routes (/poker, /poker/import, /poker/settlements, etc.)
+- 50+ tRPC backend procedures across 7 routers (6,660 lines)
+- 12+ validation rules for spreadsheet imports
+- 1,000+ database writes per typical import
+
+**Critical Paths:**
+1. **Import Flow:** File upload → Parse (7 tabs) → Validate (12 rules) → Process (1,000+ DB writes)
+2. **Settlement Flow:** Review week → Close week → Calculate settlements → Create records
+
+**Points of Concern:**
+- Client-side validation can be bypassed (backend re-validation exists but unclear if 1:1)
+- Settlement calculation complexity (financial correctness critical)
+- Large file parsing (10,000+ rows) can freeze browser
+- No optimistic updates (potential UX improvement)
 
 ---
 
 ## Table of Contents
 
-1. [Technology Stack](#technology-stack)
-2. [Route Architecture](#route-architecture)
-3. [Component Hierarchy](#component-hierarchy)
-4. [User Journey Flow](#user-journey-flow)
-5. [State Management](#state-management)
-6. [Data Flow (tRPC Integration)](#data-flow-trpc-integration)
-7. [Custom Hooks](#custom-hooks)
-8. [Critical Components Deep Dive](#critical-components-deep-dive)
-9. [Points of Concern](#points-of-concern)
+1. [Executive Summary](#executive-summary)
+2. [Technology Stack](#technology-stack)
+3. [Route Architecture](#route-architecture)
+4. [Component Hierarchy](#component-hierarchy)
+5. [User Journey Flow](#user-journey-flow)
+6. [State Management](#state-management)
+7. [Data Flow (tRPC Integration)](#data-flow-trpc-integration)
+8. [Custom Hooks](#custom-hooks)
+9. [Critical Components Deep Dive](#critical-components-deep-dive)
+10. [Server Actions](#server-actions)
+11. [Data Integration Architecture](#data-integration-architecture)
+12. [Points of Concern](#points-of-concern)
+13. [Quick Reference](#quick-reference)
 
 ---
 
@@ -1626,5 +1662,155 @@ updatePlayer: useMutation({
 
 ---
 
-**End of Frontend Map (Updated with Task 2)**
-**Next Steps:** Consolidate and finalize document (Task 3)
+## Quick Reference
+
+### Entry Points by User Goal
+
+| User Goal | Route | Component | tRPC Endpoint |
+|-----------|-------|-----------|---------------|
+| View dashboard | `/poker` | PokerWidgetsGrid | analytics.getOverview |
+| Import spreadsheet | `/poker/import` | ImportUploader → ImportValidationModal | imports.process |
+| Close week | `/poker/settlements` | CloseWeekButton | settlements.closeWeek |
+| View players | `/poker/players` | PlayersDataTable | players.get |
+| View sessions | `/poker/sessions` | SessionsDataTable | sessions.get |
+| View transactions | `/poker/transactions` | TransactionsDataTable | transactions.get |
+
+### File Count by Type
+
+| Type | Count | Location |
+|------|-------|----------|
+| Routes (pages) | 9 | apps/dashboard/src/app/[locale]/(app)/(sidebar)/poker/ |
+| Components | 62 | apps/dashboard/src/components/poker/ |
+| Validation tabs | 10 | apps/dashboard/src/components/poker/validation-tabs/ |
+| League tabs | 8 | apps/dashboard/src/components/poker/league-validation-tabs/ |
+| Close week tabs | 8 | apps/dashboard/src/components/poker/close-week-tabs/ |
+| Custom hooks | 5 | apps/dashboard/src/hooks/use-poker-*.ts |
+| tRPC routers | 7 | apps/api/src/trpc/routers/poker/ |
+| Backend queries | 43 | packages/db/src/queries/poker-*.ts |
+
+### Critical File Paths
+
+**Frontend:**
+```
+/apps/dashboard/src/
+├── app/[locale]/(app)/(sidebar)/poker/
+│   ├── page.tsx                           # Dashboard entry
+│   ├── import/page.tsx                    # Import spreadsheet page
+│   └── settlements/page.tsx               # Close week page
+├── components/poker/
+│   ├── import-uploader.tsx                # File upload + parsing (1,000+ lines)
+│   ├── import-validation-modal.tsx        # 10-tab validation UI (900+ lines)
+│   ├── close-week-button.tsx             # Week closure trigger
+│   └── validation-tabs/                   # 10 validation tab components
+├── hooks/
+│   ├── use-poker-player-params.ts         # 14 filter params
+│   ├── use-poker-settlement-params.ts     # 6 filter params
+│   ├── use-poker-session-params.ts        # 8 filter params
+│   ├── use-poker-transaction-params.ts    # 10 filter params
+│   └── use-poker-dashboard-params.ts      # 4 view mode params
+├── lib/poker/
+│   ├── validation.ts                      # 12+ validation rules (1,200+ lines)
+│   ├── types.ts                           # TypeScript types
+│   └── spreadsheet-types.ts               # PPPoker format mappings
+└── trpc/client.tsx                        # tRPC setup with Supabase auth
+```
+
+**Backend:**
+```
+/apps/api/src/trpc/routers/poker/
+├── index.ts                               # Router composition
+├── imports.ts                             # Import processing (1,667 lines)
+├── settlements.ts                         # Week closure logic (483 lines)
+├── players.ts                             # Player CRUD (1,178 lines)
+├── analytics.ts                           # Dashboard stats (1,066 lines)
+├── sessions.ts                            # Session management (661 lines)
+├── transactions.ts                        # Transaction CRUD (411 lines)
+└── week-periods.ts                        # Week management (1,194 lines)
+```
+
+### Environment Configuration
+
+**Required Environment Variables:**
+```bash
+# Frontend (.env.local)
+NEXT_PUBLIC_API_URL=http://localhost:8080       # API endpoint
+NEXT_PUBLIC_SUPABASE_URL=                       # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=                  # Supabase anon key
+
+# Backend (.env)
+DATABASE_URL=postgresql://...                    # PostgreSQL connection
+REDIS_URL=redis://localhost:6379                # Rate limiting cache
+SUPABASE_SERVICE_ROLE_KEY=                      # Admin access
+```
+
+**Development Ports:**
+- Dashboard: `http://localhost:9000` (Next.js)
+- API: `http://localhost:8080` (Hono)
+- Database: `localhost:5432` (PostgreSQL)
+- Redis: `localhost:6379` (Cache)
+
+### Technology Versions
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| Next.js | 16.x | App Router framework |
+| React | 19.x | UI library |
+| tRPC | 11.x | Type-safe API |
+| React Query | 5.x | Server state management |
+| nuqs | Latest | URL state management |
+| Drizzle ORM | Latest | Database queries |
+| Supabase | Latest | Auth + PostgreSQL |
+| xlsx | Latest | Excel parsing |
+| papaparse | Latest | CSV parsing |
+
+### Next Phase Recommendations
+
+**For Phase 02 (Backend Audit):**
+
+1. **Verify Validation Parity**
+   - Compare `/apps/dashboard/src/lib/poker/validation.ts` (client)
+   - With `/apps/api/src/trpc/routers/poker/imports.ts` (server)
+   - Ensure backend validation is stricter or equal
+
+2. **Audit Settlement Calculation**
+   - Review `settlements.closeWeek` procedure
+   - Test edge cases: negative balances, partial weeks, multiple agents
+   - Verify transaction atomicity and rollback behavior
+
+3. **Performance Testing**
+   - Test import with 10,000+ transactions
+   - Measure database write time and memory usage
+   - Consider Web Worker for client-side parsing
+
+4. **Error Handling Review**
+   - Map error codes from tRPC procedures
+   - Verify user-facing error messages are helpful
+   - Test network failure scenarios
+
+5. **Database Query Analysis**
+   - Review `packages/db/src/queries/poker-*.ts` (43 files)
+   - Check for N+1 queries, missing indexes
+   - Optimize heavy aggregations in analytics queries
+
+**For Phase 03 (Testing Strategy):**
+
+1. Add integration tests for import flow
+2. Add unit tests for validation logic (12+ rules)
+3. Add E2E tests for week closure
+4. Test concurrent imports (race conditions)
+5. Test large file uploads (performance)
+
+**For Phase 04 (UX Improvements):**
+
+1. Add optimistic updates for player mutations
+2. Move parsing to Web Worker (large files)
+3. Add progress indicator for import processing
+4. Implement cross-tab cache invalidation (BroadcastChannel)
+5. Mobile-optimize validation modal
+
+---
+
+**Document Status:** Complete (Tasks 1-3 executed)
+**Last Updated:** 2026-01-21
+**Author:** Claude Code (execute-plan workflow)
+**Next Action:** Backend audit (tRPC routers + database queries)
