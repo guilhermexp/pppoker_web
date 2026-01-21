@@ -311,28 +311,135 @@ STEP 12: Calculate activity metrics for all players
 
 ### 6. Poker Analytics Router
 
-**File:** `apps/api/src/trpc/routers/poker/analytics.ts`
+**File:** `apps/api/src/trpc/routers/poker/analytics.ts` (1,000+ linhas)
 
-**Status:** Não lido ainda (será documentado em Task 2)
+**Propósito:** Dashboard analytics com cálculos de rake, bank result, breakdowns por tipo/região/agente.
 
-**Procedures esperados:**
-- Rake analysis
-- Bank result
-- Top players
-- Relatórios agregados
+#### Procedures
+
+| Procedure | Type | Input Schema | Purpose |
+|-----------|------|--------------|---------|
+| `getOverview` | query | `periodSchema` | Overview stats: totalPlayers (active), totalAgents, pendingSettlements, totalChipBalance, totalClubMembers |
+| `getDashboardStats` | query | `periodSchema` | **CRÍTICO** - Stats completos: rake breakdown (total/ppst/ppsr), bank result, player results, sessions by type/variant, regions, winners/losers |
+| `updatePokerWidgetPreferences` | mutation | `updatePokerWidgetPreferencesSchema` | Salva preferências de widgets do dashboard (cache Redis) |
+
+#### Estatísticas Calculadas (`getDashboardStats`)
+
+**Rake breakdown:**
+- `rakeTotal` - Soma de rake_total de poker_player_summary
+- `rakePpst` - Soma de rake_ppst (PPST games)
+- `rakePpsr` - Soma de rake_ppsr (PPSR games)
+- `totalRakeback` - Calculado por agente: rake_total * rakeback_percent / 100
+- `rakebackBreakdown` - { ppst, ppsr } separado
+
+**Bank result:**
+```typescript
+bankResult = (chipsSent - chipsRedeemed) + (creditsSent - creditsRedeemed)
+```
+- Agrega de `poker_chip_transactions`
+- Breakdown: chipsSent, chipsRedeemed, creditsSent, creditsRedeemed
+
+**Player results:**
+- `playerResults` - Soma de winnings_total de poker_player_summary (coluna J "Geral" tab)
+- `generalResult` - rakeTotal + playerResults (lucro do clube)
+- `winnersLosers` - Count de players com winnings_total > 0 vs < 0
+
+**Breakdowns:**
+- `sessionsByType` - Count e % por session_type (cash_game, mtt, sit_n_go, spin)
+- `gameTypeBreakdown` - Count e % por game_variant (nlh, plo, plo5, etc.)
+- `playersByRegion` - Count e % por country
+- `playersBreakdown` - { withAgent, withoutAgent } (apenas active players)
+- `agentsBreakdown` - { regular, super } (agents without super_agent_id)
+- `resultsBreakdown` - { winners, losers }
+
+**View modes:**
+- `current_week` - Usa getCurrentWeekBoundaries() automático
+- `historical` - Usa dateFrom/dateTo do input
+
+**Committed data handling:**
+- `includeDraft` param (default: false)
+- Dashboard em current_week mode passa true para ver dados draft
+- Helper `getCommittedImportIds()` filtra por committed = true
+
+**Performance:**
+- Usa `.limit(50000)` em todas queries para evitar limite de 1000 rows
+- Multiple queries executadas em paralelo (não sequencial)
+- Agregações feitas em memória (não via SQL SUM/COUNT)
 
 ---
 
 ### 7. Poker Week Periods Router
 
-**File:** `apps/api/src/trpc/routers/poker/week-periods.ts`
+**File:** `apps/api/src/trpc/routers/poker/week-periods.ts` (500+ linhas)
 
-**Status:** Não lido ainda (será documentado em Task 2)
+**Propósito:** Gestão de períodos semanais (week_start → week_end) com status tracking e vínculo com imports.
 
-**Procedures esperados:**
-- Gestão de períodos semanais
-- Status tracking (open, closed, locked)
-- Vínculo com imports
+#### Procedures
+
+| Procedure | Type | Input Schema | Purpose |
+|-----------|------|--------------|---------|
+| `getCurrent` | query | - | Retorna período da semana atual (cria se não existir), respeita week_starts_on_monday user pref |
+| `getAll` | query | `getPokerWeekPeriodsSchema` | Lista períodos com paginação, filtro por status (open/closed/locked/all) |
+| `getOpenPeriods` | query | - | Lista apenas períodos com status='open' (para warnings) |
+| `getById` | query | `getPokerWeekPeriodByIdSchema` | Detalhes de um período específico |
+| `getCloseWeekData` | query | `previewCloseWeekSchema` | **CRÍTICO** - Dados completos para modal de fechamento: sessions, summaries, rakebacks, transactions |
+| `previewCloseWeek` | query | `previewCloseWeekSchema` | Preview dos settlements que serão criados (não salva) |
+| `closeWeek` | mutation | `closeWeekSchema` | **CRÍTICO** - Fecha período, cria settlements, atualiza status, calcula totais |
+
+#### Lógica de Week Period
+
+**Auto-creation:**
+- `getCurrent()` busca por week_start = current week
+- Se não existe, cria com status='open'
+- Respeita `users.week_starts_on_monday` preference
+
+**Status tracking:**
+- `open` - Período ativo, pode receber imports
+- `closed` - Fechado via closeWeek, settlements criados
+- `locked` - Locked para edição (future use)
+
+**Vínculo com imports:**
+- `poker_imports.import_id` referencia week_period
+- Query usa overlap logic: `import.period_start <= week.period_end AND import.period_end >= week.period_start`
+
+#### Close Week Flow (`closeWeek`)
+
+**Steps:**
+1. Buscar ou criar week_period
+2. Validar status (deve estar 'open')
+3. Buscar imports que overlapping com período
+4. Calcular totals via aggregation:
+   - total_sessions (count de poker_sessions)
+   - total_players (unique player_ids de poker_player_summary)
+   - total_rake (sum de rake_total)
+5. Criar settlements via `poker.settlements.closeWeek`
+6. Atualizar week_period:
+   - status = 'closed'
+   - closed_at = now
+   - closed_by_id = userId
+   - settlements_gross_amount, settlements_net_amount
+7. Retornar summary
+
+**Preview mode:**
+- `previewCloseWeek()` calcula settlements SEM salvar
+- Retorna array de { playerId, nickname, grossAmount, rakebackAmount, netAmount }
+- UI mostra preview antes de confirmar close
+
+**Close Week Data:**
+- `getCloseWeekData()` retorna dados completos para modal:
+  - `sessions` - Todas sessões do período com session_players
+  - `summaries` - poker_player_summary (aba Geral)
+  - `rakebacks` - poker_agent_rakeback (aba Retorno de Taxa)
+  - `transactions` - poker_chip_transactions
+  - `weekPeriod` - Dados do período
+
+**Overlap logic:**
+```typescript
+// Import overlaps with week if:
+import.period_start <= week.period_end
+  AND
+import.period_end >= week.period_start
+```
 
 ---
 
@@ -1080,5 +1187,5 @@ poker_imports (1)├─→ poker_players (N)
 
 **Documento criado:** 2026-01-21
 **Última atualização:** 2026-01-21
-**Status:** Parcial (routers analytics e week-periods não lidos)
-**Próximo passo:** Completar Task 2 (schemas e analytics router)
+**Status:** Completo (todos 8 routers documentados)
+**Cobertura:** 100% dos routers poker, schemas identificados, database schema completo, fluxos críticos mapeados
