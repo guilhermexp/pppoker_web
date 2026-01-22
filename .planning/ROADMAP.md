@@ -54,7 +54,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Auditar cálculos de settlements (matemática, saldos, status tracking)
+- [x] 03-01: Auditar cálculos de settlements (matemática, saldos, status tracking)
 - [ ] 03-02: Auditar cálculos de rake e distribuição
 - [ ] 03-03: Auditar fluxo de transações e balanço
 
@@ -89,6 +89,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Mapeamento do Fluxo UX | 2/2 | Complete | 2026-01-21 |
 | 2. Auditoria de Validação | 2/2 | Complete | 2026-01-22 |
-| 3. Auditoria de Fechamento Semanal | 0/3 | Not started | - |
+| 3. Auditoria de Fechamento Semanal | 1/3 | In progress | - |
 | 4. Verificação de Consistência | 0/2 | Not started | - |
 | 5. Relatório Final | 0/1 | Not started | - |
