@@ -522,6 +522,29 @@ const MATH_RULES: ValidationRule[] = [];
 - **Router:** `apps/api/src/trpc/routers/poker/imports.ts` (~1,667 linhas)
 - **Schemas:** `apps/api/src/schemas/poker/imports.ts` (~149 linhas)
 
+### Arquitetura Backend
+
+O backend possui 6 procedures no router `pokerImportsRouter`:
+
+| Procedure | Metodo | Validacao | Descricao |
+|-----------|--------|-----------|-----------|
+| `get` | query | Nenhuma | Lista imports com paginacao |
+| `getById` | query | UUID | Busca import por ID |
+| `create` | mutation | Schema basico | Cria registro de import |
+| `validate` | mutation | MINIMA | Valida dados do import |
+| `process` | mutation | Status check | Processa import validado |
+| `cancel` | mutation | Status check | Cancela import pendente |
+
+### Fluxo de Validacao Backend
+
+```
+create() -> validate() -> process()
+    |           |            |
+    v           v            v
+rawData:any  2 checks    12 STEPs
+             apenas       (DB ops)
+```
+
 ### Validacoes Explicitas no Backend
 
 #### Procedure: validate
@@ -582,6 +605,36 @@ parsedPlayerSchema = z.object({
 
 ---
 
+### Analise Detalhada da Procedure `process`
+
+A procedure `process` tem 12 steps de processamento (linhas 378-1614):
+
+| Step | Descricao | Validacao |
+|------|-----------|-----------|
+| 0 | Criar week period | Nenhuma |
+| 1 | Upsert players (Detalhes) | Deduplica por pppoker_id |
+| 2 | Extrair agents de summaries | Nenhuma |
+| 2.5 | Upsert players de summaries | Deduplica por pppoker_id |
+| 2.6 | Upsert players de sessions | Deduplica por pppoker_id |
+| 3 | Construir player ID map | Nenhuma |
+| 3.5 | Linkar players a agents | Nenhuma |
+| 4 | Insert transactions | Filtra timestamps invalidos |
+| 5 | Upsert sessions | Filtra timestamps invalidos |
+| 6 | Construir session ID map | Nenhuma |
+| 7 | Upsert session players | Deduplica por session_id+player_id |
+| 8 | Upsert player summaries | Deduplica por player_id |
+| 9 | Upsert player detailed | Deduplica por player_id+date |
+| 10 | Upsert agent rakeback | Deduplica por agent_pppoker_id |
+| 11 | Insert demonstrativo | Filtra registros sem data/player |
+| 12 | Calculate activity metrics | Nenhuma |
+
+**Observacoes:**
+- Nenhuma validacao de integridade de dados antes de inserir
+- Erros de constraint so aparecem durante insercao
+- Deduplicacao e feita localmente mas nao valida consistencia
+
+---
+
 ### Validacoes de Database (Constraints)
 
 Durante `process`, o backend faz upserts com `onConflict`:
@@ -639,15 +692,43 @@ Durante `process`, o backend faz upserts com `onConflict`:
 1. **Nenhuma validacao frontend e replicada no backend**
    - Se um cliente malicioso pular o frontend, pode enviar dados invalidos diretamente
    - O backend aceita `rawData: z.any()` sem verificacao
+   - **Vetor de ataque:** Chamada direta a API com dados malformados
 
 2. **Validacoes de consistencia nao existem**
    - Jogadores podem estar em uma aba mas nao em outras
    - Nenhuma verificacao de integridade referencial antes do processamento
+   - **Exemplo:** Player em sessions mas nao em summaries passa despercebido
 
 3. **Validacoes matematicas nao existem**
    - Totais podem nao bater
    - Rake pode nao corresponder aos jogos
    - Saldos podem estar errados
+   - **Impacto financeiro:** Settlements calculados incorretamente
+
+4. **Ordem de execucao vulneravel**
+   - Frontend valida ANTES de enviar para backend
+   - Backend NAO revalida ao receber
+   - Se frontend for alterado/bypassed, dados invalidos entram no sistema
+
+### Diagramas de Fluxo de Validacao
+
+**Frontend:**
+```
+Upload → Parse → 15 validacoes → hasBlockingErrors? → Preview → Approve → API
+                      ↓
+              [STRUCTURE: 11]
+              [INTEGRITY: 4]
+              [CONSISTENCY: 0] ← TODO
+              [MATH: 0] ← TODO
+```
+
+**Backend:**
+```
+create(rawData:any) → validate(2 checks) → process(12 steps)
+                            ↓                    ↓
+                      [vazio?]              [DB errors]
+                      [>100 new?]           [late catch]
+```
 
 ---
 
