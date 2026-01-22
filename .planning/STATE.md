@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** A logica de fechamento semanal (settlements) deve estar matematicamente correta e consistente. Todos os calculos, saldos, rake, transacoes e settlements devem ser precisos e auditaveis.
 
-**Current focus:** Phase 3 COMPLETE - Auditoria de Fechamento Semanal
+**Current focus:** Phase 4 IN PROGRESS - Verificacao de Consistencia
 
 ## Current Position
 
-Phase: 3 of 5 (Auditoria de Fechamento Semanal) - COMPLETE
-Plan: 3 of 3 in current phase - COMPLETE
-Status: Plan 03-03 (Transactions Audit) complete
-Last activity: 2026-01-22 - Completed 03-03 (Transactions Audit)
+Phase: 4 of 5 (Verificacao de Consistencia) - IN PROGRESS
+Plan: 2 of 3 in current phase - COMPLETE
+Status: Plan 04-02 (Schema/RLS Audit) complete
+Last activity: 2026-01-22 - Completed 04-02 (Schema & RLS Audit)
 
-Progress: ██████████ 100% (Phase 03 Complete)
+Progress: ████████░░ 80% (Phase 04: 2/3 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: ~40 min
-- Total execution time: ~10 hours
+- Total plans completed: 8
+- Average duration: ~45 min
+- Total execution time: ~12 hours
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: ██████████ 100% (Phase 03 Complete)
 | 01-mapeamento-fluxo-ux | 2 | 6.75 hours | 3.4 hours |
 | 02-auditoria-validacao | 2 | ~1.2 hours | ~35 min |
 | 03-auditoria-fechamento-semanal | 3 | ~2 hours | ~40 min |
+| 04-verificacao-consistencia | 2 | ~1.5 hours | ~45 min |
 
 **Recent Trend:**
-- Last 5 plans: 6h, 25min, 45min, 35min, 45min
+- Last 5 plans: 45min, 35min, 45min, 45min, 45min
 - Trend: Audit plans consistently ~35-45 min
 
 ## Accumulated Context
@@ -90,7 +91,7 @@ Recent decisions affecting current work:
 - HIGH: Super-agent cascade not implemented
 - Rakeback formula verified: agent_rake * agent.rakeback_percent / 100
 
-**From 03-03 (Transactions Audit - NEW):**
+**From 03-03 (Transactions Audit):**
 - chip_balance is STORED snapshot from spreadsheet, NOT calculated from transactions
 - No database trigger maintains balance consistency
 - Delete transaction does NOT update player balance
@@ -98,23 +99,46 @@ Recent decisions affecting current work:
 - No consistency verification mechanism between balance and transactions
 - Combined with 03-01/03-02: entire settlement pipeline fundamentally flawed
 
+**From 04-01 (DB Access Patterns):**
+- Comprehensive mapping of database access patterns across all poker routers
+- Identified query patterns for consistency verification
+- Documented data flow from import through settlement
+
+**From 04-02 (Schema/RLS Audit - NEW):**
+- CONFIRMED: rakeback_percentage vs rakeback_percent bug (13 code locations documented)
+- CRITICAL: 9 tables exist in migrations but NOT in schema.ts
+  - poker_week_periods (migration 0003)
+  - poker_su_leagues, poker_su_week_periods, poker_su_imports (migration 0005)
+  - poker_su_league_summary, poker_su_games, poker_su_game_players, poker_su_settlements (migration 0005)
+- HIGH: 2 fields missing from pokerSettlements schema
+  - week_period_id (from migration 0003)
+  - rakeback_percent_used (from migration 0004)
+- Tables poker_player_detailed, poker_demonstrativo, poker_agent_rakeback do NOT exist (never implemented)
+- RLS policies CORRECTLY configured for all 17 poker tables
+- All policies use team_id IN (SELECT private.get_teams_for_authenticated_user())
+
 **For Implementation Phase (Priority Order):**
 
 | Priority | Task | Effort | Source |
 |----------|------|--------|--------|
-| P0 | Fix field name mismatch in settlements.ts | 30 min | 03-02 |
+| P0 | Fix field name mismatch in settlements.ts (7 locations) | 30 min | 04-02 |
+| P0 | Fix field name mismatch in week-periods.ts (6 locations) | 30 min | 04-02 |
+| P0 | Add integration test for rakeback calculation | 2 hours | 04-02 |
 | P0 | Add database trigger for chip_balance | 4-8 hours | 03-03 |
 | P0 | Add consistency check procedure | 2-4 hours | 03-03 |
+| P1 | Add missing fields to pokerSettlements schema | 45 min | 04-02 |
+| P1 | Add pokerWeekPeriods to schema.ts | 2 hours | 04-02 |
 | P1 | Fix settlement to use period rake | 4-8 hours | 03-02 |
 | P1 | Improve transaction type assignment | 6-12 hours | 03-03 |
 | P1 | Implement agent commission settlements | 4-6 hours | 03-02 |
 | P1 | Add super-agent cascade | 6-8 hours | 03-02 |
+| P2 | Add all SU tables to schema.ts | 4-6 hours | 04-02 |
 | P2 | Implement atomic transaction pattern | 8-16 hours | 03-01 |
 | P2 | Add upsert for transactions | 4-6 hours | 02-02 |
 
 ### Pending Todos
 
-None - Phase 03 complete.
+None - Plan 04-02 complete.
 
 ### Blockers/Concerns
 
@@ -123,27 +147,26 @@ None - Phase 03 complete.
 2. chip_balance is a snapshot, not derived from transactions - no data integrity guarantee
 3. Combined with 02-01 and 02-02 issues, the entire import -> settlement pipeline has critical bugs
 4. **NO PRODUCTION WEEKLY CLOSINGS should be done until settlements.closeWeek is fixed**
+5. **Rakeback field name bug confirmed with exact line numbers - immediate fix recommended**
 
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed Plan 03-03 (Transactions Audit) - Phase 03 Complete
+Stopped at: Completed Plan 04-02 (Schema & RLS Audit) - Phase 04 in progress
 Resume file: None
 
-**Phase 03 Complete:**
-- Plan 03-01: Settlements Audit - COMPLETE
-- Plan 03-02: Rake Audit - COMPLETE
-- Plan 03-03: Transactions Audit - COMPLETE
+**Phase 04 Progress:**
+- Plan 04-01: DB Access Patterns - COMPLETE
+- Plan 04-02: Schema/RLS Audit - COMPLETE
+- Plan 04-03: Cross-validation Rules - PENDING
 
-**Key artifacts from Phase 03:**
-- .planning/phases/03-auditoria-fechamento-semanal/03-01-SETTLEMENTS-AUDIT.md (789 lines)
-- .planning/phases/03-auditoria-fechamento-semanal/03-02-RAKE-AUDIT.md (694 lines)
-- .planning/phases/03-auditoria-fechamento-semanal/03-03-TRANSACTIONS-AUDIT.md (744 lines)
-- .planning/phases/03-auditoria-fechamento-semanal/03-01-SUMMARY.md
-- .planning/phases/03-auditoria-fechamento-semanal/03-02-SUMMARY.md
-- .planning/phases/03-auditoria-fechamento-semanal/03-03-SUMMARY.md
+**Key artifacts from Phase 04:**
+- .planning/phases/04-verificacao-consistencia/04-01-DB-ACCESS-PATTERNS.md
+- .planning/phases/04-verificacao-consistencia/04-01-SUMMARY.md
+- .planning/phases/04-verificacao-consistencia/04-02-SCHEMA-RLS-AUDIT.md (567 lines)
+- .planning/phases/04-verificacao-consistencia/04-02-SUMMARY.md
 
-**Combined Audit Findings (Complete):**
+**Combined Audit Findings (Complete through Phase 04-02):**
 
 | Area | Source | Status | Risk |
 |------|--------|--------|------|
@@ -152,13 +175,22 @@ Resume file: None
 | Import Processing | 02-02 | No atomic transaction | CRITICAL |
 | Rake Calculations | 03-02 | Dashboard correct | LOW |
 | Settlement System | 03-01, 03-02 | Uses wrong data source | CRITICAL |
-| Rakeback Payments | 03-02 | Field bug = always 0 | CRITICAL |
+| Rakeback Payments | 03-02, 04-02 | Field bug = always 0 (CONFIRMED) | CRITICAL |
 | chip_balance Integrity | 03-03 | Snapshot, not calculated | CRITICAL |
 | Transaction Processing | 03-03 | 2 of 12 types used | HIGH |
+| Schema Alignment | 04-02 | 9 tables missing from schema.ts | CRITICAL |
+| RLS Policies | 04-02 | All 17 tables correct | LOW |
 
-**Total Critical Issues Across All Audits: 15+**
+**Total Critical Issues Across All Audits: 18+**
+
+**Rakeback Bug Details (04-02):**
+- Schema: `rakeback_percent` (CORRECT)
+- Code: `rakeback_percentage` (WRONG - 13 locations)
+- Files affected:
+  - settlements.ts: lines 40, 41, 112, 120, 400, 425
+  - week-periods.ts: lines 680, 692, 855, 875, 1007, 1038
 
 **Next steps:**
-1. Phase 03 COMPLETE - All 3 plans finished
-2. Ready to proceed to Phase 04 (Implementation) or Phase 05
-3. Recommend immediate fixes before any production settlement runs
+1. Execute Plan 04-03 (Cross-validation Rules) to complete Phase 04
+2. Ready to proceed to Phase 05 (Implementation) after Phase 04 complete
+3. **Recommend immediate fix for rakeback_percentage bug before any production use**
