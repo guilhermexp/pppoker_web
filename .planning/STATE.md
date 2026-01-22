@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** A logica de fechamento semanal (settlements) deve estar matematicamente correta e consistente. Todos os calculos, saldos, rake, transacoes e settlements devem ser precisos e auditaveis.
 
-**Current focus:** Phase 3 IN PROGRESS - Auditoria de Fechamento Semanal
+**Current focus:** Phase 3 COMPLETE - Auditoria de Fechamento Semanal
 
 ## Current Position
 
-Phase: 3 of 5 (Auditoria de Fechamento Semanal) - IN PROGRESS
-Plan: 2 of ? in current phase - COMPLETE
-Status: Plan 03-02 (Rake Audit) complete
-Last activity: 2026-01-22 - Completed 03-02 (Rake Audit)
+Phase: 3 of 5 (Auditoria de Fechamento Semanal) - COMPLETE
+Plan: 3 of 3 in current phase - COMPLETE
+Status: Plan 03-03 (Transactions Audit) complete
+Last activity: 2026-01-22 - Completed 03-03 (Transactions Audit)
 
-Progress: ██████████ 100% (Plan 03-02)
+Progress: ██████████ 100% (Phase 03 Complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: ~40 min
-- Total execution time: ~9 hours
+- Total execution time: ~10 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: ██████████ 100% (Plan 03-02)
 |-------|-------|-------|----------|
 | 01-mapeamento-fluxo-ux | 2 | 6.75 hours | 3.4 hours |
 | 02-auditoria-validacao | 2 | ~1.2 hours | ~35 min |
-| 03-auditoria-fechamento-semanal | 1 | ~35 min | ~35 min |
+| 03-auditoria-fechamento-semanal | 3 | ~2 hours | ~40 min |
 
 **Recent Trend:**
-- Last 5 plans: 45min, 6h, 25min, 45min, 35min
-- Trend: Audit plans consistently ~35 min
+- Last 5 plans: 6h, 25min, 45min, 35min, 45min
+- Trend: Audit plans consistently ~35-45 min
 
 ## Accumulated Context
 
@@ -73,7 +73,15 @@ Recent decisions affecting current work:
 - 10 database tables affected, complete transformation matrix documented
 - Combined risk assessment: CRITICAL - invalid data can be imported and processed
 
-**From 03-02 (NEW):**
+**From 03-01 (Settlements Audit):**
+- 5 CRITICAL issues identified in settlement procedures
+- No atomic transaction in closeWeek - partial failures corrupt state
+- No validation of netAmount in manual settlements
+- Can delete completed/paid settlements
+- markPaid accepts any value without validation
+- No status transition validation
+
+**From 03-02 (Rake Audit):**
 - Dashboard rake calculations are CORRECT - properly aggregate from poker_player_summary
 - CRITICAL: Settlement system uses chip_balance instead of rake - fundamentally wrong
 - CRITICAL: Field name mismatch (rakeback_percentage vs rakeback_percent) - rakeback always 0
@@ -82,39 +90,60 @@ Recent decisions affecting current work:
 - HIGH: Super-agent cascade not implemented
 - Rakeback formula verified: agent_rake * agent.rakeback_percent / 100
 
-**For Implementation Phase:**
-- Priority 0: Fix field name mismatch in settlements.ts (30 min)
-- Priority 0: Fix settlement to use period rake from poker_player_summary (4-8 hours)
-- Priority 1: Implement agent commission settlements (4-6 hours)
-- Priority 1: Add super-agent cascade (6-8 hours)
-- Priority 2: Implement atomic transaction or saga pattern
-- Priority 2: Add upsert for transactions and demonstrativo
+**From 03-03 (Transactions Audit - NEW):**
+- chip_balance is STORED snapshot from spreadsheet, NOT calculated from transactions
+- No database trigger maintains balance consistency
+- Delete transaction does NOT update player balance
+- Only 2 transaction types used from 12 available during import
+- No consistency verification mechanism between balance and transactions
+- Combined with 03-01/03-02: entire settlement pipeline fundamentally flawed
+
+**For Implementation Phase (Priority Order):**
+
+| Priority | Task | Effort | Source |
+|----------|------|--------|--------|
+| P0 | Fix field name mismatch in settlements.ts | 30 min | 03-02 |
+| P0 | Add database trigger for chip_balance | 4-8 hours | 03-03 |
+| P0 | Add consistency check procedure | 2-4 hours | 03-03 |
+| P1 | Fix settlement to use period rake | 4-8 hours | 03-02 |
+| P1 | Improve transaction type assignment | 6-12 hours | 03-03 |
+| P1 | Implement agent commission settlements | 4-6 hours | 03-02 |
+| P1 | Add super-agent cascade | 6-8 hours | 03-02 |
+| P2 | Implement atomic transaction pattern | 8-16 hours | 03-01 |
+| P2 | Add upsert for transactions | 4-6 hours | 02-02 |
 
 ### Pending Todos
 
-None - Plan 03-02 complete.
+None - Phase 03 complete.
 
 ### Blockers/Concerns
 
 **Critical Path Identified:**
-1. Settlement system is BROKEN - uses wrong data source and has field name bug
-2. Combined with 02-01 and 02-02 issues, the entire import -> settlement pipeline has critical bugs
-3. NO PRODUCTION WEEKLY CLOSINGS should be done until settlements.closeWeek is fixed
+1. Settlement system is BROKEN - uses wrong data source (chip_balance vs rake) and has field name bug
+2. chip_balance is a snapshot, not derived from transactions - no data integrity guarantee
+3. Combined with 02-01 and 02-02 issues, the entire import -> settlement pipeline has critical bugs
+4. **NO PRODUCTION WEEKLY CLOSINGS should be done until settlements.closeWeek is fixed**
 
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed Plan 03-02 (Rake Audit)
+Stopped at: Completed Plan 03-03 (Transactions Audit) - Phase 03 Complete
 Resume file: None
 
-**Phase 03 Progress:** 1 of ? plans COMPLETE
-- Wave 1: 03-02 (rake audit) - COMPLETE
+**Phase 03 Complete:**
+- Plan 03-01: Settlements Audit - COMPLETE
+- Plan 03-02: Rake Audit - COMPLETE
+- Plan 03-03: Transactions Audit - COMPLETE
 
 **Key artifacts from Phase 03:**
+- .planning/phases/03-auditoria-fechamento-semanal/03-01-SETTLEMENTS-AUDIT.md (789 lines)
 - .planning/phases/03-auditoria-fechamento-semanal/03-02-RAKE-AUDIT.md (694 lines)
+- .planning/phases/03-auditoria-fechamento-semanal/03-03-TRANSACTIONS-AUDIT.md (744 lines)
+- .planning/phases/03-auditoria-fechamento-semanal/03-01-SUMMARY.md
 - .planning/phases/03-auditoria-fechamento-semanal/03-02-SUMMARY.md
+- .planning/phases/03-auditoria-fechamento-semanal/03-03-SUMMARY.md
 
-**Combined Audit Findings:**
+**Combined Audit Findings (Complete):**
 
 | Area | Source | Status | Risk |
 |------|--------|--------|------|
@@ -122,9 +151,14 @@ Resume file: None
 | Backend Validation | 02-01 | Uses rawData:any, 2 checks only | CRITICAL |
 | Import Processing | 02-02 | No atomic transaction | CRITICAL |
 | Rake Calculations | 03-02 | Dashboard correct | LOW |
-| Settlement System | 03-02 | Uses wrong data source | CRITICAL |
+| Settlement System | 03-01, 03-02 | Uses wrong data source | CRITICAL |
 | Rakeback Payments | 03-02 | Field bug = always 0 | CRITICAL |
+| chip_balance Integrity | 03-03 | Snapshot, not calculated | CRITICAL |
+| Transaction Processing | 03-03 | 2 of 12 types used | HIGH |
+
+**Total Critical Issues Across All Audits: 15+**
 
 **Next steps:**
-1. Continue Phase 03 if more plans exist
-2. Or proceed to implementation fixes (most urgent)
+1. Phase 03 COMPLETE - All 3 plans finished
+2. Ready to proceed to Phase 04 (Implementation) or Phase 05
+3. Recommend immediate fixes before any production settlement runs
