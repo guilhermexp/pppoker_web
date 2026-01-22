@@ -12,7 +12,7 @@ None
 
 - [x] **Phase 1: Mapeamento do Fluxo UX** - Mapear jornada completa do usuário e identificar todos os componentes envolvidos
 - [x] **Phase 2: Auditoria de Validação** - Auditar sistema de validação de planilhas e lógica de importação
-- [ ] **Phase 3: Auditoria de Fechamento Semanal** - Auditar lógica crítica de settlements, cálculos de rake e transações
+- [x] **Phase 3: Auditoria de Fechamento Semanal** - Auditar lógica crítica de settlements, cálculos de rake e transações
 - [ ] **Phase 4: Verificação de Consistência** - Verificar alinhamento com banco de dados e integridade dos dados
 - [ ] **Phase 5: Relatório Final** - Consolidar achados e gerar relatório de recomendações priorizadas
 
@@ -55,8 +55,8 @@ Plans:
 
 Plans:
 - [x] 03-01: Auditar cálculos de settlements (matemática, saldos, status tracking)
-- [ ] 03-02: Auditar cálculos de rake e distribuição
-- [ ] 03-03: Auditar fluxo de transações e balanço
+- [x] 03-02: Auditar cálculos de rake e distribuição
+- [x] 03-03: Auditar fluxo de transações e balanço
 
 ### Phase 4: Verificação de Consistência
 **Goal**: Verificar alinhamento completo com banco de dados, queries corretas, transações atômicas, e consistência de dados.
@@ -89,6 +89,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Mapeamento do Fluxo UX | 2/2 | Complete | 2026-01-21 |
 | 2. Auditoria de Validação | 2/2 | Complete | 2026-01-22 |
-| 3. Auditoria de Fechamento Semanal | 1/3 | In progress | - |
+| 3. Auditoria de Fechamento Semanal | 3/3 | Complete | 2026-01-22 |
 | 4. Verificação de Consistência | 0/2 | Not started | - |
 | 5. Relatório Final | 0/1 | Not started | - |
