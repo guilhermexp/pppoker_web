@@ -161,8 +161,8 @@ Resume file: None
 - Plan 04-03: Cross-validation Rules - PENDING
 
 **Key artifacts from Phase 04:**
-- .planning/phases/04-verificacao-consistencia/04-01-DB-ACCESS-PATTERNS.md
-- .planning/phases/04-verificacao-consistencia/04-01-SUMMARY.md
+- .planning/phases/04-verificacao-consistencia/04-01-QUERIES-AUDIT.md (994 lines)
+- .planning/phases/04-verificacao-consistencia/04-01-SUMMARY.md (237 lines)
 - .planning/phases/04-verificacao-consistencia/04-02-SCHEMA-RLS-AUDIT.md (567 lines)
 - .planning/phases/04-verificacao-consistencia/04-02-SUMMARY.md
 
