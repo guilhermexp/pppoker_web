@@ -745,16 +745,499 @@ const INTEGRITY_RULES: ValidationRule[] = [
 ];
 
 // ============================================================================
-// REGRAS DE CONSISTÊNCIA - Desabilitadas (TODO: implementar corretamente)
+// REGRAS DE CONSISTÊNCIA - Validam integridade entre abas
 // ============================================================================
 
-const CONSISTENCY_RULES: ValidationRule[] = [];
+const CONSISTENCY_RULES: ValidationRule[] = [
+  {
+    id: "players_in_geral",
+    category: "consistency",
+    severity: "warning",
+    label: "Jogadores das Partidas estão no Geral",
+    description: "Jogadores das Partidas devem ter registro na aba Geral",
+    validate: (data) => {
+      const summaryIds = new Set(
+        (data.summaries || []).map((s) => s.ppPokerId),
+      );
+      const sessionPlayerIds = new Set<string>();
+
+      for (const session of data.sessions || []) {
+        for (const player of session.players || []) {
+          if (player.ppPokerId) sessionPlayerIds.add(player.ppPokerId);
+        }
+      }
+
+      const missingInGeral: string[] = [];
+      for (const id of sessionPlayerIds) {
+        if (!summaryIds.has(id)) {
+          missingInGeral.push(id);
+        }
+      }
+
+      const passed = missingInGeral.length === 0;
+      return {
+        passed,
+        details: passed
+          ? `${sessionPlayerIds.size} jogadores consistentes`
+          : `${missingInGeral.length} jogadores das Partidas não estão no Geral`,
+        count: missingInGeral.length,
+        debug: {
+          logic:
+            "Verifica se todos os jogadores que aparecem nas Partidas também estão na aba Geral",
+          expected: "Todos os jogadores das sessões devem ter resumo no Geral",
+          actual: passed
+            ? `${sessionPlayerIds.size} jogadores encontrados em ambos`
+            : `${missingInGeral.length} jogadores apenas nas Partidas`,
+          failedItems: missingInGeral.slice(0, 10),
+        },
+      };
+    },
+  },
+  {
+    id: "transaction_players_exist",
+    category: "consistency",
+    severity: "warning",
+    label: "Jogadores das Transações existem",
+    description:
+      "Remetentes e destinatários das transações devem ser jogadores conhecidos",
+    validate: (data) => {
+      const allKnownIds = new Set<string>();
+
+      // Collect all known player IDs
+      for (const p of data.players || []) allKnownIds.add(p.ppPokerId);
+      for (const s of data.summaries || []) allKnownIds.add(s.ppPokerId);
+      for (const d of data.detailed || []) allKnownIds.add(d.ppPokerId);
+
+      const missingPlayers: string[] = [];
+      for (const tx of data.transactions || []) {
+        if (
+          tx.senderPlayerId &&
+          !allKnownIds.has(tx.senderPlayerId) &&
+          /^\d+$/.test(tx.senderPlayerId)
+        ) {
+          if (!missingPlayers.includes(tx.senderPlayerId)) {
+            missingPlayers.push(tx.senderPlayerId);
+          }
+        }
+        if (
+          tx.recipientPlayerId &&
+          !allKnownIds.has(tx.recipientPlayerId) &&
+          /^\d+$/.test(tx.recipientPlayerId)
+        ) {
+          if (!missingPlayers.includes(tx.recipientPlayerId)) {
+            missingPlayers.push(tx.recipientPlayerId);
+          }
+        }
+      }
+
+      const passed = missingPlayers.length === 0;
+      return {
+        passed,
+        details: passed
+          ? "Todos os jogadores das transações são conhecidos"
+          : `${missingPlayers.length} jogadores desconhecidos nas transações`,
+        count: missingPlayers.length,
+        debug: {
+          logic:
+            "Verifica se todos os IDs de sender/recipient das transações existem em players/summaries/detailed",
+          expected:
+            "Todos os IDs das transações devem corresponder a jogadores conhecidos",
+          actual: passed
+            ? "Todos conhecidos"
+            : `${missingPlayers.length} IDs não encontrados`,
+          failedItems: missingPlayers.slice(0, 10),
+        },
+      };
+    },
+  },
+  {
+    id: "agent_players_match",
+    category: "consistency",
+    severity: "warning",
+    label: "Agentes no Geral correspondem ao Rakeback",
+    description:
+      "Agentes mencionados no Geral devem estar na aba Retorno de taxa",
+    validate: (data) => {
+      const rakebackAgents = new Set(
+        (data.rakebacks || []).map((r) => r.agentPpPokerId),
+      );
+      const geralAgents = new Set<string>();
+
+      for (const s of data.summaries || []) {
+        if (s.agentPpPokerId) geralAgents.add(s.agentPpPokerId);
+      }
+
+      if (geralAgents.size === 0 || rakebackAgents.size === 0) {
+        return {
+          passed: true,
+          details: "Sem dados de agentes para comparar",
+          debug: {
+            logic: "Compara agentes do Geral com os da aba Retorno de taxa",
+            expected: "Agentes do Geral devem estar no Rakeback",
+            actual: "Sem dados suficientes para validar",
+          },
+        };
+      }
+
+      const missingInRakeback: string[] = [];
+      for (const agentId of geralAgents) {
+        if (!rakebackAgents.has(agentId)) {
+          missingInRakeback.push(agentId);
+        }
+      }
+
+      const passed = missingInRakeback.length === 0;
+      return {
+        passed,
+        details: passed
+          ? `${geralAgents.size} agentes consistentes`
+          : `${missingInRakeback.length} agentes do Geral não estão no Rakeback`,
+        count: missingInRakeback.length,
+        debug: {
+          logic:
+            "Verifica se agentes mencionados no Geral têm entrada na aba Retorno de taxa",
+          expected: "Todos os agentes do Geral devem ter dados de rakeback",
+          actual: passed
+            ? `${geralAgents.size} agentes encontrados em ambos`
+            : `${missingInRakeback.length} agentes sem rakeback`,
+          failedItems: missingInRakeback.slice(0, 10),
+        },
+      };
+    },
+  },
+  {
+    id: "detailed_players_match_geral",
+    category: "consistency",
+    severity: "warning",
+    label: "Jogadores do Detalhado correspondem ao Geral",
+    description: "A aba Detalhado deve ter os mesmos jogadores que a aba Geral",
+    validate: (data) => {
+      const geralIds = new Set((data.summaries || []).map((s) => s.ppPokerId));
+      const detailedIds = new Set(
+        (data.detailed || []).map((d) => d.ppPokerId),
+      );
+
+      if (geralIds.size === 0 || detailedIds.size === 0) {
+        return {
+          passed: true,
+          details: "Sem dados para comparar",
+          debug: {
+            logic: "Compara jogadores do Geral com os do Detalhado",
+            expected: "Mesmos jogadores em ambas as abas",
+            actual: "Sem dados suficientes para validar",
+          },
+        };
+      }
+
+      const onlyInGeral: string[] = [];
+      const onlyInDetailed: string[] = [];
+
+      for (const id of geralIds) {
+        if (!detailedIds.has(id)) onlyInGeral.push(id);
+      }
+      for (const id of detailedIds) {
+        if (!geralIds.has(id)) onlyInDetailed.push(id);
+      }
+
+      const passed = onlyInGeral.length === 0 && onlyInDetailed.length === 0;
+      return {
+        passed,
+        details: passed
+          ? `${geralIds.size} jogadores consistentes entre Geral e Detalhado`
+          : `${onlyInGeral.length} só no Geral, ${onlyInDetailed.length} só no Detalhado`,
+        count: onlyInGeral.length + onlyInDetailed.length,
+        debug: {
+          logic: "Verifica se os jogadores do Geral e Detalhado são os mesmos",
+          expected: "Mesmo conjunto de jogadores em ambas as abas",
+          actual: passed
+            ? `${geralIds.size} jogadores idênticos`
+            : `Diferenças: ${onlyInGeral.length} só Geral, ${onlyInDetailed.length} só Detalhado`,
+          failedItems: [
+            ...onlyInGeral.slice(0, 5),
+            ...onlyInDetailed.slice(0, 5),
+          ],
+        },
+      };
+    },
+  },
+];
 
 // ============================================================================
-// REGRAS MATEMÁTICAS - Desabilitadas (TODO: implementar corretamente)
+// REGRAS MATEMÁTICAS - Validam cálculos e totais
 // ============================================================================
 
-const MATH_RULES: ValidationRule[] = [];
+const MATH_RULES: ValidationRule[] = [
+  {
+    id: "session_rake_sum",
+    category: "math",
+    severity: "warning",
+    label: "Soma de rake por sessão",
+    description:
+      "O rake total da sessão deve ser a soma dos rakes dos jogadores",
+    validate: (data) => {
+      const sessions = data.sessions || [];
+      if (sessions.length === 0) {
+        return {
+          passed: true,
+          details: "Sem sessões para validar",
+          debug: {
+            logic: "Compara session.totalRake com a soma dos player.rake",
+            expected: "session.totalRake == sum(player.rake)",
+            actual: "Sem sessões",
+          },
+        };
+      }
+
+      const errors: string[] = [];
+      let checkedCount = 0;
+
+      for (const session of sessions) {
+        if (!session.players || session.players.length === 0) continue;
+
+        const declaredRake = session.totalRake ?? 0;
+        const calculatedRake = session.players.reduce(
+          (sum, p) => sum + (p.rake ?? p.clubWinningsFee ?? 0),
+          0,
+        );
+
+        // Allow 1% tolerance for rounding
+        const tolerance = Math.max(1, Math.abs(declaredRake) * 0.01);
+        const diff = Math.abs(declaredRake - calculatedRake);
+
+        if (diff > tolerance) {
+          errors.push(
+            `${session.externalId}: declarado ${declaredRake}, calculado ${calculatedRake.toFixed(2)}`,
+          );
+        }
+        checkedCount++;
+      }
+
+      const passed = errors.length === 0;
+      return {
+        passed,
+        details: passed
+          ? `${checkedCount} sessões com rake consistente`
+          : `${errors.length} sessões com rake inconsistente`,
+        count: errors.length,
+        debug: {
+          logic:
+            "Para cada sessão, soma o rake de todos os jogadores e compara com totalRake (tolerância 1%)",
+          expected: "Todos os totais devem bater",
+          actual: passed
+            ? `${checkedCount} sessões OK`
+            : `${errors.length} inconsistências`,
+          failedItems: errors.slice(0, 10),
+        },
+      };
+    },
+  },
+  {
+    id: "transaction_balance",
+    category: "math",
+    severity: "warning",
+    label: "Balanço de transações",
+    description:
+      "O total de fichas/créditos enviados deve aproximar ao resgatado + saldo",
+    validate: (data) => {
+      const transactions = data.transactions || [];
+      if (transactions.length === 0) {
+        return {
+          passed: true,
+          details: "Sem transações para validar",
+          debug: {
+            logic: "Verifica se total_enviado ≈ total_resgatado + saldo",
+            expected: "Balanço consistente",
+            actual: "Sem transações",
+          },
+        };
+      }
+
+      let totalCreditSent = 0;
+      let totalCreditRedeemed = 0;
+      let totalCreditLeft = 0;
+      let totalChipsSent = 0;
+      let totalChipsRedeemed = 0;
+      let totalChipsLeft = 0;
+
+      for (const tx of transactions) {
+        totalCreditSent += tx.creditSent ?? 0;
+        totalCreditRedeemed += tx.creditRedeemed ?? 0;
+        totalCreditLeft += tx.creditLeftClub ?? 0;
+        totalChipsSent += tx.chipsSent ?? 0;
+        totalChipsRedeemed += tx.chipsRedeemed ?? 0;
+        totalChipsLeft += tx.chipsLeftClub ?? 0;
+      }
+
+      // Check credit balance
+      const creditBalance =
+        totalCreditSent - totalCreditRedeemed - totalCreditLeft;
+      const creditTolerance = Math.max(100, totalCreditSent * 0.05); // 5% tolerance
+
+      // Check chips balance
+      const chipsBalance = totalChipsSent - totalChipsRedeemed - totalChipsLeft;
+      const chipsTolerance = Math.max(100, totalChipsSent * 0.05); // 5% tolerance
+
+      const creditOk =
+        Math.abs(creditBalance) <= creditTolerance || totalCreditSent === 0;
+      const chipsOk =
+        Math.abs(chipsBalance) <= chipsTolerance || totalChipsSent === 0;
+
+      const passed = creditOk && chipsOk;
+      return {
+        passed,
+        details: passed
+          ? `Balanço OK: crédito ${totalCreditSent.toFixed(0)}, fichas ${totalChipsSent.toFixed(0)}`
+          : `Balanço inconsistente: crédito diff=${creditBalance.toFixed(0)}, fichas diff=${chipsBalance.toFixed(0)}`,
+        debug: {
+          logic: "Verifica se enviado - resgatado - saldo ≈ 0 (tolerância 5%)",
+          expected: "Balanço próximo de zero para créditos e fichas",
+          actual: `Crédito: ${totalCreditSent} - ${totalCreditRedeemed} - ${totalCreditLeft} = ${creditBalance.toFixed(0)}; Fichas: ${totalChipsSent} - ${totalChipsRedeemed} - ${totalChipsLeft} = ${chipsBalance.toFixed(0)}`,
+        },
+      };
+    },
+  },
+  {
+    id: "geral_winnings_sum",
+    category: "math",
+    severity: "warning",
+    label: "Soma de ganhos do Geral",
+    description:
+      "O total geral deve ser aproximadamente a soma dos tipos de jogo",
+    validate: (data) => {
+      const summaries = data.summaries || [];
+      if (summaries.length === 0) {
+        return {
+          passed: true,
+          details: "Sem dados do Geral para validar",
+          debug: {
+            logic: "Verifica se generalTotal ≈ soma dos tipos de jogo",
+            expected: "generalTotal == ringGames + mtt + spinUp + ...",
+            actual: "Sem dados",
+          },
+        };
+      }
+
+      const errors: string[] = [];
+      let checkedCount = 0;
+
+      for (const s of summaries) {
+        const generalTotal = s.generalTotal ?? 0;
+        const calculatedTotal =
+          (s.ringGamesTotal ?? 0) +
+          (s.mttSitNGoTotal ?? 0) +
+          (s.spinUpTotal ?? 0) +
+          (s.caribbeanTotal ?? 0) +
+          (s.colorGameTotal ?? 0) +
+          (s.crashTotal ?? 0) +
+          (s.luckyDrawTotal ?? 0) +
+          (s.jackpotTotal ?? 0) +
+          (s.evSplitTotal ?? 0);
+
+        // Skip if all zeros (probably incomplete data)
+        if (generalTotal === 0 && calculatedTotal === 0) continue;
+
+        // Allow 5% tolerance or $10 absolute
+        const tolerance = Math.max(10, Math.abs(generalTotal) * 0.05);
+        const diff = Math.abs(generalTotal - calculatedTotal);
+
+        if (diff > tolerance) {
+          errors.push(
+            `${s.ppPokerId} (${s.nickname}): geral=${generalTotal}, soma=${calculatedTotal.toFixed(2)}`,
+          );
+        }
+        checkedCount++;
+      }
+
+      // Only fail if more than 10% have errors (some spreadsheets have incomplete breakdown)
+      const errorRate = checkedCount > 0 ? errors.length / checkedCount : 0;
+      const passed = errorRate <= 0.1;
+
+      return {
+        passed,
+        details: passed
+          ? `${checkedCount} jogadores com totais consistentes`
+          : `${errors.length} de ${checkedCount} jogadores com totais inconsistentes (${(errorRate * 100).toFixed(0)}%)`,
+        count: errors.length,
+        debug: {
+          logic:
+            "Para cada jogador, soma os ganhos por tipo de jogo e compara com generalTotal (tolerância 5%)",
+          expected:
+            "Soma dos tipos de jogo deve aproximar o total geral (≤10% de erros)",
+          actual: passed
+            ? `${checkedCount} OK (${(errorRate * 100).toFixed(0)}% erros)`
+            : `${errors.length} inconsistências de ${checkedCount}`,
+          failedItems: errors.slice(0, 10),
+        },
+      };
+    },
+  },
+  {
+    id: "session_players_buyins",
+    category: "math",
+    severity: "info",
+    label: "Buy-ins das sessões",
+    description:
+      "Soma de buy-ins dos jogadores deve aproximar o total da sessão",
+    validate: (data) => {
+      const sessions = data.sessions || [];
+      if (sessions.length === 0) {
+        return {
+          passed: true,
+          details: "Sem sessões para validar",
+          debug: {
+            logic: "Compara session.totalBuyIn com soma de player.buyIn",
+            expected: "session.totalBuyIn ≈ sum(player.buyIn)",
+            actual: "Sem sessões",
+          },
+        };
+      }
+
+      const errors: string[] = [];
+      let checkedCount = 0;
+
+      for (const session of sessions) {
+        if (!session.players || session.players.length === 0) continue;
+        if (!session.totalBuyIn) continue;
+
+        const declaredBuyIn = session.totalBuyIn;
+        const calculatedBuyIn = session.players.reduce(
+          (sum, p) =>
+            sum + (p.buyIn ?? p.buyInChips ?? 0) + (p.buyInTicket ?? 0),
+          0,
+        );
+
+        // Allow 5% tolerance
+        const tolerance = Math.max(10, declaredBuyIn * 0.05);
+        const diff = Math.abs(declaredBuyIn - calculatedBuyIn);
+
+        if (diff > tolerance) {
+          errors.push(
+            `${session.externalId}: declarado ${declaredBuyIn}, calculado ${calculatedBuyIn.toFixed(2)}`,
+          );
+        }
+        checkedCount++;
+      }
+
+      const passed = errors.length <= checkedCount * 0.1; // Allow 10% errors
+      return {
+        passed,
+        details: passed
+          ? `${checkedCount} sessões verificadas`
+          : `${errors.length} sessões com buy-in inconsistente`,
+        count: errors.length,
+        debug: {
+          logic:
+            "Soma buy-ins dos jogadores e compara com totalBuyIn (tolerância 5%)",
+          expected: "Totais devem bater (≤10% de erros tolerado)",
+          actual: passed
+            ? `${checkedCount} sessões OK`
+            : `${errors.length} inconsistências`,
+          failedItems: errors.slice(0, 10),
+        },
+      };
+    },
+  },
+];
 
 // ============================================================================
 // FUNÇÃO PRINCIPAL DE VALIDAÇÃO
@@ -1274,14 +1757,14 @@ function countNumericErrorsWithDetails(data: ParsedImportData): {
   const rakebacks = data.rakebacks || [];
 
   for (const p of players) {
-    if (typeof p.chipBalance !== "number" || isNaN(p.chipBalance)) {
+    if (typeof p.chipBalance !== "number" || Number.isNaN(p.chipBalance)) {
       errors++;
       if (details.length < 10)
         details.push(`players[${p.ppPokerId}].chipBalance = ${p.chipBalance}`);
     }
     if (
       typeof p.agentCreditBalance !== "number" ||
-      isNaN(p.agentCreditBalance)
+      Number.isNaN(p.agentCreditBalance)
     ) {
       errors++;
       if (details.length < 10)
@@ -1291,21 +1774,21 @@ function countNumericErrorsWithDetails(data: ParsedImportData): {
     }
   }
   for (const s of summaries) {
-    if (typeof s.generalTotal !== "number" || isNaN(s.generalTotal)) {
+    if (typeof s.generalTotal !== "number" || Number.isNaN(s.generalTotal)) {
       errors++;
       if (details.length < 10)
         details.push(
           `summaries[${s.ppPokerId}].generalTotal = ${s.generalTotal}`,
         );
     }
-    if (typeof s.feeGeneral !== "number" || isNaN(s.feeGeneral)) {
+    if (typeof s.feeGeneral !== "number" || Number.isNaN(s.feeGeneral)) {
       errors++;
       if (details.length < 10)
         details.push(`summaries[${s.ppPokerId}].feeGeneral = ${s.feeGeneral}`);
     }
   }
   for (const d of detailed) {
-    if (typeof d.totalWinnings !== "number" || isNaN(d.totalWinnings)) {
+    if (typeof d.totalWinnings !== "number" || Number.isNaN(d.totalWinnings)) {
       errors++;
       if (details.length < 10)
         details.push(
@@ -1314,7 +1797,7 @@ function countNumericErrorsWithDetails(data: ParsedImportData): {
     }
   }
   for (const d of demonstrativo) {
-    if (typeof d.amount !== "number" || isNaN(d.amount)) {
+    if (typeof d.amount !== "number" || Number.isNaN(d.amount)) {
       errors++;
       if (details.length < 10)
         details.push(`demonstrativo[${d.ppPokerId}].amount = ${d.amount}`);
@@ -1322,12 +1805,12 @@ function countNumericErrorsWithDetails(data: ParsedImportData): {
   }
   for (let i = 0; i < transactions.length; i++) {
     const t = transactions[i];
-    if (typeof t.chipsSent !== "number" || isNaN(t.chipsSent)) {
+    if (typeof t.chipsSent !== "number" || Number.isNaN(t.chipsSent)) {
       errors++;
       if (details.length < 10)
         details.push(`transactions[${i}].chipsSent = ${t.chipsSent}`);
     }
-    if (typeof t.creditSent !== "number" || isNaN(t.creditSent)) {
+    if (typeof t.creditSent !== "number" || Number.isNaN(t.creditSent)) {
       errors++;
       if (details.length < 10)
         details.push(`transactions[${i}].creditSent = ${t.creditSent}`);
@@ -1336,7 +1819,7 @@ function countNumericErrorsWithDetails(data: ParsedImportData): {
   for (const r of rakebacks) {
     if (
       typeof r.averageRakebackPercent !== "number" ||
-      isNaN(r.averageRakebackPercent)
+      Number.isNaN(r.averageRakebackPercent)
     ) {
       errors++;
       if (details.length < 10)
@@ -1344,7 +1827,7 @@ function countNumericErrorsWithDetails(data: ParsedImportData): {
           `rakebacks[${r.agentPpPokerId}].averageRakebackPercent = ${r.averageRakebackPercent}`,
         );
     }
-    if (typeof r.totalRt !== "number" || isNaN(r.totalRt)) {
+    if (typeof r.totalRt !== "number" || Number.isNaN(r.totalRt)) {
       errors++;
       if (details.length < 10)
         details.push(`rakebacks[${r.agentPpPokerId}].totalRt = ${r.totalRt}`);
@@ -1366,7 +1849,7 @@ function countDateErrorsWithDetails(data: ParsedImportData): {
   const sessions = data.sessions || [];
 
   for (const p of players) {
-    if (p.lastActiveAt && isNaN(Date.parse(p.lastActiveAt))) {
+    if (p.lastActiveAt && Number.isNaN(Date.parse(p.lastActiveAt))) {
       errors++;
       if (details.length < 10)
         details.push(
@@ -1376,14 +1859,14 @@ function countDateErrorsWithDetails(data: ParsedImportData): {
   }
   for (let i = 0; i < transactions.length; i++) {
     const t = transactions[i];
-    if (t.occurredAt && isNaN(Date.parse(t.occurredAt))) {
+    if (t.occurredAt && Number.isNaN(Date.parse(t.occurredAt))) {
       errors++;
       if (details.length < 10)
         details.push(`transactions[${i}].occurredAt = "${t.occurredAt}"`);
     }
   }
   for (const d of demonstrativo) {
-    if (d.occurredAt && isNaN(Date.parse(d.occurredAt))) {
+    if (d.occurredAt && Number.isNaN(Date.parse(d.occurredAt))) {
       errors++;
       if (details.length < 10)
         details.push(
@@ -1392,12 +1875,12 @@ function countDateErrorsWithDetails(data: ParsedImportData): {
     }
   }
   for (const s of sessions) {
-    if (s.startedAt && isNaN(Date.parse(s.startedAt))) {
+    if (s.startedAt && Number.isNaN(Date.parse(s.startedAt))) {
       errors++;
       if (details.length < 10)
         details.push(`sessions[${s.externalId}].startedAt = "${s.startedAt}"`);
     }
-    if (s.endedAt && isNaN(Date.parse(s.endedAt))) {
+    if (s.endedAt && Number.isNaN(Date.parse(s.endedAt))) {
       errors++;
       if (details.length < 10)
         details.push(`sessions[${s.externalId}].endedAt = "${s.endedAt}"`);
