@@ -1,0 +1,39 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Read(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Write(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Edit(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Glob(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Grep(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Read(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/.auto-claude/specs/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Write(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/.auto-claude/specs/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Edit(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/worktrees/tasks/003-add-path-traversal-protection-to-file-download-rou/.auto-claude/specs/003-add-path-traversal-protection-to-file-download-rou/**)",
+      "Read(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/**)",
+      "Write(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/**)",
+      "Edit(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/**)",
+      "Glob(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/**)",
+      "Grep(/Users/guilhermevarela/Documents/Projetos/Mid/.auto-claude/**)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__context7__resolve-library-id(*)",
+      "mcp__context7__get-library-docs(*)",
+      "mcp__graphiti-memory__search_nodes(*)",
+      "mcp__graphiti-memory__search_facts(*)",
+      "mcp__graphiti-memory__add_episode(*)",
+      "mcp__graphiti-memory__get_episodes(*)",
+      "mcp__graphiti-memory__get_entity_edge(*)"
+    ]
+  }
+}
