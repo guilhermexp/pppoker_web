@@ -84,7 +84,7 @@ export const pokerTransactionsRouter = createTRPCRouter({
           recipient:poker_players!poker_chip_transactions_recipient_player_id_fkey(id, nickname, memo_name, pppoker_id),
           session:poker_sessions!poker_chip_transactions_session_id_fkey(id, table_name, session_type)
         `,
-          { count: "exact" }
+          { count: "exact" },
         )
         .eq("team_id", teamId);
 
@@ -97,7 +97,7 @@ export const pokerTransactionsRouter = createTRPCRouter({
       if (q) {
         // Search in sender or recipient nickname/memo
         query = query.or(
-          `sender.nickname.ilike.%${q}%,sender.memo_name.ilike.%${q}%,recipient.nickname.ilike.%${q}%,recipient.memo_name.ilike.%${q}%`
+          `sender.nickname.ilike.%${q}%,sender.memo_name.ilike.%${q}%,recipient.nickname.ilike.%${q}%,recipient.memo_name.ilike.%${q}%`,
         );
       }
 
@@ -107,7 +107,7 @@ export const pokerTransactionsRouter = createTRPCRouter({
 
       if (playerId) {
         query = query.or(
-          `sender_player_id.eq.${playerId},recipient_player_id.eq.${playerId}`
+          `sender_player_id.eq.${playerId},recipient_player_id.eq.${playerId}`,
         );
       }
 
@@ -228,7 +228,7 @@ export const pokerTransactionsRouter = createTRPCRouter({
           sender:poker_players!poker_chip_transactions_sender_player_id_fkey(id, nickname, memo_name, pppoker_id),
           recipient:poker_players!poker_chip_transactions_recipient_player_id_fkey(id, nickname, memo_name, pppoker_id),
           session:poker_sessions!poker_chip_transactions_session_id_fkey(id, table_name, session_type, started_at)
-        `
+        `,
         )
         .eq("id", input.id)
         .eq("team_id", teamId)
@@ -298,8 +298,13 @@ export const pokerTransactionsRouter = createTRPCRouter({
   getStats: protectedProcedure
     .input(
       getPokerTransactionsSchema
-        .pick({ dateFrom: true, dateTo: true, playerId: true, includeDraft: true })
-        .optional()
+        .pick({
+          dateFrom: true,
+          dateTo: true,
+          playerId: true,
+          includeDraft: true,
+        })
+        .optional(),
     )
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
@@ -326,7 +331,9 @@ export const pokerTransactionsRouter = createTRPCRouter({
 
       let query = supabase
         .from("poker_chip_transactions")
-        .select("type, credit_sent, credit_redeemed, chips_sent, chips_redeemed, amount")
+        .select(
+          "type, credit_sent, credit_redeemed, chips_sent, chips_redeemed, amount",
+        )
         .eq("team_id", teamId);
 
       // Filter by committed imports if needed
@@ -344,7 +351,7 @@ export const pokerTransactionsRouter = createTRPCRouter({
 
       if (input?.playerId) {
         query = query.or(
-          `sender_player_id.eq.${input.playerId},recipient_player_id.eq.${input.playerId}`
+          `sender_player_id.eq.${input.playerId},recipient_player_id.eq.${input.playerId}`,
         );
       }
 
@@ -387,23 +394,104 @@ export const pokerTransactionsRouter = createTRPCRouter({
 
   /**
    * Delete a transaction
+   * Also updates the chip_balance of affected players
    */
   delete: protectedProcedure
     .input(deletePokerTransactionSchema)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
-      const { error } = await supabase
+      // First, get the transaction to know which players are affected
+      const { data: transaction, error: fetchError } = await supabase
+        .from("poker_chip_transactions")
+        .select("id, amount, sender_player_id, recipient_player_id")
+        .eq("id", input.id)
+        .eq("team_id", teamId)
+        .single();
+
+      if (fetchError) {
+        if (fetchError.code === "PGRST116") {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Transaction not found",
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: fetchError.message,
+        });
+      }
+
+      // Delete the transaction
+      const { error: deleteError } = await supabase
         .from("poker_chip_transactions")
         .delete()
         .eq("id", input.id)
         .eq("team_id", teamId);
 
-      if (error) {
+      if (deleteError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
+          message: deleteError.message,
         });
+      }
+
+      // Update chip_balance for affected players
+      // When a transaction is deleted, we need to reverse its effect on balances
+      const amount = transaction.amount ?? 0;
+
+      // Update sender's balance (add back the amount that was sent)
+      if (transaction.sender_player_id && amount !== 0) {
+        // Get current balance and update
+        const { data: sender, error: fetchSenderError } = await supabase
+          .from("poker_players")
+          .select("id, chip_balance")
+          .eq("id", transaction.sender_player_id)
+          .single();
+
+        if (!fetchSenderError && sender) {
+          const newBalance = (sender.chip_balance ?? 0) + amount;
+          const { error: senderError } = await supabase
+            .from("poker_players")
+            .update({
+              chip_balance: newBalance,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", transaction.sender_player_id);
+
+          if (senderError) {
+            console.error(
+              `Failed to update sender chip_balance after transaction delete: ${senderError.message}`,
+            );
+          }
+        }
+      }
+
+      // Update recipient's balance (subtract the amount that was received)
+      if (transaction.recipient_player_id && amount !== 0) {
+        // Get current balance and update
+        const { data: recipient, error: fetchRecipientError } = await supabase
+          .from("poker_players")
+          .select("id, chip_balance")
+          .eq("id", transaction.recipient_player_id)
+          .single();
+
+        if (!fetchRecipientError && recipient) {
+          const newBalance = (recipient.chip_balance ?? 0) - amount;
+          const { error: recipientError } = await supabase
+            .from("poker_players")
+            .update({
+              chip_balance: newBalance,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", transaction.recipient_player_id);
+
+          if (recipientError) {
+            console.error(
+              `Failed to update recipient chip_balance after transaction delete: ${recipientError.message}`,
+            );
+          }
+        }
       }
 
       return { success: true };
