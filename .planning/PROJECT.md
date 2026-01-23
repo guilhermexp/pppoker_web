@@ -27,15 +27,15 @@ A lógica de fechamento semanal (settlements) deve estar matematicamente correta
 
 ### Active
 
-<!-- Escopo desta auditoria -->
+<!-- Milestone 01 COMPLETE - 2026-01-22 -->
 
-- [ ] Mapear fluxo completo de UX: entrada na seção de clubes → adicionar planilha → validar → aprovar → iniciar fechamento → fechar semana completa
-- [ ] Auditar sistema de validação de planilhas (12+ regras): verificar se todas as regras estão corretas e completas
-- [ ] Auditar lógica de fechamento semanal: matemática dos settlements, cálculo de rake, saldos, transações
-- [ ] Verificar alinhamento com banco de dados: queries corretas, transações atômicas, consistência de dados
-- [ ] Identificar gaps e problemas: lógica quebrada, validações faltando, estados inconsistentes, bugs
-- [ ] Documentar toda a análise: fluxo completo, componentes envolvidos, queries do banco, lógica de negócio
-- [ ] Gerar relatório de recomendações: lista priorizada de correções necessárias, impacto, e plano de ação
+- [x] Mapear fluxo completo de UX: entrada na seção de clubes → adicionar planilha → validar → aprovar → iniciar fechamento → fechar semana completa — **COMPLETE (Phase 1)**
+- [x] Auditar sistema de validação de planilhas (12+ regras): verificar se todas as regras estão corretas e completas — **COMPLETE (Phase 2)**
+- [x] Auditar lógica de fechamento semanal: matemática dos settlements, cálculo de rake, saldos, transações — **COMPLETE (Phase 3)**
+- [x] Verificar alinhamento com banco de dados: queries corretas, transações atômicas, consistência de dados — **COMPLETE (Phase 4)**
+- [x] Identificar gaps e problemas: lógica quebrada, validações faltando, estados inconsistentes, bugs — **30 issues found**
+- [x] Documentar toda a análise: fluxo completo, componentes envolvidos, queries do banco, lógica de negócio — **~11,760 lines**
+- [x] Gerar relatório de recomendações: lista priorizada de correções necessárias, impacto, e plano de ação — **See FINAL-REPORT.md**
 
 ### Out of Scope
 
@@ -77,9 +77,26 @@ A lógica de fechamento semanal (settlements) deve estar matematicamente correta
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Priorizar fechamento semanal como core value | Matemática dos settlements é crítica - erros afetam dinheiro real dos usuários | — Pending |
-| Excluir análise de performance | Primeiro garantir que está correto, depois otimizar | — Pending |
-| Excluir módulos de League da auditoria | Reduzir escopo para focar em fluxo principal de clubes | — Pending |
+| Priorizar fechamento semanal como core value | Matemática dos settlements é crítica - erros afetam dinheiro real dos usuários | ✅ 12 P0 issues found in settlement pipeline |
+| Excluir análise de performance | Primeiro garantir que está correto, depois otimizar | ✅ Focus on correctness revealed critical bugs |
+| Excluir módulos de League da auditoria | Reduzir escopo para focar em fluxo principal de clubes | ✅ Completed in scope, identified 9 missing SU tables |
+
+## Milestone 01 Summary
+
+**Status:** ✅ COMPLETE (2026-01-22)
+
+| Metric | Value |
+|--------|-------|
+| Duration | ~12.5 hours |
+| Plans Executed | 10 |
+| Issues Found | 30 (12 P0, 8 P1, 6 P2, 4 P3-P4) |
+| Documentation | ~11,760 lines |
+
+**Critical Finding:** Settlement system is fundamentally broken. Uses `chip_balance` instead of `rake`, and field name bug causes all rakeback = $0.
+
+**Next Milestone:** Implementation Sprint 1 (P0 Fixes)
+
+See: `.planning/FINAL-REPORT.md` for full details.
 
 ---
-*Last updated: 2026-01-21 after initialization*
+*Last updated: 2026-01-22 after Milestone 01 completion*
