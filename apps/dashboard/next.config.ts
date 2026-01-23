@@ -55,7 +55,8 @@ const config = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self'",
+              // Allow connections to: self, API server, Supabase (auth, realtime, storage)
+              "connect-src 'self' http://localhost:* https://*.supabase.co wss://*.supabase.co",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
