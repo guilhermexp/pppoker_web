@@ -32,6 +32,7 @@ import { transactionTagsRouter } from "./transaction-tags";
 import { transactionsRouter } from "./transactions";
 import { userRouter } from "./user";
 import { widgetsRouter } from "./widgets";
+import { fastchipsRouter } from "./fastchips";
 import { pokerRouter } from "./poker";
 import { suRouter } from "./su";
 
@@ -70,6 +71,7 @@ export const appRouter = createTRPCRouter({
   widgets: widgetsRouter,
   poker: pokerRouter,
   su: suRouter,
+  fastchips: fastchipsRouter,
 });
 
 // export type definition of API

@@ -4589,3 +4589,399 @@ export const pokerTeamClubsRelations = relations(pokerTeamClubs, ({ one }) => ({
     relationName: "linkedTeamClub",
   }),
 }));
+
+// =============================================================================
+// FASTCHIPS (CHIPPIX) - ENUMS
+// =============================================================================
+
+export const fastchipsImportStatusEnum = pgEnum("fastchips_import_status", [
+  "pending",
+  "validating",
+  "validated",
+  "processing",
+  "completed",
+  "failed",
+  "cancelled",
+]);
+
+export const fastchipsOperationTypeEnum = pgEnum("fastchips_operation_type", [
+  "entrada",
+  "saida",
+]);
+
+export const fastchipsPurposeEnum = pgEnum("fastchips_purpose", [
+  "recebimento",
+  "pagamento",
+  "saque",
+  "servico",
+]);
+
+export const fastchipsMemberStatusEnum = pgEnum("fastchips_member_status", [
+  "active",
+  "inactive",
+]);
+
+export const fastchipsRestrictionEnum = pgEnum("fastchips_restriction", [
+  "auto_withdraw",
+  "blocked",
+]);
+
+// =============================================================================
+// FASTCHIPS (CHIPPIX) - TABLES
+// =============================================================================
+
+/**
+ * Fastchips Imports - Track import history
+ * Similar to poker_imports but for Fastchips/Chippix spreadsheets
+ */
+export const fastchipsImports = pgTable(
+  "fastchips_imports",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // File info
+    fileName: text("file_name").notNull(),
+    fileSize: integer("file_size"),
+
+    // Status
+    status: fastchipsImportStatusEnum().default("pending").notNull(),
+
+    // Period covered by import
+    periodStart: timestamp("period_start", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    periodEnd: timestamp("period_end", { withTimezone: true, mode: "string" }),
+
+    // Statistics
+    totalOperations: integer("total_operations").default(0),
+    totalMembers: integer("total_members").default(0),
+    newMembers: integer("new_members").default(0),
+
+    // Validation results
+    validationPassed: boolean("validation_passed").default(false),
+    validationErrors: jsonb("validation_errors"),
+    validationWarnings: jsonb("validation_warnings"),
+
+    // Processing
+    processedAt: timestamp("processed_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    processedById: uuid("processed_by_id"),
+    processingErrors: jsonb("processing_errors"),
+
+    // Raw data snapshot
+    rawData: jsonb("raw_data"),
+  },
+  (table) => [
+    // Indexes
+    index("fastchips_imports_team_id_idx").on(table.teamId),
+    index("fastchips_imports_status_idx").on(table.status),
+    index("fastchips_imports_created_at_idx").on(table.createdAt),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "fastchips_imports_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.processedById],
+      foreignColumns: [users.id],
+      name: "fastchips_imports_processed_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Fastchips imports can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Fastchips Members - Unique members/integrants
+ * Can be linked to poker_players via pppoker_id
+ */
+export const fastchipsMembers = pgTable(
+  "fastchips_members",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Identity
+    name: text("name").notNull(),
+
+    // Link to poker system (optional)
+    ppPokerId: text("pppoker_id"),
+    pokerPlayerId: uuid("poker_player_id"),
+
+    // Status
+    status: fastchipsMemberStatusEnum().default("active").notNull(),
+    restriction: fastchipsRestrictionEnum(),
+
+    // Metadata
+    linkedAt: timestamp("linked_at", { withTimezone: true, mode: "string" }),
+    totalLinkedAccounts: integer("total_linked_accounts").default(0),
+
+    // Notes
+    note: text("note"),
+
+    // Full-text search
+    fts: tsvector("fts").generatedAlwaysAs(
+      (): SQL =>
+        sql`to_tsvector('portuguese', coalesce(${sql.identifier("name")}, '') || ' ' || coalesce(${sql.identifier("pppoker_id")}, ''))`,
+    ),
+  },
+  (table) => [
+    // Unique constraint: name must be unique per team
+    unique("fastchips_members_name_team_id_key").on(table.name, table.teamId),
+
+    // Indexes
+    index("fastchips_members_team_id_idx").on(table.teamId),
+    index("fastchips_members_status_idx").on(table.status),
+    index("fastchips_members_pppoker_id_idx").on(table.ppPokerId),
+    index("fastchips_members_fts_idx").using("gin", table.fts),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "fastchips_members_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.pokerPlayerId],
+      foreignColumns: [pokerPlayers.id],
+      name: "fastchips_members_poker_player_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("Fastchips members can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Fastchips Operations - Individual transactions from spreadsheet
+ */
+export const fastchipsOperations = pgTable(
+  "fastchips_operations",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+    importId: uuid("import_id").notNull(),
+
+    // External identifiers from spreadsheet
+    externalId: text("external_id").notNull(), // 24 hex chars
+    paymentId: text("payment_id").notNull(),
+
+    // Timing
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "string" })
+      .notNull(),
+
+    // Operation classification
+    operationType: fastchipsOperationTypeEnum().notNull(),
+    purpose: fastchipsPurposeEnum().notNull(),
+
+    // Member info (denormalized for query performance)
+    memberId: uuid("member_id").notNull(),
+    memberName: text("member_name").notNull(),
+    ppPokerId: text("pppoker_id"),
+
+    // Financial amounts
+    grossAmount: numericCasted("gross_amount", {
+      precision: 14,
+      scale: 2,
+    }).notNull(),
+    netAmount: numericCasted("net_amount", {
+      precision: 14,
+      scale: 2,
+    }).notNull(),
+    feeRate: numericCasted("fee_rate", { precision: 5, scale: 2 })
+      .default(0)
+      .notNull(),
+    feeAmount: numericCasted("fee_amount", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+  },
+  (table) => [
+    // Unique constraint: external_id must be unique per team
+    unique("fastchips_operations_external_id_team_id_key").on(
+      table.externalId,
+      table.teamId,
+    ),
+
+    // Indexes
+    index("fastchips_operations_team_id_idx").on(table.teamId),
+    index("fastchips_operations_import_id_idx").on(table.importId),
+    index("fastchips_operations_member_id_idx").on(table.memberId),
+    index("fastchips_operations_occurred_at_idx").on(table.occurredAt),
+    index("fastchips_operations_operation_type_idx").on(table.operationType),
+    index("fastchips_operations_purpose_idx").on(table.purpose),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "fastchips_operations_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.importId],
+      foreignColumns: [fastchipsImports.id],
+      name: "fastchips_operations_import_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.memberId],
+      foreignColumns: [fastchipsMembers.id],
+      name: "fastchips_operations_member_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("Fastchips operations can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Fastchips Linked Accounts - Additional accounts linked to members (for UI display)
+ */
+export const fastchipsLinkedAccounts = pgTable(
+  "fastchips_linked_accounts",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+    memberId: uuid("member_id").notNull(),
+
+    // Account info
+    name: text("name").notNull(),
+    phone: text("phone"),
+
+    // Status
+    linkedAt: timestamp("linked_at", { withTimezone: true, mode: "string" }),
+    status: fastchipsMemberStatusEnum().default("active").notNull(),
+    restriction: fastchipsRestrictionEnum(),
+  },
+  (table) => [
+    // Indexes
+    index("fastchips_linked_accounts_team_id_idx").on(table.teamId),
+    index("fastchips_linked_accounts_member_id_idx").on(table.memberId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "fastchips_linked_accounts_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.memberId],
+      foreignColumns: [fastchipsMembers.id],
+      name: "fastchips_linked_accounts_member_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("Fastchips linked accounts can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+// =============================================================================
+// FASTCHIPS (CHIPPIX) - RELATIONS
+// =============================================================================
+
+export const fastchipsImportsRelations = relations(
+  fastchipsImports,
+  ({ one, many }) => ({
+    team: one(teams, {
+      fields: [fastchipsImports.teamId],
+      references: [teams.id],
+    }),
+    processedBy: one(users, {
+      fields: [fastchipsImports.processedById],
+      references: [users.id],
+    }),
+    operations: many(fastchipsOperations),
+  }),
+);
+
+export const fastchipsMembersRelations = relations(
+  fastchipsMembers,
+  ({ one, many }) => ({
+    team: one(teams, {
+      fields: [fastchipsMembers.teamId],
+      references: [teams.id],
+    }),
+    pokerPlayer: one(pokerPlayers, {
+      fields: [fastchipsMembers.pokerPlayerId],
+      references: [pokerPlayers.id],
+    }),
+    operations: many(fastchipsOperations),
+    linkedAccounts: many(fastchipsLinkedAccounts),
+  }),
+);
+
+export const fastchipsOperationsRelations = relations(
+  fastchipsOperations,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [fastchipsOperations.teamId],
+      references: [teams.id],
+    }),
+    import: one(fastchipsImports, {
+      fields: [fastchipsOperations.importId],
+      references: [fastchipsImports.id],
+    }),
+    member: one(fastchipsMembers, {
+      fields: [fastchipsOperations.memberId],
+      references: [fastchipsMembers.id],
+    }),
+  }),
+);
+
+export const fastchipsLinkedAccountsRelations = relations(
+  fastchipsLinkedAccounts,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [fastchipsLinkedAccounts.teamId],
+      references: [teams.id],
+    }),
+    member: one(fastchipsMembers, {
+      fields: [fastchipsLinkedAccounts.memberId],
+      references: [fastchipsMembers.id],
+    }),
+  }),
+);

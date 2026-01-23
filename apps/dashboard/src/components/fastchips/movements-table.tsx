@@ -2,6 +2,7 @@
 
 import { useFastchipsMovementParams } from "@/hooks/use-fastchips-movement-params";
 import { useI18n } from "@/locales/client";
+import { useTRPC } from "@/trpc/client";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import { Card, CardContent } from "@midpoker/ui/card";
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@midpoker/ui/select";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -22,11 +24,13 @@ import {
   TableHeader,
   TableRow,
 } from "@midpoker/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { format, subDays, subMonths, startOfMonth } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { fastChipsMovements } from "./movements-data";
 
 export function FastChipsMovementsTable() {
   const t = useI18n();
+  const trpc = useTRPC();
   const { fastchipsMovementId, setParams } = useFastchipsMovementParams();
   const [viewMode, setViewMode] = useState<"operations" | "withdraw_data">(
     "operations",
@@ -38,7 +42,64 @@ export function FastChipsMovementsTable() {
     setMounted(true);
   }, []);
 
-  const rows = useMemo(() => fastChipsMovements, []);
+  // Calculate date range filters
+  const dateFilters = useMemo(() => {
+    const now = new Date();
+    switch (dateRange) {
+      case "last_7_days":
+        return { startDate: subDays(now, 7).toISOString() };
+      case "this_month":
+        return { startDate: startOfMonth(now).toISOString() };
+      case "last_month":
+      default:
+        return { startDate: subMonths(now, 1).toISOString() };
+    }
+  }, [dateRange]);
+
+  // Fetch operations from tRPC
+  const { data, isLoading, error } = useQuery(
+    trpc.fastchips.operations.list.queryOptions({
+      pageSize: 50,
+      ...dateFilters,
+    })
+  );
+
+  // Fetch stats
+  const { data: statsData } = useQuery(
+    trpc.fastchips.operations.getStats.queryOptions(dateFilters)
+  );
+
+  // Map tRPC data to table format
+  const rows = useMemo(() => {
+    if (!data?.data) return [];
+    return data.data.map((op) => {
+      const occurredAt = new Date(op.occurredAt);
+      return {
+        id: op.id,
+        playerId: op.ppPokerId || "-",
+        date: format(occurredAt, "d/M/yy"),
+        time: format(occurredAt, "HH:mm"),
+        amount: `R$ ${(op.grossAmount / 100).toFixed(2).replace(".", ",")}`,
+        type: op.operationType === "entrada" ? "entry" : "exit",
+        status: "completed",
+        paymentId: op.paymentId || "-",
+        purpose: op.purpose,
+        grossAmount: `R$ ${(op.grossAmount / 100).toFixed(2).replace(".", ",")}`,
+        netAmount: `R$ ${(op.netAmount / 100).toFixed(2).replace(".", ",")}`,
+        fee: `R$ ${(op.feeAmount / 100).toFixed(2).replace(".", ",")}`,
+        payer: op.memberName,
+      };
+    });
+  }, [data]);
+
+  // Format currency
+  const formatCurrency = (value: number) =>
+    `R$ ${(value / 100).toFixed(2).replace(".", ",")}`;
+
+  // Calculate totals from stats
+  const totalEntries = statsData?.totalGrossEntry ?? 0;
+  const totalExits = statsData?.totalGrossExit ?? 0;
+  const balance = totalEntries - totalExits;
 
   return (
     <div className="space-y-5">
@@ -47,7 +108,7 @@ export function FastChipsMovementsTable() {
           <p className="text-xs text-muted-foreground">
             {t("fastchips.movimentacao.available")}
           </p>
-          <p className="text-2xl font-semibold">0,00</p>
+          <p className="text-2xl font-semibold">{formatCurrency(balance)}</p>
         </CardContent>
       </Card>
 
@@ -127,7 +188,7 @@ export function FastChipsMovementsTable() {
               <p className="text-xs text-muted-foreground">
                 {t("fastchips.movimentacao.total_entries")}
               </p>
-              <p className="text-lg font-semibold">R$ 0,00</p>
+              <p className="text-lg font-semibold">{formatCurrency(totalEntries)}</p>
             </div>
           </CardContent>
         </Card>
@@ -140,7 +201,7 @@ export function FastChipsMovementsTable() {
               <p className="text-xs text-muted-foreground">
                 {t("fastchips.movimentacao.total_exits")}
               </p>
-              <p className="text-lg font-semibold">R$ 0,00</p>
+              <p className="text-lg font-semibold">{formatCurrency(totalExits)}</p>
             </div>
           </CardContent>
         </Card>
@@ -171,52 +232,78 @@ export function FastChipsMovementsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((movement) => {
-              const isSelected = fastchipsMovementId === movement.id;
-              return (
-                <TableRow
-                  key={movement.id}
-                  className={`cursor-pointer hover:bg-accent/50 ${
-                    isSelected
-                      ? "bg-primary/5 outline outline-1 outline-primary/40"
-                      : "even:bg-muted/20"
-                  }`}
-                  onClick={() => setParams({ fastchipsMovementId: movement.id })}
-                >
-                  <TableCell>{movement.playerId}</TableCell>
-                  <TableCell>{movement.date}</TableCell>
-                  <TableCell>{movement.time}</TableCell>
-                  <TableCell>{movement.amount}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className={`border ${
-                        movement.type === "entry"
-                          ? "bg-sky-100 text-sky-700 border-sky-200"
-                          : "bg-amber-100 text-amber-700 border-amber-200"
-                      }`}
-                    >
-                      {movement.type === "entry"
-                        ? t("fastchips.movimentacao.type_entry")
-                        : t("fastchips.movimentacao.type_exit")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 border border-border text-muted-foreground"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setParams({ fastchipsMovementId: movement.id });
-                      }}
-                    >
-                      <Icons.ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
-              );
-            })}
+              ))
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Erro ao carregar operações
+                </TableCell>
+              </TableRow>
+            ) : rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Nenhuma operação encontrada. Importe uma planilha Fastchips para começar.
+                </TableCell>
+              </TableRow>
+            ) : (
+              rows.map((movement) => {
+                const isSelected = fastchipsMovementId === movement.id;
+                return (
+                  <TableRow
+                    key={movement.id}
+                    className={`cursor-pointer hover:bg-accent/50 ${
+                      isSelected
+                        ? "bg-primary/5 outline outline-1 outline-primary/40"
+                        : "even:bg-muted/20"
+                    }`}
+                    onClick={() => setParams({ fastchipsMovementId: movement.id })}
+                  >
+                    <TableCell>{movement.playerId}</TableCell>
+                    <TableCell>{movement.date}</TableCell>
+                    <TableCell>{movement.time}</TableCell>
+                    <TableCell>{movement.amount}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={`border ${
+                          movement.type === "entry"
+                            ? "bg-sky-100 text-sky-700 border-sky-200"
+                            : "bg-amber-100 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {movement.type === "entry"
+                          ? t("fastchips.movimentacao.type_entry")
+                          : t("fastchips.movimentacao.type_exit")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 border border-border text-muted-foreground"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setParams({ fastchipsMovementId: movement.id });
+                        }}
+                      >
+                        <Icons.ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>
