@@ -516,7 +516,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
 
       // 3.1 Get rake by agent AND super agent from poker_player_detailed (has agent info from spreadsheet)
       // This is more accurate than using poker_player_summary which depends on poker_players.agent_id
-      let rakeByAgentFromSpreadsheet: Record<
+      const rakeByAgentFromSpreadsheet: Record<
         string,
         { rake: number; playerCount: number }
       > = {};
@@ -677,7 +677,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           memo_name,
           type,
           chip_balance,
-          rakeback_percentage,
+          rakeback_percent,
           agent_id,
           agent:poker_players!poker_players_agent_id_fkey(id, nickname, memo_name)
         `,
@@ -689,7 +689,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
 
       const settlements = (players ?? []).map((player) => {
         const grossAmount = player.chip_balance ?? 0;
-        const rakebackPercent = player.rakeback_percentage ?? 0;
+        const rakebackPercent = player.rakeback_percent ?? 0;
         const rakebackAmount =
           grossAmount > 0 ? (grossAmount * rakebackPercent) / 100 : 0;
         const netAmount = grossAmount - rakebackAmount;
@@ -852,7 +852,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           memo_name,
           type,
           chip_balance,
-          rakeback_percentage,
+          rakeback_percent,
           agent_id,
           agent:poker_players!poker_players_agent_id_fkey(id, nickname, memo_name)
         `,
@@ -872,7 +872,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
       // Calculate settlement preview for each player
       const settlements = (players ?? []).map((player) => {
         const grossAmount = player.chip_balance ?? 0;
-        const rakebackPercent = player.rakeback_percentage ?? 0;
+        const rakebackPercent = player.rakeback_percent ?? 0;
         const rakebackAmount =
           grossAmount > 0 ? (grossAmount * rakebackPercent) / 100 : 0;
         const netAmount = grossAmount - rakebackAmount;
@@ -1004,7 +1004,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
       // Get all players with non-zero chip balance
       const { data: players, error: playersError } = await supabase
         .from("poker_players")
-        .select("id, nickname, chip_balance, agent_id, rakeback_percentage")
+        .select("id, nickname, chip_balance, agent_id, rakeback_percent")
         .eq("team_id", teamId)
         .eq("status", "active")
         .neq("chip_balance", 0);
@@ -1035,7 +1035,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
 
           // Use override % if exists, otherwise use player's configured %
           const rakebackPercent =
-            agentOverride?.rakebackPercent ?? player.rakeback_percentage ?? 0;
+            agentOverride?.rakebackPercent ?? player.rakeback_percent ?? 0;
 
           const rakebackAmount =
             grossAmount > 0 ? (grossAmount * rakebackPercent) / 100 : 0;

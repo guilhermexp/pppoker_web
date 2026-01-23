@@ -11,6 +11,15 @@ import {
 } from "../../../schemas/poker/settlements";
 import { createTRPCRouter, protectedProcedure } from "../../init";
 
+// Valid settlement status transitions
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  pending: ["partial", "completed", "cancelled"],
+  partial: ["completed", "cancelled"],
+  completed: ["disputed"],
+  disputed: ["completed", "cancelled"],
+  cancelled: [], // terminal state - no transitions allowed
+};
+
 export const pokerSettlementsRouter = createTRPCRouter({
   /**
    * Get poker settlements with pagination and filtering
@@ -37,8 +46,8 @@ export const pokerSettlementsRouter = createTRPCRouter({
         .select(
           `
           *,
-          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name, rakeback_percentage),
-          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name, rakeback_percentage)
+          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name, rakeback_percent),
+          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name, rakeback_percent)
         `,
           { count: "exact" },
         )
@@ -109,7 +118,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               id: settlement.player.id,
               nickname: settlement.player.nickname,
               memoName: settlement.player.memo_name,
-              rakebackPercent: settlement.player.rakeback_percentage ?? 0,
+              rakebackPercent: settlement.player.rakeback_percent ?? 0,
             }
           : null,
         agent: settlement.agent
@@ -117,7 +126,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               id: settlement.agent.id,
               nickname: settlement.agent.nickname,
               memoName: settlement.agent.memo_name,
-              rakebackPercent: settlement.agent.rakeback_percentage ?? 0,
+              rakebackPercent: settlement.agent.rakeback_percent ?? 0,
             }
           : null,
       }));
@@ -146,8 +155,8 @@ export const pokerSettlementsRouter = createTRPCRouter({
         .select(
           `
           *,
-          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name, pppoker_id, rakeback_percentage),
-          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name, pppoker_id, rakeback_percentage)
+          player:poker_players!poker_settlements_player_id_fkey(id, nickname, memo_name, pppoker_id, rakeback_percent),
+          agent:poker_players!poker_settlements_agent_id_fkey(id, nickname, memo_name, pppoker_id, rakeback_percent)
         `,
         )
         .eq("id", input.id)
@@ -189,7 +198,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               nickname: data.player.nickname,
               memoName: data.player.memo_name,
               ppPokerId: data.player.pppoker_id,
-              rakebackPercent: data.player.rakeback_percentage ?? 0,
+              rakebackPercent: data.player.rakeback_percent ?? 0,
             }
           : null,
         agent: data.agent
@@ -198,7 +207,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
               nickname: data.agent.nickname,
               memoName: data.agent.memo_name,
               ppPokerId: data.agent.pppoker_id,
-              rakebackPercent: data.agent.rakeback_percentage ?? 0,
+              rakebackPercent: data.agent.rakeback_percent ?? 0,
             }
           : null,
       };
@@ -251,6 +260,39 @@ export const pokerSettlementsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
+      // First, fetch the current settlement to validate status transition
+      const { data: currentSettlement, error: fetchError } = await supabase
+        .from("poker_settlements")
+        .select("id, status")
+        .eq("id", input.id)
+        .eq("team_id", teamId)
+        .single();
+
+      if (fetchError) {
+        if (fetchError.code === "PGRST116") {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Settlement not found",
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: fetchError.message,
+        });
+      }
+
+      // Validate status transition
+      const currentStatus = currentSettlement.status;
+      const newStatus = input.status;
+      const allowedTransitions = VALID_STATUS_TRANSITIONS[currentStatus] ?? [];
+
+      if (!allowedTransitions.includes(newStatus)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Invalid status transition: cannot change from '${currentStatus}' to '${newStatus}'. Allowed transitions: ${allowedTransitions.length > 0 ? allowedTransitions.join(", ") : "none (terminal state)"}`,
+        });
+      }
+
       const { data, error } = await supabase
         .from("poker_settlements")
         .update({
@@ -280,12 +322,45 @@ export const pokerSettlementsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
+      // First, fetch the settlement to validate the paid amount
+      const { data: settlement, error: fetchError } = await supabase
+        .from("poker_settlements")
+        .select("id, status, net_amount, paid_amount")
+        .eq("id", input.id)
+        .eq("team_id", teamId)
+        .single();
+
+      if (fetchError) {
+        if (fetchError.code === "PGRST116") {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Settlement not found",
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: fetchError.message,
+        });
+      }
+
+      // Validate that paid amount doesn't exceed net amount
+      const netAmount = Math.abs(settlement.net_amount ?? 0);
+      if (input.paidAmount > netAmount) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Paid amount (${input.paidAmount}) cannot exceed net amount (${netAmount})`,
+        });
+      }
+
+      // Determine status based on payment
+      const newStatus = input.paidAmount >= netAmount ? "completed" : "partial";
+
       const { data, error } = await supabase
         .from("poker_settlements")
         .update({
           paid_amount: input.paidAmount,
           paid_at: input.paidAt ?? new Date().toISOString(),
-          status: "completed",
+          status: newStatus,
           updated_at: new Date().toISOString(),
         })
         .eq("id", input.id)
@@ -310,6 +385,44 @@ export const pokerSettlementsRouter = createTRPCRouter({
     .input(deletePokerSettlementSchema)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
+
+      // First, fetch the settlement to check if it can be deleted
+      const { data: settlement, error: fetchError } = await supabase
+        .from("poker_settlements")
+        .select("id, status, paid_amount")
+        .eq("id", input.id)
+        .eq("team_id", teamId)
+        .single();
+
+      if (fetchError) {
+        if (fetchError.code === "PGRST116") {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Settlement not found",
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: fetchError.message,
+        });
+      }
+
+      // Prevent deletion of completed settlements or settlements with payments
+      if (settlement.status === "completed") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Cannot delete a completed settlement. Change status to cancelled first if needed.",
+        });
+      }
+
+      if ((settlement.paid_amount ?? 0) > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Cannot delete a settlement with recorded payments. Reverse the payment first.",
+        });
+      }
 
       const { error } = await supabase
         .from("poker_settlements")
@@ -382,7 +495,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
           periodEnd: z.string().optional(),
           note: z.string().optional(),
         })
-        .optional()
+        .optional(),
     )
     .mutation(async ({ input, ctx: { teamId, userId } }) => {
       const supabase = await createAdminClient();
@@ -397,7 +510,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
       // Get all players with non-zero chip balance
       const { data: players, error: playersError } = await supabase
         .from("poker_players")
-        .select("id, nickname, chip_balance, agent_id, rakeback_percentage")
+        .select("id, nickname, chip_balance, agent_id, rakeback_percent")
         .eq("team_id", teamId)
         .eq("status", "active")
         .neq("chip_balance", 0);
@@ -422,7 +535,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         const grossAmount = player.chip_balance ?? 0;
         const rakebackAmount =
           grossAmount > 0
-            ? (grossAmount * (player.rakeback_percentage ?? 0)) / 100
+            ? (grossAmount * (player.rakeback_percent ?? 0)) / 100
             : 0;
         const netAmount = grossAmount - rakebackAmount;
 
