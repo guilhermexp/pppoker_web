@@ -9,6 +9,7 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import type { Context } from "hono";
 import superjson from "superjson";
 import { withPrimaryReadAfterWrite } from "./middleware/primary-read-after-write";
+import { withRateLimiting } from "./middleware/rate-limiting";
 import { withTeamPermission } from "./middleware/team-permission";
 
 type TRPCContext = {
@@ -60,30 +61,11 @@ const withTeamPermissionMiddleware = t.middleware(async (opts) => {
   });
 });
 
-// Rate limiting middleware - protects against abuse
-// Uses in-memory store with sliding window (10 min, 100 requests per user)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-const withRateLimiting = t.middleware(async (opts) => {
-  const userId = opts.ctx.session?.user?.id ?? "anonymous";
-  const now = Date.now();
-  const windowMs = 10 * 60 * 1000; // 10 minutes
-  const limit = 1000; // Increased for development
-
-  const entry = rateLimitMap.get(userId);
-
-  if (!entry || entry.resetAt < now) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + windowMs });
-  } else if (entry.count >= limit) {
-    throw new TRPCError({
-      code: "TOO_MANY_REQUESTS",
-      message: "Rate limit exceeded. Try again later.",
-    });
-  } else {
-    entry.count++;
-  }
-
-  return opts.next();
+const withRateLimitingMiddleware = t.middleware(async (opts) => {
+  return withRateLimiting({
+    ctx: opts.ctx,
+    next: opts.next,
+  });
 });
 
 export const publicProcedure = t.procedure.use(withPrimaryDbMiddleware);
@@ -91,7 +73,7 @@ export const publicProcedure = t.procedure.use(withPrimaryDbMiddleware);
 // Procedure that only requires authentication but not team membership
 // Used for endpoints that need to work for new users without a team
 export const authProcedure = t.procedure
-  .use(withRateLimiting)
+  .use(withRateLimitingMiddleware)
   .use(withPrimaryDbMiddleware)
   .use(async (opts) => {
     const { session } = opts.ctx;
@@ -111,7 +93,7 @@ export const authProcedure = t.procedure
   });
 
 export const protectedProcedure = t.procedure
-  .use(withRateLimiting)
+  .use(withRateLimitingMiddleware)
   .use(withTeamPermissionMiddleware) // NOTE: This is needed to ensure that the teamId is set in the context
   .use(withPrimaryDbMiddleware)
   .use(async (opts) => {
