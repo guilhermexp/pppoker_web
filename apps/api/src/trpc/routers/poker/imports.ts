@@ -11,6 +11,90 @@ import {
 } from "../../../schemas/poker/imports";
 import { createTRPCRouter, protectedProcedure } from "../../init";
 
+/**
+ * Classifies a transaction based on its characteristics.
+ * Available types (from pokerTransactionTypeEnum):
+ * - buy_in: Player buying chips to enter a game
+ * - cash_out: Player cashing out chips
+ * - credit_given: Agent giving credit to player
+ * - credit_received: Agent receiving credit back from player
+ * - credit_paid: Credit being paid/settled
+ * - rake: Rake collected from sessions
+ * - agent_commission: Commission paid to agent
+ * - rakeback: Rakeback paid to player
+ * - jackpot: Jackpot winnings
+ * - adjustment: Manual adjustments
+ * - transfer_in: Chips/credit transferred in
+ * - transfer_out: Chips/credit transferred out
+ */
+function classifyTransactionType(tx: {
+  creditSent?: number;
+  creditRedeemed?: number;
+  creditLeftClub?: number;
+  chipsSent?: number;
+  chipsRedeemed?: number;
+  chipsLeftClub?: number;
+  ticketSent?: number;
+  ticketRedeemed?: number;
+  ticketExpired?: number;
+  senderNickname?: string;
+  recipientNickname?: string;
+}): string {
+  const creditSent = tx.creditSent ?? 0;
+  const creditRedeemed = tx.creditRedeemed ?? 0;
+  const creditLeftClub = tx.creditLeftClub ?? 0;
+  const chipsSent = tx.chipsSent ?? 0;
+  const chipsRedeemed = tx.chipsRedeemed ?? 0;
+  const chipsLeftClub = tx.chipsLeftClub ?? 0;
+  const ticketSent = tx.ticketSent ?? 0;
+  const ticketRedeemed = tx.ticketRedeemed ?? 0;
+
+  // Credit-based transactions
+  if (creditSent > 0 && creditRedeemed === 0) {
+    return "credit_given"; // Agent giving credit
+  }
+  if (creditRedeemed > 0 && creditSent === 0) {
+    return "credit_received"; // Agent receiving credit back
+  }
+  if (creditLeftClub > 0) {
+    return "credit_paid"; // Credit being settled when leaving club
+  }
+
+  // Chip-based transactions
+  if (chipsSent > 0 && chipsRedeemed === 0) {
+    // Could be buy-in or transfer depending on context
+    // If there's a ticket, it's likely a tournament buy-in
+    if (ticketSent > 0 || ticketRedeemed > 0) {
+      return "buy_in";
+    }
+    return "transfer_in"; // Chips being sent to player
+  }
+  if (chipsRedeemed > 0 && chipsSent === 0) {
+    // Could be cash-out or transfer out
+    if (chipsLeftClub > 0) {
+      return "cash_out"; // Cashing out when leaving club
+    }
+    return "transfer_out"; // Chips being redeemed
+  }
+
+  // Mixed transactions (both sent and redeemed)
+  if (chipsSent > 0 && chipsRedeemed > 0) {
+    // Net positive = transfer in, net negative = transfer out
+    return chipsSent > chipsRedeemed ? "transfer_in" : "transfer_out";
+  }
+  if (creditSent > 0 && creditRedeemed > 0) {
+    return creditSent > creditRedeemed ? "credit_given" : "credit_received";
+  }
+
+  // Ticket-only transactions
+  if (ticketSent > 0 || ticketRedeemed > 0) {
+    return "buy_in"; // Tickets are typically for tournament entry
+  }
+
+  // Default fallback
+  return "adjustment";
+}
+
 export const pokerImportsRouter = createTRPCRouter({
   /**
    * Get poker imports with pagination
@@ -860,11 +944,14 @@ export const pokerImportsRouter = createTRPCRouter({
               const occurredAt = parseTimestamp(tx.occurredAt);
               if (!occurredAt) return null; // Skip invalid
 
+              // Determine transaction type based on the values
+              const transactionType = classifyTransactionType(tx);
+
               return {
                 team_id: teamId,
                 import_id: importId,
                 occurred_at: occurredAt,
-                type: tx.creditSent ? "credit_given" : "transfer_in",
+                type: transactionType,
                 sender_club_id: tx.senderClubId ?? null,
                 sender_player_id: tx.senderPlayerId
                   ? playerIdMap.get(tx.senderPlayerId)
