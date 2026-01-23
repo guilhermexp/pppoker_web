@@ -15,7 +15,8 @@
     "./chat-feedback-cache": "./src/chat-feedback-cache.ts",
     "./suggested-actions-cache": "./src/suggested-actions-cache.ts",
     "./widget-preferences-cache": "./src/widget-preferences-cache.ts",
-    "./poker-widget-preferences-cache": "./src/poker-widget-preferences-cache.ts"
+    "./poker-widget-preferences-cache": "./src/poker-widget-preferences-cache.ts",
+    "./rate-limit-cache": "./src/rate-limit-cache.ts"
   },
   "dependencies": {
     "redis": "^5.9.0",
