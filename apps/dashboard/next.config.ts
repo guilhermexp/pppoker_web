@@ -52,9 +52,9 @@ const config = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https:",
-              "font-src 'self' data:",
+              "font-src 'self' data: https://fonts.gstatic.com",
               // Allow connections to: self, API server, Supabase (auth, realtime, storage)
               "connect-src 'self' http://localhost:* https://*.supabase.co wss://*.supabase.co",
               "frame-ancestors 'none'",
