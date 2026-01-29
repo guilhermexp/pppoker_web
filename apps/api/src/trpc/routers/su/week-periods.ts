@@ -101,6 +101,16 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         });
       }
 
+      // Fetch completed imports for this period (same approach as dashboard analytics)
+      const { data: imports } = await supabase
+        .from("poker_su_imports")
+        .select("id")
+        .eq("team_id", teamId)
+        .eq("status", "completed")
+        .eq("week_period_id", weekPeriod.id);
+
+      const importIds = imports?.map((i) => i.id) ?? [];
+
       // Fetch league summaries for this period
       const { data: summaries, error: summariesError } = await supabase
         .from("poker_su_league_summary")
@@ -116,19 +126,24 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         });
       }
 
-      // Fetch games for this period
-      const { data: games, error: gamesError } = await supabase
-        .from("poker_su_games")
-        .select("*")
-        .eq("team_id", teamId)
-        .eq("week_period_id", weekPeriod.id)
-        .order("started_at", { ascending: false });
+      // Fetch games via import_ids (same approach as dashboard to ensure consistency)
+      let games: any[] = [];
+      if (importIds.length > 0) {
+        const { data: gamesData, error: gamesError } = await supabase
+          .from("poker_su_games")
+          .select("*")
+          .eq("team_id", teamId)
+          .in("import_id", importIds)
+          .order("started_at", { ascending: false })
+          .limit(50000);
 
-      if (gamesError) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch games",
-        });
+        if (gamesError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch games",
+          });
+        }
+        games = gamesData ?? [];
       }
 
       // Fetch existing settlements for this period
@@ -174,6 +189,81 @@ export const suWeekPeriodsRouter = createTRPCRouter({
             Number(s.ppsr_ganhos_jogador || 0),
           0,
         ) ?? 0;
+
+      // PPST/PPSR breakdown
+      const totalTaxaPPST =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppst_ganhos_liga_taxa || 0),
+          0,
+        ) ?? 0;
+
+      const totalTaxaPPSR =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppsr_ganhos_liga_taxa || 0),
+          0,
+        ) ?? 0;
+
+      const totalPlayerWinningsPPST =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppst_ganhos_jogador || 0),
+          0,
+        ) ?? 0;
+
+      const totalPlayerWinningsPPSR =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppsr_ganhos_jogador || 0),
+          0,
+        ) ?? 0;
+
+      // Leagues with PPST/PPSR activity
+      const leaguesWithPPST = new Set(
+        summaries
+          ?.filter((s) => Number(s.ppst_ganhos_liga_taxa ?? 0) > 0)
+          .map((s) => s.liga_id),
+      ).size;
+
+      const leaguesWithPPSR = new Set(
+        summaries
+          ?.filter((s) => Number(s.ppsr_ganhos_liga_taxa ?? 0) > 0)
+          .map((s) => s.liga_id),
+      ).size;
+
+      // Overlay calculation from individual PPST games
+      let overlayCount = 0;
+      let overlayTotal = 0;
+
+      for (const game of ppstGames) {
+        const gtd = Number(game.premiacao_garantida ?? 0);
+        if (gtd <= 0) continue;
+        const buyinLiquido = Number(game.total_buyin ?? 0) - Number(game.total_taxa ?? 0);
+        const resultado = buyinLiquido - gtd;
+        if (resultado < 0) {
+          overlayCount++;
+          overlayTotal += resultado;
+        }
+      }
+
+      // Game variant distribution
+      const variantCountMap = new Map<
+        string,
+        { variant: string; type: string; count: number }
+      >();
+      for (const game of games ?? []) {
+        const key = `${game.game_type}:${game.game_variant}`;
+        const existing = variantCountMap.get(key);
+        if (existing) {
+          existing.count++;
+        } else {
+          variantCountMap.set(key, {
+            variant: game.game_variant,
+            type: game.game_type,
+            count: 1,
+          });
+        }
+      }
+      const gameVariantDistribution = Array.from(
+        variantCountMap.values(),
+      ).sort((a, b) => b.count - a.count);
 
       // Calculate preview settlements (one per liga)
       const previewSettlements =
@@ -221,6 +311,8 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         existingSettlements: existingSettlements ?? [],
         stats: {
           totalLeagues: summaries?.length ?? 0,
+          leaguesWithPPST,
+          leaguesWithPPSR,
           totalGamesPPST: ppstGames.length,
           totalGamesPPSR: ppsrGames.length,
           totalPlayersPPST: ppstGames.reduce(
@@ -233,7 +325,14 @@ export const suWeekPeriodsRouter = createTRPCRouter({
           ),
           totalLeagueFee,
           totalGapGuaranteed,
+          overlayCount,
+          overlayTotal,
           totalPlayerWinnings,
+          totalTaxaPPST,
+          totalTaxaPPSR,
+          totalPlayerWinningsPPST,
+          totalPlayerWinningsPPSR,
+          gameVariantDistribution,
         },
         settlementsSummary: {
           count: previewSettlements.length,
@@ -311,15 +410,30 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         });
       }
 
-      // Get games stats
-      const { data: games } = await supabase
-        .from("poker_su_games")
-        .select("game_type, player_count")
+      // Get completed imports for this period
+      const { data: closeImports } = await supabase
+        .from("poker_su_imports")
+        .select("id")
         .eq("team_id", teamId)
+        .eq("status", "completed")
         .eq("week_period_id", weekPeriod.id);
 
-      const ppstGames = games?.filter((g) => g.game_type === "ppst") ?? [];
-      const ppsrGames = games?.filter((g) => g.game_type === "ppsr") ?? [];
+      const closeImportIds = closeImports?.map((i) => i.id) ?? [];
+
+      // Get games stats via import_ids (consistent with dashboard)
+      let games: any[] = [];
+      if (closeImportIds.length > 0) {
+        const { data: gamesData } = await supabase
+          .from("poker_su_games")
+          .select("game_type, player_count")
+          .eq("team_id", teamId)
+          .in("import_id", closeImportIds)
+          .limit(50000);
+        games = gamesData ?? [];
+      }
+
+      const ppstGames = games.filter((g) => g.game_type === "ppst");
+      const ppsrGames = games.filter((g) => g.game_type === "ppsr");
 
       // Create settlements for each liga
       let settlementsCreated = 0;

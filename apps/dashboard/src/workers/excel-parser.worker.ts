@@ -686,22 +686,7 @@ function parseJogosPPSTSheet(
       continue;
     }
 
-    // DEBUG: Log todas as linhas que parecem ser totais
     const rowLower = rowStr.map((s) => s?.toLowerCase() || "");
-    if (rowLower.some((cell) => cell.includes("total"))) {
-      console.log(
-        "DEBUG TOTAL ROW:",
-        JSON.stringify({
-          rowIndex: i,
-          row: row,
-          rowStr: rowStr,
-          col5: rowStr[5],
-          col8: rowStr[8],
-          currentJogoExists: !!currentJogo,
-          currentJogoMeta: currentJogo?.metadata?.nomeMesa,
-        }),
-      );
-    }
 
     // Detecta "Liga Total" - pode estar na coluna 5 (nome mesa) ou 8 (ranking)
     const isLigaTotal =

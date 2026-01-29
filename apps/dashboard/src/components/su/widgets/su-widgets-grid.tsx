@@ -60,6 +60,14 @@ function TotalLeaguesWidget({ data }: { data: any }) {
 }
 
 function TotalGamesPPSTWidget({ data }: { data: any }) {
+  const byType = data?.gamesPPSTByType ?? {};
+  const breakdown: Array<{ label: string; value: number }> = [];
+  if (byType.nlh) breakdown.push({ label: "NLH", value: byType.nlh });
+  if (byType.spinup) breakdown.push({ label: "SpinUp", value: byType.spinup });
+  if (byType.pko) breakdown.push({ label: "PKO", value: byType.pko });
+  if (byType.mko) breakdown.push({ label: "MKO", value: byType.mko });
+  if (byType.sat) breakdown.push({ label: "SAT", value: byType.sat });
+
   return (
     <SUStatCard
       title="Jogos PPST"
@@ -67,20 +75,28 @@ function TotalGamesPPSTWidget({ data }: { data: any }) {
       description="Total de torneios"
       action="Ver jogos"
       actionHref="/su/jogos?type=ppst"
-      breakdown={[
-        { label: "NLH", value: data?.gamesPPSTByType?.nlh ?? 0 },
-        { label: "SpinUp", value: data?.gamesPPSTByType?.spinup ?? 0 },
-        { label: "PKO/MKO", value: data?.gamesPPSTByType?.knockout ?? 0 },
-      ]}
+      breakdown={breakdown}
     >
       <h2 className="text-2xl font-normal mb-2">
         {formatNumber(data?.totalGamesPPST ?? 0)}
       </h2>
+      <p className="text-xs text-muted-foreground">
+        {formatNumber(data?.totalPlayersPPST ?? 0)} jogadores
+      </p>
     </SUStatCard>
   );
 }
 
 function TotalGamesPPSRWidget({ data }: { data: any }) {
+  const byType = data?.gamesPPSRByType ?? {};
+  const breakdown: Array<{ label: string; value: number }> = [];
+  if (byType.nlh) breakdown.push({ label: "NLH", value: byType.nlh });
+  if (byType.plo4) breakdown.push({ label: "PLO4", value: byType.plo4 });
+  if (byType.plo5) breakdown.push({ label: "PLO5", value: byType.plo5 });
+  if (byType.plo6) breakdown.push({ label: "PLO6", value: byType.plo6 });
+  if (byType.ofc) breakdown.push({ label: "OFC", value: byType.ofc });
+  if (byType.other) breakdown.push({ label: "Outros", value: byType.other });
+
   return (
     <SUStatCard
       title="Jogos PPSR"
@@ -88,15 +104,14 @@ function TotalGamesPPSRWidget({ data }: { data: any }) {
       description="Total de cash games"
       action="Ver jogos"
       actionHref="/su/jogos?type=ppsr"
-      breakdown={[
-        { label: "NLH", value: data?.gamesPPSRByType?.nlh ?? 0 },
-        { label: "PLO", value: data?.gamesPPSRByType?.plo ?? 0 },
-        { label: "Outros", value: data?.gamesPPSRByType?.other ?? 0 },
-      ]}
+      breakdown={breakdown}
     >
       <h2 className="text-2xl font-normal mb-2">
         {formatNumber(data?.totalGamesPPSR ?? 0)}
       </h2>
+      <p className="text-xs text-muted-foreground">
+        {formatNumber(data?.totalPlayersPPSR ?? 0)} jogadores
+      </p>
     </SUStatCard>
   );
 }
@@ -129,27 +144,33 @@ function LeagueEarningsWidget({ data }: { data: any }) {
 
 function GapGuaranteedWidget({ data }: { data: any }) {
   const gapTotal = data?.gapGuaranteedTotal ?? 0;
-  const isNegative = gapTotal < 0;
+  const overlayTotal = Math.abs(data?.overlayTotal ?? 0);
+  const overlayCount = data?.overlayCount ?? 0;
+  const gamesWithGTD = data?.gamesWithGTD ?? 0;
 
   return (
     <SUStatCard
-      title="Gap Garantido"
+      title="Gap / Overlay"
       icon={<Icons.TrendingDown className="size-4" />}
-      description="Overlay de premiação garantida"
+      description="Gap garantido e overlay dos torneios"
       breakdown={[
-        { label: "Torneios com gap", value: data?.gamesWithGap ?? 0 },
         {
-          label: "Maior gap",
-          value: formatCurrency(data?.maxGap ?? 0),
+          label: `Overlay (${overlayCount} torneios)`,
+          value: formatCurrency(overlayTotal),
           color: "red" as const,
         },
+        {
+          label: "Gap Garantido",
+          value: formatCurrency(gapTotal),
+          color: gapTotal > 0 ? ("red" as const) : ("green" as const),
+        },
+        { label: "Torneios com GTD", value: formatNumber(gamesWithGTD) },
       ]}
     >
-      <h2
-        className={`text-2xl font-normal mb-2 ${isNegative ? "text-red-500" : "text-green-500"}`}
-      >
-        {formatCurrency(gapTotal)}
+      <h2 className="text-2xl font-normal mb-2 text-red-500">
+        {formatCurrency(overlayTotal)}
       </h2>
+      <p className="text-xs text-muted-foreground">overlay total</p>
     </SUStatCard>
   );
 }
@@ -238,7 +259,7 @@ function TopLeaguesWidget({ data }: { data: any }) {
       }))}
     >
       <h2 className="text-2xl font-normal mb-2">
-        {topLeagues.length} ligas ativas
+        Top {Math.min(topLeagues.length, 3)}
       </h2>
     </SUStatCard>
   );

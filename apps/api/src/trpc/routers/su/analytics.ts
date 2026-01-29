@@ -78,12 +78,12 @@ export const suAnalyticsRouter = createTRPCRouter({
           leagueEarningsPPST: 0,
           leagueEarningsPPSR: 0,
           gapGuaranteedTotal: 0,
-          gamesWithGap: 0,
-          maxGap: 0,
+          overlayCount: 0,
+          overlayTotal: 0,
+          gamesWithGTD: 0,
           playerWinningsTotal: 0,
           playerWinningsPPST: 0,
           playerWinningsPPSR: 0,
-          totalGTD: 0,
           leaguesWithPPST: 0,
           leaguesWithPPSR: 0,
           topLeagues: [] as Array<{
@@ -91,8 +91,8 @@ export const suAnalyticsRouter = createTRPCRouter({
             ligaNome: string;
             totalFee: number;
           }>,
-          gamesPPSTByType: { nlh: 0, spinup: 0, knockout: 0 },
-          gamesPPSRByType: { nlh: 0, plo: 0, other: 0 },
+          gamesPPSTByType: { nlh: 0, spinup: 0, pko: 0, mko: 0, sat: 0 },
+          gamesPPSRByType: { nlh: 0, plo4: 0, plo5: 0, plo6: 0, ofc: 0, other: 0 },
         };
       }
 
@@ -110,19 +110,75 @@ export const suAnalyticsRouter = createTRPCRouter({
         });
       }
 
-      // Step 3: Get games for these imports
-      const { data: games, error: gamesError } = await supabase
-        .from("poker_su_games")
-        .select("game_type, game_variant, player_count")
-        .eq("team_id", teamId)
-        .in("import_id", importIds);
+      // Step 3: Get game counts and breakdowns (parallel queries to avoid 1000-row default limit)
+      const [
+        { count: countPPST },
+        { count: countPPSR },
+        { data: ppstVariants },
+        { data: ppsrVariants },
+        { data: ppstPlayerData },
+        { data: ppsrPlayerData },
+        { data: gtdGames },
+      ] = await Promise.all([
+        // Total PPST count
+        supabase
+          .from("poker_su_games")
+          .select("*", { count: "exact", head: true })
+          .eq("team_id", teamId)
+          .eq("game_type", "ppst")
+          .in("import_id", importIds),
+        // Total PPSR count
+        supabase
+          .from("poker_su_games")
+          .select("*", { count: "exact", head: true })
+          .eq("team_id", teamId)
+          .eq("game_type", "ppsr")
+          .in("import_id", importIds),
+        // PPST variant breakdown
+        supabase
+          .from("poker_su_games")
+          .select("game_variant")
+          .eq("team_id", teamId)
+          .eq("game_type", "ppst")
+          .in("import_id", importIds)
+          .limit(50000),
+        // PPSR variant breakdown
+        supabase
+          .from("poker_su_games")
+          .select("game_variant")
+          .eq("team_id", teamId)
+          .eq("game_type", "ppsr")
+          .in("import_id", importIds)
+          .limit(50000),
+        // PPST player counts
+        supabase
+          .from("poker_su_games")
+          .select("player_count")
+          .eq("team_id", teamId)
+          .eq("game_type", "ppst")
+          .in("import_id", importIds)
+          .limit(50000),
+        // PPSR player counts
+        supabase
+          .from("poker_su_games")
+          .select("player_count")
+          .eq("team_id", teamId)
+          .eq("game_type", "ppsr")
+          .in("import_id", importIds)
+          .limit(50000),
+        // PPST games with GTD (for overlay/gap calculation)
+        supabase
+          .from("poker_su_games")
+          .select("premiacao_garantida, total_buyin, total_taxa, total_gap_garantido")
+          .eq("team_id", teamId)
+          .eq("game_type", "ppst")
+          .gt("premiacao_garantida", 0)
+          .in("import_id", importIds)
+          .limit(50000),
+      ]);
 
-      if (gamesError) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch games",
-        });
-      }
+      const totalGamesPPST = countPPST ?? 0;
+      const totalGamesPPSR = countPPSR ?? 0;
 
       // Step 4: Calculate stats from summaries
       const totalLeagues = new Set(summaries?.map((s) => s.liga_id)).size;
@@ -165,63 +221,64 @@ export const suAnalyticsRouter = createTRPCRouter({
           .map((s) => s.liga_id),
       ).size;
 
-      // Count games with gap
-      const gamesWithGap = summaries?.filter(
-        (s) => Number(s.ppst_gap_garantido ?? 0) > 0,
-      ).length ?? 0;
+      // Step 5: Calculate overlay and gap from individual PPST games with GTD
+      let overlayCount = 0;
+      let overlayTotal = 0;
+      let totalGapFromGames = 0;
+      let gamesWithGTD = 0;
 
-      // Find max gap
-      const maxGap = summaries?.reduce(
-        (max, s) => Math.max(max, Number(s.ppst_gap_garantido ?? 0)),
-        0,
-      ) ?? 0;
+      for (const game of gtdGames ?? []) {
+        gamesWithGTD++;
+        const buyinLiquido = Number(game.total_buyin ?? 0) - Number(game.total_taxa ?? 0);
+        const gtd = Number(game.premiacao_garantida ?? 0);
+        const resultado = buyinLiquido - gtd;
 
-      // Step 5: Calculate game stats
-      const gamesPPST = games?.filter((g) => g.game_type === "ppst") ?? [];
-      const gamesPPSR = games?.filter((g) => g.game_type === "ppsr") ?? [];
+        // Overlay = when net buy-in is less than GTD
+        if (resultado < 0) {
+          overlayCount++;
+          overlayTotal += resultado; // negative value
+        }
 
-      const totalPlayersPPST = gamesPPST.reduce(
+        totalGapFromGames += Number(game.total_gap_garantido ?? 0);
+      }
+
+      // Step 6: Calculate game stats from parallel query results
+      const totalPlayersPPST = (ppstPlayerData ?? []).reduce(
         (sum, g) => sum + (g.player_count ?? 0),
         0,
       );
-      const totalPlayersPPSR = gamesPPSR.reduce(
+      const totalPlayersPPSR = (ppsrPlayerData ?? []).reduce(
         (sum, g) => sum + (g.player_count ?? 0),
         0,
       );
 
-      // Breakdown by game variant (approximate based on variant names)
+      // PPST breakdown by variant
+      const ppstVariantCounts: Record<string, number> = {};
+      for (const g of ppstVariants ?? []) {
+        ppstVariantCounts[g.game_variant] = (ppstVariantCounts[g.game_variant] ?? 0) + 1;
+      }
       const gamesPPSTByType = {
-        nlh: gamesPPST.filter((g) =>
-          g.game_variant === "nlh" ||
-          g.game_variant === "short" ||
-          g.game_variant === "6plus"
-        ).length,
-        spinup: gamesPPST.filter((g) => g.game_variant === "spinup").length,
-        knockout: gamesPPST.filter((g) =>
-          g.game_variant === "pko" ||
-          g.game_variant === "mko"
-        ).length,
+        nlh: (ppstVariantCounts.nlh ?? 0) + (ppstVariantCounts.short ?? 0) + (ppstVariantCounts["6plus"] ?? 0),
+        spinup: ppstVariantCounts.spinup ?? 0,
+        pko: ppstVariantCounts.pko ?? 0,
+        mko: ppstVariantCounts.mko ?? 0,
+        sat: ppstVariantCounts.sat ?? 0,
       };
 
+      // PPSR breakdown by variant
+      const ppsrVariantCounts: Record<string, number> = {};
+      for (const g of ppsrVariants ?? []) {
+        ppsrVariantCounts[g.game_variant] = (ppsrVariantCounts[g.game_variant] ?? 0) + 1;
+      }
       const gamesPPSRByType = {
-        nlh: gamesPPSR.filter((g) =>
-          g.game_variant === "nlh" ||
-          g.game_variant === "short" ||
-          g.game_variant === "6plus"
-        ).length,
-        plo: gamesPPSR.filter((g) =>
-          g.game_variant === "plo4" ||
-          g.game_variant === "plo5" ||
-          g.game_variant === "plo6"
-        ).length,
-        other: gamesPPSR.filter((g) =>
-          g.game_variant !== "nlh" &&
-          g.game_variant !== "short" &&
-          g.game_variant !== "6plus" &&
-          g.game_variant !== "plo4" &&
-          g.game_variant !== "plo5" &&
-          g.game_variant !== "plo6"
-        ).length,
+        nlh: (ppsrVariantCounts.nlh ?? 0) + (ppsrVariantCounts.short ?? 0) + (ppsrVariantCounts["6plus"] ?? 0),
+        plo4: ppsrVariantCounts.plo4 ?? 0,
+        plo5: ppsrVariantCounts.plo5 ?? 0,
+        plo6: ppsrVariantCounts.plo6 ?? 0,
+        ofc: ppsrVariantCounts.ofc ?? 0,
+        other: Object.entries(ppsrVariantCounts)
+          .filter(([k]) => !["nlh", "short", "6plus", "plo4", "plo5", "plo6", "ofc"].includes(k))
+          .reduce((sum, [, v]) => sum + v, 0),
       };
 
       // Step 6: Top leagues by total fee
@@ -259,20 +316,20 @@ export const suAnalyticsRouter = createTRPCRouter({
       // Return all stats
       return {
         totalLeagues,
-        totalGamesPPST: gamesPPST.length,
-        totalGamesPPSR: gamesPPSR.length,
+        totalGamesPPST,
+        totalGamesPPSR,
         totalPlayersPPST,
         totalPlayersPPSR,
         leagueEarningsTotal: leagueEarningsPPST + leagueEarningsPPSR,
         leagueEarningsPPST,
         leagueEarningsPPSR,
         gapGuaranteedTotal,
-        gamesWithGap,
-        maxGap,
+        overlayCount,
+        overlayTotal,
+        gamesWithGTD,
         playerWinningsTotal: playerWinningsPPST + playerWinningsPPSR,
         playerWinningsPPST,
         playerWinningsPPSR,
-        totalGTD: 0, // TODO: Calculate from game guaranteed prizes if available
         leaguesWithPPST,
         leaguesWithPPSR,
         topLeagues,

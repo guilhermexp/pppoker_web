@@ -336,90 +336,172 @@ export function LeagueOverviewTab({
     };
   }, [parsedData.geralPPSR]);
 
+  // PPSR: distribuição por tipo de cash
+  const cashTypeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const jogo of parsedData.jogosPPSR) {
+      const tipo = jogo.metadata.tipoCash;
+      const label = tipo.replace(/^PPSR\//, "");
+      counts[label] = (counts[label] || 0) + 1;
+    }
+    return counts;
+  }, [parsedData.jogosPPSR]);
+
+  // PPSR: soma dos totais das partidas
+  const ppsrPartidasStats = useMemo(() => {
+    let totalBuyin = 0;
+    let totalGanhos = 0;
+    let totalTaxa = 0;
+    let totalMaos = 0;
+
+    for (const jogo of parsedData.jogosPPSR) {
+      const buyin = jogo.totalGeral?.buyinFichas || jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
+      const ganhos = jogo.totalGeral?.ganhosJogadorGeral || jogo.jogadores.reduce((s, j) => s + j.ganhosJogadorGeral, 0);
+      const taxa = jogo.totalGeral?.taxa || jogo.jogadores.reduce((s, j) => s + j.taxa, 0);
+      const maos = jogo.totalGeral?.maos || jogo.jogadores.reduce((s, j) => s + j.maos, 0);
+      totalBuyin += buyin;
+      totalGanhos += ganhos;
+      totalTaxa += taxa;
+      totalMaos += maos;
+    }
+
+    return { totalBuyin, totalGanhos, totalTaxa, totalMaos };
+  }, [parsedData.jogosPPSR]);
+
   // Cross-validation counts
   const inicioCount = parsedData.jogosPPSTInicioCount ?? 0;
   const jogosCount = stats.totalJogosPPST;
   const cancelledCount =
     inicioCount > jogosCount ? inicioCount - jogosCount : 0;
 
+  // Color map for PPSR cash game types
+  const cashTypeColors: Record<string, string> = {
+    NLH: "text-green-500 bg-green-500/10 border-green-500/30",
+    NLHOLDEM: "text-green-500 bg-green-500/10 border-green-500/30",
+    PLO: "text-blue-500 bg-blue-500/10 border-blue-500/30",
+    PLO5: "text-purple-500 bg-purple-500/10 border-purple-500/30",
+    PLO6: "text-pink-500 bg-pink-500/10 border-pink-500/30",
+    "6+": "text-orange-500 bg-orange-500/10 border-orange-500/30",
+    "6+ NLH": "text-orange-500 bg-orange-500/10 border-orange-500/30",
+    OFC: "text-cyan-500 bg-cyan-500/10 border-cyan-500/30",
+    "FLASH/NLH": "text-yellow-500 bg-yellow-500/10 border-yellow-500/30",
+    "3-1": "text-teal-500 bg-teal-500/10 border-teal-500/30",
+  };
+
   return (
     <div className="space-y-4">
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-2 gap-8">
-        {/* Left Column - Main Metrics */}
-        <div>
-          {/* Context Header - Liga e Taxa de Câmbio */}
-          {geralPPSTTotals.contexto && (
-            <div className="mb-2 px-3 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 inline-flex items-center gap-2">
-              <span className="text-sm font-medium text-amber-500">
-                Liga {geralPPSTTotals.contexto.entidadeId}
-              </span>
-              <span className="text-amber-500/50">•</span>
-              <span className="text-sm text-amber-400">
-                Taxa de câmbio {geralPPSTTotals.contexto.taxaCambio}
-              </span>
-            </div>
-          )}
+      {/* Context Header - Liga e Taxa de Câmbio */}
+      {geralPPSTTotals.contexto && (
+        <div className="px-3 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 inline-flex items-center gap-2">
+          <span className="text-sm font-medium text-amber-500">
+            Liga {geralPPSTTotals.contexto.entidadeId}
+          </span>
+          <span className="text-amber-500/50">•</span>
+          <span className="text-sm text-amber-400">
+            Taxa de câmbio {geralPPSTTotals.contexto.taxaCambio}
+          </span>
+        </div>
+      )}
 
-          {/* Three main metrics */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Taxa Total</div>
-              <div className="text-3xl font-bold text-[#00C969]">{formatNumber(totalTaxa)}</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Ganhos do Jogador</div>
-              <div className={`text-3xl font-bold ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-[#00C969]"}`}>
-                {formatNumber(geralPPSTTotals.ganhosJogador)}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">
-                Overlay <span className="text-xs text-muted-foreground/70">({overlayStats.overlayCount})</span>
-              </div>
-              <div className="text-3xl font-bold text-red-500">
-                {formatNumber(Math.abs(overlayStats.totalOverlay))}
-              </div>
+      {/* ── PPST (Torneios) ── */}
+      <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-blue-500">PPST — Torneios</span>
+        </div>
+
+        {/* Métricas principais */}
+        <div className="grid grid-cols-4 gap-4">
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Torneios</div>
+            <div className="text-xl font-bold">{formatNumber(jogosCount)}</div>
+            <div className="flex flex-wrap gap-x-2 text-[10px] text-muted-foreground mt-0.5">
+              {gameTypeCounts.mtt > 0 && <span>MTT {gameTypeCounts.mtt}</span>}
+              {gameTypeCounts.spin > 0 && <span>Spin {gameTypeCounts.spin}</span>}
+              {gameTypeCounts.pko > 0 && <span>PKO {gameTypeCounts.pko}</span>}
+              {gameTypeCounts.mko > 0 && <span>MKO {gameTypeCounts.mko}</span>}
+              {gameTypeCounts.sat > 0 && <span>SAT {gameTypeCounts.sat}</span>}
             </div>
           </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Ligas</div>
+            <div className="text-xl font-bold">{formatNumber(stats.totalLigasPPST)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Jogadores</div>
+            <div className="text-xl font-bold">{formatNumber(stats.totalJogadoresPPST)}</div>
+            {stats.totalParticipacoesPPST && stats.totalParticipacoesPPST !== stats.totalJogadoresPPST && (
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                Entradas {formatNumber(stats.totalParticipacoesPPST)}
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Overlay <span className="text-muted-foreground/60">({overlayStats.overlayCount})</span>
+            </div>
+            <div className="text-xl font-bold text-red-500">{formatNumber(Math.abs(overlayStats.totalOverlay))}</div>
+          </div>
+        </div>
 
-          {/* Soma das Partidas (Jogos PPST) */}
-          <div className="mt-4 space-y-1 text-sm border-t pt-3">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Σ Partidas</div>
+        {/* Financeiro */}
+        <div className="grid grid-cols-3 gap-4 border-t border-blue-500/20 pt-3">
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Taxa Total</div>
+            <div className="text-lg font-bold text-[#00C969]">{formatNumber(totalTaxa)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Ganhos Jogador</div>
+            <div className={`text-lg font-bold ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-[#00C969]"}`}>
+              {formatNumber(geralPPSTTotals.ganhosJogador)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Gap GTD</div>
+            <div className={`text-lg font-bold ${geralPPSTTotals.gapGarantido < 0 ? "text-red-500" : geralPPSTTotals.gapGarantido > 0 ? "text-[#00C969]" : ""}`}>
+              {formatNumber(geralPPSTTotals.gapGarantido)}
+            </div>
+          </div>
+        </div>
+
+        {/* Detalhes: Σ Partidas + Geral PPST side by side */}
+        <div className="grid grid-cols-2 gap-4 border-t border-blue-500/20 pt-3">
+          {/* Σ Partidas */}
+          <div className="space-y-1 text-sm">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Σ Partidas</div>
             <div className="flex justify-between">
-              <span>Buyin</span>
+              <span className="text-muted-foreground">Buyin</span>
               <span className="text-blue-500 font-mono">{formatNumber(partidasStats.totalBuyin)}</span>
             </div>
             <div className="flex justify-between">
-              <span>GTD</span>
+              <span className="text-muted-foreground">GTD</span>
               <span className="text-[#00C969] font-mono">{formatNumber(partidasStats.totalGTD)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Ganhos</span>
+              <span className="text-muted-foreground">Ganhos</span>
               <span className={`font-mono ${partidasStats.totalGanhos < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(partidasStats.totalGanhos)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Taxa</span>
+              <span className="text-muted-foreground">Taxa</span>
               <span className="text-green-500 font-mono">{formatNumber(partidasStats.totalTaxa)}</span>
             </div>
           </div>
 
-          {/* Comparação com Geral PPST (Planilha) */}
-          <div className="mt-4 space-y-1 text-sm border-t pt-3">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Geral PPST 1:5</div>
+          {/* Geral PPST 1:5 */}
+          <div className="space-y-1 text-sm">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Geral PPST 1:5</div>
             <div className="flex justify-between">
-              <span>Ganhos (col E)</span>
+              <span className="text-muted-foreground">Ganhos (col E)</span>
               <span className={`font-mono ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(geralPPSTTotals.ganhosJogador)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Taxa (col J)</span>
+              <span className="text-muted-foreground">Taxa (col J)</span>
               <span className="text-green-500 font-mono">{formatNumber(geralPPSTTotals.ganhosLigaTaxa)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Gap (col O)</span>
+              <span className="text-muted-foreground">Gap (col O)</span>
               <span className={`font-mono ${geralPPSTTotals.gapGarantido < 0 ? "text-red-500" : geralPPSTTotals.gapGarantido > 0 ? "text-green-500" : ""}`}>{formatNumber(geralPPSTTotals.gapGarantido)}</span>
             </div>
-            {/* Diferença para validação */}
             {partidasStats.totalGanhos !== geralPPSTTotals.ganhosJogador && (
               <div className="flex justify-between text-xs text-muted-foreground border-t pt-1 mt-1">
                 <span>Δ Ganhos</span>
@@ -429,44 +511,124 @@ export function LeagueOverviewTab({
               </div>
             )}
           </div>
-
-        </div>
-
-        {/* Right Column - Stats */}
-        <div className="space-y-4">
-          {/* Torneios */}
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-sm text-muted-foreground">Torneios</div>
-              <div className="text-2xl font-bold">{formatNumber(jogosCount)}</div>
-            </div>
-            <div className="text-right text-xs space-y-0.5">
-              {gameTypeCounts.mtt > 0 && <div><span className="text-muted-foreground">MTT:</span> {formatNumber(gameTypeCounts.mtt)}</div>}
-              {gameTypeCounts.spin > 0 && <div><span className="text-muted-foreground">Spin:</span> {formatNumber(gameTypeCounts.spin)}</div>}
-              {gameTypeCounts.pko > 0 && <div><span className="text-muted-foreground">PKO:</span> {formatNumber(gameTypeCounts.pko)}</div>}
-              {gameTypeCounts.mko > 0 && <div><span className="text-muted-foreground">MKO:</span> {formatNumber(gameTypeCounts.mko)}</div>}
-              {gameTypeCounts.sat > 0 && <div><span className="text-muted-foreground">SAT:</span> {formatNumber(gameTypeCounts.sat)}</div>}
-            </div>
-          </div>
-
-          {/* Jogadores */}
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-sm text-muted-foreground">Jogadores</div>
-              <div className="text-2xl font-bold">{formatNumber(stats.totalJogadoresPPST)}</div>
-            </div>
-            <div className="text-right text-xs">
-              <div><span className="text-muted-foreground">Ligas:</span> {formatNumber(stats.totalLigasPPST)}</div>
-              {stats.totalParticipacoesPPST && stats.totalParticipacoesPPST !== stats.totalJogadoresPPST && (
-                <div><span className="text-muted-foreground">Entradas:</span> {formatNumber(stats.totalParticipacoesPPST)}</div>
-              )}
-            </div>
-          </div>
-
         </div>
       </div>
 
-      {/* Cross-validation with Schedule (Grade de Torneios) - Compact */}
+      {/* ── PPSR (Cash) ── */}
+      <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-green-500">PPSR — Cash</span>
+        </div>
+
+        {/* Métricas principais */}
+        <div className="grid grid-cols-4 gap-4">
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Mesas</div>
+            <div className="text-xl font-bold">{formatNumber(stats.totalJogosPPSR)}</div>
+            {Object.keys(cashTypeCounts).length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {Object.entries(cashTypeCounts).map(([type, count]) => (
+                  <span
+                    key={type}
+                    className={`text-[9px] px-1.5 py-0.5 rounded border font-medium ${cashTypeColors[type] || "text-muted-foreground bg-muted/20 border-border"}`}
+                  >
+                    {type} {count}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Ligas</div>
+            <div className="text-xl font-bold">{formatNumber(stats.totalLigasPPSR)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Jogadores</div>
+            <div className="text-xl font-bold">{formatNumber(stats.totalJogadoresPPSR)}</div>
+            {stats.totalParticipacoesPPSR && stats.totalParticipacoesPPSR !== stats.totalJogadoresPPSR && (
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                Entradas {formatNumber(stats.totalParticipacoesPPSR)}
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Mãos</div>
+            <div className="text-xl font-bold">{formatNumber(ppsrPartidasStats.totalMaos)}</div>
+          </div>
+        </div>
+
+        {/* Financeiro */}
+        <div className="grid grid-cols-3 gap-4 border-t border-green-500/20 pt-3">
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Taxa Total</div>
+            <div className="text-lg font-bold text-[#00C969]">{formatNumber(geralPPSRTotals.ganhosLigaTaxa)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Ganhos Jogador</div>
+            <div className={`text-lg font-bold ${geralPPSRTotals.ganhosJogadorGeral < 0 ? "text-red-500" : "text-[#00C969]"}`}>
+              {formatNumber(geralPPSRTotals.ganhosJogadorGeral)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">Liga Geral</div>
+            <div className={`text-lg font-bold ${geralPPSRTotals.ganhosLigaGeral < 0 ? "text-red-500" : "text-[#00C969]"}`}>
+              {formatNumber(geralPPSRTotals.ganhosLigaGeral)}
+            </div>
+          </div>
+        </div>
+
+        {/* Detalhes: Σ Partidas + Geral PPSR side by side */}
+        <div className="grid grid-cols-2 gap-4 border-t border-green-500/20 pt-3">
+          {/* Σ Partidas PPSR */}
+          <div className="space-y-1 text-sm">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Σ Partidas</div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Buyin</span>
+              <span className="text-blue-500 font-mono">{formatNumber(ppsrPartidasStats.totalBuyin)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Ganhos</span>
+              <span className={`font-mono ${ppsrPartidasStats.totalGanhos < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(ppsrPartidasStats.totalGanhos)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Taxa</span>
+              <span className="text-green-500 font-mono">{formatNumber(ppsrPartidasStats.totalTaxa)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Mãos</span>
+              <span className="font-mono">{formatNumber(ppsrPartidasStats.totalMaos)}</span>
+            </div>
+          </div>
+
+          {/* Geral PPSR */}
+          <div className="space-y-1 text-sm">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Geral PPSR</div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Ganhos Jogador</span>
+              <span className={`font-mono ${geralPPSRTotals.ganhosJogadorGeral < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(geralPPSRTotals.ganhosJogadorGeral)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Taxa Liga</span>
+              <span className="text-green-500 font-mono">{formatNumber(geralPPSRTotals.ganhosLigaTaxa)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Liga Geral</span>
+              <span className={`font-mono ${geralPPSRTotals.ganhosLigaGeral < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(geralPPSRTotals.ganhosLigaGeral)}</span>
+            </div>
+            {ppsrPartidasStats.totalGanhos !== geralPPSRTotals.ganhosJogadorGeral && (
+              <div className="flex justify-between text-xs text-muted-foreground border-t pt-1 mt-1">
+                <span>Δ Ganhos</span>
+                <span className={Math.abs(ppsrPartidasStats.totalGanhos - geralPPSRTotals.ganhosJogadorGeral) > 1 ? "text-amber-500" : "text-green-500"}>
+                  {formatNumber(ppsrPartidasStats.totalGanhos - geralPPSRTotals.ganhosJogadorGeral)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Conferência Grade (Cross-validation) ── */}
       {crossValidation && (
         <div className="border rounded bg-muted/10 p-2">
           <div className="flex items-center gap-2 mb-2">

@@ -5,7 +5,6 @@ import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { resumableUpload } from "@/utils/upload";
 import { createClient } from "@midpoker/supabase/client";
-import { cn } from "@midpoker/ui/cn";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -196,27 +195,23 @@ export function VaultUploadZone({ onUpload, children }: Props) {
       className="relative h-full"
       {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
     >
-      <div className="absolute top-0 right-0 left-0 z-[51] w-full pointer-events-none h-[calc(100vh-150px)]">
-        <div
-          className={cn(
-            "bg-background dark:bg-[#1A1A1A] h-full w-full flex items-center justify-center text-center",
-            isDragActive ? "visible" : "invisible",
-          )}
-        >
-          <input {...getInputProps()} id="upload-files" />
+      <input {...getInputProps()} id="upload-files" className="hidden" />
+      {isDragActive && (
+        <div className="absolute top-0 right-0 left-0 z-[51] w-full pointer-events-none h-[calc(100vh-150px)]">
+          <div className="bg-background h-full w-full flex items-center justify-center text-center">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <p className="text-xs">
+                {t("vault.drop_description")} <br />
+                {t("vault.drop_max_files")}
+              </p>
 
-          <div className="flex flex-col items-center justify-center gap-2">
-            <p className="text-xs">
-              {t("vault.drop_description")} <br />
-              {t("vault.drop_max_files")}
-            </p>
-
-            <span className="text-xs text-[#878787]">
-              {t("vault.drop_max_size")}
-            </span>
+              <span className="text-xs text-[#878787]">
+                {t("vault.drop_max_size")}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {children}
     </div>

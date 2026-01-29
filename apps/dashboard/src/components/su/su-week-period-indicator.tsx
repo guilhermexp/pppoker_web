@@ -53,11 +53,11 @@ export function SUWeekPeriodIndicator({
   const isCurrentWeek = weekNumber === currentWeek;
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
       {/* SU badge */}
       <div className="flex items-center gap-2">
-        <Icons.GridView className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Super Union</span>
+        <Icons.GridView className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="text-sm font-medium whitespace-nowrap">Super Union</span>
         {suId && (
           <Badge
             variant="secondary"
@@ -69,23 +69,23 @@ export function SUWeekPeriodIndicator({
       </div>
 
       {/* Date range with calendar icon */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Icons.CalendarMonth className="h-4 w-4" />
-        <span className="font-medium text-foreground">{dateRange}</span>
-        <span className="text-xs">
+      <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-muted-foreground">
+        <Icons.CalendarMonth className="h-4 w-4 shrink-0" />
+        <span className="font-medium text-foreground whitespace-nowrap">{dateRange}</span>
+        <span className="text-xs whitespace-nowrap hidden sm:inline">
           ({dayCount} dias · {weekdayRange})
         </span>
       </div>
 
       {/* Week number badge */}
       <div
-        className={`flex items-center gap-1.5 text-sm px-3 py-1 rounded-md font-medium ${
+        className={`flex items-center gap-1.5 text-sm px-2 sm:px-3 py-1 rounded-md font-medium whitespace-nowrap ${
           isCurrentWeek
             ? "bg-[#00C969]/10 text-[#00C969]"
             : "bg-amber-500/10 text-amber-500"
         }`}
       >
-        <Icons.DateFormat className="h-4 w-4" />
+        <Icons.DateFormat className="h-4 w-4 shrink-0" />
         <span>Semana {weekNumber}</span>
         {!isCurrentWeek && (
           <span className="text-xs opacity-70">(atual: {currentWeek})</span>
@@ -114,10 +114,10 @@ export function SUWeekPeriodIndicator({
 
 SUWeekPeriodIndicator.Skeleton = function SUWeekPeriodIndicatorSkeleton() {
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
       <div className="h-5 w-32 bg-muted animate-pulse rounded" />
-      <div className="h-5 w-56 bg-muted animate-pulse rounded" />
-      <div className="h-7 w-32 bg-muted animate-pulse rounded-md" />
+      <div className="h-5 w-40 sm:w-56 bg-muted animate-pulse rounded" />
+      <div className="h-7 w-28 sm:w-32 bg-muted animate-pulse rounded-md" />
     </div>
   );
 };

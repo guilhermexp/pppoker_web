@@ -104,9 +104,9 @@ export function SUDashboardHeader() {
   return (
     <div className="space-y-4 mb-8">
       {/* Main header row */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         {/* Left side - Week indicator and Close Week button */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 min-w-0">
           {isLoadingCurrentWeek ? (
             <SUWeekPeriodIndicator.Skeleton />
           ) : currentWeek ? (
@@ -117,7 +117,7 @@ export function SUDashboardHeader() {
             />
           ) : (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Icons.CalendarMonth className="h-4 w-4" />
+              <Icons.CalendarMonth className="h-4 w-4 shrink-0" />
               <span>Super Union - Nenhum período importado</span>
             </div>
           )}
@@ -142,7 +142,7 @@ export function SUDashboardHeader() {
         />
 
         {/* Right side - Filters and Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Date Range Picker - only show in historical mode */}
           {!isCurrentWeekView && (
             <Popover>

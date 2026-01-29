@@ -20,7 +20,6 @@ import type {
 } from "@/lib/league/types";
 import { validateLeagueImportData } from "@/lib/league/validation";
 import { useTRPC } from "@/trpc/client";
-import { cn } from "@midpoker/ui/cn";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -1695,23 +1694,20 @@ export function LeagueImportUploader() {
         className="relative h-full"
         {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
       >
+        <input {...getInputProps()} id="upload-league-file" className="hidden" />
         {/* Drag overlay */}
-        <div className="absolute top-0 right-0 left-0 z-[51] w-full pointer-events-none h-[calc(100vh-150px)]">
-          <div
-            className={cn(
-              "bg-background dark:bg-[#1A1A1A] h-full w-full flex items-center justify-center text-center transition-opacity",
-              isDragActive ? "visible opacity-100" : "invisible opacity-0",
-            )}
-          >
-            <input {...getInputProps()} id="upload-league-file" />
-            <div className="flex flex-col items-center justify-center gap-2">
-              <p className="text-sm">Solte o arquivo aqui...</p>
-              <span className="text-xs text-[#878787]">
-                Formatos aceitos: .xlsx, .xls
-              </span>
+        {isDragActive && (
+          <div className="absolute top-0 right-0 left-0 z-[51] w-full pointer-events-none h-[calc(100vh-150px)]">
+            <div className="bg-background h-full w-full flex items-center justify-center text-center">
+              <div className="flex flex-col items-center justify-center gap-2">
+                <p className="text-sm">Solte o arquivo aqui...</p>
+                <span className="text-xs text-[#878787]">
+                  Formatos aceitos: .xlsx, .xls
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Content area */}
         <div className="space-y-6 py-4">

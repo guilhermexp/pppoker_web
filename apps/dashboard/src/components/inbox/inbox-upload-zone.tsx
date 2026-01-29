@@ -4,7 +4,6 @@ import { useUserQuery } from "@/hooks/use-user";
 import { useTRPC } from "@/trpc/client";
 import { resumableUpload } from "@/utils/upload";
 import { createClient } from "@midpoker/supabase/client";
-import { cn } from "@midpoker/ui/cn";
 import { useToast } from "@midpoker/ui/use-toast";
 import { stripSpecialCharacters } from "@midpoker/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -197,20 +196,17 @@ export function UploadZone({ children, onUploadComplete }: Props) {
       {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
       className="relative h-full"
     >
-      <div className="absolute top-0 bottom-0 right-0 left-0 z-[51] pointer-events-none">
-        <div
-          className={cn(
-            "bg-background dark:bg-[#1A1A1A] h-full flex items-center justify-center text-center invisible",
-            isDragActive && "visible",
-          )}
-        >
-          <input {...getInputProps()} id="upload-files" />
-          <p className="text-xs">
-            Drop your receipts here. <br />
-            Maximum of 25 files at a time.
-          </p>
+      <input {...getInputProps()} id="upload-files" className="hidden" />
+      {isDragActive && (
+        <div className="absolute top-0 bottom-0 right-0 left-0 z-[51] pointer-events-none">
+          <div className="bg-background h-full flex items-center justify-center text-center">
+            <p className="text-xs">
+              Drop your receipts here. <br />
+              Maximum of 25 files at a time.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {children}
     </div>
