@@ -168,23 +168,33 @@ export function LeagueImportProgressModal({
           {importData && importData.status === "processing" && (
             <div className="grid grid-cols-2 gap-3 p-5 rounded-lg bg-muted/30">
               <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">Ligas</p>
-                <p className="text-2xl font-bold">{importData.total_leagues || 0}</p>
+                <p className="text-muted-foreground text-xs font-medium">
+                  Ligas
+                </p>
+                <p className="text-2xl font-bold">
+                  {importData.total_leagues || 0}
+                </p>
               </div>
               <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">Jogos PPST</p>
+                <p className="text-muted-foreground text-xs font-medium">
+                  Jogos PPST
+                </p>
                 <p className="text-2xl font-bold">
                   {importData.total_games_ppst || 0}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">Jogos PPSR</p>
+                <p className="text-muted-foreground text-xs font-medium">
+                  Jogos PPSR
+                </p>
                 <p className="text-2xl font-bold">
                   {importData.total_games_ppsr || 0}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">Jogadores</p>
+                <p className="text-muted-foreground text-xs font-medium">
+                  Jogadores
+                </p>
                 <p className="text-2xl font-bold">
                   {(importData.total_players_ppst || 0) +
                     (importData.total_players_ppsr || 0)}
@@ -208,26 +218,34 @@ export function LeagueImportProgressModal({
           {isCompleted && importData && (
             <div className="grid grid-cols-2 gap-3 p-5 rounded-lg bg-green-500/10">
               <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">Ligas</p>
+                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+                  Ligas
+                </p>
                 <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {importData.total_leagues || 0}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">Total Jogos</p>
+                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+                  Total Jogos
+                </p>
                 <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {(importData.total_games_ppst || 0) +
                     (importData.total_games_ppsr || 0)}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">Jogadores PPST</p>
+                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+                  Jogadores PPST
+                </p>
                 <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {importData.total_players_ppst || 0}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">Jogadores PPSR</p>
+                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+                  Jogadores PPSR
+                </p>
                 <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {importData.total_players_ppsr || 0}
                 </p>

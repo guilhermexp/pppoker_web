@@ -37,13 +37,19 @@ export const bankConnectionsRouter = createTRPCRouter({
         .order("created_at", { ascending: false });
 
       if (input?.enabled !== undefined) {
-        query = query.eq("status", input.enabled ? "connected" : "disconnected");
+        query = query.eq(
+          "status",
+          input.enabled ? "connected" : "disconnected",
+        );
       }
 
       const { data: connections, error } = await query;
 
       if (error) {
-        console.log("[bankConnections.get] Supabase REST error:", error.message);
+        console.log(
+          "[bankConnections.get] Supabase REST error:",
+          error.message,
+        );
         return [];
       }
 
@@ -90,7 +96,10 @@ export const bankConnectionsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[bankConnections.create] Supabase REST error:", error.message);
+        console.log(
+          "[bankConnections.create] Supabase REST error:",
+          error.message,
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to create bank connection: ${error.message}`,
@@ -122,7 +131,10 @@ export const bankConnectionsRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log("[bankConnections.delete] Supabase REST error:", error.message);
+        console.log(
+          "[bankConnections.delete] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to delete bank connection: ${error.message}`);
       }
 

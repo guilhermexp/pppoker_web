@@ -4799,8 +4799,10 @@ export const fastchipsOperations = pgTable(
     paymentId: text("payment_id").notNull(),
 
     // Timing
-    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "string" })
-      .notNull(),
+    occurredAt: timestamp("occurred_at", {
+      withTimezone: true,
+      mode: "string",
+    }).notNull(),
 
     // Operation classification
     operationType: fastchipsOperationTypeEnum().notNull(),

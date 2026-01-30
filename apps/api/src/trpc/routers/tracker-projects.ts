@@ -51,7 +51,9 @@ export const trackerProjectsRouter = createTRPCRouter({
       if (input?.sort) {
         const sortOrder = input.sort.startsWith("-") ? false : true;
         const sortField = input.sort.replace(/^-/, "");
-        query = query.order(sortField === "name" ? "name" : "created_at", { ascending: sortOrder });
+        query = query.order(sortField === "name" ? "name" : "created_at", {
+          ascending: sortOrder,
+        });
       } else {
         query = query.order("created_at", { ascending: false });
       }
@@ -64,7 +66,10 @@ export const trackerProjectsRouter = createTRPCRouter({
       const { data: projects, error } = await query;
 
       if (error) {
-        console.log("[trackerProjects.get] Supabase REST error:", error.message);
+        console.log(
+          "[trackerProjects.get] Supabase REST error:",
+          error.message,
+        );
         return {
           data: [],
           meta: {
@@ -77,7 +82,9 @@ export const trackerProjectsRouter = createTRPCRouter({
 
       const allProjects = projects ?? [];
       const hasNextPage = allProjects.length > pageSize;
-      const projectsToReturn = hasNextPage ? allProjects.slice(0, pageSize) : allProjects;
+      const projectsToReturn = hasNextPage
+        ? allProjects.slice(0, pageSize)
+        : allProjects;
       const nextCursor = hasNextPage ? String(cursor + pageSize) : null;
 
       return {
@@ -92,10 +99,12 @@ export const trackerProjectsRouter = createTRPCRouter({
           estimate: p.estimate,
           customerId: p.customer_id,
           createdAt: p.created_at,
-          customer: p.customers ? {
-            id: p.customers.id,
-            name: p.customers.name,
-          } : null,
+          customer: p.customers
+            ? {
+                id: p.customers.id,
+                name: p.customers.name,
+              }
+            : null,
         })),
         meta: {
           cursor: nextCursor,

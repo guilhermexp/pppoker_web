@@ -4,511 +4,232 @@ import type {
   ParsedLeagueGeralPPSTBloco,
   ParsedLeagueJogoPPST,
 } from "@/lib/league/types";
+import { useTRPC } from "@/trpc/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Button } from "@midpoker/ui/button";
-
-// Configuração das ligas
-const LIGAS_CONFIG: Record<number, { nome: string; tipo: "BR" | "SA" }> = {
-  1675: { nome: "Evolution 1", tipo: "BR" },
-  1765: { nome: "Evolution 2", tipo: "BR" },
-  2101: { nome: "Evolution 3", tipo: "BR" },
-  2448: { nome: "Evolution 4", tipo: "BR" },
-  1534: { nome: "Colombiana", tipo: "SA" },
-  1578: { nome: "Latinos", tipo: "SA" },
-  2006: { nome: "Evolution.", tipo: "SA" },
-  2126: { nome: "Nuts", tipo: "SA" },
-  2343: { nome: "Golden", tipo: "SA" },
-};
-
-const LIGAS_BR = [1675, 1765, 2101, 2448];
-const LIGAS_SA = [1534, 1578, 2006, 2126, 2343];
+import { ClubMetasSection } from "./rateio/club-metas-section";
+import { MetaGroupsSection } from "./rateio/meta-groups-section";
+import { RateioAnalysis } from "./rateio/rateio-analysis";
+import {
+  type AvailableClub,
+  type AvailableLeague,
+  type MetaGroupData,
+  FALLBACK_GROUPS,
+  formatNumber,
+} from "./rateio/rateio-utils";
 
 interface LeagueRateioTabProps {
   geralPPST: ParsedLeagueGeralPPSTBloco[];
   jogosPPST: ParsedLeagueJogoPPST[];
 }
 
-function formatNumber(value: number): string {
-  return `R$ ${new Intl.NumberFormat("pt-BR").format(Math.round(value))}`;
-}
-
-function parseDateString(value: string): Date | null {
-  if (!value) {
-    return null;
-  }
-  const match = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-  if (!match) {
-    return null;
-  }
-  const [, dayStr, monthStr, yearStr] = match;
-  const day = Number(dayStr);
-  const month = Number(monthStr);
-  const yearRaw = Number(yearStr);
-  if (!day || !month || !yearRaw) {
-    return null;
-  }
-  const year = yearStr.length === 2 ? 2000 + yearRaw : yearRaw;
-  const date = new Date(year, month - 1, day);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-  return date;
-}
-
-function getWeekdayLabel(value: string): string {
-  const date = parseDateString(value);
-  if (!date) {
-    return "Sem data";
-  }
-  const labels = [
-    "Domingo",
-    "Segunda feira",
-    "Terca",
-    "Quarta",
-    "Quinta",
-    "Sexta",
-    "Sabado",
-  ];
-  const label = labels[date.getDay()] ?? "Sem data";
-  return label;
-}
-
-function formatDateDisplay(value: string): string {
-  const date = parseDateString(value);
-  if (!date) {
-    return value || "-";
-  }
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = String(date.getFullYear()).slice(-2);
-  return `${day}/${month}/${year}`;
-}
-
-function getDateKey(value: string): string {
-  const date = parseDateString(value);
-  if (!date) {
-    return value || "sem-data";
-  }
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export function LeagueRateioTab({
   geralPPST,
   jogosPPST,
 }: LeagueRateioTabProps) {
-  const [showAllGtd, setShowAllGtd] = useState(false);
-  // Calcula estatísticas de rateio
-  const stats = useMemo(() => {
-    // 1. Somar GTD total de todos os torneios
-    let gtdTotal = 0;
-    let arrecadadoTotal = 0;
-    let arrecadadoBR = 0;
-    let arrecadadoSA = 0;
+  const [activeSubTab, setActiveSubTab] = useState("analysis");
+  const trpc = useTRPC();
 
-    // Stats para torneios PPST com GTD
-    let buyinGTD = 0; // Buyin apenas de torneios PPST com GTD
-    let taxaGTD = 0; // Taxa apenas de torneios PPST com GTD
-    let gtdTourneysCount = 0; // Contagem de torneios PPST com GTD
-    let soOverlay = 0; // Soma apenas dos overlays (resultados negativos)
+  // Fetch meta groups list from backend
+  const { data: dbGroups } = useQuery(
+    trpc.su.metas["metaGroups.list"].queryOptions({ activeOnly: true }),
+  );
 
-    // Arrecadado por liga (só overlay)
-    const arrecadadoPorLiga: Record<number, number> = {};
-    // Arrecadado por liga (todos GTD)
-    const arrecadadoPorLigaTotal: Record<number, number> = {};
-    let arrecadadoBRTotal = 0;
-    let arrecadadoSATotal = 0;
-    for (const ligaId of [...LIGAS_BR, ...LIGAS_SA]) {
-      arrecadadoPorLiga[ligaId] = 0;
-      arrecadadoPorLigaTotal[ligaId] = 0;
+  // Build stable list of group IDs for detail queries
+  const groupIds = useMemo(
+    () => (dbGroups ?? []).map((g: any) => g.id as string),
+    [dbGroups],
+  );
+
+  // Fetch all group details in parallel using useQueries
+  const groupDetailQueries = useQueries({
+    queries: groupIds.map((id) =>
+      trpc.su.metas["metaGroups.getById"].queryOptions({ id }),
+    ),
+  });
+
+  // Build enriched meta groups with members + time slots for analysis
+  const analysisGroups: MetaGroupData[] = useMemo(() => {
+    if (!dbGroups || dbGroups.length === 0) {
+      return FALLBACK_GROUPS;
     }
 
-    // Clubes por liga (para colapsáveis)
-    const clubesPorLiga: Record<
-      number,
-      { clubeId: number; clubeNome: string; arrecadado: number }[]
-    > = {};
-    for (const ligaId of [...LIGAS_BR, ...LIGAS_SA]) {
-      clubesPorLiga[ligaId] = [];
-    }
+    const enriched = groupDetailQueries
+      .filter((q) => q.data)
+      .map((q) => {
+        const data = q.data!;
+        return {
+          id: data.id,
+          name: data.name,
+          metaPercent: Number(data.meta_percent),
+          isActive: data.is_active,
+          members: (data.members ?? []).map((m: any) => ({
+            superUnionId: m.super_union_id,
+            displayName: m.display_name,
+          })),
+          timeSlots: (data.timeSlots ?? []).map((ts: any) => ({
+            id: ts.id,
+            name: ts.name,
+            hourStart: ts.hour_start,
+            hourEnd: ts.hour_end,
+            metaPercent: Number(ts.meta_percent ?? ts.metaPercent),
+            isActive: ts.is_active,
+          })),
+        };
+      });
 
-    // Map temporário para acumular por clube
-    const clubeMap: Record<string, { clubeNome: string; arrecadado: number }> =
-      {};
+    return enriched.length > 0 ? enriched : FALLBACK_GROUPS;
+  }, [dbGroups, groupDetailQueries]);
 
-    // Contadores para todos os torneios com GTD
-    let overlayTourneysCount = 0;
-    let gtdTotalTodos = 0; // GTD total de TODOS os torneios (não só overlay)
+  const usingFallback = !dbGroups || dbGroups.length === 0;
 
-    // Separar ME (Main Event) de Outros
-    type TorneioInfo = {
-      nome: string;
-      data: string;
-      gtdUSD: number;
-      gtdBRL: number;
-      buyinBRL: number;
-      entradas: number;
-      overlay: number;
-    };
-    const torneisoME: TorneioInfo[] = [];
-    const torneiosOutros: TorneioInfo[] = [];
-    const torneiosOverlay: TorneioInfo[] = [];
-    let arrecadadoME = 0;
-    let arrecadadoOutros = 0;
-    let gtdME = 0;
-    let gtdOutros = 0;
+  // Compute overlay stats from jogosPPST
+  const overlayStats = useMemo(() => {
+    let overlayCount = 0;
+    let overlayTotal = 0;
+    let gtdCount = 0;
 
     for (const jogo of jogosPPST) {
-      // GTD do torneio
       const gtd = jogo.metadata?.premiacaoGarantida ?? 0;
+      const isPPST =
+        jogo.metadata?.tipoJogo?.toUpperCase()?.startsWith("PPST") ?? false;
 
-      // Verificar se é organizado pelo PPST
-      const isPPSTOrganized = jogo.metadata?.tipoJogo?.toUpperCase()?.startsWith("PPST") ?? false;
-
-      // Buyin e taxa do jogo (com fallback para soma dos jogadores)
-      const jogoBuyin = jogo.totalGeral?.buyinFichas ||
-        jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) || 0;
-      const jogoTaxa = jogo.totalGeral?.taxa ||
-        jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) || 0;
-
-      // Arrecadado total do jogo (todos os torneios)
-      arrecadadoTotal += jogoBuyin;
-
-      // Só conta GTD de torneios PPST
-      if (isPPSTOrganized && gtd > 0) {
-        gtdTourneysCount++;
-        gtdTotalTodos += gtd; // Soma GTD de TODOS os torneios com GTD
-
-        // Arrecadado por liga - TODOS os torneios com GTD
-        for (const jogador of jogo.jogadores ?? []) {
-          const ligaId = jogador.ligaId;
-          const buyin = jogador.buyinFichas ?? 0;
-          if (LIGAS_CONFIG[ligaId]) {
-            arrecadadoPorLigaTotal[ligaId] += buyin;
-            if (LIGAS_BR.includes(ligaId)) {
-              arrecadadoBRTotal += buyin;
-            } else if (LIGAS_SA.includes(ligaId)) {
-              arrecadadoSATotal += buyin;
-            }
-          }
-        }
-
-        // Verificar se teve overlay: (Buyin - Taxa) - GTD < 0
-        const buyinLiquido = jogoBuyin - jogoTaxa;
-        const resultado = buyinLiquido - gtd;
-        const temOverlay = resultado < 0;
-
-        // ME = torneio das 20:00 (Main Event do dia)
-        const horaInicio = jogo.metadata?.horaInicio ?? "";
-        const isME = horaInicio === "20:00";
-        // Outros = qualquer torneio com GTD que NÃO é das 20:00
-
-        // Info do torneio
-        const torneioInfo: TorneioInfo = {
-          nome: jogo.metadata?.nomeMesa ?? "Sem nome",
-          data: jogo.metadata?.dataInicio ?? "",
-          gtdUSD: gtd / 5, // Assumindo taxa 1:5
-          gtdBRL: gtd,
-          buyinBRL: buyinLiquido,
-          entradas: jogo.jogadores?.length ?? 0,
-          overlay: temOverlay ? Math.abs(resultado) : 0,
-        };
-
-        // ME = 7 torneios específicos, Outros = resto
-        if (isME) {
-          torneisoME.push(torneioInfo);
-          arrecadadoME += buyinLiquido;
-          gtdME += gtd;
-        } else {
-          torneiosOutros.push(torneioInfo);
-          arrecadadoOutros += buyinLiquido;
-          gtdOutros += gtd;
-        }
-
-        if (temOverlay) {
-          torneiosOverlay.push(torneioInfo);
-          // Só soma nos totais se teve overlay
-          gtdTotal += gtd;
-          buyinGTD += jogoBuyin;
-          taxaGTD += jogoTaxa;
-          soOverlay += resultado;
-          overlayTourneysCount++;
-
-          // Arrecadado por liga e clube - APENAS de torneios com overlay
-          // Arrecadado = Buyin - Taxa (líquido)
-          for (const jogador of jogo.jogadores ?? []) {
-            const ligaId = jogador.ligaId;
-            const buyin = jogador.buyinFichas ?? 0;
-            const taxa = jogador.taxa ?? 0;
-            const liquido = buyin - taxa; // Buyin - Taxa
-
-            if (LIGAS_CONFIG[ligaId]) {
-              arrecadadoPorLiga[ligaId] += liquido;
-
-              if (LIGAS_BR.includes(ligaId)) {
-                arrecadadoBR += liquido;
-              } else if (LIGAS_SA.includes(ligaId)) {
-                arrecadadoSA += liquido;
-              }
-
-              // Acumular por clube
-              const clubeKey = `${ligaId}-${jogador.clubeId}`;
-              if (!clubeMap[clubeKey]) {
-                clubeMap[clubeKey] = {
-                  clubeNome: jogador.clubeNome,
-                  arrecadado: 0,
-                };
-              }
-              clubeMap[clubeKey].arrecadado += liquido;
-            }
-          }
+      if (isPPST && gtd > 0) {
+        gtdCount++;
+        const jogoBuyin =
+          jogo.totalGeral?.buyinFichas ||
+          jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) ||
+          0;
+        const jogoTaxa =
+          jogo.totalGeral?.taxa ||
+          jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) ||
+          0;
+        const resultado = jogoBuyin - jogoTaxa - gtd;
+        if (resultado < 0) {
+          overlayCount++;
+          overlayTotal += Math.abs(resultado);
         }
       }
     }
 
-    // Converter clubeMap para clubesPorLiga
-    for (const [key, data] of Object.entries(clubeMap)) {
-      const [ligaIdStr, clubeIdStr] = key.split("-");
-      const ligaId = Number(ligaIdStr);
-      const clubeId = Number(clubeIdStr);
-      if (clubesPorLiga[ligaId]) {
-        clubesPorLiga[ligaId].push({
-          clubeId,
-          clubeNome: data.clubeNome,
-          arrecadado: data.arrecadado,
-        });
+    return { overlayCount, overlayTotal, gtdCount };
+  }, [jogosPPST]);
+
+  // Extract available leagues from geralPPST import data
+  const availableLeagues: AvailableLeague[] = useMemo(() => {
+    const seen = new Map<number, AvailableLeague>();
+    for (const bloco of geralPPST) {
+      for (const liga of bloco.ligas) {
+        if (!seen.has(liga.ligaId)) {
+          seen.set(liga.ligaId, {
+            ligaId: liga.ligaId,
+            ligaNome: liga.ligaNome,
+            superUnionId: liga.superUnionId ?? null,
+          });
+        }
       }
     }
+    return Array.from(seen.values());
+  }, [geralPPST]);
 
-    // Ordenar clubes por arrecadado (desc)
-    for (const ligaId of Object.keys(clubesPorLiga)) {
-      clubesPorLiga[Number(ligaId)].sort((a, b) => b.arrecadado - a.arrecadado);
+  // Extract available clubs from jogosPPST import data
+  const availableClubs: AvailableClub[] = useMemo(() => {
+    const seen = new Map<string, AvailableClub>();
+    for (const jogo of jogosPPST) {
+      for (const jogador of jogo.jogadores) {
+        const key = `${jogador.ligaId}-${jogador.clubeId}`;
+        if (!seen.has(key)) {
+          // Find the liga name from available leagues
+          const liga = availableLeagues.find(
+            (l) => l.ligaId === jogador.ligaId,
+          );
+          seen.set(key, {
+            clubeId: jogador.clubeId,
+            clubeNome: jogador.clubeNome,
+            ligaId: jogador.ligaId,
+            ligaNome: liga?.ligaNome ?? `Liga ${jogador.ligaId}`,
+            superUnionId: liga?.superUnionId ?? null,
+          });
+        }
+      }
     }
-
-    // 2. Meta BR = 60% do GTD
-    const metaBR = gtdTotal * 0.6;
-    const metaSA = gtdTotal * 0.4;
-
-    // 3. Overlay = max(0, Meta - Arrecadado)
-    const overlayBR = Math.max(0, metaBR - arrecadadoBR);
-    const overlaySA = Math.max(0, metaSA - arrecadadoSA);
-    const overlayTotal = overlayBR + overlaySA;
-
-    // 4. Gap da planilha (coluna O) e dados do Geral PPST para comparação
-    const bloco15 = geralPPST.find((b) => b.contexto?.taxaCambio === "1:5");
-    const gapPlanilha = bloco15?.total?.gapGarantido ?? 0;
-
-    // Dados do Geral PPST para investigar cálculo do gap
-    const geralPPSTData = {
-      ganhosJogador: bloco15?.total?.ganhosJogador ?? 0,
-      valorTicketGanho: bloco15?.total?.valorTicketGanho ?? 0,
-      buyinTicket: bloco15?.total?.buyinTicket ?? 0,
-      valorPremioPersonalizado: bloco15?.total?.valorPremioPersonalizado ?? 0,
-      ganhosLigaGeral: bloco15?.total?.ganhosLigaGeral ?? 0,
-      ganhosLigaTaxa: bloco15?.total?.ganhosLigaTaxa ?? 0,
-      buyinSpinup: bloco15?.total?.buyinSpinup ?? 0,
-      premiacaoSpinup: bloco15?.total?.premiacaoSpinup ?? 0,
-      valorTicketEntregue: bloco15?.total?.valorTicketEntregue ?? 0,
-      buyinTicketLiga: bloco15?.total?.buyinTicketLiga ?? 0,
-    };
-
-    // Percentual atingido
-    const percentualBR = metaBR > 0 ? arrecadadoBR / metaBR : 0;
-    const percentualSA = metaSA > 0 ? arrecadadoSA / metaSA : 0;
-
-    torneiosOverlay.sort((a, b) => b.overlay - a.overlay);
-
-    return {
-      gtdTotal,
-      arrecadadoTotal,
-      arrecadadoBR,
-      arrecadadoSA,
-      arrecadadoPorLiga,
-      clubesPorLiga,
-      metaBR,
-      metaSA,
-      overlayBR,
-      overlaySA,
-      overlayTotal,
-      gapPlanilha,
-      geralPPST: geralPPSTData,
-      percentualBR,
-      percentualSA,
-      atingiuMetaBR: arrecadadoBR >= metaBR,
-      atingiuMetaSA: arrecadadoSA >= metaSA,
-      // Stats para torneios PPST com GTD
-      buyinGTD,
-      taxaGTD,
-      gtdTourneysCount,
-      overlayTourneysCount,
-      buyinGTDMenosTaxa: buyinGTD - taxaGTD,
-      soOverlay,
-      gtdTotalTodos, // GTD total de TODOS os torneios
-      arrecadadoPorLigaTotal, // Buyins por liga de TODOS os torneios com GTD
-      arrecadadoBRTotal,
-      arrecadadoSATotal,
-      // ME vs Outros
-      torneisoME,
-      torneiosOutros,
-      arrecadadoME,
-      arrecadadoOutros,
-      gtdME,
-      gtdOutros,
-      torneiosOverlay,
-    };
-  }, [geralPPST, jogosPPST]);
-
-  if (jogosPPST.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        Nenhum dado de Jogos PPST encontrado
-      </div>
-    );
-  }
-
-  const torneiosGtd = [...stats.torneisoME, ...stats.torneiosOutros].sort(
-    (a, b) => {
-      const timeA = parseDateString(a.data)?.getTime() ?? Number.POSITIVE_INFINITY;
-      const timeB = parseDateString(b.data)?.getTime() ?? Number.POSITIVE_INFINITY;
-      return timeA - timeB;
-    },
-  );
-  let lastDateKey = "";
+    return Array.from(seen.values());
+  }, [jogosPPST, availableLeagues]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-2">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-          Rateio
-        </div>
-        <div className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">
-          Só Torneios c/ Overlay ({stats.overlayTourneysCount} de {stats.gtdTourneysCount})
-        </div>
-      </div>
+    <Tabs
+      value={activeSubTab}
+      onValueChange={setActiveSubTab}
+      className="flex flex-col h-full"
+    >
+      <TabsList className="flex-shrink-0 w-full justify-start border-b border-border bg-transparent h-auto px-0 py-0 gap-0">
+        <TabsTrigger
+          value="analysis"
+          className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-3 py-2 text-xs"
+        >
+          Analise
+        </TabsTrigger>
+        <TabsTrigger
+          value="meta-groups"
+          className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-3 py-2 text-xs"
+        >
+          Grupos Meta
+        </TabsTrigger>
+        <TabsTrigger
+          value="club-metas"
+          className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-3 py-2 text-xs"
+        >
+          Metas Clube
+        </TabsTrigger>
+      </TabsList>
 
-      {/* Gap da Planilha */}
-      <div className="space-y-1 text-sm border-t pt-3">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-          Comparativo entre torneios com overlay geral vindo da planilha e torneios com overlay so de PPST + GTD
-        </div>
-        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 text-xs">
-          <span className="text-muted-foreground whitespace-nowrap">
-            Gap planilha (col O) - overlay total informado na planilha (todos GTD PPST)
-          </span>
-          <span className={`font-mono tabular-nums text-right ${stats.gapPlanilha < 0 ? "text-red-500" : "text-green-500"}`}>
-            {formatNumber(stats.gapPlanilha)}
-          </span>
-          <span className="text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">
-            Só overlay (torneios PPST com GTD e overlay)
-          </span>
-          <span className="font-mono tabular-nums text-right text-red-500">
-            {formatNumber(stats.soOverlay)}
-          </span>
-        </div>
-      </div>
-
-      {/* Torneios com overlay */}
-      {stats.torneiosOverlay.length > 0 && (
-        <div className="border-t pt-4 space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              So overlay - torneios ({stats.torneiosOverlay.length})
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-[10px] uppercase tracking-wide"
-              onClick={() => setShowAllGtd((current) => !current)}
-            >
-              {showAllGtd ? "Ocultar GTD" : "Ver torneios GTD"}
-            </Button>
+      {/* Overlay Stats - visible across all sub-tabs */}
+      {overlayStats.gtdCount > 0 && (
+        <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 mt-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-muted-foreground">Torneios c/ overlay:</span>
+            <span className="font-mono font-medium text-red-500">
+              {overlayStats.overlayCount}
+            </span>
+            <span className="text-muted-foreground">
+              de {overlayStats.gtdCount} GTD
+            </span>
           </div>
-          <div className="text-xs">
-            <div className="grid grid-cols-6 gap-2 text-muted-foreground border-b pb-1 mb-1">
-              <span>Nome</span>
-              <span>Data</span>
-              <span className="text-right">GTD</span>
-              <span className="text-right">Arrecadado</span>
-              <span className="text-right">Entradas</span>
-              <span className="text-right">Overlay</span>
-            </div>
-            {stats.torneiosOverlay.map((t, i) => (
-              <div key={`${t.nome}-${t.data}-${i}`} className="grid grid-cols-6 gap-2 py-0.5">
-                <span className="truncate">{t.nome}</span>
-                <span>{t.data || "-"}</span>
-                <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
-                <span className="text-right font-mono text-green-500">
-                  {formatNumber(t.buyinBRL)}
-                </span>
-                <span className="text-right font-mono">{t.entradas}</span>
-                <span className="text-right font-mono text-red-500">
-                  {formatNumber(t.overlay)}
-                </span>
-              </div>
-            ))}
+          <div className="h-3 w-px bg-border" />
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-muted-foreground">Overlay total:</span>
+            <span className="font-mono font-medium text-red-500">
+              {formatNumber(overlayStats.overlayTotal)}
+            </span>
           </div>
-          {showAllGtd && (
-            <div className="pt-3">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
-                Torneios GTD (PPST) ({torneiosGtd.length})
-              </div>
-              <div className="text-xs">
-                <div className="grid grid-cols-6 gap-2 text-muted-foreground border-b pb-1 mb-1">
-                  <span>Nome</span>
-                  <span>Data</span>
-                  <span className="text-right">GTD</span>
-                  <span className="text-right">Arrecadado</span>
-                  <span className="text-right">Entradas</span>
-                  <span className="text-right">Overlay</span>
-                </div>
-                {torneiosGtd.map((t, i) => {
-                  const dateKey = getDateKey(t.data);
-                  const weekdayLabel = getWeekdayLabel(t.data);
-                  const dateLabel = formatDateDisplay(t.data);
-                  const showWeekday = dateKey !== lastDateKey;
-                  if (showWeekday) {
-                    lastDateKey = dateKey;
-                  }
-                  return (
-                    <div key={`${t.nome}-${t.data}-${i}`}>
-                      {showWeekday && (
-                        <div className="flex items-center gap-2 py-2">
-                          <div className="h-px flex-1 bg-border/70" />
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                            {weekdayLabel} • {dateLabel}
-                          </div>
-                          <div className="h-px flex-1 bg-border/70" />
-                        </div>
-                      )}
-                      <div className="grid grid-cols-6 gap-2 py-0.5">
-                        <span className="truncate">{t.nome}</span>
-                        <span>{t.data || "-"}</span>
-                        <span className="text-right font-mono">{formatNumber(t.gtdBRL)}</span>
-                        <span className="text-right font-mono text-green-500">
-                          {formatNumber(t.buyinBRL)}
-                        </span>
-                        <span className="text-right font-mono">{t.entradas}</span>
-                        <span
-                          className={`text-right font-mono ${
-                            t.overlay > 0 ? "text-red-500" : "text-muted-foreground"
-                          }`}
-                        >
-                          {t.overlay > 0 ? formatNumber(t.overlay) : "-"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-    </div>
+      <div className="flex-1 overflow-y-auto pt-4">
+        <TabsContent value="analysis" className="mt-0">
+          <RateioAnalysis
+            geralPPST={geralPPST}
+            jogosPPST={jogosPPST}
+            metaGroups={analysisGroups}
+          />
+        </TabsContent>
+
+        <TabsContent value="meta-groups" className="mt-0">
+          <MetaGroupsSection
+            availableLeagues={availableLeagues}
+            fallbackGroups={usingFallback ? analysisGroups : undefined}
+          />
+        </TabsContent>
+
+        <TabsContent value="club-metas" className="mt-0">
+          <ClubMetasSection
+            availableClubs={availableClubs}
+            metaGroups={analysisGroups}
+            usingFallback={usingFallback}
+          />
+        </TabsContent>
+      </div>
+    </Tabs>
   );
 }

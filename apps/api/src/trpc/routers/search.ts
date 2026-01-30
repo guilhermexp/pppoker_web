@@ -36,35 +36,40 @@ export const searchRouter = createTRPCRouter({
         .from("invoices")
         .select("id, invoice_number, amount, currency, status, customer_name")
         .eq("team_id", teamId)
-        .or(`invoice_number.ilike.%${searchTerm ?? ""}%,customer_name.ilike.%${searchTerm ?? ""}%`)
+        .or(
+          `invoice_number.ilike.%${searchTerm ?? ""}%,customer_name.ilike.%${searchTerm ?? ""}%`,
+        )
         .limit(limit);
 
       return {
-        transactions: transactions?.map(t => ({
-          id: t.id,
-          name: t.name,
-          amount: t.amount,
-          currency: t.currency,
-          date: t.date,
-          categorySlug: t.category_slug,
-          type: "transaction" as const,
-        })) ?? [],
-        customers: customers?.map(c => ({
-          id: c.id,
-          name: c.name,
-          email: c.email,
-          website: c.website,
-          type: "customer" as const,
-        })) ?? [],
-        invoices: invoices?.map(i => ({
-          id: i.id,
-          invoiceNumber: i.invoice_number,
-          amount: i.amount,
-          currency: i.currency,
-          status: i.status,
-          customerName: i.customer_name,
-          type: "invoice" as const,
-        })) ?? [],
+        transactions:
+          transactions?.map((t) => ({
+            id: t.id,
+            name: t.name,
+            amount: t.amount,
+            currency: t.currency,
+            date: t.date,
+            categorySlug: t.category_slug,
+            type: "transaction" as const,
+          })) ?? [],
+        customers:
+          customers?.map((c) => ({
+            id: c.id,
+            name: c.name,
+            email: c.email,
+            website: c.website,
+            type: "customer" as const,
+          })) ?? [],
+        invoices:
+          invoices?.map((i) => ({
+            id: i.id,
+            invoiceNumber: i.invoice_number,
+            amount: i.amount,
+            currency: i.currency,
+            status: i.status,
+            customerName: i.customer_name,
+            type: "invoice" as const,
+          })) ?? [],
       };
     }),
 
@@ -78,12 +83,16 @@ export const searchRouter = createTRPCRouter({
       // Search inbox items
       let inboxQuery = supabase
         .from("inbox")
-        .select("id, file_name, file_path, display_name, amount, currency, content_type, date, size, description, status, website, base_amount, base_currency, tax_amount, tax_rate, tax_type, created_at")
+        .select(
+          "id, file_name, file_path, display_name, amount, currency, content_type, date, size, description, status, website, base_amount, base_currency, tax_amount, tax_rate, tax_type, created_at",
+        )
         .eq("team_id", teamId)
         .limit(limit);
 
       if (q) {
-        inboxQuery = inboxQuery.or(`file_name.ilike.%${q}%,display_name.ilike.%${q}%,description.ilike.%${q}%`);
+        inboxQuery = inboxQuery.or(
+          `file_name.ilike.%${q}%,display_name.ilike.%${q}%,description.ilike.%${q}%`,
+        );
       }
       if (transactionId) {
         inboxQuery = inboxQuery.eq("transaction_id", transactionId);
@@ -92,13 +101,17 @@ export const searchRouter = createTRPCRouter({
       // Search invoices
       let invoiceQuery = supabase
         .from("invoices")
-        .select("id, invoice_number, customer_name, amount, currency, file_path, due_date, status, file_size, created_at")
+        .select(
+          "id, invoice_number, customer_name, amount, currency, file_path, due_date, status, file_size, created_at",
+        )
         .eq("team_id", teamId)
         .in("status", ["unpaid", "overdue", "paid"])
         .limit(limit);
 
       if (q) {
-        invoiceQuery = invoiceQuery.or(`invoice_number.ilike.%${q}%,customer_name.ilike.%${q}%`);
+        invoiceQuery = invoiceQuery.or(
+          `invoice_number.ilike.%${q}%,customer_name.ilike.%${q}%`,
+        );
       }
 
       const [inboxRes, invoiceRes] = await Promise.all([

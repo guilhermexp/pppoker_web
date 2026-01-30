@@ -17,7 +17,11 @@ import {
   removeLinkedClubSchema,
 } from "@api/schemas/poker";
 import { createAdminClient } from "@api/services/supabase";
-import { authProcedure, createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import {
+  authProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "@api/trpc/init";
 import {
   acceptTeamInvite,
   createTeam,
@@ -50,7 +54,9 @@ async function getTeamViaSupabase(teamId: string) {
 
   const { data: team, error: teamError } = await supabase
     .from("teams")
-    .select("id, name, logo_url, email, inbox_id, plan, base_currency, country_code, fiscal_year_start_month, export_settings")
+    .select(
+      "id, name, logo_url, email, inbox_id, plan, base_currency, country_code, fiscal_year_start_month, export_settings",
+    )
     .eq("id", teamId)
     .single();
 
@@ -94,9 +100,12 @@ export const teamRouter = createTRPCRouter({
       if (input.name !== undefined) updateData.name = input.name;
       if (input.email !== undefined) updateData.email = input.email;
       if (input.logoUrl !== undefined) updateData.logo_url = input.logoUrl;
-      if (input.baseCurrency !== undefined) updateData.base_currency = input.baseCurrency;
-      if (input.countryCode !== undefined) updateData.country_code = input.countryCode;
-      if (input.fiscalYearStartMonth !== undefined) updateData.fiscal_year_start_month = input.fiscalYearStartMonth;
+      if (input.baseCurrency !== undefined)
+        updateData.base_currency = input.baseCurrency;
+      if (input.countryCode !== undefined)
+        updateData.country_code = input.countryCode;
+      if (input.fiscalYearStartMonth !== undefined)
+        updateData.fiscal_year_start_month = input.fiscalYearStartMonth;
 
       const { data, error } = await supabase
         .from("teams")
@@ -149,12 +158,14 @@ export const teamRouter = createTRPCRouter({
       id: m.id,
       role: m.role,
       createdAt: m.created_at,
-      user: m.user ? {
-        id: m.user.id,
-        fullName: m.user.full_name,
-        email: m.user.email,
-        avatarUrl: m.user.avatar_url,
-      } : null,
+      user: m.user
+        ? {
+            id: m.user.id,
+            fullName: m.user.full_name,
+            email: m.user.email,
+            avatarUrl: m.user.avatar_url,
+          }
+        : null,
     }));
   }),
 
@@ -226,7 +237,10 @@ export const teamRouter = createTRPCRouter({
         .single();
 
       if (teamError || !team) {
-        console.error(`[${requestId}] Failed to create team:`, teamError?.message);
+        console.error(
+          `[${requestId}] Failed to create team:`,
+          teamError?.message,
+        );
         throw new Error(`Failed to create team: ${teamError?.message}`);
       }
 
@@ -240,7 +254,10 @@ export const teamRouter = createTRPCRouter({
         });
 
       if (memberError) {
-        console.error(`[${requestId}] Failed to add user to team:`, memberError.message);
+        console.error(
+          `[${requestId}] Failed to add user to team:`,
+          memberError.message,
+        );
         throw new Error(`Failed to add user to team: ${memberError.message}`);
       }
 
@@ -366,7 +383,10 @@ export const teamRouter = createTRPCRouter({
       .eq("email", session.user.email!);
 
     if (invitesError || !invites) {
-      console.log("[team.invitesByEmail] Supabase REST error:", invitesError?.message);
+      console.log(
+        "[team.invitesByEmail] Supabase REST error:",
+        invitesError?.message,
+      );
       return [];
     }
 
@@ -376,16 +396,20 @@ export const teamRouter = createTRPCRouter({
       email: inv.email,
       code: inv.code,
       role: inv.role,
-      user: inv.user ? {
-        id: inv.user.id,
-        fullName: inv.user.full_name,
-        email: inv.user.email,
-      } : null,
-      team: inv.team ? {
-        id: inv.team.id,
-        name: inv.team.name,
-        logoUrl: inv.team.logo_url,
-      } : null,
+      user: inv.user
+        ? {
+            id: inv.user.id,
+            fullName: inv.user.full_name,
+            email: inv.user.email,
+          }
+        : null,
+      team: inv.team
+        ? {
+            id: inv.team.id,
+            name: inv.team.name,
+            logoUrl: inv.team.logo_url,
+          }
+        : null,
     }));
   }),
 
@@ -502,15 +526,24 @@ export const teamRouter = createTRPCRouter({
       const supabase = await createAdminClient();
 
       const updateData: Record<string, unknown> = {};
-      if (input.pokerPlatform !== undefined) updateData.poker_platform = input.pokerPlatform;
-      if (input.pokerEntityType !== undefined) updateData.poker_entity_type = input.pokerEntityType;
-      if (input.pokerClubId !== undefined) updateData.poker_club_id = input.pokerClubId;
-      if (input.pokerClubName !== undefined) updateData.poker_club_name = input.pokerClubName;
-      if (input.pokerLigaId !== undefined) updateData.poker_liga_id = input.pokerLigaId;
-      if (input.pokerLigaName !== undefined) updateData.poker_liga_name = input.pokerLigaName;
-      if (input.pokerSuId !== undefined) updateData.poker_su_id = input.pokerSuId;
-      if (input.pokerSuName !== undefined) updateData.poker_su_name = input.pokerSuName;
-      if (input.pokerParentLigaTeamId !== undefined) updateData.poker_parent_liga_team_id = input.pokerParentLigaTeamId;
+      if (input.pokerPlatform !== undefined)
+        updateData.poker_platform = input.pokerPlatform;
+      if (input.pokerEntityType !== undefined)
+        updateData.poker_entity_type = input.pokerEntityType;
+      if (input.pokerClubId !== undefined)
+        updateData.poker_club_id = input.pokerClubId;
+      if (input.pokerClubName !== undefined)
+        updateData.poker_club_name = input.pokerClubName;
+      if (input.pokerLigaId !== undefined)
+        updateData.poker_liga_id = input.pokerLigaId;
+      if (input.pokerLigaName !== undefined)
+        updateData.poker_liga_name = input.pokerLigaName;
+      if (input.pokerSuId !== undefined)
+        updateData.poker_su_id = input.pokerSuId;
+      if (input.pokerSuName !== undefined)
+        updateData.poker_su_name = input.pokerSuName;
+      if (input.pokerParentLigaTeamId !== undefined)
+        updateData.poker_parent_liga_team_id = input.pokerParentLigaTeamId;
 
       const { data, error } = await supabase
         .from("teams")

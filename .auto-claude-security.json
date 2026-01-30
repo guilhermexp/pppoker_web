@@ -184,39 +184,15 @@
     "tsx",
     "turbo"
   ],
-  "script_commands": [
-    "bun",
-    "npm",
-    "pnpm",
-    "yarn"
-  ],
+  "script_commands": ["bun", "npm", "pnpm", "yarn"],
   "custom_commands": [],
   "detected_stack": {
-    "languages": [
-      "python",
-      "javascript",
-      "typescript",
-      "c",
-      "cpp"
-    ],
-    "package_managers": [
-      "bun"
-    ],
-    "frameworks": [
-      "nextjs",
-      "turbo",
-      "biome"
-    ],
-    "databases": [
-      "redis",
-      "postgresql"
-    ],
-    "infrastructure": [
-      "docker"
-    ],
-    "cloud_providers": [
-      "railway"
-    ],
+    "languages": ["python", "javascript", "typescript", "c", "cpp"],
+    "package_managers": ["bun"],
+    "frameworks": ["nextjs", "turbo", "biome"],
+    "databases": ["redis", "postgresql"],
+    "infrastructure": ["docker"],
+    "cloud_providers": ["railway"],
     "code_quality_tools": [],
     "version_managers": []
   },

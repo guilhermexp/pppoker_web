@@ -37,8 +37,7 @@ const statusClasses: Record<FastChipsTransactionStatus, string> = {
 export function FastChipsTransactionsTable() {
   const t = useI18n();
   const trpc = useTRPC();
-  const { fastchipsTransactionId, setParams } =
-    useFastchipsTransactionParams();
+  const { fastchipsTransactionId, setParams } = useFastchipsTransactionParams();
   const [viewMode, setViewMode] = useState<"entries" | "exits">("entries");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,7 +48,7 @@ export function FastChipsTransactionsTable() {
       pageSize: 50,
       operationType: viewMode === "entries" ? "entrada" : "saida",
       search: searchQuery || undefined,
-    })
+    }),
   );
 
   // Map tRPC data to table format
@@ -165,32 +164,54 @@ export function FastChipsTransactionsTable() {
               // Loading skeleton
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-12" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-12" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-20" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-8 w-8 ml-auto" />
+                  </TableCell>
                 </TableRow>
               ))
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={8}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   Erro ao carregar transações
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  Nenhuma transação encontrada. Importe uma planilha Fastchips para começar.
+                <TableCell
+                  colSpan={8}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  Nenhuma transação encontrada. Importe uma planilha Fastchips
+                  para começar.
                 </TableCell>
               </TableRow>
             ) : (
               rows.map((transaction) => {
-                const isSelected =
-                  fastchipsTransactionId === transaction.id;
+                const isSelected = fastchipsTransactionId === transaction.id;
                 return (
                   <TableRow
                     key={transaction.id}

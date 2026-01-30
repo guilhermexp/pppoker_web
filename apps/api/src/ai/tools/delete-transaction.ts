@@ -55,9 +55,7 @@ IMPORTANT RESTRICTIONS:
         }),
       );
 
-      const existingTransactions = transactionDetails.filter(
-        (t) => t !== null,
-      );
+      const existingTransactions = transactionDetails.filter((t) => t !== null);
 
       if (existingTransactions.length === 0) {
         yield {

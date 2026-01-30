@@ -14,8 +14,10 @@ try {
         const key = trimmed.slice(0, eqIndex);
         let value = trimmed.slice(eqIndex + 1);
         // Remove quotes if present
-        if ((value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'"))) {
+        if (
+          (value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))
+        ) {
           value = value.slice(1, -1);
         }
         if (!process.env[key]) {
@@ -28,10 +30,13 @@ try {
   console.log("Could not load .env file:", e);
 }
 
-const connectionString = process.env.DATABASE_PRIMARY_URL || process.env.DATABASE_URL;
+const connectionString =
+  process.env.DATABASE_PRIMARY_URL || process.env.DATABASE_URL;
 
 if (!connectionString) {
-  console.error("DATABASE_PRIMARY_URL or DATABASE_URL environment variable is required");
+  console.error(
+    "DATABASE_PRIMARY_URL or DATABASE_URL environment variable is required",
+  );
   process.exit(1);
 }
 

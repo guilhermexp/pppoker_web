@@ -1,10 +1,5 @@
 import { getAppUrl } from "@midpoker/utils/envs";
-import {
-  Hr,
-  Link,
-  Section,
-  Text,
-} from "@react-email/components";
+import { Hr, Link, Section, Text } from "@react-email/components";
 import { LogoFooter } from "./logo-footer";
 import { getEmailInlineStyles, getEmailThemeClasses } from "./theme";
 

@@ -70,12 +70,12 @@ export function FastchipsImportValidationModal({
 
   // Validate mutation
   const validateMutation = useMutation(
-    trpc.fastchips.imports.validate.mutationOptions()
+    trpc.fastchips.imports.validate.mutationOptions(),
   );
 
   // Process mutation
   const processMutation = useMutation(
-    trpc.fastchips.imports.process.mutationOptions()
+    trpc.fastchips.imports.process.mutationOptions(),
   );
 
   // Calculate stats
@@ -168,7 +168,9 @@ export function FastchipsImportValidationModal({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 border rounded-lg">
                 <div className="text-sm text-muted-foreground">Operações</div>
-                <div className="text-2xl font-bold">{stats.totalOperations}</div>
+                <div className="text-2xl font-bold">
+                  {stats.totalOperations}
+                </div>
                 <div className="flex gap-2 mt-1 text-xs">
                   <span className="text-green-600 flex items-center">
                     <ArrowUpRight className="h-3 w-3" /> {stats.totalEntries}
@@ -205,7 +207,9 @@ export function FastchipsImportValidationModal({
               </div>
 
               <div className="p-4 border rounded-lg">
-                <div className="text-sm text-muted-foreground">Total Saídas</div>
+                <div className="text-sm text-muted-foreground">
+                  Total Saídas
+                </div>
                 <div className="text-2xl font-bold text-red-600">
                   {formatCurrency(stats.grossExitTotal)}
                 </div>
@@ -260,7 +264,10 @@ export function FastchipsImportValidationModal({
           </TabsContent>
 
           {/* Operações Tab */}
-          <TabsContent value="operacoes" className="mt-4 flex-1 overflow-hidden">
+          <TabsContent
+            value="operacoes"
+            className="mt-4 flex-1 overflow-hidden"
+          >
             <ScrollArea className="h-[400px]">
               <Table>
                 <TableHeader>
@@ -299,15 +306,15 @@ export function FastchipsImportValidationModal({
                       <TableCell className="text-right">
                         {formatCurrency(
                           op.operationType === "Entrada"
-                            ? op.grossEntry ?? 0
-                            : op.grossExit ?? 0
+                            ? (op.grossEntry ?? 0)
+                            : (op.grossExit ?? 0),
                         )}
                       </TableCell>
                       <TableCell className="text-right">
                         {formatCurrency(
                           op.operationType === "Entrada"
-                            ? op.netEntry ?? 0
-                            : op.netExit ?? 0
+                            ? (op.netEntry ?? 0)
+                            : (op.netExit ?? 0),
                         )}
                       </TableCell>
                       <TableCell>{op.feeRate}%</TableCell>
@@ -324,7 +331,10 @@ export function FastchipsImportValidationModal({
           </TabsContent>
 
           {/* Integrantes Tab */}
-          <TabsContent value="integrantes" className="mt-4 flex-1 overflow-hidden">
+          <TabsContent
+            value="integrantes"
+            className="mt-4 flex-1 overflow-hidden"
+          >
             <ScrollArea className="h-[400px]">
               <Table>
                 <TableHeader>
@@ -374,7 +384,10 @@ export function FastchipsImportValidationModal({
           </TabsContent>
 
           {/* Validação Tab */}
-          <TabsContent value="validacao" className="mt-4 flex-1 overflow-hidden">
+          <TabsContent
+            value="validacao"
+            className="mt-4 flex-1 overflow-hidden"
+          >
             <div className="mb-4 p-4 border rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Qualidade dos Dados</span>
@@ -420,10 +433,7 @@ export function FastchipsImportValidationModal({
                           {check.category}
                         </Badge>
                         {check.severity === "critical" && (
-                          <Badge
-                            variant="destructive"
-                            className="text-xs"
-                          >
+                          <Badge variant="destructive" className="text-xs">
                             crítico
                           </Badge>
                         )}

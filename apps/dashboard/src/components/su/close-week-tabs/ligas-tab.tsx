@@ -91,15 +91,11 @@ export function LigasTab({ summaries }: LigasTabProps) {
             </TableHead>
           </TableRow>
           <TableRow>
-            <TableHead className="text-right text-xs">
-              Ganhos Jogador
-            </TableHead>
+            <TableHead className="text-right text-xs">Ganhos Jogador</TableHead>
             <TableHead className="text-right text-xs">Liga Geral</TableHead>
             <TableHead className="text-right text-xs">Liga Taxa</TableHead>
             <TableHead className="text-right text-xs">Gap GTD</TableHead>
-            <TableHead className="text-right text-xs">
-              Ganhos Jogador
-            </TableHead>
+            <TableHead className="text-right text-xs">Ganhos Jogador</TableHead>
             <TableHead className="text-right text-xs">Liga Geral</TableHead>
             <TableHead className="text-right text-xs">Liga Taxa</TableHead>
             <TableHead className="text-right text-xs">Jogador</TableHead>

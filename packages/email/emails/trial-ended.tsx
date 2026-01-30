@@ -84,9 +84,9 @@ export const TrialEndedEmail = ({ fullName = "" }: Props) => {
             className={`text-[14px] ${themeClasses.text}`}
             style={{ color: lightStyles.text.color }}
           >
-            If this is the last time we hear from you, thanks for giving Mid Poker
-            a try. We won't send any more emails, but you're always welcome
-            back.
+            If this is the last time we hear from you, thanks for giving Mid
+            Poker a try. We won't send any more emails, but you're always
+            welcome back.
           </Text>
           <Text
             className={`text-[14px] ${themeClasses.text}`}

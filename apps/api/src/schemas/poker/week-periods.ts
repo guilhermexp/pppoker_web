@@ -11,21 +11,12 @@ export const pokerWeekPeriodStatusSchema = z.enum(["open", "closed"]);
 // =============================================================================
 
 export const getPokerWeekPeriodsSchema = z.object({
-  cursor: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Cursor for pagination (page number as string)",
-    }),
-  pageSize: z.coerce
-    .number()
-    .min(1)
-    .max(100)
-    .optional()
-    .openapi({
-      description: "Number of items per page",
-    }),
+  cursor: z.string().nullable().optional().openapi({
+    description: "Cursor for pagination (page number as string)",
+  }),
+  pageSize: z.coerce.number().min(1).max(100).optional().openapi({
+    description: "Number of items per page",
+  }),
   status: z.enum(["open", "closed", "all"]).optional().openapi({
     description: "Filter by status (open, closed, or all)",
   }),
@@ -59,7 +50,8 @@ export const closeWeekSchema = z.object({
     description: "Optional note for the week closure",
   }),
   rakebackOverrides: z.array(rakebackOverrideSchema).optional().openapi({
-    description: "Temporary rakeback overrides for specific agents (only for this week)",
+    description:
+      "Temporary rakeback overrides for specific agents (only for this week)",
   }),
 });
 
@@ -135,7 +127,9 @@ export const closeWeekPreviewSchema = z.object({
 // =============================================================================
 
 export type PokerWeekPeriodStatus = z.infer<typeof pokerWeekPeriodStatusSchema>;
-export type GetPokerWeekPeriodsInput = z.infer<typeof getPokerWeekPeriodsSchema>;
+export type GetPokerWeekPeriodsInput = z.infer<
+  typeof getPokerWeekPeriodsSchema
+>;
 export type PreviewCloseWeekInput = z.infer<typeof previewCloseWeekSchema>;
 export type RakebackOverride = z.infer<typeof rakebackOverrideSchema>;
 export type CloseWeekInput = z.infer<typeof closeWeekSchema>;

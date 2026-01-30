@@ -20,7 +20,9 @@ export default async function FastChipsContasVinculadasPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{t("fastchips.contas_vinculadas.title")}</h1>
+          <h1 className="text-2xl font-semibold">
+            {t("fastchips.contas_vinculadas.title")}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {t("fastchips.contas_vinculadas.description")}
           </p>

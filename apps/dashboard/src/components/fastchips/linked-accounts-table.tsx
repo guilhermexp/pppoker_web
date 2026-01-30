@@ -65,9 +65,12 @@ export function FastChipsLinkedAccountsTable() {
   const { data, isLoading, error } = useQuery(
     trpc.fastchips.members.list.queryOptions({
       pageSize: 100,
-      status: statusFilter !== "all" ? (statusFilter as "active" | "inactive") : undefined,
+      status:
+        statusFilter !== "all"
+          ? (statusFilter as "active" | "inactive")
+          : undefined,
       search: searchQuery || undefined,
-    })
+    }),
   );
 
   // Map tRPC data to table format (showing members as linked accounts for now)
@@ -86,10 +89,14 @@ export function FastChipsLinkedAccountsTable() {
 
   // Stats from data
   const totalMembers = data?.total ?? 0;
-  const activeCount = data?.data?.filter((m) => m.status === "active").length ?? 0;
-  const inactiveCount = data?.data?.filter((m) => m.status === "inactive").length ?? 0;
-  const blockedCount = data?.data?.filter((m) => m.restriction === "blocked").length ?? 0;
-  const autoWithdrawCount = data?.data?.filter((m) => m.restriction === "auto_withdraw").length ?? 0;
+  const activeCount =
+    data?.data?.filter((m) => m.status === "active").length ?? 0;
+  const inactiveCount =
+    data?.data?.filter((m) => m.status === "inactive").length ?? 0;
+  const blockedCount =
+    data?.data?.filter((m) => m.restriction === "blocked").length ?? 0;
+  const autoWithdrawCount =
+    data?.data?.filter((m) => m.restriction === "auto_withdraw").length ?? 0;
 
   return (
     <div className="space-y-5">
@@ -103,7 +110,9 @@ export function FastChipsLinkedAccountsTable() {
               <p className="text-xs text-muted-foreground">
                 {t("fastchips.contas_vinculadas.stats.inactive_blocked")}
               </p>
-              <p className="text-lg font-semibold">{inactiveCount} / {blockedCount}</p>
+              <p className="text-lg font-semibold">
+                {inactiveCount} / {blockedCount}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -117,7 +126,9 @@ export function FastChipsLinkedAccountsTable() {
               <p className="text-xs text-muted-foreground">
                 {t("fastchips.contas_vinculadas.stats.active_blocked_withdraw")}
               </p>
-              <p className="text-lg font-semibold">{activeCount} / {autoWithdrawCount}</p>
+              <p className="text-lg font-semibold">
+                {activeCount} / {autoWithdrawCount}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -179,7 +190,9 @@ export function FastChipsLinkedAccountsTable() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full md:w-[160px]">
-            <SelectValue placeholder={t("fastchips.contas_vinculadas.filter_all")} />
+            <SelectValue
+              placeholder={t("fastchips.contas_vinculadas.filter_all")}
+            />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">
@@ -227,25 +240,46 @@ export function FastChipsLinkedAccountsTable() {
               // Loading skeleton
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-28" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-8 w-8 ml-auto" />
+                  </TableCell>
                 </TableRow>
               ))
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   Erro ao carregar contas vinculadas
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  Nenhuma conta vinculada encontrada. Importe uma planilha Fastchips para começar.
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  Nenhuma conta vinculada encontrada. Importe uma planilha
+                  Fastchips para começar.
                 </TableCell>
               </TableRow>
             ) : (
@@ -263,7 +297,9 @@ export function FastChipsLinkedAccountsTable() {
                       setParams({ fastchipsLinkedAccountId: account.id })
                     }
                   >
-                    <TableCell className="font-medium">{account.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {account.name}
+                    </TableCell>
                     <TableCell>{account.playerId}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-rose-500">
@@ -314,19 +350,29 @@ export function FastChipsLinkedAccountsTable() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>
-                            {t("fastchips.contas_vinculadas.actions.reset_withdraw")}
+                            {t(
+                              "fastchips.contas_vinculadas.actions.reset_withdraw",
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            {t("fastchips.contas_vinculadas.actions.block_withdraw")}
+                            {t(
+                              "fastchips.contas_vinculadas.actions.block_withdraw",
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            {t("fastchips.contas_vinculadas.actions.block_account")}
+                            {t(
+                              "fastchips.contas_vinculadas.actions.block_account",
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            {t("fastchips.contas_vinculadas.actions.manual_withdraw")}
+                            {t(
+                              "fastchips.contas_vinculadas.actions.manual_withdraw",
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            {t("fastchips.contas_vinculadas.actions.customize_withdraw")}
+                            {t(
+                              "fastchips.contas_vinculadas.actions.customize_withdraw",
+                            )}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

@@ -94,7 +94,11 @@ export function ResumoTab({ stats, settlementsSummary }: ResumoTabProps) {
             value={stats.totalGamesPPST}
             icon={Icons.Play}
           />
-          <StatCard label="Ligas" value={stats.leaguesWithPPST} icon={Icons.Link} />
+          <StatCard
+            label="Ligas"
+            value={stats.leaguesWithPPST}
+            icon={Icons.Link}
+          />
           <StatCard label="Jogadores" value={stats.totalPlayersPPST} />
           <StatCard
             label={`Overlay (${stats.overlayCount})`}
@@ -134,7 +138,11 @@ export function ResumoTab({ stats, settlementsSummary }: ResumoTabProps) {
             value={stats.totalGamesPPSR}
             icon={Icons.Time}
           />
-          <StatCard label="Ligas" value={stats.leaguesWithPPSR} icon={Icons.Link} />
+          <StatCard
+            label="Ligas"
+            value={stats.leaguesWithPPSR}
+            icon={Icons.Link}
+          />
           <StatCard label="Jogadores" value={stats.totalPlayersPPSR} />
           <StatCard
             label="Taxa Liga"

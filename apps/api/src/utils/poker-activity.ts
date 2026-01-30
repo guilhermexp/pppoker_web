@@ -6,7 +6,13 @@ export type ActivityMetrics = {
   weeksActiveLast4: number;
   daysSinceLastSession: number | null;
   daysSinceLastAppActivity: number | null;
-  sessionFrequency: "daily" | "weekly" | "biweekly" | "monthly" | "sporadic" | "unknown";
+  sessionFrequency:
+    | "daily"
+    | "weekly"
+    | "biweekly"
+    | "monthly"
+    | "sporadic"
+    | "unknown";
   activityScore: number;
   activityStatus: "active" | "at_risk" | "inactive" | "new";
 };
@@ -18,7 +24,7 @@ export async function calculatePlayerActivityMetrics(
   supabase: SupabaseClient,
   teamId: string,
   playerId: string,
-  lastActiveAt: string | null
+  lastActiveAt: string | null,
 ): Promise<ActivityMetrics> {
   const now = new Date();
   const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
@@ -72,7 +78,7 @@ export async function calculatePlayerActivityMetrics(
   if (lastSessionAt) {
     const lastSessionDate = new Date(lastSessionAt);
     daysSinceLastSession = Math.floor(
-      (now.getTime() - lastSessionDate.getTime()) / (24 * 60 * 60 * 1000)
+      (now.getTime() - lastSessionDate.getTime()) / (24 * 60 * 60 * 1000),
     );
   }
 
@@ -81,19 +87,22 @@ export async function calculatePlayerActivityMetrics(
   if (lastActiveAt) {
     const lastActiveDate = new Date(lastActiveAt);
     daysSinceLastAppActivity = Math.floor(
-      (now.getTime() - lastActiveDate.getTime()) / (24 * 60 * 60 * 1000)
+      (now.getTime() - lastActiveDate.getTime()) / (24 * 60 * 60 * 1000),
     );
   }
 
   // Calculate session frequency
-  const sessionFrequency = calculateFrequency(sessionsLast4Weeks, weeksActiveLast4);
+  const sessionFrequency = calculateFrequency(
+    sessionsLast4Weeks,
+    weeksActiveLast4,
+  );
 
   // Calculate activity score (0-100)
   const activityScore = calculateActivityScore(
     sessionsLast4Weeks,
     weeksActiveLast4,
     daysSinceLastSession,
-    daysSinceLastAppActivity
+    daysSinceLastAppActivity,
   );
 
   // Determine activity status
@@ -101,7 +110,7 @@ export async function calculatePlayerActivityMetrics(
     sessionsLast4Weeks,
     daysSinceLastSession,
     daysSinceLastAppActivity,
-    lastSessionAt
+    lastSessionAt,
   );
 
   return {
@@ -122,7 +131,7 @@ export async function calculatePlayerActivityMetrics(
 export async function calculateBatchActivityMetrics(
   supabase: SupabaseClient,
   teamId: string,
-  playerIds: string[]
+  playerIds: string[],
 ): Promise<Map<string, Partial<ActivityMetrics>>> {
   const now = new Date();
   const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
@@ -181,7 +190,7 @@ export async function calculateBatchActivityMetrics(
     if (!lastSessionByPlayer.has(session.player_id)) {
       lastSessionByPlayer.set(
         session.player_id,
-        (session.poker_sessions as any).started_at
+        (session.poker_sessions as any).started_at,
       );
     }
   }
@@ -208,7 +217,7 @@ export async function calculateBatchActivityMetrics(
     if (lastSessionAt) {
       const lastSessionDate = new Date(lastSessionAt);
       daysSinceLastSession = Math.floor(
-        (now.getTime() - lastSessionDate.getTime()) / (24 * 60 * 60 * 1000)
+        (now.getTime() - lastSessionDate.getTime()) / (24 * 60 * 60 * 1000),
       );
     }
 
@@ -217,7 +226,7 @@ export async function calculateBatchActivityMetrics(
       sessionsLast4Weeks,
       daysSinceLastSession,
       null, // daysSinceLastAppActivity - not available in batch
-      lastSessionAt
+      lastSessionAt,
     );
 
     metricsMap.set(playerId, {
@@ -240,7 +249,7 @@ function getWeekNumber(date: Date): number {
 
 function calculateFrequency(
   sessionsLast4Weeks: number,
-  weeksActiveLast4: number
+  weeksActiveLast4: number,
 ): ActivityMetrics["sessionFrequency"] {
   if (sessionsLast4Weeks === 0) return "unknown";
 
@@ -257,7 +266,7 @@ function calculateActivityScore(
   sessionsLast4Weeks: number,
   weeksActiveLast4: number,
   daysSinceLastSession: number | null,
-  daysSinceLastAppActivity: number | null
+  daysSinceLastAppActivity: number | null,
 ): number {
   let score = 0;
 
@@ -292,7 +301,7 @@ function determineActivityStatus(
   sessionsLast4Weeks: number,
   daysSinceLastSession: number | null,
   daysSinceLastAppActivity: number | null,
-  lastSessionAt: string | null
+  lastSessionAt: string | null,
 ): ActivityMetrics["activityStatus"] {
   // New player - never played
   if (!lastSessionAt && sessionsLast4Weeks === 0) {
@@ -300,8 +309,10 @@ function determineActivityStatus(
   }
 
   // Active - played recently or active in app
-  const playedRecently = daysSinceLastSession !== null && daysSinceLastSession <= 14;
-  const appActiveRecently = daysSinceLastAppActivity !== null && daysSinceLastAppActivity <= 7;
+  const playedRecently =
+    daysSinceLastSession !== null && daysSinceLastSession <= 14;
+  const appActiveRecently =
+    daysSinceLastAppActivity !== null && daysSinceLastAppActivity <= 7;
   const hasRecentSessions = sessionsLast4Weeks >= 2;
 
   if (playedRecently || appActiveRecently || hasRecentSessions) {
@@ -309,8 +320,10 @@ function determineActivityStatus(
   }
 
   // Inactive - no activity for 30+ days
-  const noRecentSessions = daysSinceLastSession === null || daysSinceLastSession > 30;
-  const noRecentAppActivity = daysSinceLastAppActivity === null || daysSinceLastAppActivity > 30;
+  const noRecentSessions =
+    daysSinceLastSession === null || daysSinceLastSession > 30;
+  const noRecentAppActivity =
+    daysSinceLastAppActivity === null || daysSinceLastAppActivity > 30;
 
   if (noRecentSessions && noRecentAppActivity) {
     return "inactive";

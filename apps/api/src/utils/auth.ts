@@ -30,7 +30,10 @@ export async function verifyAccessToken(
     );
 
     // Use getUser() to verify the token - this validates with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(accessToken);
 
     if (error || !user) {
       console.log("[verifyAccessToken] Failed:", error?.message || "No user");

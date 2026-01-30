@@ -145,9 +145,7 @@ export function JogosPPSTTab({ games }: JogosPPSTTabProps) {
     const overlayCount = games.filter((g) =>
       matchesFilter(g, "overlay"),
     ).length;
-    const semGtdCount = games.filter((g) =>
-      matchesFilter(g, "sem-gtd"),
-    ).length;
+    const semGtdCount = games.filter((g) => matchesFilter(g, "sem-gtd")).length;
     return { overlayCount, semGtdCount };
   }, [games]);
 
@@ -183,7 +181,15 @@ export function JogosPPSTTab({ games }: JogosPPSTTabProps) {
       }
     }
 
-    return { playerCount, totalBuyin, totalTaxa, totalGap, totalRecompensa, overlayCount, overlayTotal };
+    return {
+      playerCount,
+      totalBuyin,
+      totalTaxa,
+      totalGap,
+      totalRecompensa,
+      overlayCount,
+      overlayTotal,
+    };
   }, [filteredGames]);
 
   return (

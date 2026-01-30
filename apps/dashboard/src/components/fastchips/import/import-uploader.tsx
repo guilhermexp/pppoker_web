@@ -27,7 +27,7 @@ import { FastchipsImportValidationModal } from "./import-validation-modal";
  * Parses the "Operações" sheet from a Fastchips/Chippix export
  */
 function parseFastchipsOperationsSheet(
-  data: any[]
+  data: any[],
 ): ParsedFastchipsOperation[] {
   return data
     .filter(
@@ -36,12 +36,17 @@ function parseFastchipsOperationsSheet(
         row["Id da operação"] ||
         row["operationId"] ||
         row["Data"] ||
-        row["occurredAt"]
+        row["occurredAt"],
     )
     .map((row) => {
       // Handle "-" as null for numeric values
       const parseNumeric = (value: any): number | null => {
-        if (value === "-" || value === "" || value === null || value === undefined) {
+        if (
+          value === "-" ||
+          value === "" ||
+          value === null ||
+          value === undefined
+        ) {
           return null;
         }
         const num = Number.parseFloat(String(value).replace(",", "."));
@@ -50,7 +55,12 @@ function parseFastchipsOperationsSheet(
 
       // Parse fee rate (can be 0, 0.5, or 1.5)
       const parseFeeRate = (value: any): number => {
-        if (value === "-" || value === "" || value === null || value === undefined) {
+        if (
+          value === "-" ||
+          value === "" ||
+          value === null ||
+          value === undefined
+        ) {
           return 0;
         }
         const num = Number.parseFloat(String(value).replace(",", "."));
@@ -60,54 +70,54 @@ function parseFastchipsOperationsSheet(
       return {
         // Column A: Data
         occurredAt: String(
-          row["Data"] || row["occurredAt"] || row["data"] || ""
+          row["Data"] || row["occurredAt"] || row["data"] || "",
         ),
         // Column B: Tipo
-        operationType: (String(
-          row["Tipo"] || row["operationType"] || row["tipo"] || "Entrada"
-        ) as "Entrada" | "Saída"),
+        operationType: String(
+          row["Tipo"] || row["operationType"] || row["tipo"] || "Entrada",
+        ) as "Entrada" | "Saída",
         // Column C: Finalidade
-        purpose: (String(
+        purpose: String(
           row["Finalidade"] ||
             row["purpose"] ||
             row["finalidade"] ||
-            "Recebimento"
-        ) as "Recebimento" | "Pagamento" | "Saque" | "Serviço"),
+            "Recebimento",
+        ) as "Recebimento" | "Pagamento" | "Saque" | "Serviço",
         // Column D: Entrada bruta
         grossEntry: parseNumeric(
-          row["Entrada bruta"] || row["grossEntry"] || row["entrada_bruta"]
+          row["Entrada bruta"] || row["grossEntry"] || row["entrada_bruta"],
         ),
         // Column E: Saída bruta
         grossExit: parseNumeric(
           row["Saída bruta"] ||
             row["Saida bruta"] ||
             row["grossExit"] ||
-            row["saida_bruta"]
+            row["saida_bruta"],
         ),
         // Column F: Entrada líquida
         netEntry: parseNumeric(
           row["Entrada líquida"] ||
             row["Entrada liquida"] ||
             row["netEntry"] ||
-            row["entrada_liquida"]
+            row["entrada_liquida"],
         ),
         // Column G: Saída líquida
         netExit: parseNumeric(
           row["Saída líquida"] ||
             row["Saida liquida"] ||
             row["netExit"] ||
-            row["saida_liquida"]
+            row["saida_liquida"],
         ),
         // Column H: Integrante
         memberName: String(
-          row["Integrante"] || row["memberName"] || row["integrante"] || ""
+          row["Integrante"] || row["memberName"] || row["integrante"] || "",
         ),
         // Column I: Taxa da operação
         feeRate: parseFeeRate(
           row["Taxa da operação"] ||
             row["Taxa da operacao"] ||
             row["feeRate"] ||
-            row["taxa"]
+            row["taxa"],
         ),
         // Column J: Id Jogador
         ppPokerId:
@@ -118,14 +128,14 @@ function parseFastchipsOperationsSheet(
             row["Id da operacao"] ||
             row["operationId"] ||
             row["id_operacao"] ||
-            ""
+            "",
         ),
         // Column L: Id do pagamento
         paymentId: String(
           row["Id do pagamento"] ||
             row["paymentId"] ||
             row["id_pagamento"] ||
-            ""
+            "",
         ),
       };
     });
@@ -134,12 +144,14 @@ function parseFastchipsOperationsSheet(
 /**
  * Parses a Fastchips workbook and extracts data
  */
-function parseFastchipsWorkbook(workbook: XLSX.WorkBook): ParsedFastchipsImportData {
+function parseFastchipsWorkbook(
+  workbook: XLSX.WorkBook,
+): ParsedFastchipsImportData {
   // Try to find the "Operações" sheet
   const sheetNames = workbook.SheetNames;
   let operationsSheetName = sheetNames.find(
     (name) =>
-      name.toLowerCase().includes("opera") || name.toLowerCase() === "sheet1"
+      name.toLowerCase().includes("opera") || name.toLowerCase() === "sheet1",
   );
 
   // Default to first sheet if not found
@@ -180,8 +192,10 @@ export function FastchipsImportUploader() {
   const queryClient = useQueryClient();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [parsedData, setParsedData] = useState<ParsedFastchipsImportData | null>(null);
-  const [validationResult, setValidationResult] = useState<FastchipsValidationResult | null>(null);
+  const [parsedData, setParsedData] =
+    useState<ParsedFastchipsImportData | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<FastchipsValidationResult | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [fileSize, setFileSize] = useState<number>(0);
   const [showValidationModal, setShowValidationModal] = useState(false);
@@ -196,7 +210,7 @@ export function FastchipsImportUploader() {
           description: error.message,
         });
       },
-    })
+    }),
   );
 
   // Process file
@@ -240,7 +254,7 @@ export function FastchipsImportUploader() {
         setIsProcessing(false);
       }
     },
-    [toast]
+    [toast],
   );
 
   // Dropzone setup
@@ -252,7 +266,7 @@ export function FastchipsImportUploader() {
           processFile(file);
         }
       },
-      [processFile]
+      [processFile],
     ),
     accept: {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
@@ -316,7 +330,7 @@ export function FastchipsImportUploader() {
           isDragActive
             ? "border-primary bg-primary/5"
             : "border-muted-foreground/25 hover:border-primary/50",
-          isProcessing && "opacity-50 cursor-not-allowed"
+          isProcessing && "opacity-50 cursor-not-allowed",
         )}
       >
         <input {...getInputProps()} />
@@ -343,7 +357,8 @@ export function FastchipsImportUploader() {
                 </p>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                A planilha deve ter a sheet &quot;Operações&quot; com as 12 colunas padrão
+                A planilha deve ter a sheet &quot;Operações&quot; com as 12
+                colunas padrão
               </p>
             </>
           )}

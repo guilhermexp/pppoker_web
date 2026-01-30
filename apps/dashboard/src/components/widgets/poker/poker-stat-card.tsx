@@ -44,7 +44,9 @@ export function PokerStatCard({
           <span className="text-muted-foreground">{icon}</span>
           <h3 className="text-xs text-muted-foreground font-medium">{title}</h3>
         </div>
-        {description && <p className="text-xs text-muted-foreground/70">{description}</p>}
+        {description && (
+          <p className="text-xs text-muted-foreground/70">{description}</p>
+        )}
       </div>
 
       <div>

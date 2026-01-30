@@ -86,12 +86,17 @@ export const bankAccountsRouter = createTRPCRouter({
       .eq("enabled", true);
 
     if (error) {
-      console.log("[bankAccounts.currencies] Supabase REST error:", error.message);
+      console.log(
+        "[bankAccounts.currencies] Supabase REST error:",
+        error.message,
+      );
       return [];
     }
 
     // Get unique currencies
-    const currencies = [...new Set((data ?? []).map((d: any) => d.currency).filter(Boolean))];
+    const currencies = [
+      ...new Set((data ?? []).map((d: any) => d.currency).filter(Boolean)),
+    ];
     return currencies;
   }),
 
@@ -106,7 +111,10 @@ export const bankAccountsRouter = createTRPCRouter({
       .eq("enabled", true);
 
     if (error) {
-      console.log("[bankAccounts.balances] Supabase REST error:", error.message);
+      console.log(
+        "[bankAccounts.balances] Supabase REST error:",
+        error.message,
+      );
       return [];
     }
 
@@ -133,7 +141,10 @@ export const bankAccountsRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log("[bankAccounts.delete] Supabase REST error:", error.message);
+        console.log(
+          "[bankAccounts.delete] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to delete bank account: ${error.message}`);
       }
 
@@ -161,7 +172,10 @@ export const bankAccountsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[bankAccounts.update] Supabase REST error:", error.message);
+        console.log(
+          "[bankAccounts.update] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to update bank account: ${error.message}`);
       }
 
@@ -196,7 +210,10 @@ export const bankAccountsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[bankAccounts.create] Supabase REST error:", error.message);
+        console.log(
+          "[bankAccounts.create] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to create bank account: ${error.message}`);
       }
 

@@ -1654,7 +1654,12 @@ export function LeagueImportUploader() {
       // Error toast is handled by mutation callbacks
       setIsProcessing(false);
     }
-  }, [parsedData, validationResult, createImportMutation, processImportMutation]);
+  }, [
+    parsedData,
+    validationResult,
+    createImportMutation,
+    processImportMutation,
+  ]);
 
   const handleReject = useCallback(() => {
     setShowValidationModal(false);
@@ -1694,7 +1699,11 @@ export function LeagueImportUploader() {
         className="relative h-full"
         {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
       >
-        <input {...getInputProps()} id="upload-league-file" className="hidden" />
+        <input
+          {...getInputProps()}
+          id="upload-league-file"
+          className="hidden"
+        />
         {/* Drag overlay */}
         {isDragActive && (
           <div className="absolute top-0 right-0 left-0 z-[51] w-full pointer-events-none h-[calc(100vh-150px)]">

@@ -67,7 +67,9 @@ export const inboxRouter = createTRPCRouter({
 
       // Apply search filter
       if (input?.q) {
-        query = query.or(`file_name.ilike.%${input.q}%,display_name.ilike.%${input.q}%,description.ilike.%${input.q}%`);
+        query = query.or(
+          `file_name.ilike.%${input.q}%,display_name.ilike.%${input.q}%,description.ilike.%${input.q}%`,
+        );
       }
 
       // Apply sorting
@@ -97,7 +99,9 @@ export const inboxRouter = createTRPCRouter({
 
       const allItems = inboxItems ?? [];
       const hasNextPage = allItems.length > pageSize;
-      const itemsToReturn = hasNextPage ? allItems.slice(0, pageSize) : allItems;
+      const itemsToReturn = hasNextPage
+        ? allItems.slice(0, pageSize)
+        : allItems;
       const nextCursor = hasNextPage ? String(cursor + pageSize) : null;
 
       // Transform snake_case to camelCase

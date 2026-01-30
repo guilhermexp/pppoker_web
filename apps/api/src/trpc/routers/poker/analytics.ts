@@ -361,7 +361,10 @@ export const pokerAnalyticsRouter = createTRPCRouter({
 
       // Filter by committed imports if needed
       if (committedImportIds !== null) {
-        sessionsTypeQuery = sessionsTypeQuery.in("import_id", committedImportIds);
+        sessionsTypeQuery = sessionsTypeQuery.in(
+          "import_id",
+          committedImportIds,
+        );
       }
 
       if (dateFrom) {
@@ -1025,7 +1028,10 @@ export const pokerAnalyticsRouter = createTRPCRouter({
       // Aggregate stats per player
       const playerStats = new Map<string, { rake: number; winnings: number }>();
       for (const row of summaryData ?? []) {
-        const current = playerStats.get(row.player_id) ?? { rake: 0, winnings: 0 };
+        const current = playerStats.get(row.player_id) ?? {
+          rake: 0,
+          winnings: 0,
+        };
         current.rake += Number(row.rake_total || 0);
         current.winnings += Number(row.winnings_total || 0);
         playerStats.set(row.player_id, current);

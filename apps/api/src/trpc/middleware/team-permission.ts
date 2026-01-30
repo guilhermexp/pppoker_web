@@ -27,14 +27,19 @@ async function getUserTeamDataViaSupabase(userId: string) {
     .eq("user_id", userId);
 
   if (memberError) {
-    console.log("[getUserTeamDataViaSupabase] Memberships error:", memberError?.message);
+    console.log(
+      "[getUserTeamDataViaSupabase] Memberships error:",
+      memberError?.message,
+    );
   }
 
   // Transform snake_case to camelCase to match Drizzle output
-  const transformedMemberships = (memberships || []).map((m: { id: string; team_id: string }) => ({
-    id: m.id,
-    teamId: m.team_id,
-  }));
+  const transformedMemberships = (memberships || []).map(
+    (m: { id: string; team_id: string }) => ({
+      id: m.id,
+      teamId: m.team_id,
+    }),
+  );
 
   return {
     teamId: user.team_id,
@@ -70,7 +75,9 @@ export const withTeamPermission = async <TReturn>(opts: {
   const result = await getUserTeamDataViaSupabase(userId);
 
   if (!result) {
-    console.log("[withTeamPermission] No result from fallback - user not found");
+    console.log(
+      "[withTeamPermission] No result from fallback - user not found",
+    );
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "User not found",

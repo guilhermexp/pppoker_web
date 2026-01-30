@@ -56,8 +56,18 @@ function isValidFastchipsDate(dateStr: string): boolean {
   const h = Number(hour);
   const min = Number(minute);
 
-  return d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 2020 && y <= 2030
-    && h >= 0 && h <= 23 && min >= 0 && min <= 59;
+  return (
+    d >= 1 &&
+    d <= 31 &&
+    m >= 1 &&
+    m <= 12 &&
+    y >= 2020 &&
+    y <= 2030 &&
+    h >= 0 &&
+    h <= 23 &&
+    min >= 0 &&
+    min <= 59
+  );
 }
 
 /**
@@ -98,7 +108,9 @@ const STRUCTURE_RULES: ValidationRule[] = [
       const hasData = data.operations && Array.isArray(data.operations);
       return {
         passed: hasData,
-        details: hasData ? "Sheet encontrada" : "Sheet 'Operações' não encontrada",
+        details: hasData
+          ? "Sheet encontrada"
+          : "Sheet 'Operações' não encontrada",
         debug: {
           logic: "Verifica se data.operations é um array",
           expected: "operations é array",
@@ -172,7 +184,8 @@ const STRUCTURE_RULES: ValidationRule[] = [
       const count = data.operations?.length ?? 0;
       return {
         passed: count > 0,
-        details: count > 0 ? `${count} operações` : "Nenhuma operação encontrada",
+        details:
+          count > 0 ? `${count} operações` : "Nenhuma operação encontrada",
         count,
         debug: {
           logic: "Verifica se operations.length > 0",
@@ -197,19 +210,24 @@ const INTEGRITY_RULES: ValidationRule[] = [
     description: "Todas as datas devem estar no formato DD-MM-YYYY HH:MM",
     validate: (data) => {
       const operations = data.operations || [];
-      const invalidDates = operations.filter((op) => !isValidFastchipsDate(op.occurredAt));
+      const invalidDates = operations.filter(
+        (op) => !isValidFastchipsDate(op.occurredAt),
+      );
 
       return {
         passed: invalidDates.length === 0,
-        details: invalidDates.length === 0
-          ? `${operations.length} datas válidas`
-          : `${invalidDates.length} datas inválidas`,
+        details:
+          invalidDates.length === 0
+            ? `${operations.length} datas válidas`
+            : `${invalidDates.length} datas inválidas`,
         count: invalidDates.length,
         debug: {
           logic: "Verifica formato DD-MM-YYYY HH:MM",
           expected: "Todas as datas no formato correto",
           actual: `${invalidDates.length} inválidas`,
-          failedItems: invalidDates.slice(0, 5).map((op) => op.occurredAt || "vazio"),
+          failedItems: invalidDates
+            .slice(0, 5)
+            .map((op) => op.occurredAt || "vazio"),
         },
       };
     },
@@ -219,22 +237,28 @@ const INTEGRITY_RULES: ValidationRule[] = [
     category: "integrity",
     severity: "critical",
     label: "IDs de operação válidos (24 hex)",
-    description: "Todos os IDs de operação devem ser 24 caracteres hexadecimais",
+    description:
+      "Todos os IDs de operação devem ser 24 caracteres hexadecimais",
     validate: (data) => {
       const operations = data.operations || [];
-      const invalidIds = operations.filter((op) => !isValidOperationId(op.operationId));
+      const invalidIds = operations.filter(
+        (op) => !isValidOperationId(op.operationId),
+      );
 
       return {
         passed: invalidIds.length === 0,
-        details: invalidIds.length === 0
-          ? `${operations.length} IDs válidos`
-          : `${invalidIds.length} IDs inválidos`,
+        details:
+          invalidIds.length === 0
+            ? `${operations.length} IDs válidos`
+            : `${invalidIds.length} IDs inválidos`,
         count: invalidIds.length,
         debug: {
           logic: "Verifica se operationId é hex de 24 chars",
           expected: "Todos os IDs no formato hex 24 chars",
           actual: `${invalidIds.length} inválidos`,
-          failedItems: invalidIds.slice(0, 5).map((op) => op.operationId || "vazio"),
+          failedItems: invalidIds
+            .slice(0, 5)
+            .map((op) => op.operationId || "vazio"),
         },
       };
     },
@@ -259,12 +283,14 @@ const INTEGRITY_RULES: ValidationRule[] = [
 
       return {
         passed: invalidOps.length === 0,
-        details: invalidOps.length === 0
-          ? "Todos os valores são numéricos"
-          : `${invalidOps.length} operações com valores inválidos`,
+        details:
+          invalidOps.length === 0
+            ? "Todos os valores são numéricos"
+            : `${invalidOps.length} operações com valores inválidos`,
         count: invalidOps.length,
         debug: {
-          logic: "Verifica se grossEntry, grossExit, netEntry, netExit, feeRate são números",
+          logic:
+            "Verifica se grossEntry, grossExit, netEntry, netExit, feeRate são números",
           expected: "Todos os campos numéricos são números",
           actual: `${invalidOps.length} com valores inválidos`,
         },
@@ -280,20 +306,23 @@ const INTEGRITY_RULES: ValidationRule[] = [
     validate: (data) => {
       const operations = data.operations || [];
       const invalidOps = operations.filter(
-        (op) => !VALID_OPERATION_TYPES.includes(op.operationType)
+        (op) => !VALID_OPERATION_TYPES.includes(op.operationType),
       );
 
       return {
         passed: invalidOps.length === 0,
-        details: invalidOps.length === 0
-          ? "Todos os tipos são válidos"
-          : `${invalidOps.length} tipos inválidos`,
+        details:
+          invalidOps.length === 0
+            ? "Todos os tipos são válidos"
+            : `${invalidOps.length} tipos inválidos`,
         count: invalidOps.length,
         debug: {
           logic: `Verifica se operationType é ${VALID_OPERATION_TYPES.join(" ou ")}`,
           expected: "Entrada ou Saída",
           actual: `${invalidOps.length} inválidos`,
-          failedItems: invalidOps.slice(0, 5).map((op) => op.operationType || "vazio"),
+          failedItems: invalidOps
+            .slice(0, 5)
+            .map((op) => op.operationType || "vazio"),
         },
       };
     },
@@ -307,20 +336,23 @@ const INTEGRITY_RULES: ValidationRule[] = [
     validate: (data) => {
       const operations = data.operations || [];
       const invalidOps = operations.filter(
-        (op) => !VALID_PURPOSES.includes(op.purpose)
+        (op) => !VALID_PURPOSES.includes(op.purpose),
       );
 
       return {
         passed: invalidOps.length === 0,
-        details: invalidOps.length === 0
-          ? "Todas as finalidades são válidas"
-          : `${invalidOps.length} finalidades inválidas`,
+        details:
+          invalidOps.length === 0
+            ? "Todas as finalidades são válidas"
+            : `${invalidOps.length} finalidades inválidas`,
         count: invalidOps.length,
         debug: {
           logic: `Verifica se purpose é ${VALID_PURPOSES.join(", ")}`,
           expected: VALID_PURPOSES.join(", "),
           actual: `${invalidOps.length} inválidos`,
-          failedItems: invalidOps.slice(0, 5).map((op) => op.purpose || "vazio"),
+          failedItems: invalidOps
+            .slice(0, 5)
+            .map((op) => op.purpose || "vazio"),
         },
       };
     },
@@ -334,14 +366,15 @@ const INTEGRITY_RULES: ValidationRule[] = [
     validate: (data) => {
       const operations = data.operations || [];
       const invalidOps = operations.filter(
-        (op) => !VALID_FEE_RATES.includes(op.feeRate)
+        (op) => !VALID_FEE_RATES.includes(op.feeRate),
       );
 
       return {
         passed: invalidOps.length === 0,
-        details: invalidOps.length === 0
-          ? "Todas as taxas são válidas"
-          : `${invalidOps.length} taxas fora do padrão`,
+        details:
+          invalidOps.length === 0
+            ? "Todas as taxas são válidas"
+            : `${invalidOps.length} taxas fora do padrão`,
         count: invalidOps.length,
         debug: {
           logic: `Verifica se feeRate é ${VALID_FEE_RATES.join(", ")}`,
@@ -364,19 +397,21 @@ const CONSISTENCY_RULES: ValidationRule[] = [
     category: "consistency",
     severity: "warning",
     label: "Entradas têm valores de entrada",
-    description: "Operações de Entrada devem ter grossEntry e netEntry preenchidos",
+    description:
+      "Operações de Entrada devem ter grossEntry e netEntry preenchidos",
     validate: (data) => {
       const operations = data.operations || [];
       const entries = operations.filter((op) => op.operationType === "Entrada");
       const invalid = entries.filter(
-        (op) => op.grossEntry === null || op.netEntry === null
+        (op) => op.grossEntry === null || op.netEntry === null,
       );
 
       return {
         passed: invalid.length === 0,
-        details: invalid.length === 0
-          ? `${entries.length} entradas com valores corretos`
-          : `${invalid.length} entradas sem valores de entrada`,
+        details:
+          invalid.length === 0
+            ? `${entries.length} entradas com valores corretos`
+            : `${invalid.length} entradas sem valores de entrada`,
         count: invalid.length,
         debug: {
           logic: "Verifica se Entrada tem grossEntry e netEntry preenchidos",
@@ -396,14 +431,15 @@ const CONSISTENCY_RULES: ValidationRule[] = [
       const operations = data.operations || [];
       const exits = operations.filter((op) => op.operationType === "Saída");
       const invalid = exits.filter(
-        (op) => op.grossExit === null || op.netExit === null
+        (op) => op.grossExit === null || op.netExit === null,
       );
 
       return {
         passed: invalid.length === 0,
-        details: invalid.length === 0
-          ? `${exits.length} saídas com valores corretos`
-          : `${invalid.length} saídas sem valores de saída`,
+        details:
+          invalid.length === 0
+            ? `${exits.length} saídas com valores corretos`
+            : `${invalid.length} saídas sem valores de saída`,
         count: invalid.length,
         debug: {
           logic: "Verifica se Saída tem grossExit e netExit preenchidos",
@@ -428,13 +464,16 @@ const CONSISTENCY_RULES: ValidationRule[] = [
         idCounts.set(op.operationId, count + 1);
       }
 
-      const duplicates = Array.from(idCounts.entries()).filter(([, count]) => count > 1);
+      const duplicates = Array.from(idCounts.entries()).filter(
+        ([, count]) => count > 1,
+      );
 
       return {
         passed: duplicates.length === 0,
-        details: duplicates.length === 0
-          ? "Sem duplicatas"
-          : `${duplicates.length} IDs duplicados`,
+        details:
+          duplicates.length === 0
+            ? "Sem duplicatas"
+            : `${duplicates.length} IDs duplicados`,
         count: duplicates.length,
         debug: {
           logic: "Verifica se cada operationId aparece apenas uma vez",
@@ -463,20 +502,22 @@ const MATH_RULES: ValidationRule[] = [
       const tolerance = 0.01; // 1 centavo de tolerância para arredondamento
 
       const invalid = operations.filter((op) => {
-        const gross = op.operationType === "Entrada" ? op.grossEntry : op.grossExit;
+        const gross =
+          op.operationType === "Entrada" ? op.grossEntry : op.grossExit;
         const net = op.operationType === "Entrada" ? op.netEntry : op.netExit;
 
         if (gross === null || net === null) return false;
 
-        const expectedNet = gross - (gross * op.feeRate / 100);
+        const expectedNet = gross - (gross * op.feeRate) / 100;
         return Math.abs(net - expectedNet) > tolerance;
       });
 
       return {
         passed: invalid.length === 0,
-        details: invalid.length === 0
-          ? "Todos os cálculos conferem"
-          : `${invalid.length} operações com cálculo incorreto`,
+        details:
+          invalid.length === 0
+            ? "Todos os cálculos conferem"
+            : `${invalid.length} operações com cálculo incorreto`,
         count: invalid.length,
         debug: {
           logic: "Verifica se net = gross - (gross * feeRate / 100)",
@@ -533,7 +574,7 @@ const ALL_RULES: ValidationRule[] = [
  * Runs all validation rules and returns the results
  */
 export function validateFastchipsImportData(
-  data: ParsedFastchipsImportData
+  data: ParsedFastchipsImportData,
 ): FastchipsValidationResult {
   const checks: FastchipsValidationCheck[] = [];
 
@@ -543,7 +584,13 @@ export function validateFastchipsImportData(
       id: rule.id,
       label: rule.label,
       description: rule.description,
-      status: result.passed ? "passed" : rule.severity === "info" ? "passed" : rule.severity === "warning" ? "warning" : "failed",
+      status: result.passed
+        ? "passed"
+        : rule.severity === "info"
+          ? "passed"
+          : rule.severity === "warning"
+            ? "warning"
+            : "failed",
       details: result.details,
       category: rule.category,
       severity: rule.severity,
@@ -556,15 +603,24 @@ export function validateFastchipsImportData(
   const criticalChecks = checks.filter((c) => c.severity === "critical");
   const warningChecks = checks.filter((c) => c.severity === "warning");
 
-  const criticalPassed = criticalChecks.filter((c) => c.status === "passed").length;
-  const criticalFailed = criticalChecks.filter((c) => c.status === "failed").length;
-  const warningsPassed = warningChecks.filter((c) => c.status === "passed" || c.status === "warning").length;
-  const warningsFailed = warningChecks.filter((c) => c.status === "failed").length;
+  const criticalPassed = criticalChecks.filter(
+    (c) => c.status === "passed",
+  ).length;
+  const criticalFailed = criticalChecks.filter(
+    (c) => c.status === "failed",
+  ).length;
+  const warningsPassed = warningChecks.filter(
+    (c) => c.status === "passed" || c.status === "warning",
+  ).length;
+  const warningsFailed = warningChecks.filter(
+    (c) => c.status === "failed",
+  ).length;
 
   // Calculate quality score
   const totalWeight = criticalChecks.length * 2 + warningChecks.length;
   const passedWeight = criticalPassed * 2 + warningsPassed;
-  const qualityScore = totalWeight > 0 ? Math.round((passedWeight / totalWeight) * 100) : 0;
+  const qualityScore =
+    totalWeight > 0 ? Math.round((passedWeight / totalWeight) * 100) : 0;
 
   // Extract warnings
   const warnings = checks
@@ -576,7 +632,9 @@ export function validateFastchipsImportData(
   const operations = data.operations || [];
   if (operations.length > 0) {
     const uniqueMembers = new Set(operations.map((op) => op.memberName)).size;
-    insights.push(`${operations.length} operações de ${uniqueMembers} integrantes`);
+    insights.push(
+      `${operations.length} operações de ${uniqueMembers} integrantes`,
+    );
 
     const entries = operations.filter((op) => op.operationType === "Entrada");
     const exits = operations.filter((op) => op.operationType === "Saída");
@@ -607,7 +665,7 @@ export function validateFastchipsImportData(
  */
 export function extractMembersFromOperations(
   operations: ParsedFastchipsOperation[],
-  existingMemberNames: Set<string> = new Set()
+  existingMemberNames: Set<string> = new Set(),
 ): ExtractedFastchipsMember[] {
   const memberMap = new Map<string, ExtractedFastchipsMember>();
 
@@ -629,14 +687,17 @@ export function extractMembersFromOperations(
         name: op.memberName,
         ppPokerId: op.ppPokerId,
         operationCount: 1,
-        totalGrossEntry: op.operationType === "Entrada" ? (op.grossEntry ?? 0) : 0,
+        totalGrossEntry:
+          op.operationType === "Entrada" ? (op.grossEntry ?? 0) : 0,
         totalGrossExit: op.operationType === "Saída" ? (op.grossExit ?? 0) : 0,
         isNew: !existingMemberNames.has(op.memberName),
       });
     }
   }
 
-  return Array.from(memberMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  return Array.from(memberMap.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 }
 
 /**
@@ -644,46 +705,68 @@ export function extractMembersFromOperations(
  */
 export function calculateImportStats(
   operations: ParsedFastchipsOperation[],
-  existingMemberNames: Set<string> = new Set()
+  existingMemberNames: Set<string> = new Set(),
 ): FastchipsImportStats {
   const entries = operations.filter((op) => op.operationType === "Entrada");
   const exits = operations.filter((op) => op.operationType === "Saída");
 
   const uniqueMembers = new Set(operations.map((op) => op.memberName));
   const newMembers = Array.from(uniqueMembers).filter(
-    (name) => !existingMemberNames.has(name)
+    (name) => !existingMemberNames.has(name),
   ).length;
 
-  const grossEntryTotal = entries.reduce((sum, op) => sum + (op.grossEntry ?? 0), 0);
-  const grossExitTotal = exits.reduce((sum, op) => sum + (op.grossExit ?? 0), 0);
-  const netEntryTotal = entries.reduce((sum, op) => sum + (op.netEntry ?? 0), 0);
+  const grossEntryTotal = entries.reduce(
+    (sum, op) => sum + (op.grossEntry ?? 0),
+    0,
+  );
+  const grossExitTotal = exits.reduce(
+    (sum, op) => sum + (op.grossExit ?? 0),
+    0,
+  );
+  const netEntryTotal = entries.reduce(
+    (sum, op) => sum + (op.netEntry ?? 0),
+    0,
+  );
   const netExitTotal = exits.reduce((sum, op) => sum + (op.netExit ?? 0), 0);
-  const totalFees = (grossEntryTotal - netEntryTotal) + (grossExitTotal - netExitTotal);
+  const totalFees =
+    grossEntryTotal - netEntryTotal + (grossExitTotal - netExitTotal);
 
   const byPurpose = {
     recebimento: {
       count: operations.filter((op) => op.purpose === "Recebimento").length,
       total: operations
         .filter((op) => op.purpose === "Recebimento")
-        .reduce((sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0), 0),
+        .reduce(
+          (sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0),
+          0,
+        ),
     },
     pagamento: {
       count: operations.filter((op) => op.purpose === "Pagamento").length,
       total: operations
         .filter((op) => op.purpose === "Pagamento")
-        .reduce((sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0), 0),
+        .reduce(
+          (sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0),
+          0,
+        ),
     },
     saque: {
       count: operations.filter((op) => op.purpose === "Saque").length,
       total: operations
         .filter((op) => op.purpose === "Saque")
-        .reduce((sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0), 0),
+        .reduce(
+          (sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0),
+          0,
+        ),
     },
     servico: {
       count: operations.filter((op) => op.purpose === "Serviço").length,
       total: operations
         .filter((op) => op.purpose === "Serviço")
-        .reduce((sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0), 0),
+        .reduce(
+          (sum, op) => sum + (op.grossEntry ?? 0) + (op.grossExit ?? 0),
+          0,
+        ),
     },
   };
 
@@ -717,7 +800,7 @@ export function parseFastchipsDateToISO(dateStr: string): string | null {
     Number(month) - 1,
     Number(day),
     Number(hour),
-    Number(minute)
+    Number(minute),
   );
 
   if (Number.isNaN(date.getTime())) return null;

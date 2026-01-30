@@ -16,7 +16,10 @@ export const POKER_WIDGET_TYPES = [
 ] as const;
 
 // Legacy widget types for migration (these map to poker-rake-breakdown)
-export const LEGACY_WIDGET_TYPES = ["poker-rake-ppst", "poker-rake-ppsr"] as const;
+export const LEGACY_WIDGET_TYPES = [
+  "poker-rake-ppst",
+  "poker-rake-ppsr",
+] as const;
 
 export type PokerWidgetType = (typeof POKER_WIDGET_TYPES)[number];
 
@@ -25,7 +28,9 @@ export interface PokerWidgetPreferences {
   availableWidgets: PokerWidgetType[];
 }
 
-export const DEFAULT_POKER_WIDGET_ORDER: PokerWidgetType[] = [...POKER_WIDGET_TYPES];
+export const DEFAULT_POKER_WIDGET_ORDER: PokerWidgetType[] = [
+  ...POKER_WIDGET_TYPES,
+];
 
 export const DEFAULT_POKER_WIDGET_PREFERENCES: PokerWidgetPreferences = {
   primaryWidgets: DEFAULT_POKER_WIDGET_ORDER.slice(0, 10), // Show all widgets by default
@@ -64,7 +69,9 @@ class PokerWidgetPreferencesCache extends RedisCache {
             result.push("poker-rake-breakdown");
             hasBreakdown = true;
           }
-        } else if (DEFAULT_POKER_WIDGET_ORDER.includes(widget as PokerWidgetType)) {
+        } else if (
+          DEFAULT_POKER_WIDGET_ORDER.includes(widget as PokerWidgetType)
+        ) {
           result.push(widget as PokerWidgetType);
         }
       }
@@ -72,8 +79,12 @@ class PokerWidgetPreferencesCache extends RedisCache {
       return result;
     };
 
-    const migratedPrimaryWidgets = migrateLegacyWidgets(preferences.primaryWidgets as string[]);
-    const migratedAvailableWidgets = migrateLegacyWidgets(preferences.availableWidgets as string[]);
+    const migratedPrimaryWidgets = migrateLegacyWidgets(
+      preferences.primaryWidgets as string[],
+    );
+    const migratedAvailableWidgets = migrateLegacyWidgets(
+      preferences.availableWidgets as string[],
+    );
 
     // Validate and add missing widgets
     const allWidgets = [...migratedPrimaryWidgets, ...migratedAvailableWidgets];

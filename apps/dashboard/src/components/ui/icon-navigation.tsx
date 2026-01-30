@@ -23,7 +23,7 @@ function IconNavButton({ section, isActive, onClick }: IconNavButtonProps) {
       className={cn(
         "w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200",
         "hover:bg-neutral-800",
-        isActive ? "bg-neutral-800 text-neutral-50" : "text-neutral-400"
+        isActive ? "bg-neutral-800 text-neutral-50" : "text-neutral-400",
       )}
       title={section.label}
     >
@@ -149,7 +149,7 @@ export function IconNavigation({
             "hover:bg-neutral-800",
             activeSection === "settings"
               ? "bg-neutral-800 text-neutral-50"
-              : "text-neutral-400"
+              : "text-neutral-400",
           )}
           title="Settings"
         >
@@ -164,7 +164,7 @@ export function IconNavigation({
             "hover:bg-neutral-800",
             activeSection === "apps"
               ? "bg-neutral-800 text-neutral-50"
-              : "text-neutral-400"
+              : "text-neutral-400",
           )}
           title="Apps"
         >

@@ -135,7 +135,9 @@ export function SUImportsList({ compact = false }: SUImportsListProps) {
                 <span className="font-medium truncate">
                   {importItem.file_name}
                 </span>
-                <Badge variant={getStatusVariant(importItem.status as ImportStatus)}>
+                <Badge
+                  variant={getStatusVariant(importItem.status as ImportStatus)}
+                >
                   {getStatusLabel(importItem.status as ImportStatus)}
                 </Badge>
               </div>

@@ -28,11 +28,15 @@ export const reportsRouter = createTRPCRouter({
         .lte("issue_date", input.to);
 
       // Group by month
-      const monthlyData: Record<string, { value: number; currency: string }> = {};
+      const monthlyData: Record<string, { value: number; currency: string }> =
+        {};
       for (const inv of invoices ?? []) {
         const month = inv.issue_date?.substring(0, 7) ?? "unknown";
         if (!monthlyData[month]) {
-          monthlyData[month] = { value: 0, currency: inv.currency || input.currency || "USD" };
+          monthlyData[month] = {
+            value: 0,
+            currency: inv.currency || input.currency || "USD",
+          };
         }
         monthlyData[month].value += Number(inv.amount) || 0;
       }
@@ -74,12 +78,19 @@ export const reportsRouter = createTRPCRouter({
         .lte("date", input.to);
 
       // Calculate monthly profit
-      const monthlyData: Record<string, { revenue: number; expenses: number; currency: string }> = {};
+      const monthlyData: Record<
+        string,
+        { revenue: number; expenses: number; currency: string }
+      > = {};
 
       for (const inv of invoices ?? []) {
         const month = inv.issue_date?.substring(0, 7) ?? "unknown";
         if (!monthlyData[month]) {
-          monthlyData[month] = { revenue: 0, expenses: 0, currency: inv.currency || input.currency || "USD" };
+          monthlyData[month] = {
+            revenue: 0,
+            expenses: 0,
+            currency: inv.currency || input.currency || "USD",
+          };
         }
         monthlyData[month].revenue += Number(inv.amount) || 0;
       }
@@ -87,7 +98,11 @@ export const reportsRouter = createTRPCRouter({
       for (const exp of expenses ?? []) {
         const month = exp.date?.substring(0, 7) ?? "unknown";
         if (!monthlyData[month]) {
-          monthlyData[month] = { revenue: 0, expenses: 0, currency: exp.currency || input.currency || "USD" };
+          monthlyData[month] = {
+            revenue: 0,
+            expenses: 0,
+            currency: exp.currency || input.currency || "USD",
+          };
         }
         monthlyData[month].expenses += Math.abs(Number(exp.amount)) || 0;
       }
@@ -106,7 +121,10 @@ export const reportsRouter = createTRPCRouter({
           currency: data.currency,
         }));
 
-      const totalProfit = result.reduce((sum, item) => sum + item.current.value, 0);
+      const totalProfit = result.reduce(
+        (sum, item) => sum + item.current.value,
+        0,
+      );
       const currency = input.currency ?? result[0]?.currency ?? "USD";
 
       return {
@@ -133,10 +151,18 @@ export const reportsRouter = createTRPCRouter({
         .gte("date", input.from)
         .lte("date", input.to);
 
-      const totalExpenses = Math.abs((expenses ?? []).reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0));
+      const totalExpenses = Math.abs(
+        (expenses ?? []).reduce(
+          (sum, exp) => sum + (Number(exp.amount) || 0),
+          0,
+        ),
+      );
       const fromDate = new Date(input.from);
       const toDate = new Date(input.to);
-      const monthsDiff = Math.max(1, (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
+      const monthsDiff = Math.max(
+        1,
+        (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 30),
+      );
       const monthlyBurnRate = totalExpenses / monthsDiff;
 
       return {
@@ -171,13 +197,25 @@ export const reportsRouter = createTRPCRouter({
         .gte("date", input.from)
         .lte("date", input.to);
 
-      const totalBalance = (accounts ?? []).reduce((sum, acc) => sum + (Number(acc.balance) || 0), 0);
-      const totalExpenses = Math.abs((expenses ?? []).reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0));
+      const totalBalance = (accounts ?? []).reduce(
+        (sum, acc) => sum + (Number(acc.balance) || 0),
+        0,
+      );
+      const totalExpenses = Math.abs(
+        (expenses ?? []).reduce(
+          (sum, exp) => sum + (Number(exp.amount) || 0),
+          0,
+        ),
+      );
       const fromDate = new Date(input.from);
       const toDate = new Date(input.to);
-      const monthsDiff = Math.max(1, (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
+      const monthsDiff = Math.max(
+        1,
+        (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 30),
+      );
       const monthlyBurnRate = totalExpenses / monthsDiff;
-      const runwayMonths = monthlyBurnRate > 0 ? Math.round(totalBalance / monthlyBurnRate) : 999;
+      const runwayMonths =
+        monthlyBurnRate > 0 ? Math.round(totalBalance / monthlyBurnRate) : 999;
 
       // Return runwayMonths directly as result (component expects a number, not an object)
       return {
@@ -201,11 +239,15 @@ export const reportsRouter = createTRPCRouter({
         .lte("date", input.to);
 
       // Group by month
-      const monthlyData: Record<string, { value: number; currency: string }> = {};
+      const monthlyData: Record<string, { value: number; currency: string }> =
+        {};
       for (const exp of expenses ?? []) {
         const month = exp.date?.substring(0, 7) ?? "unknown";
         if (!monthlyData[month]) {
-          monthlyData[month] = { value: 0, currency: exp.currency || input.currency || "USD" };
+          monthlyData[month] = {
+            value: 0,
+            currency: exp.currency || input.currency || "USD",
+          };
         }
         monthlyData[month].value += Math.abs(Number(exp.amount)) || 0;
       }
@@ -237,11 +279,15 @@ export const reportsRouter = createTRPCRouter({
         .lte("date", input.to);
 
       // Group by category
-      const categoryData: Record<string, { amount: number; currency: string }> = {};
+      const categoryData: Record<string, { amount: number; currency: string }> =
+        {};
       for (const exp of expenses ?? []) {
         const category = exp.category_slug || "uncategorized";
         if (!categoryData[category]) {
-          categoryData[category] = { amount: 0, currency: exp.currency || input.currency || "USD" };
+          categoryData[category] = {
+            amount: 0,
+            currency: exp.currency || input.currency || "USD",
+          };
         }
         categoryData[category].amount += Math.abs(Number(exp.amount)) || 0;
       }
@@ -269,8 +315,14 @@ export const reportsRouter = createTRPCRouter({
         .gte("date", input.from)
         .lte("date", input.to);
 
-      const totalTax = (transactions ?? []).reduce((sum, tx) => sum + (Number(tx.tax_amount) || 0), 0);
-      const totalAmount = (transactions ?? []).reduce((sum, tx) => sum + Math.abs(Number(tx.amount) || 0), 0);
+      const totalTax = (transactions ?? []).reduce(
+        (sum, tx) => sum + (Number(tx.tax_amount) || 0),
+        0,
+      );
+      const totalAmount = (transactions ?? []).reduce(
+        (sum, tx) => sum + Math.abs(Number(tx.amount) || 0),
+        0,
+      );
 
       return {
         summary: {
@@ -301,11 +353,15 @@ export const reportsRouter = createTRPCRouter({
       const monthlyData: Record<string, number> = {};
       for (const inv of invoices ?? []) {
         const month = inv.issue_date?.substring(0, 7) ?? "unknown";
-        monthlyData[month] = (monthlyData[month] || 0) + (Number(inv.amount) || 0);
+        monthlyData[month] =
+          (monthlyData[month] || 0) + (Number(inv.amount) || 0);
       }
 
       const months = Object.keys(monthlyData).length;
-      const totalRevenue = Object.values(monthlyData).reduce((sum, val) => sum + val, 0);
+      const totalRevenue = Object.values(monthlyData).reduce(
+        (sum, val) => sum + val,
+        0,
+      );
       const avgMonthlyRevenue = months > 0 ? totalRevenue / months : 0;
 
       // Generate forecast

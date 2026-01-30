@@ -3,7 +3,12 @@
 import { CopyInput } from "@/components/copy-input";
 import { useUserQuery } from "@/hooks/use-user";
 import { getInboxEmail } from "@midpoker/inbox";
-import { Card, CardDescription, CardHeader, CardTitle } from "@midpoker/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@midpoker/ui/card";
 
 export function InboxEmailSettings() {
   const { data: user } = useUserQuery();

@@ -92,7 +92,14 @@ export const suAnalyticsRouter = createTRPCRouter({
             totalFee: number;
           }>,
           gamesPPSTByType: { nlh: 0, spinup: 0, pko: 0, mko: 0, sat: 0 },
-          gamesPPSRByType: { nlh: 0, plo4: 0, plo5: 0, plo6: 0, ofc: 0, other: 0 },
+          gamesPPSRByType: {
+            nlh: 0,
+            plo4: 0,
+            plo5: 0,
+            plo6: 0,
+            ofc: 0,
+            other: 0,
+          },
         };
       }
 
@@ -169,7 +176,9 @@ export const suAnalyticsRouter = createTRPCRouter({
         // PPST games with GTD (for overlay/gap calculation)
         supabase
           .from("poker_su_games")
-          .select("premiacao_garantida, total_buyin, total_taxa, total_gap_garantido")
+          .select(
+            "premiacao_garantida, total_buyin, total_taxa, total_gap_garantido",
+          )
           .eq("team_id", teamId)
           .eq("game_type", "ppst")
           .gt("premiacao_garantida", 0)
@@ -183,30 +192,35 @@ export const suAnalyticsRouter = createTRPCRouter({
       // Step 4: Calculate stats from summaries
       const totalLeagues = new Set(summaries?.map((s) => s.liga_id)).size;
 
-      const leagueEarningsPPST = summaries?.reduce(
-        (sum, s) => sum + Number(s.ppst_ganhos_liga_taxa ?? 0),
-        0,
-      ) ?? 0;
+      const leagueEarningsPPST =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppst_ganhos_liga_taxa ?? 0),
+          0,
+        ) ?? 0;
 
-      const leagueEarningsPPSR = summaries?.reduce(
-        (sum, s) => sum + Number(s.ppsr_ganhos_liga_taxa ?? 0),
-        0,
-      ) ?? 0;
+      const leagueEarningsPPSR =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppsr_ganhos_liga_taxa ?? 0),
+          0,
+        ) ?? 0;
 
-      const gapGuaranteedTotal = summaries?.reduce(
-        (sum, s) => sum + Number(s.ppst_gap_garantido ?? 0),
-        0,
-      ) ?? 0;
+      const gapGuaranteedTotal =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppst_gap_garantido ?? 0),
+          0,
+        ) ?? 0;
 
-      const playerWinningsPPST = summaries?.reduce(
-        (sum, s) => sum + Number(s.ppst_ganhos_jogador ?? 0),
-        0,
-      ) ?? 0;
+      const playerWinningsPPST =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppst_ganhos_jogador ?? 0),
+          0,
+        ) ?? 0;
 
-      const playerWinningsPPSR = summaries?.reduce(
-        (sum, s) => sum + Number(s.ppsr_ganhos_jogador ?? 0),
-        0,
-      ) ?? 0;
+      const playerWinningsPPSR =
+        summaries?.reduce(
+          (sum, s) => sum + Number(s.ppsr_ganhos_jogador ?? 0),
+          0,
+        ) ?? 0;
 
       // Count leagues with PPST/PPSR
       const leaguesWithPPST = new Set(
@@ -229,7 +243,8 @@ export const suAnalyticsRouter = createTRPCRouter({
 
       for (const game of gtdGames ?? []) {
         gamesWithGTD++;
-        const buyinLiquido = Number(game.total_buyin ?? 0) - Number(game.total_taxa ?? 0);
+        const buyinLiquido =
+          Number(game.total_buyin ?? 0) - Number(game.total_taxa ?? 0);
         const gtd = Number(game.premiacao_garantida ?? 0);
         const resultado = buyinLiquido - gtd;
 
@@ -255,10 +270,14 @@ export const suAnalyticsRouter = createTRPCRouter({
       // PPST breakdown by variant
       const ppstVariantCounts: Record<string, number> = {};
       for (const g of ppstVariants ?? []) {
-        ppstVariantCounts[g.game_variant] = (ppstVariantCounts[g.game_variant] ?? 0) + 1;
+        ppstVariantCounts[g.game_variant] =
+          (ppstVariantCounts[g.game_variant] ?? 0) + 1;
       }
       const gamesPPSTByType = {
-        nlh: (ppstVariantCounts.nlh ?? 0) + (ppstVariantCounts.short ?? 0) + (ppstVariantCounts["6plus"] ?? 0),
+        nlh:
+          (ppstVariantCounts.nlh ?? 0) +
+          (ppstVariantCounts.short ?? 0) +
+          (ppstVariantCounts["6plus"] ?? 0),
         spinup: ppstVariantCounts.spinup ?? 0,
         pko: ppstVariantCounts.pko ?? 0,
         mko: ppstVariantCounts.mko ?? 0,
@@ -268,16 +287,31 @@ export const suAnalyticsRouter = createTRPCRouter({
       // PPSR breakdown by variant
       const ppsrVariantCounts: Record<string, number> = {};
       for (const g of ppsrVariants ?? []) {
-        ppsrVariantCounts[g.game_variant] = (ppsrVariantCounts[g.game_variant] ?? 0) + 1;
+        ppsrVariantCounts[g.game_variant] =
+          (ppsrVariantCounts[g.game_variant] ?? 0) + 1;
       }
       const gamesPPSRByType = {
-        nlh: (ppsrVariantCounts.nlh ?? 0) + (ppsrVariantCounts.short ?? 0) + (ppsrVariantCounts["6plus"] ?? 0),
+        nlh:
+          (ppsrVariantCounts.nlh ?? 0) +
+          (ppsrVariantCounts.short ?? 0) +
+          (ppsrVariantCounts["6plus"] ?? 0),
         plo4: ppsrVariantCounts.plo4 ?? 0,
         plo5: ppsrVariantCounts.plo5 ?? 0,
         plo6: ppsrVariantCounts.plo6 ?? 0,
         ofc: ppsrVariantCounts.ofc ?? 0,
         other: Object.entries(ppsrVariantCounts)
-          .filter(([k]) => !["nlh", "short", "6plus", "plo4", "plo5", "plo6", "ofc"].includes(k))
+          .filter(
+            ([k]) =>
+              ![
+                "nlh",
+                "short",
+                "6plus",
+                "plo4",
+                "plo5",
+                "plo6",
+                "ofc",
+              ].includes(k),
+          )
           .reduce((sum, [, v]) => sum + v, 0),
       };
 

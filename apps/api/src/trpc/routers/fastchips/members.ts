@@ -36,9 +36,7 @@ export const fastchipsMembersRouter = createTRPCRouter({
       }
 
       if (search) {
-        query = query.or(
-          `name.ilike.%${search}%,pppoker_id.ilike.%${search}%`,
-        );
+        query = query.or(`name.ilike.%${search}%,pppoker_id.ilike.%${search}%`);
       }
 
       const currentCursor = cursor ? Number.parseInt(cursor, 10) : 0;
@@ -123,14 +121,19 @@ export const fastchipsMembersRouter = createTRPCRouter({
 
       const stats = {
         totalOperations: operations?.length ?? 0,
-        totalEntries: operations?.filter((op) => op.operation_type === "entrada").length ?? 0,
-        totalExits: operations?.filter((op) => op.operation_type === "saida").length ?? 0,
-        grossEntryTotal: operations
-          ?.filter((op) => op.operation_type === "entrada")
-          .reduce((sum, op) => sum + Number(op.gross_amount ?? 0), 0) ?? 0,
-        grossExitTotal: operations
-          ?.filter((op) => op.operation_type === "saida")
-          .reduce((sum, op) => sum + Number(op.gross_amount ?? 0), 0) ?? 0,
+        totalEntries:
+          operations?.filter((op) => op.operation_type === "entrada").length ??
+          0,
+        totalExits:
+          operations?.filter((op) => op.operation_type === "saida").length ?? 0,
+        grossEntryTotal:
+          operations
+            ?.filter((op) => op.operation_type === "entrada")
+            .reduce((sum, op) => sum + Number(op.gross_amount ?? 0), 0) ?? 0,
+        grossExitTotal:
+          operations
+            ?.filter((op) => op.operation_type === "saida")
+            .reduce((sum, op) => sum + Number(op.gross_amount ?? 0), 0) ?? 0,
       };
 
       return {

@@ -24,13 +24,23 @@ interface SUDashboardHeaderProps {
   from?: string | null;
   to?: string | null;
   viewMode?: "current_week" | "historical" | null;
-  onParamsChange?: (params: { from?: string | null; to?: string | null; viewMode?: "current_week" | "historical" | null }) => void;
+  onParamsChange?: (params: {
+    from?: string | null;
+    to?: string | null;
+    viewMode?: "current_week" | "historical" | null;
+  }) => void;
 }
 
-export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDashboardHeaderProps = {}) {
+export function SUDashboardHeader({
+  from,
+  to,
+  viewMode,
+  onParamsChange,
+}: SUDashboardHeaderProps = {}) {
   const trpc = useTRPC();
-  const { data: openPeriods, isLoading: isLoadingOpenPeriods } =
-    useQuery(trpc.su.weekPeriods.getOpenPeriods.queryOptions());
+  const { data: openPeriods, isLoading: isLoadingOpenPeriods } = useQuery(
+    trpc.su.weekPeriods.getOpenPeriods.queryOptions(),
+  );
   const currentWeek = openPeriods?.[0] ?? null;
 
   const dateRange: DateRange = {
@@ -102,7 +112,8 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
             <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 rounded-md border border-green-500/20">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-sm font-medium">
-                Semana {format(new Date(currentWeek.week_start), "dd/MM")} - {format(new Date(currentWeek.week_end), "dd/MM")}
+                Semana {format(new Date(currentWeek.week_start), "dd/MM")} -{" "}
+                {format(new Date(currentWeek.week_end), "dd/MM")}
               </span>
               <span className="text-xs text-muted-foreground">
                 ({currentWeek.status === "open" ? "Aberta" : "Fechada"})
@@ -125,7 +136,7 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
               "flex items-center px-3 py-1.5 text-sm rounded-md transition-colors",
               isCurrentWeekView
                 ? "bg-background shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Icons.CalendarMonth className="h-4 w-4 mr-2" />
@@ -138,7 +149,7 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
               "flex items-center px-3 py-1.5 text-sm rounded-md transition-colors",
               !isCurrentWeekView
                 ? "bg-background shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Icons.History className="h-4 w-4 mr-2" />
@@ -190,7 +201,9 @@ export function SUDashboardHeader({ from, to, viewMode, onParamsChange }: SUDash
                           variant="ghost"
                           size="sm"
                           className="w-full justify-start text-sm text-muted-foreground"
-                          onClick={() => onParamsChange?.({ from: null, to: null })}
+                          onClick={() =>
+                            onParamsChange?.({ from: null, to: null })
+                          }
                         >
                           <Icons.Clear className="mr-2 h-3 w-3" />
                           Limpar filtro

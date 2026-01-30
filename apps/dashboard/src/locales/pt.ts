@@ -1941,7 +1941,8 @@ export default {
     title: "Painel Fast Chips",
     description: "Gerencie suas operacoes de Fast Chips",
     in_development: "Em Desenvolvimento",
-    in_development_description: "Esta funcionalidade esta sendo desenvolvida e estara disponivel em breve.",
+    in_development_description:
+      "Esta funcionalidade esta sendo desenvolvida e estara disponivel em breve.",
     transacoes: {
       title: "Transacoes",
       description: "Visualize e gerencie todas as transacoes de Fast Chips",

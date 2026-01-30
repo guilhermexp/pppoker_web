@@ -27,7 +27,7 @@ function SectionTitle({
       <div
         className={cn(
           "text-lg font-semibold text-neutral-50 transition-opacity duration-500",
-          isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+          isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100",
         )}
         style={{ transitionTimingFunction: softSpringEasing }}
       >
@@ -41,7 +41,7 @@ function SectionTitle({
         className={cn(
           "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-500",
           "hover:bg-neutral-800 text-neutral-400",
-          isCollapsed ? "mx-auto" : ""
+          isCollapsed ? "mx-auto" : "",
         )}
         style={{ transitionTimingFunction: softSpringEasing }}
         title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -87,7 +87,7 @@ export function DetailSidebar({
     <div
       className={cn(
         "h-full bg-neutral-950 rounded-r-2xl flex flex-col transition-all duration-500 overflow-hidden",
-        isCollapsed ? "w-16" : "w-80"
+        isCollapsed ? "w-16" : "w-80",
       )}
       style={{ transitionTimingFunction: softSpringEasing }}
     >

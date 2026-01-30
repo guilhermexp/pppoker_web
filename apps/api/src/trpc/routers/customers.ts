@@ -38,7 +38,9 @@ export const customersRouter = createTRPCRouter({
 
       // Apply search filter
       if (input?.q) {
-        query = query.or(`name.ilike.%${input.q}%,email.ilike.%${input.q}%,contact.ilike.%${input.q}%`);
+        query = query.or(
+          `name.ilike.%${input.q}%,email.ilike.%${input.q}%,contact.ilike.%${input.q}%`,
+        );
       }
 
       query = query.order("name", { ascending: true });
@@ -65,7 +67,9 @@ export const customersRouter = createTRPCRouter({
 
       const allItems = customers ?? [];
       const hasNextPage = allItems.length > pageSize;
-      const itemsToReturn = hasNextPage ? allItems.slice(0, pageSize) : allItems;
+      const itemsToReturn = hasNextPage
+        ? allItems.slice(0, pageSize)
+        : allItems;
       const nextCursor = hasNextPage ? String(cursor + pageSize) : null;
 
       return {
@@ -187,22 +191,28 @@ export const customersRouter = createTRPCRouter({
 
       if (input.id) upsertData.id = input.id;
       if (input.country !== undefined) upsertData.country = input.country;
-      if (input.addressLine1 !== undefined) upsertData.address_line_1 = input.addressLine1;
-      if (input.addressLine2 !== undefined) upsertData.address_line_2 = input.addressLine2;
+      if (input.addressLine1 !== undefined)
+        upsertData.address_line_1 = input.addressLine1;
+      if (input.addressLine2 !== undefined)
+        upsertData.address_line_2 = input.addressLine2;
       if (input.city !== undefined) upsertData.city = input.city;
       if (input.state !== undefined) upsertData.state = input.state;
       if (input.zip !== undefined) upsertData.zip = input.zip;
       if (input.phone !== undefined) upsertData.phone = input.phone;
       if (input.website !== undefined) upsertData.website = input.website;
-      if (input.vatNumber !== undefined) upsertData.vat_number = input.vatNumber;
-      if (input.countryCode !== undefined) upsertData.country_code = input.countryCode;
+      if (input.vatNumber !== undefined)
+        upsertData.vat_number = input.vatNumber;
+      if (input.countryCode !== undefined)
+        upsertData.country_code = input.countryCode;
       if (input.contact !== undefined) upsertData.contact = input.contact;
       if (input.note !== undefined) upsertData.note = input.note;
 
       const { data: customer, error } = await supabase
         .from("customers")
         .upsert(upsertData, { onConflict: "id" })
-        .select("id, name, email, country, address_line_1, address_line_2, city, state, zip, phone, website, vat_number, country_code, contact, note, created_at")
+        .select(
+          "id, name, email, country, address_line_1, address_line_2, city, state, zip, phone, website, vat_number, country_code, contact, note, created_at",
+        )
         .single();
 
       if (error) {

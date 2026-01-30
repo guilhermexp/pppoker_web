@@ -1,7 +1,11 @@
 import { updateUserSchema } from "@api/schemas/users";
 import { resend } from "@api/services/resend";
 import { createAdminClient } from "@api/services/supabase";
-import { authProcedure, createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import {
+  authProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "@api/trpc/init";
 import {
   deleteUser,
   getUserById,
@@ -18,7 +22,9 @@ async function getUserViaSupabase(userId: string) {
   // Query user data - only select columns that exist in the database
   const { data: user, error } = await supabase
     .from("users")
-    .select("id, full_name, email, avatar_url, locale, time_format, date_format, week_starts_on_monday, timezone, team_id, created_at")
+    .select(
+      "id, full_name, email, avatar_url, locale, time_format, date_format, week_starts_on_monday, timezone, team_id, created_at",
+    )
     .eq("id", userId)
     .single();
 
@@ -89,13 +95,18 @@ export const userRouter = createTRPCRouter({
       // Transform camelCase to snake_case for database
       const updateData: Record<string, unknown> = {};
       if (input.fullName !== undefined) updateData.full_name = input.fullName;
-      if (input.avatarUrl !== undefined) updateData.avatar_url = input.avatarUrl;
+      if (input.avatarUrl !== undefined)
+        updateData.avatar_url = input.avatarUrl;
       if (input.locale !== undefined) updateData.locale = input.locale;
-      if (input.weekStartsOnMonday !== undefined) updateData.week_starts_on_monday = input.weekStartsOnMonday;
+      if (input.weekStartsOnMonday !== undefined)
+        updateData.week_starts_on_monday = input.weekStartsOnMonday;
       if (input.timezone !== undefined) updateData.timezone = input.timezone;
-      if (input.timezoneAutoSync !== undefined) updateData.timezone_auto_sync = input.timezoneAutoSync;
-      if (input.timeFormat !== undefined) updateData.time_format = input.timeFormat;
-      if (input.dateFormat !== undefined) updateData.date_format = input.dateFormat;
+      if (input.timezoneAutoSync !== undefined)
+        updateData.timezone_auto_sync = input.timezoneAutoSync;
+      if (input.timeFormat !== undefined)
+        updateData.time_format = input.timeFormat;
+      if (input.dateFormat !== undefined)
+        updateData.date_format = input.dateFormat;
 
       const { data, error } = await supabase
         .from("users")
@@ -166,16 +177,20 @@ export const userRouter = createTRPCRouter({
       email: inv.email,
       code: inv.code,
       role: inv.role,
-      user: inv.user ? {
-        id: inv.user.id,
-        fullName: inv.user.full_name,
-        email: inv.user.email,
-      } : null,
-      team: inv.team ? {
-        id: inv.team.id,
-        name: inv.team.name,
-        logoUrl: inv.team.logo_url,
-      } : null,
+      user: inv.user
+        ? {
+            id: inv.user.id,
+            fullName: inv.user.full_name,
+            email: inv.user.email,
+          }
+        : null,
+      team: inv.team
+        ? {
+            id: inv.team.id,
+            name: inv.team.name,
+            logoUrl: inv.team.logo_url,
+          }
+        : null,
     }));
   }),
 });

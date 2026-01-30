@@ -31,23 +31,14 @@ export const pokerGameVariantSchema = z.enum([
 // =============================================================================
 
 export const getPokerSessionsSchema = z.object({
-  cursor: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Cursor for pagination (page number as string)",
-      example: "1",
-    }),
-  pageSize: z.coerce
-    .number()
-    .min(1)
-    .max(1000)
-    .optional()
-    .openapi({
-      description: "Number of items per page",
-      example: 50,
-    }),
+  cursor: z.string().nullable().optional().openapi({
+    description: "Cursor for pagination (page number as string)",
+    example: "1",
+  }),
+  pageSize: z.coerce.number().min(1).max(1000).optional().openapi({
+    description: "Number of items per page",
+    example: 50,
+  }),
   sort: z
     .array(z.string().min(1))
     .max(2)
@@ -58,46 +49,25 @@ export const getPokerSessionsSchema = z.object({
       description: "Sort by [column, direction]",
       example: ["started_at", "desc"],
     }),
-  q: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Search query for table name or external ID",
-    }),
-  sessionType: pokerSessionTypeSchema
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter by session type",
-    }),
-  gameVariant: pokerGameVariantSchema
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter by game variant",
-    }),
-  dateFrom: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter sessions from this date (ISO string)",
-    }),
-  dateTo: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter sessions until this date (ISO string)",
-    }),
-  includeDraft: z
-    .boolean()
-    .optional()
-    .openapi({
-      description:
-        "Include draft (non-committed) data. Default is false (only committed data shown).",
-    }),
+  q: z.string().nullable().optional().openapi({
+    description: "Search query for table name or external ID",
+  }),
+  sessionType: pokerSessionTypeSchema.nullable().optional().openapi({
+    description: "Filter by session type",
+  }),
+  gameVariant: pokerGameVariantSchema.nullable().optional().openapi({
+    description: "Filter by game variant",
+  }),
+  dateFrom: z.string().nullable().optional().openapi({
+    description: "Filter sessions from this date (ISO string)",
+  }),
+  dateTo: z.string().nullable().optional().openapi({
+    description: "Filter sessions until this date (ISO string)",
+  }),
+  includeDraft: z.boolean().optional().openapi({
+    description:
+      "Include draft (non-committed) data. Default is false (only committed data shown).",
+  }),
 });
 
 export const getPokerSessionByIdSchema = z.object({
@@ -171,6 +141,8 @@ export const deletePokerSessionSchema = z.object({
 // =============================================================================
 
 export type GetPokerSessionsInput = z.infer<typeof getPokerSessionsSchema>;
-export type GetPokerSessionByIdInput = z.infer<typeof getPokerSessionByIdSchema>;
+export type GetPokerSessionByIdInput = z.infer<
+  typeof getPokerSessionByIdSchema
+>;
 export type UpsertPokerSessionInput = z.infer<typeof upsertPokerSessionSchema>;
 export type DeletePokerSessionInput = z.infer<typeof deletePokerSessionSchema>;

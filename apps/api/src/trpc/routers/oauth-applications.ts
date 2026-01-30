@@ -70,7 +70,10 @@ export const oauthApplicationsRouter = createTRPCRouter({
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.log("[oauth-applications.list] Supabase REST error:", error.message);
+      console.log(
+        "[oauth-applications.list] Supabase REST error:",
+        error.message,
+      );
       return { data: [] };
     }
 
@@ -96,11 +99,13 @@ export const oauthApplicationsRouter = createTRPCRouter({
       isPublic: app.is_public,
       active: app.active,
       status: app.status,
-      user: app.users ? {
-        id: app.users.id,
-        fullName: app.users.full_name,
-        avatarUrl: app.users.avatar_url,
-      } : null,
+      user: app.users
+        ? {
+            id: app.users.id,
+            fullName: app.users.full_name,
+            avatarUrl: app.users.avatar_url,
+          }
+        : null,
     }));
 
     return {
@@ -383,7 +388,10 @@ export const oauthApplicationsRouter = createTRPCRouter({
       .order("last_used_at", { ascending: false });
 
     if (error) {
-      console.log("[oauthApplications.authorized] Supabase REST error:", error.message);
+      console.log(
+        "[oauthApplications.authorized] Supabase REST error:",
+        error.message,
+      );
       return { data: [] };
     }
 
@@ -394,17 +402,19 @@ export const oauthApplicationsRouter = createTRPCRouter({
       createdAt: token.created_at,
       expiresAt: token.expires_at,
       refreshTokenExpiresAt: token.refresh_token_expires_at,
-      application: token.oauth_applications ? {
-        id: token.oauth_applications.id,
-        name: token.oauth_applications.name,
-        description: token.oauth_applications.description,
-        overview: token.oauth_applications.overview,
-        developerName: token.oauth_applications.developer_name,
-        logoUrl: token.oauth_applications.logo_url,
-        website: token.oauth_applications.website,
-        installUrl: token.oauth_applications.install_url,
-        screenshots: token.oauth_applications.screenshots,
-      } : null,
+      application: token.oauth_applications
+        ? {
+            id: token.oauth_applications.id,
+            name: token.oauth_applications.name,
+            description: token.oauth_applications.description,
+            overview: token.oauth_applications.overview,
+            developerName: token.oauth_applications.developer_name,
+            logoUrl: token.oauth_applications.logo_url,
+            website: token.oauth_applications.website,
+            installUrl: token.oauth_applications.install_url,
+            screenshots: token.oauth_applications.screenshots,
+          }
+        : null,
     }));
 
     return {

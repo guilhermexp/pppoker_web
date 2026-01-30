@@ -32,7 +32,7 @@ export function FastChipsPlayersTable() {
     trpc.fastchips.members.list.queryOptions({
       pageSize: 50,
       search: searchQuery || undefined,
-    })
+    }),
   );
 
   // Map tRPC data to table format
@@ -42,7 +42,9 @@ export function FastChipsPlayersTable() {
       id: member.id,
       playerId: member.ppPokerId || "-",
       name: member.name,
-      linkedAt: member.linkedAt ? format(new Date(member.linkedAt), "dd/MM/yy") : "-",
+      linkedAt: member.linkedAt
+        ? format(new Date(member.linkedAt), "dd/MM/yy")
+        : "-",
       totalLinkedAccounts: member.linkedAccountsCount ?? 0,
     }));
   }, [data]);
@@ -106,20 +108,31 @@ export function FastChipsPlayersTable() {
                       <Skeleton className="h-4 w-32" />
                     </div>
                   </TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-8 w-8 ml-auto" />
+                  </TableCell>
                 </TableRow>
               ))
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={3}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   Erro ao carregar integrantes
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                  Nenhum integrante encontrado. Importe uma planilha Fastchips para começar.
+                <TableCell
+                  colSpan={3}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  Nenhum integrante encontrado. Importe uma planilha Fastchips
+                  para começar.
                 </TableCell>
               </TableRow>
             ) : (

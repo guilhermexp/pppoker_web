@@ -83,7 +83,9 @@ export const ConnectionExpireEmail = ({
           </Text>
 
           <Section className="text-center mt-[50px] mb-[50px]">
-            <Button href="https://app.mid.poker/settings/accounts">Reconnect</Button>
+            <Button href="https://app.mid.poker/settings/accounts">
+              Reconnect
+            </Button>
           </Section>
 
           <Text

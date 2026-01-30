@@ -14,8 +14,9 @@ export function FastChipsLinkedAccountDetailSheet() {
     useFastchipsLinkedAccountParams();
   const isOpen = Boolean(fastchipsLinkedAccountId);
   const account =
-    fastChipsLinkedAccounts.find((item) => item.id === fastchipsLinkedAccountId) ??
-    fastChipsLinkedAccounts[0];
+    fastChipsLinkedAccounts.find(
+      (item) => item.id === fastchipsLinkedAccountId,
+    ) ?? fastChipsLinkedAccounts[0];
 
   return (
     <Sheet
@@ -110,7 +111,9 @@ export function FastChipsLinkedAccountDetailSheet() {
                     className="border bg-emerald-100 text-emerald-700 border-emerald-200"
                   >
                     {account.restriction === "auto_withdraw"
-                      ? t("fastchips.contas_vinculadas.restriction_auto_withdraw")
+                      ? t(
+                          "fastchips.contas_vinculadas.restriction_auto_withdraw",
+                        )
                       : t("fastchips.contas_vinculadas.restriction_blocked")}
                   </Badge>
                 ) : (

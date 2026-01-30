@@ -31,7 +31,9 @@ export default async function FastChipsPage() {
             <Icons.Settings className="w-8 h-8 text-primary" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold">{t("fastchips.in_development")}</h2>
+            <h2 className="text-xl font-semibold">
+              {t("fastchips.in_development")}
+            </h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-md">
               {t("fastchips.in_development_description")}
             </p>

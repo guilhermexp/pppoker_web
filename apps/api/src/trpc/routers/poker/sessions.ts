@@ -90,9 +90,7 @@ export const pokerSessionsRouter = createTRPCRouter({
 
       // Apply filters
       if (q) {
-        query = query.or(
-          `table_name.ilike.%${q}%,external_id.ilike.%${q}%`,
-        );
+        query = query.or(`table_name.ilike.%${q}%,external_id.ilike.%${q}%`);
       }
 
       if (sessionType) {
@@ -365,8 +363,14 @@ export const pokerSessionsRouter = createTRPCRouter({
   getStats: protectedProcedure
     .input(
       getPokerSessionsSchema
-        .pick({ dateFrom: true, dateTo: true, sessionType: true, gameVariant: true, includeDraft: true })
-        .optional()
+        .pick({
+          dateFrom: true,
+          dateTo: true,
+          sessionType: true,
+          gameVariant: true,
+          includeDraft: true,
+        })
+        .optional(),
     )
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
@@ -429,7 +433,9 @@ export const pokerSessionsRouter = createTRPCRouter({
       // This avoids the 1000 row limit issue
       let query = supabase
         .from("poker_sessions")
-        .select("session_type, game_variant, total_rake, total_buy_in, player_count, hands_played, guaranteed_prize, raw_data")
+        .select(
+          "session_type, game_variant, total_rake, total_buy_in, player_count, hands_played, guaranteed_prize, raw_data",
+        )
         .eq("team_id", teamId)
         .limit(10000); // Increase limit to handle large datasets
 
@@ -470,7 +476,10 @@ export const pokerSessionsRouter = createTRPCRouter({
         totalPlayers: 0,
         totalHandsPlayed: 0,
         totalGtd: 0,
-        byType: {} as Record<string, { count: number; rake: number; buyIn: number }>,
+        byType: {} as Record<
+          string,
+          { count: number; rake: number; buyIn: number }
+        >,
         byVariant: {} as Record<string, { count: number; rake: number }>,
         byOrganizer: {} as Record<string, { count: number; rake: number }>,
       };
@@ -514,7 +523,9 @@ export const pokerSessionsRouter = createTRPCRouter({
         .eq("team_id", teamId)
         .limit(50000);
 
-      const uniquePlayerIds = new Set((uniquePlayers ?? []).map((p) => p.player_id));
+      const uniquePlayerIds = new Set(
+        (uniquePlayers ?? []).map((p) => p.player_id),
+      );
       const uniquePlayerCount = uniquePlayerIds.size;
 
       return {
@@ -532,7 +543,7 @@ export const pokerSessionsRouter = createTRPCRouter({
         .pick({ cursor: true, pageSize: true, dateFrom: true, dateTo: true })
         .extend({
           playerId: getPokerSessionByIdSchema.shape.id,
-        })
+        }),
     )
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
@@ -552,12 +563,13 @@ export const pokerSessionsRouter = createTRPCRouter({
           winnings,
           rake,
           hands
-        `
+        `,
         )
         .eq("team_id", teamId)
         .eq("player_id", playerId);
 
-      const { data: sessionPlayers, error: spError } = await sessionPlayersQuery;
+      const { data: sessionPlayers, error: spError } =
+        await sessionPlayersQuery;
 
       if (spError) {
         throw new TRPCError({

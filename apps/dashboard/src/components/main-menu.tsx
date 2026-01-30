@@ -104,10 +104,19 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
     path: "/fastchips",
     name: t("sidebar.fastchips"),
     children: [
-      { path: "/fastchips/transacoes", name: t("sidebar.fastchips_transacoes") },
-      { path: "/fastchips/contas-vinculadas", name: t("sidebar.fastchips_contas_vinculadas") },
+      {
+        path: "/fastchips/transacoes",
+        name: t("sidebar.fastchips_transacoes"),
+      },
+      {
+        path: "/fastchips/contas-vinculadas",
+        name: t("sidebar.fastchips_contas_vinculadas"),
+      },
       { path: "/fastchips/jogadores", name: t("sidebar.fastchips_jogadores") },
-      { path: "/fastchips/movimentacao", name: t("sidebar.fastchips_movimentacao") },
+      {
+        path: "/fastchips/movimentacao",
+        name: t("sidebar.fastchips_movimentacao"),
+      },
       { path: "/fastchips/controle", name: t("sidebar.fastchips_controle") },
     ],
   },

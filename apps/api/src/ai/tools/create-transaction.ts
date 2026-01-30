@@ -120,9 +120,8 @@ IMPORTANT RULES:
 
       if (!finalBankAccountId && bankAccountName) {
         // Search by name
-        const matchedAccount = accounts.find(
-          (acc) =>
-            acc.name?.toLowerCase().includes(bankAccountName.toLowerCase()),
+        const matchedAccount = accounts.find((acc) =>
+          acc.name?.toLowerCase().includes(bankAccountName.toLowerCase()),
         );
         if (matchedAccount) {
           finalBankAccountId = matchedAccount.id;

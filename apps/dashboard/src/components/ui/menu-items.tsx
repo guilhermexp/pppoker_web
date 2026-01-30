@@ -21,8 +21,10 @@ export function SubMenuItem({ item, isCollapsed }: SubMenuItemProps) {
       className={cn(
         "h-8 rounded-lg flex items-center gap-2 transition-colors duration-200 cursor-pointer",
         "hover:bg-neutral-800/50",
-        item.isActive ? "bg-neutral-800/50 text-neutral-50" : "text-neutral-400",
-        isCollapsed ? "pl-0 justify-center" : "pl-9"
+        item.isActive
+          ? "bg-neutral-800/50 text-neutral-50"
+          : "text-neutral-400",
+        isCollapsed ? "pl-0 justify-center" : "pl-9",
       )}
     >
       {item.icon && <div className="shrink-0">{item.icon}</div>}
@@ -42,7 +44,12 @@ export function SubMenuItem({ item, isCollapsed }: SubMenuItemProps) {
   }
 
   return (
-    <div onClick={item.onClick} onKeyDown={(e) => e.key === "Enter" && item.onClick?.()} role="button" tabIndex={0}>
+    <div
+      onClick={item.onClick}
+      onKeyDown={(e) => e.key === "Enter" && item.onClick?.()}
+      role="button"
+      tabIndex={0}
+    >
       {content}
     </div>
   );
@@ -80,7 +87,7 @@ export function MenuItem({
         item.isActive
           ? "bg-neutral-800 text-neutral-50"
           : "hover:bg-neutral-800 text-neutral-400",
-        isCollapsed ? "w-10 h-10 justify-center p-0" : "w-full h-10 px-3"
+        isCollapsed ? "w-10 h-10 justify-center p-0" : "w-full h-10 px-3",
       )}
       onClick={handleClick}
       onKeyDown={(e) => e.key === "Enter" && handleClick()}
@@ -89,7 +96,9 @@ export function MenuItem({
       style={{ transitionTimingFunction: softSpringEasing }}
     >
       {/* Ícone */}
-      {item.icon && <div className="shrink-0 flex items-center">{item.icon}</div>}
+      {item.icon && (
+        <div className="shrink-0 flex items-center">{item.icon}</div>
+      )}
 
       {/* Label e Badge */}
       {!isCollapsed && (

@@ -18,23 +18,14 @@ export const pokerPlayerTypeSchema = z.enum(["player", "agent", "super_agent"]);
 // =============================================================================
 
 export const getPokerPlayersSchema = z.object({
-  cursor: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Cursor for pagination (page number as string)",
-      example: "1",
-    }),
-  pageSize: z.coerce
-    .number()
-    .min(1)
-    .max(1000)
-    .optional()
-    .openapi({
-      description: "Number of items per page",
-      example: 50,
-    }),
+  cursor: z.string().nullable().optional().openapi({
+    description: "Cursor for pagination (page number as string)",
+    example: "1",
+  }),
+  pageSize: z.coerce.number().min(1).max(1000).optional().openapi({
+    description: "Number of items per page",
+    example: 50,
+  }),
   sort: z
     .array(z.string().min(1))
     .max(2)
@@ -45,90 +36,76 @@ export const getPokerPlayersSchema = z.object({
       description: "Sort by [column, direction]",
       example: ["nickname", "asc"],
     }),
-  q: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Search query for nickname, memo_name, pppoker_id, email",
-      example: "player123",
-    }),
-  type: pokerPlayerTypeSchema
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter by player type",
-      example: "player",
-    }),
-  status: pokerPlayerStatusSchema
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter by status",
-      example: "active",
-    }),
-  agentId: z
-    .string()
-    .uuid()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter by agent ID",
-    }),
-  isVip: z
-    .boolean()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter by VIP status",
-    }),
-  isShark: z
-    .boolean()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Filter by shark status",
-    }),
+  q: z.string().nullable().optional().openapi({
+    description: "Search query for nickname, memo_name, pppoker_id, email",
+    example: "player123",
+  }),
+  type: pokerPlayerTypeSchema.nullable().optional().openapi({
+    description: "Filter by player type",
+    example: "player",
+  }),
+  status: pokerPlayerStatusSchema.nullable().optional().openapi({
+    description: "Filter by status",
+    example: "active",
+  }),
+  agentId: z.string().uuid().nullable().optional().openapi({
+    description: "Filter by agent ID",
+  }),
+  isVip: z.boolean().nullable().optional().openapi({
+    description: "Filter by VIP status",
+  }),
+  isShark: z.boolean().nullable().optional().openapi({
+    description: "Filter by shark status",
+  }),
   // Simple boolean filters (accept string "true"/"false" as well as boolean)
   hasCreditLimit: z
     .preprocess(
-      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
-      z.boolean().nullable().optional()
+      (val) =>
+        val === null || val === undefined
+          ? val
+          : val === "true" || val === true,
+      z.boolean().nullable().optional(),
     )
     .openapi({
       description: "Filter players with credit limit > 0",
     }),
   hasRake: z
     .preprocess(
-      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
-      z.boolean().nullable().optional()
+      (val) =>
+        val === null || val === undefined
+          ? val
+          : val === "true" || val === true,
+      z.boolean().nullable().optional(),
     )
     .openapi({
       description: "Filter players with total rake > 0",
     }),
   hasBalance: z
     .preprocess(
-      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
-      z.boolean().nullable().optional()
+      (val) =>
+        val === null || val === undefined
+          ? val
+          : val === "true" || val === true,
+      z.boolean().nullable().optional(),
     )
     .openapi({
       description: "Filter players with balance != 0",
     }),
   hasAgent: z
     .preprocess(
-      (val) => (val === null || val === undefined ? val : val === "true" || val === true),
-      z.boolean().nullable().optional()
+      (val) =>
+        val === null || val === undefined
+          ? val
+          : val === "true" || val === true,
+      z.boolean().nullable().optional(),
     )
     .openapi({
       description: "Filter players with an agent assigned",
     }),
-  includeDraft: z
-    .boolean()
-    .optional()
-    .openapi({
-      description:
-        "Include draft (non-committed) data. Default is false (only committed data shown).",
-    }),
+  includeDraft: z.boolean().optional().openapi({
+    description:
+      "Include draft (non-committed) data. Default is false (only committed data shown).",
+  }),
 });
 
 export const getPokerPlayerByIdSchema = z.object({
@@ -267,17 +244,21 @@ export const checkExistingPlayersSchema = z.object({
 });
 
 export const bulkCreatePlayersSchema = z.object({
-  players: z.array(z.object({
-    ppPokerId: z.string().min(1),
-    nickname: z.string().min(1),
-    memoName: z.string().nullable().optional(),
-    country: z.string().nullable().optional(),
-    type: pokerPlayerTypeSchema.optional().default("player"),
-    agentPpPokerId: z.string().nullable().optional(), // Will be resolved to agentId
-    superAgentPpPokerId: z.string().nullable().optional(), // Will be resolved to superAgentId
-  })).openapi({
-    description: "Array of players to create",
-  }),
+  players: z
+    .array(
+      z.object({
+        ppPokerId: z.string().min(1),
+        nickname: z.string().min(1),
+        memoName: z.string().nullable().optional(),
+        country: z.string().nullable().optional(),
+        type: pokerPlayerTypeSchema.optional().default("player"),
+        agentPpPokerId: z.string().nullable().optional(), // Will be resolved to agentId
+        superAgentPpPokerId: z.string().nullable().optional(), // Will be resolved to superAgentId
+      }),
+    )
+    .openapi({
+      description: "Array of players to create",
+    }),
 });
 
 // =============================================================================

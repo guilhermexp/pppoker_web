@@ -220,7 +220,9 @@ export const fastchipsOperationsRouter = createTRPCRouter({
       const operations = data ?? [];
 
       // Calculate totals
-      const entries = operations.filter((op) => op.operation_type === "entrada");
+      const entries = operations.filter(
+        (op) => op.operation_type === "entrada",
+      );
       const exits = operations.filter((op) => op.operation_type === "saida");
 
       const totalEntries = entries.length;

@@ -70,7 +70,8 @@ export const ConnectionIssueEmail = ({
             <br />
             We wanted to let you know that your bank <strong>{bankName}</strong>{" "}
             for team <strong>{teamName}</strong> is currently disconnected. To
-            keep Mid Poker running smoothly, we'll need you to reconnect your bank.
+            keep Mid Poker running smoothly, we'll need you to reconnect your
+            bank.
             <br />
             <br />
             The good news? It only takes 60 seconds to get everything back on
@@ -78,7 +79,9 @@ export const ConnectionIssueEmail = ({
           </Text>
 
           <Section className="text-center mt-[50px] mb-[50px]">
-            <Button href="https://app.mid.poker/settings/accounts">Reconnect</Button>
+            <Button href="https://app.mid.poker/settings/accounts">
+              Reconnect
+            </Button>
           </Section>
 
           <Text

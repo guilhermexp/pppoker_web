@@ -79,7 +79,10 @@ export const notificationsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[notifications.updateStatus] Supabase REST error:", error.message);
+        console.log(
+          "[notifications.updateStatus] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to update notification: ${error.message}`);
       }
 
@@ -102,7 +105,10 @@ export const notificationsRouter = createTRPCRouter({
         .eq("user_id", session.user.id);
 
       if (error) {
-        console.log("[notifications.updateAllStatus] Supabase REST error:", error.message);
+        console.log(
+          "[notifications.updateAllStatus] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to update notifications: ${error.message}`);
       }
 

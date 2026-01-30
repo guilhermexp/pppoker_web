@@ -17,27 +17,13 @@ export const pokerSettlementStatusSchema = z.enum([
 // =============================================================================
 
 export const getPokerSettlementsSchema = z.object({
-  cursor: z
-    .string()
-    .nullable()
-    .optional()
-    .openapi({
-      description: "Cursor for pagination (page number as string)",
-    }),
-  pageSize: z.coerce
-    .number()
-    .min(1)
-    .max(1000)
-    .optional()
-    .openapi({
-      description: "Number of items per page",
-    }),
-  sort: z
-    .array(z.string().min(1))
-    .max(2)
-    .min(2)
-    .nullable()
-    .optional(),
+  cursor: z.string().nullable().optional().openapi({
+    description: "Cursor for pagination (page number as string)",
+  }),
+  pageSize: z.coerce.number().min(1).max(1000).optional().openapi({
+    description: "Number of items per page",
+  }),
+  sort: z.array(z.string().min(1)).max(2).min(2).nullable().optional(),
   status: pokerSettlementStatusSchema.nullable().optional(),
   playerId: z.string().uuid().nullable().optional(),
   agentId: z.string().uuid().nullable().optional(),
@@ -81,5 +67,9 @@ export const deletePokerSettlementSchema = z.object({
 // TYPE EXPORTS
 // =============================================================================
 
-export type GetPokerSettlementsInput = z.infer<typeof getPokerSettlementsSchema>;
-export type CreatePokerSettlementInput = z.infer<typeof createPokerSettlementSchema>;
+export type GetPokerSettlementsInput = z.infer<
+  typeof getPokerSettlementsSchema
+>;
+export type CreatePokerSettlementInput = z.infer<
+  typeof createPokerSettlementSchema
+>;

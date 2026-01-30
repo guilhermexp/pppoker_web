@@ -40,7 +40,7 @@ export function FastchipsImportsList() {
 
   // Fetch imports
   const { data, isLoading, error } = useQuery(
-    trpc.fastchips.imports.get.queryOptions({ pageSize: 10 })
+    trpc.fastchips.imports.get.queryOptions({ pageSize: 10 }),
   );
 
   // Delete mutation
@@ -57,7 +57,7 @@ export function FastchipsImportsList() {
           description: error.message,
         });
       },
-    })
+    }),
   );
 
   // Process mutation (for reprocessing failed imports)
@@ -74,7 +74,7 @@ export function FastchipsImportsList() {
           description: error.message,
         });
       },
-    })
+    }),
   );
 
   // Status badge
@@ -214,9 +214,7 @@ export function FastchipsImportsList() {
                   <DropdownMenuContent align="end">
                     {imp.status === "validated" && (
                       <DropdownMenuItem
-                        onClick={() =>
-                          processMutation.mutate({ id: imp.id })
-                        }
+                        onClick={() => processMutation.mutate({ id: imp.id })}
                       >
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Processar
@@ -224,9 +222,7 @@ export function FastchipsImportsList() {
                     )}
                     {imp.status === "failed" && (
                       <DropdownMenuItem
-                        onClick={() =>
-                          processMutation.mutate({ id: imp.id })
-                        }
+                        onClick={() => processMutation.mutate({ id: imp.id })}
                       >
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Reprocessar

@@ -38,7 +38,10 @@ export const transactionCategoriesRouter = createTRPCRouter({
       const { data: categories, error } = await query;
 
       if (error) {
-        console.log("[transactionCategories.get] Supabase REST error:", error.message);
+        console.log(
+          "[transactionCategories.get] Supabase REST error:",
+          error.message,
+        );
         return [];
       }
 
@@ -80,7 +83,10 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[transactionCategories.getById] Supabase REST error:", error.message);
+        console.log(
+          "[transactionCategories.getById] Supabase REST error:",
+          error.message,
+        );
         return null;
       }
 
@@ -104,7 +110,10 @@ export const transactionCategoriesRouter = createTRPCRouter({
       const supabase = await createAdminClient();
 
       // Generate slug from name
-      const slug = input.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const slug = input.name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
 
       const { data, error } = await supabase
         .from("transaction_categories")
@@ -121,7 +130,10 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[transactionCategories.create] Supabase REST error:", error.message);
+        console.log(
+          "[transactionCategories.create] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to create category: ${error.message}`);
       }
 
@@ -147,10 +159,14 @@ export const transactionCategoriesRouter = createTRPCRouter({
       const updateData: Record<string, unknown> = {};
       if (input.name !== undefined) {
         updateData.name = input.name;
-        updateData.slug = input.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        updateData.slug = input.name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
       }
       if (input.color !== undefined) updateData.color = input.color;
-      if (input.description !== undefined) updateData.description = input.description;
+      if (input.description !== undefined)
+        updateData.description = input.description;
       if (input.vat !== undefined) updateData.vat = input.vat;
 
       const { data, error } = await supabase
@@ -162,7 +178,10 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[transactionCategories.update] Supabase REST error:", error.message);
+        console.log(
+          "[transactionCategories.update] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to update category: ${error.message}`);
       }
 
@@ -189,7 +208,10 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log("[transactionCategories.delete] Supabase REST error:", error.message);
+        console.log(
+          "[transactionCategories.delete] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to delete category: ${error.message}`);
       }
 

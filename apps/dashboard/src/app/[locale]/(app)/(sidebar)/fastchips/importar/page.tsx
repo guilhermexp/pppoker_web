@@ -23,7 +23,7 @@ export default async function FastchipsImportPage() {
     await queryClient.fetchQuery(
       trpc.fastchips.imports.get.queryOptions({
         pageSize: 10,
-      })
+      }),
     );
   } catch {
     // SSR prefetch failed, client will fetch via Suspense

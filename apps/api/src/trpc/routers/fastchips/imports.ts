@@ -522,12 +522,12 @@ export const fastchipsImportsRouter = createTRPCRouter({
             // Determine gross and net amounts based on operation type
             const grossAmount =
               operationType === "entrada"
-                ? op.grossEntry ?? 0
-                : op.grossExit ?? 0;
+                ? (op.grossEntry ?? 0)
+                : (op.grossExit ?? 0);
             const netAmount =
               operationType === "entrada"
-                ? op.netEntry ?? 0
-                : op.netExit ?? 0;
+                ? (op.netEntry ?? 0)
+                : (op.netExit ?? 0);
             const feeAmount = grossAmount - netAmount;
 
             return {
@@ -556,7 +556,10 @@ export const fastchipsImportsRouter = createTRPCRouter({
           );
         }
 
-        for (const batch of chunkArray(operationsToInsert as any[], BATCH_SIZE)) {
+        for (const batch of chunkArray(
+          operationsToInsert as any[],
+          BATCH_SIZE,
+        )) {
           const { error } = await supabase
             .from("fastchips_operations")
             .insert(batch);

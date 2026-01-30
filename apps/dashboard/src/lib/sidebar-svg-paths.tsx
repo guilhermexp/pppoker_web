@@ -32,11 +32,7 @@ export function MidPokerLogoSquare() {
             opacity="0.9"
           />
           <circle cx="12" cy="12" r="3" fill="#18181B" />
-          <path
-            d="M12 9 L14 12 L12 15 L10 12 Z"
-            fill="#FAFAFA"
-            opacity="0.8"
-          />
+          <path d="M12 9 L14 12 L12 15 L10 12 Z" fill="#FAFAFA" opacity="0.8" />
         </g>
       </svg>
     </div>

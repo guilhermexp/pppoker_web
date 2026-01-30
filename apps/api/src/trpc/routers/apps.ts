@@ -20,10 +20,12 @@ export const appsRouter = createTRPCRouter({
       return [];
     }
 
-    return apps?.map((app) => ({
-      appId: app.app_id,
-      settings: app.settings,
-    })) ?? [];
+    return (
+      apps?.map((app) => ({
+        appId: app.app_id,
+        settings: app.settings,
+      })) ?? []
+    );
   }),
 
   disconnect: protectedProcedure

@@ -1,5 +1,8 @@
 export type FastChipsLinkedAccountStatus = "active" | "inactive";
-export type FastChipsLinkedAccountRestriction = "auto_withdraw" | "blocked" | null;
+export type FastChipsLinkedAccountRestriction =
+  | "auto_withdraw"
+  | "blocked"
+  | null;
 
 export type FastChipsLinkedAccount = {
   id: string;

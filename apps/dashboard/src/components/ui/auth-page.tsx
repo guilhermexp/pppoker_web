@@ -18,8 +18,8 @@ export function AuthPage() {
         <div className="z-10 mt-auto">
           <blockquote className="space-y-2">
             <p className="text-xl">
-              &ldquo;Esta plataforma me ajudou a economizar tempo e atender
-              meus clientes mais rápido do que nunca.&rdquo;
+              &ldquo;Esta plataforma me ajudou a economizar tempo e atender meus
+              clientes mais rápido do que nunca.&rdquo;
             </p>
             <footer className="font-mono text-sm font-semibold">
               ~ Cliente Mid Poker

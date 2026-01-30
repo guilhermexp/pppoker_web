@@ -27,7 +27,8 @@ export const transactionsRouter = createTRPCRouter({
 
       let query = supabase
         .from("transactions")
-        .select(`
+        .select(
+          `
           id,
           date,
           amount,
@@ -44,7 +45,9 @@ export const transactionsRouter = createTRPCRouter({
           created_at,
           category_slug,
           bank_account_id
-        `, { count: "exact" })
+        `,
+          { count: "exact" },
+        )
         .eq("team_id", teamId);
 
       // Apply filters
@@ -64,13 +67,22 @@ export const transactionsRouter = createTRPCRouter({
         query = query.lte("date", filter.end);
       }
       if (filter?.q) {
-        query = query.or(`name.ilike.%${filter.q}%,description.ilike.%${filter.q}%`);
+        query = query.or(
+          `name.ilike.%${filter.q}%,description.ilike.%${filter.q}%`,
+        );
       }
 
       // Apply sorting
       const sortColumn = sort?.[0]?.id ?? "date";
       const sortOrder = sort?.[0]?.desc ?? true;
-      query = query.order(sortColumn === "amount" ? "amount" : sortColumn === "name" ? "name" : "date", { ascending: !sortOrder });
+      query = query.order(
+        sortColumn === "amount"
+          ? "amount"
+          : sortColumn === "name"
+            ? "name"
+            : "date",
+        { ascending: !sortOrder },
+      );
 
       // Apply pagination
       const offset = cursor ? cursor * pageSize : 0;
@@ -161,7 +173,10 @@ export const transactionsRouter = createTRPCRouter({
         .single();
 
       if (error || !transaction) {
-        console.log("[transactions.getById] Supabase REST error:", error?.message);
+        console.log(
+          "[transactions.getById] Supabase REST error:",
+          error?.message,
+        );
         return null;
       }
 
@@ -200,7 +215,10 @@ export const transactionsRouter = createTRPCRouter({
         .select("id");
 
       if (error) {
-        console.log("[transactions.deleteMany] Supabase REST error:", error.message);
+        console.log(
+          "[transactions.deleteMany] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to delete transactions: ${error.message}`);
       }
 
@@ -246,27 +264,36 @@ export const transactionsRouter = createTRPCRouter({
       if (input.amount !== undefined) updateData.amount = input.amount;
       if (input.currency !== undefined) updateData.currency = input.currency;
       if (input.date !== undefined) updateData.date = input.date;
-      if (input.bankAccountId !== undefined) updateData.bank_account_id = input.bankAccountId;
-      if (input.categorySlug !== undefined) updateData.category_slug = input.categorySlug;
+      if (input.bankAccountId !== undefined)
+        updateData.bank_account_id = input.bankAccountId;
+      if (input.categorySlug !== undefined)
+        updateData.category_slug = input.categorySlug;
       if (input.status !== undefined) updateData.status = input.status;
       if (input.internal !== undefined) updateData.internal = input.internal;
       if (input.recurring !== undefined) updateData.recurring = input.recurring;
       if (input.frequency !== undefined) updateData.frequency = input.frequency;
       if (input.note !== undefined) updateData.note = input.note;
-      if (input.assignedId !== undefined) updateData.assigned_id = input.assignedId;
+      if (input.assignedId !== undefined)
+        updateData.assigned_id = input.assignedId;
       if (input.taxRate !== undefined) updateData.tax_rate = input.taxRate;
-      if (input.taxAmount !== undefined) updateData.tax_amount = input.taxAmount;
+      if (input.taxAmount !== undefined)
+        updateData.tax_amount = input.taxAmount;
 
       const { data: transaction, error } = await supabase
         .from("transactions")
         .update(updateData)
         .eq("id", input.id)
         .eq("team_id", teamId)
-        .select("id, name, amount, currency, date, status, manual, internal, note, created_at")
+        .select(
+          "id, name, amount, currency, date, status, manual, internal, note, created_at",
+        )
         .single();
 
       if (error) {
-        console.log("[transactions.update] Supabase REST error:", error.message);
+        console.log(
+          "[transactions.update] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to update transaction: ${error.message}`);
       }
 
@@ -292,12 +319,14 @@ export const transactionsRouter = createTRPCRouter({
 
       // Build update object (snake_case)
       const updateData: Record<string, unknown> = {};
-      if (input.categorySlug !== undefined) updateData.category_slug = input.categorySlug;
+      if (input.categorySlug !== undefined)
+        updateData.category_slug = input.categorySlug;
       if (input.status !== undefined) updateData.status = input.status;
       if (input.frequency !== undefined) updateData.frequency = input.frequency;
       if (input.internal !== undefined) updateData.internal = input.internal;
       if (input.note !== undefined) updateData.note = input.note;
-      if (input.assignedId !== undefined) updateData.assigned_id = input.assignedId;
+      if (input.assignedId !== undefined)
+        updateData.assigned_id = input.assignedId;
       if (input.recurring !== undefined) updateData.recurring = input.recurring;
 
       const { data, error } = await supabase
@@ -308,7 +337,10 @@ export const transactionsRouter = createTRPCRouter({
         .select("id");
 
       if (error) {
-        console.log("[transactions.updateMany] Supabase REST error:", error.message);
+        console.log(
+          "[transactions.updateMany] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to update transactions: ${error.message}`);
       }
 
@@ -368,11 +400,16 @@ export const transactionsRouter = createTRPCRouter({
           internal_id: internalId,
           method: "other",
         })
-        .select("id, name, amount, currency, date, status, manual, internal, note, created_at, category_slug, bank_account_id")
+        .select(
+          "id, name, amount, currency, date, status, manual, internal, note, created_at, category_slug, bank_account_id",
+        )
         .single();
 
       if (error) {
-        console.log("[transactions.create] Supabase REST error:", error.message);
+        console.log(
+          "[transactions.create] Supabase REST error:",
+          error.message,
+        );
         throw new Error(`Failed to create transaction: ${error.message}`);
       }
 
@@ -387,7 +424,9 @@ export const transactionsRouter = createTRPCRouter({
           type: att.type,
         }));
 
-        await supabase.from("transaction_attachments").insert(attachmentRecords);
+        await supabase
+          .from("transaction_attachments")
+          .insert(attachmentRecords);
       }
 
       // Trigger embedding for the newly created manual transaction

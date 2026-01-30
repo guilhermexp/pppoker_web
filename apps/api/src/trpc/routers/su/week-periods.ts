@@ -235,7 +235,8 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       for (const game of ppstGames) {
         const gtd = Number(game.premiacao_garantida ?? 0);
         if (gtd <= 0) continue;
-        const buyinLiquido = Number(game.total_buyin ?? 0) - Number(game.total_taxa ?? 0);
+        const buyinLiquido =
+          Number(game.total_buyin ?? 0) - Number(game.total_taxa ?? 0);
         const resultado = buyinLiquido - gtd;
         if (resultado < 0) {
           overlayCount++;
@@ -261,9 +262,9 @@ export const suWeekPeriodsRouter = createTRPCRouter({
           });
         }
       }
-      const gameVariantDistribution = Array.from(
-        variantCountMap.values(),
-      ).sort((a, b) => b.count - a.count);
+      const gameVariantDistribution = Array.from(variantCountMap.values()).sort(
+        (a, b) => b.count - a.count,
+      );
 
       // Calculate preview settlements (one per liga)
       const previewSettlements =

@@ -71,8 +71,8 @@ export function SUWidgetsGrid({ from, to, viewMode }: SUWidgetsGridProps = {}) {
       },
       {
         refetchOnWindowFocus: false,
-      }
-    )
+      },
+    ),
   );
 
   // Loading state
@@ -102,7 +102,8 @@ export function SUWidgetsGrid({ from, to, viewMode }: SUWidgetsGridProps = {}) {
     gamesPPSRByType: { nlh: 0, plo: 0, other: 0 },
   };
 
-  const totalPlayers = (stats.totalPlayersPPST ?? 0) + (stats.totalPlayersPPSR ?? 0);
+  const totalPlayers =
+    (stats.totalPlayersPPST ?? 0) + (stats.totalPlayersPPSR ?? 0);
   const totalGames = (stats.totalGamesPPST ?? 0) + (stats.totalGamesPPSR ?? 0);
   const gameTypes = stats.gamesPPSTByType ?? { nlh: 0, spinup: 0, knockout: 0 };
   const gameTypesPPSR = stats.gamesPPSRByType ?? { nlh: 0, plo: 0, other: 0 };
@@ -126,9 +127,7 @@ export function SUWidgetsGrid({ from, to, viewMode }: SUWidgetsGridProps = {}) {
           description="Total de participações"
           icon={<Icons.Customers className="size-4" />}
         >
-          <h2 className="text-2xl font-normal">
-            {formatNumber(totalPlayers)}
-          </h2>
+          <h2 className="text-2xl font-normal">{formatNumber(totalPlayers)}</h2>
         </SUWidget>
 
         <SUWidget
@@ -282,9 +281,14 @@ export function SUWidgetsGrid({ from, to, viewMode }: SUWidgetsGridProps = {}) {
           </div>
           <div className="space-y-2">
             {stats.topLeagues?.slice(0, 5).map((league: any, index: number) => (
-              <div key={league.ligaId} className="flex items-center justify-between py-2 border-b border-[#1d1d1d] last:border-0">
+              <div
+                key={league.ligaId}
+                className="flex items-center justify-between py-2 border-b border-[#1d1d1d] last:border-0"
+              >
                 <div className="flex items-center gap-3">
-                  <span className="text-lg font-mono text-[#666666]">{index + 1}</span>
+                  <span className="text-lg font-mono text-[#666666]">
+                    {index + 1}
+                  </span>
                   <span className="text-sm">{league.ligaNome}</span>
                 </div>
                 <span className="text-sm text-[#00C969] font-mono">
@@ -305,7 +309,10 @@ SUWidgetsGrid.Skeleton = function SUWidgetsGridSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 h-[210px]">
+          <div
+            key={i}
+            className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 h-[210px]"
+          >
             <Skeleton className="h-4 w-20 mb-3" />
             <Skeleton className="h-3 w-32 mb-4" />
             <Skeleton className="h-8 w-24" />
@@ -314,7 +321,10 @@ SUWidgetsGrid.Skeleton = function SUWidgetsGridSkeleton() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 h-[210px]">
+          <div
+            key={i}
+            className="dark:bg-[#0c0c0c] border dark:border-[#1d1d1d] p-4 h-[210px]"
+          >
             <Skeleton className="h-4 w-20 mb-3" />
             <Skeleton className="h-3 w-32 mb-4" />
             <Skeleton className="h-8 w-24" />

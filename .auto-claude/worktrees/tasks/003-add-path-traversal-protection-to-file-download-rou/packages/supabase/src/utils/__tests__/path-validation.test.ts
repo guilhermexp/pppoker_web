@@ -29,9 +29,7 @@ describe("Path Validation", () => {
     });
 
     it("should throw error for null or undefined paths", () => {
-      expect(() => validateFilePath(null as any)).toThrow(
-        PathValidationError,
-      );
+      expect(() => validateFilePath(null as any)).toThrow(PathValidationError);
       expect(() => validateFilePath(undefined as any)).toThrow(
         PathValidationError,
       );
@@ -128,11 +126,7 @@ describe("Path Validation", () => {
     });
 
     it("should throw error for invalid URL encoding", () => {
-      const invalidEncoded = [
-        "file%ZZname.txt",
-        "folder%/file.txt",
-        "%GG%HH",
-      ];
+      const invalidEncoded = ["file%ZZname.txt", "folder%/file.txt", "%GG%HH"];
 
       for (const path of invalidEncoded) {
         expect(() => validateFilePath(path)).toThrow(PathValidationError);

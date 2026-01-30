@@ -1909,7 +1909,8 @@ export default {
     title: "Fast Chips Panel",
     description: "Manage your Fast Chips operations",
     in_development: "Under Development",
-    in_development_description: "This feature is being developed and will be available soon.",
+    in_development_description:
+      "This feature is being developed and will be available soon.",
     transacoes: {
       title: "Transactions",
       description: "View and manage all Fast Chips transactions",

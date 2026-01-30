@@ -344,7 +344,9 @@ const JogoItem = memo(function JogoItem({
             <Clock className="h-3 w-3" />
             {jogo.metadata.duracao}
           </Badge>
-          <span className={`text-xs font-mono ${jogo.totalGeral.ganhosJogadorGeral < 0 ? "text-red-500" : "text-green-500"}`}>
+          <span
+            className={`text-xs font-mono ${jogo.totalGeral.ganhosJogadorGeral < 0 ? "text-red-500" : "text-green-500"}`}
+          >
             {formatCurrency(jogo.totalGeral.ganhosJogadorGeral)}
           </span>
           <span className="text-xs font-mono text-orange-500">

@@ -57,7 +57,9 @@ export function SUWeekPeriodIndicator({
       {/* SU badge */}
       <div className="flex items-center gap-2">
         <Icons.GridView className="h-4 w-4 text-muted-foreground shrink-0" />
-        <span className="text-sm font-medium whitespace-nowrap">Super Union</span>
+        <span className="text-sm font-medium whitespace-nowrap">
+          Super Union
+        </span>
         {suId && (
           <Badge
             variant="secondary"
@@ -71,7 +73,9 @@ export function SUWeekPeriodIndicator({
       {/* Date range with calendar icon */}
       <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-muted-foreground">
         <Icons.CalendarMonth className="h-4 w-4 shrink-0" />
-        <span className="font-medium text-foreground whitespace-nowrap">{dateRange}</span>
+        <span className="font-medium text-foreground whitespace-nowrap">
+          {dateRange}
+        </span>
         <span className="text-xs whitespace-nowrap hidden sm:inline">
           ({dayCount} dias · {weekdayRange})
         </span>

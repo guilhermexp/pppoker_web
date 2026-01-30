@@ -331,5 +331,9 @@ export const calculateTotals = (events: TournamentEvent[]) => {
     }
   }
 
-  return { totalGTD, totalTournaments: tournamentsWithGTD, totalTournamentsAll: totalTournaments };
+  return {
+    totalGTD,
+    totalTournaments: tournamentsWithGTD,
+    totalTournamentsAll: totalTournaments,
+  };
 };

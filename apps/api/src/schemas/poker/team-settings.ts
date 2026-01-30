@@ -58,7 +58,8 @@ export const updatePokerSettingsSchema = z.object({
     example: "Super Union Brasil",
   }),
   pokerParentLigaTeamId: z.string().uuid().nullable().optional().openapi({
-    description: "If this is a club in a liga, reference to the Liga team in the system",
+    description:
+      "If this is a club in a liga, reference to the Liga team in the system",
     example: "550e8400-e29b-41d4-a716-446655440000",
   }),
 });
@@ -121,7 +122,9 @@ export const linkedClubsResponseSchema = z.object({
 
 export type PokerPlatform = z.infer<typeof pokerPlatformSchema>;
 export type PokerEntityType = z.infer<typeof pokerEntityTypeSchema>;
-export type UpdatePokerSettingsInput = z.infer<typeof updatePokerSettingsSchema>;
+export type UpdatePokerSettingsInput = z.infer<
+  typeof updatePokerSettingsSchema
+>;
 export type AddLinkedClubInput = z.infer<typeof addLinkedClubSchema>;
 export type RemoveLinkedClubInput = z.infer<typeof removeLinkedClubSchema>;
 export type PokerSettingsResponse = z.infer<typeof pokerSettingsResponseSchema>;

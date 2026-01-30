@@ -1,5 +1,8 @@
 import { createAdminClient } from "@api/services/supabase";
-import { calculateBatchActivityMetrics, calculatePlayerActivityMetrics } from "@api/utils/poker-activity";
+import {
+  calculateBatchActivityMetrics,
+  calculatePlayerActivityMetrics,
+} from "@api/utils/poker-activity";
 import { TRPCError } from "@trpc/server";
 import {
   bulkCreatePlayersSchema,
@@ -196,7 +199,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         ...new Set(
           (data ?? [])
             .map((p) => p.agent_id)
-            .filter((id): id is string => id !== null)
+            .filter((id): id is string => id !== null),
         ),
       ];
 
@@ -204,7 +207,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         ...new Set(
           (data ?? [])
             .map((p) => p.super_agent_id)
-            .filter((id): id is string => id !== null)
+            .filter((id): id is string => id !== null),
         ),
       ];
 
@@ -228,7 +231,7 @@ export const pokerPlayersRouter = createTRPCRouter({
             };
             return acc;
           },
-          {} as typeof agentsMap
+          {} as typeof agentsMap,
         );
       }
 
@@ -252,13 +255,16 @@ export const pokerPlayersRouter = createTRPCRouter({
             };
             return acc;
           },
-          {} as typeof superAgentsMap
+          {} as typeof superAgentsMap,
         );
       }
 
       // Fetch rake/winnings stats for all players in current page
       const playerIds = (data ?? []).map((p) => p.id);
-      let statsMap: Record<string, { totalRake: number; totalWinnings: number }> = {};
+      let statsMap: Record<
+        string,
+        { totalRake: number; totalWinnings: number }
+      > = {};
       if (playerIds.length > 0) {
         const { data: sessionStats, error: sessionError } = await supabase
           .from("poker_session_players")
@@ -268,7 +274,10 @@ export const pokerPlayersRouter = createTRPCRouter({
 
         // Aggregate by player
         for (const row of sessionStats ?? []) {
-          const current = statsMap[row.player_id] ?? { totalRake: 0, totalWinnings: 0 };
+          const current = statsMap[row.player_id] ?? {
+            totalRake: 0,
+            totalWinnings: 0,
+          };
           statsMap[row.player_id] = {
             totalRake: current.totalRake + Number(row.rake ?? 0),
             totalWinnings: current.totalWinnings + Number(row.winnings ?? 0),
@@ -277,9 +286,10 @@ export const pokerPlayersRouter = createTRPCRouter({
       }
 
       // Fetch activity metrics for all players in current page
-      const activityMetricsMap = playerIds.length > 0
-        ? await calculateBatchActivityMetrics(supabase, teamId, playerIds)
-        : new Map();
+      const activityMetricsMap =
+        playerIds.length > 0
+          ? await calculateBatchActivityMetrics(supabase, teamId, playerIds)
+          : new Map();
 
       // Transform snake_case to camelCase
       const transformedData = (data ?? []).map((player) => ({
@@ -308,11 +318,14 @@ export const pokerPlayersRouter = createTRPCRouter({
         rakebackPercent: player.rakeback_percent ?? 0,
         customerId: player.customer_id,
         note: player.note,
-        agent: player.agent_id ? agentsMap[player.agent_id] ?? null : null,
-        superAgent: player.super_agent_id ? superAgentsMap[player.super_agent_id] ?? null : null,
+        agent: player.agent_id ? (agentsMap[player.agent_id] ?? null) : null,
+        superAgent: player.super_agent_id
+          ? (superAgentsMap[player.super_agent_id] ?? null)
+          : null,
         totalRake: statsMap[player.id]?.totalRake ?? 0,
         totalWinnings: statsMap[player.id]?.totalWinnings ?? 0,
-        activityStatus: activityMetricsMap.get(player.id)?.activityStatus ?? "new",
+        activityStatus:
+          activityMetricsMap.get(player.id)?.activityStatus ?? "new",
       }));
 
       return {
@@ -383,11 +396,11 @@ export const pokerPlayersRouter = createTRPCRouter({
 
       const totalRake = (sessionStats ?? []).reduce(
         (sum, s) => sum + (s.rake ?? 0),
-        0
+        0,
       );
       const totalWinnings = (sessionStats ?? []).reduce(
         (sum, s) => sum + (s.winnings ?? 0),
-        0
+        0,
       );
       const sessionsPlayed = sessionStats?.length ?? 0;
       const rakebackPercent = data.rakeback_percent ?? 0;
@@ -423,7 +436,7 @@ export const pokerPlayersRouter = createTRPCRouter({
 
           const managedTotalRake = (managedSessionStats ?? []).reduce(
             (sum, s) => sum + (s.rake ?? 0),
-            0
+            0,
           );
           const managedRakeback = managedTotalRake * (rakebackPercent / 100);
 
@@ -446,7 +459,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         supabase,
         teamId,
         data.id,
-        data.last_active_at
+        data.last_active_at,
       );
 
       return {
@@ -869,15 +882,24 @@ export const pokerPlayersRouter = createTRPCRouter({
         .from("poker_players")
         .select("id, agent_id")
         .eq("team_id", teamId)
-        .in("agent_id", agentIds.length > 0 ? agentIds : ["00000000-0000-0000-0000-000000000000"])
+        .in(
+          "agent_id",
+          agentIds.length > 0
+            ? agentIds
+            : ["00000000-0000-0000-0000-000000000000"],
+        )
         .limit(50000); // Avoid 1000 row limit
 
       // Filter by committed imports if needed
       if (committedImportIds !== null) {
-        managedPlayersQuery = managedPlayersQuery.in("import_id", committedImportIds);
+        managedPlayersQuery = managedPlayersQuery.in(
+          "import_id",
+          committedImportIds,
+        );
       }
 
-      const { data: managedPlayers, error: playersError } = await managedPlayersQuery;
+      const { data: managedPlayers, error: playersError } =
+        await managedPlayersQuery;
 
       if (playersError) {
         throw new TRPCError({
@@ -922,11 +944,18 @@ export const pokerPlayersRouter = createTRPCRouter({
         }
       }
 
-      const agentRakeMap = new Map<string, { total: number; ppst: number; ppsr: number }>();
+      const agentRakeMap = new Map<
+        string,
+        { total: number; ppst: number; ppsr: number }
+      >();
       for (const summary of summaries ?? []) {
         const agentId = playerAgentMap.get(summary.player_id);
         if (agentId) {
-          const current = agentRakeMap.get(agentId) ?? { total: 0, ppst: 0, ppsr: 0 };
+          const current = agentRakeMap.get(agentId) ?? {
+            total: 0,
+            ppst: 0,
+            ppsr: 0,
+          };
           current.total += summary.rake_total ?? 0;
           current.ppst += summary.rake_ppst ?? 0;
           current.ppsr += summary.rake_ppsr ?? 0;
@@ -941,20 +970,28 @@ export const pokerPlayersRouter = createTRPCRouter({
       let totalCommission = 0;
 
       const byStatus: Record<string, { count: number; rake: number }> = {};
-      const bySuperAgent: Record<string, { nickname: string; count: number; rake: number }> = {};
+      const bySuperAgent: Record<
+        string,
+        { nickname: string; count: number; rake: number }
+      > = {};
 
       // Get super agent nicknames
-      const superAgentIds = [...new Set((agents ?? []).map((a) => a.super_agent_id).filter(Boolean))] as string[];
+      const superAgentIds = [
+        ...new Set((agents ?? []).map((a) => a.super_agent_id).filter(Boolean)),
+      ] as string[];
       let superAgentMap: Record<string, string> = {};
       if (superAgentIds.length > 0) {
         const { data: superAgents } = await supabase
           .from("poker_players")
           .select("id, nickname")
           .in("id", superAgentIds);
-        superAgentMap = (superAgents ?? []).reduce((acc, sa) => {
-          acc[sa.id] = sa.nickname;
-          return acc;
-        }, {} as Record<string, string>);
+        superAgentMap = (superAgents ?? []).reduce(
+          (acc, sa) => {
+            acc[sa.id] = sa.nickname;
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
       }
 
       // Aggregate per agent
@@ -972,8 +1009,14 @@ export const pokerPlayersRouter = createTRPCRouter({
       }> = [];
 
       for (const agent of agents ?? []) {
-        const playerCount = (managedPlayers ?? []).filter((p) => p.agent_id === agent.id).length;
-        const rake = agentRakeMap.get(agent.id) ?? { total: 0, ppst: 0, ppsr: 0 };
+        const playerCount = (managedPlayers ?? []).filter(
+          (p) => p.agent_id === agent.id,
+        ).length;
+        const rake = agentRakeMap.get(agent.id) ?? {
+          total: 0,
+          ppst: 0,
+          ppsr: 0,
+        };
         const rakebackPercent = agent.rakeback_percent ?? 0;
         const commission = rake.total * (rakebackPercent / 100);
 
@@ -992,9 +1035,14 @@ export const pokerPlayersRouter = createTRPCRouter({
 
         // By super agent
         if (agent.super_agent_id) {
-          const superAgentNickname = superAgentMap[agent.super_agent_id] ?? "Unknown";
+          const superAgentNickname =
+            superAgentMap[agent.super_agent_id] ?? "Unknown";
           if (!bySuperAgent[agent.super_agent_id]) {
-            bySuperAgent[agent.super_agent_id] = { nickname: superAgentNickname, count: 0, rake: 0 };
+            bySuperAgent[agent.super_agent_id] = {
+              nickname: superAgentNickname,
+              count: 0,
+              rake: 0,
+            };
           }
           bySuperAgent[agent.super_agent_id].count++;
           bySuperAgent[agent.super_agent_id].rake += rake.total;
@@ -1090,14 +1138,14 @@ export const pokerPlayersRouter = createTRPCRouter({
         ...new Set(
           input.players
             .map((p) => p.agentPpPokerId)
-            .filter((id): id is string => id !== null && id !== undefined)
+            .filter((id): id is string => id !== null && id !== undefined),
         ),
       ];
       const superAgentPpPokerIds = [
         ...new Set(
           input.players
             .map((p) => p.superAgentPpPokerId)
-            .filter((id): id is string => id !== null && id !== undefined)
+            .filter((id): id is string => id !== null && id !== undefined),
         ),
       ];
 
@@ -1105,7 +1153,9 @@ export const pokerPlayersRouter = createTRPCRouter({
       const idMap: Record<string, string> = {};
 
       if (agentPpPokerIds.length > 0 || superAgentPpPokerIds.length > 0) {
-        const allIds = [...new Set([...agentPpPokerIds, ...superAgentPpPokerIds])];
+        const allIds = [
+          ...new Set([...agentPpPokerIds, ...superAgentPpPokerIds]),
+        ];
         const { data: existingPlayers } = await supabase
           .from("poker_players")
           .select("id, pppoker_id")
@@ -1126,8 +1176,10 @@ export const pokerPlayersRouter = createTRPCRouter({
         country: p.country ?? null,
         type: p.type ?? "player",
         status: "active" as const,
-        agent_id: p.agentPpPokerId ? idMap[p.agentPpPokerId] ?? null : null,
-        super_agent_id: p.superAgentPpPokerId ? idMap[p.superAgentPpPokerId] ?? null : null,
+        agent_id: p.agentPpPokerId ? (idMap[p.agentPpPokerId] ?? null) : null,
+        super_agent_id: p.superAgentPpPokerId
+          ? (idMap[p.superAgentPpPokerId] ?? null)
+          : null,
         credit_limit: 0,
         current_balance: 0,
         chip_balance: 0,
@@ -1160,9 +1212,10 @@ export const pokerPlayersRouter = createTRPCRouter({
             if (singleError) {
               errors.push({
                 ppPokerId: player.pppoker_id,
-                error: singleError.code === "23505"
-                  ? "Jogador já existe"
-                  : singleError.message,
+                error:
+                  singleError.code === "23505"
+                    ? "Jogador já existe"
+                    : singleError.message,
               });
             } else {
               created++;

@@ -838,7 +838,8 @@ function parseJogosPPSTSheet(
 
       // Calcular totais a partir dos jogadores se os valores estão zerados
       const needsGanhosCalc = jogo.totalGeral.ganhos === 0;
-      const needsTaxaCalc = jogo.totalGeral.taxa === 0 || jogo.totalGeral.taxa === undefined;
+      const needsTaxaCalc =
+        jogo.totalGeral.taxa === 0 || jogo.totalGeral.taxa === undefined;
       const needsBuyinCalc = jogo.totalGeral.buyinFichas === 0;
 
       if (needsGanhosCalc || needsTaxaCalc || needsBuyinCalc) {

@@ -43,20 +43,18 @@ const updateTransactionSchema = z.object({
     .enum(["pending", "archived", "completed", "posted", "excluded"])
     .optional()
     .describe("New status"),
-  note: z.string().nullable().optional().describe("New note (or null to clear)"),
-  recurring: z
-    .boolean()
+  note: z
+    .string()
+    .nullable()
     .optional()
-    .describe("Mark as recurring transaction"),
+    .describe("New note (or null to clear)"),
+  recurring: z.boolean().optional().describe("Mark as recurring transaction"),
   frequency: z
     .enum(["weekly", "monthly", "annually", "irregular"])
     .nullable()
     .optional()
     .describe("Recurring frequency"),
-  internal: z
-    .boolean()
-    .optional()
-    .describe("Mark as internal transfer"),
+  internal: z.boolean().optional().describe("Mark as internal transfer"),
 });
 
 export const updateTransactionTool = tool({
@@ -178,7 +176,8 @@ Note: Amount and currency can only be changed for manual transactions.`,
       const locale = appContext.locale ?? "en-US";
       const formattedAmount = formatAmount({
         amount: updatedTransaction.amount,
-        currency: updatedTransaction.currency || appContext.baseCurrency || "USD",
+        currency:
+          updatedTransaction.currency || appContext.baseCurrency || "USD",
         locale,
       });
 

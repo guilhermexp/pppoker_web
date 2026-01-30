@@ -48,16 +48,21 @@ function StatusBadge({ settlement }: { settlement: Settlement }) {
       },
       pending: {
         label: "Pendente",
-        className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+        className:
+          "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
       },
     }[status] ?? {
       label: status,
-      className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+      className:
+        "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
     };
 
     return (
       <span
-        className={cn("px-2 py-0.5 rounded text-xs font-medium", config.className)}
+        className={cn(
+          "px-2 py-0.5 rounded text-xs font-medium",
+          config.className,
+        )}
       >
         {config.label}
       </span>

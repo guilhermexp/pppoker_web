@@ -53,7 +53,10 @@ export const invoiceProductsRouter = createTRPCRouter({
       if (sortBy === "popular") {
         query = query.order("usage_count", { ascending: false });
       } else if (sortBy === "recent") {
-        query = query.order("last_used_at", { ascending: false, nullsFirst: false });
+        query = query.order("last_used_at", {
+          ascending: false,
+          nullsFirst: false,
+        });
       } else {
         query = query.order("name", { ascending: true });
       }
@@ -63,7 +66,10 @@ export const invoiceProductsRouter = createTRPCRouter({
       const { data: products, error } = await query;
 
       if (error) {
-        console.log("[invoiceProducts.get] Supabase REST error:", error.message);
+        console.log(
+          "[invoiceProducts.get] Supabase REST error:",
+          error.message,
+        );
         return [];
       }
 
@@ -108,23 +114,28 @@ export const invoiceProductsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[invoiceProducts.getById] Supabase REST error:", error.message);
+        console.log(
+          "[invoiceProducts.getById] Supabase REST error:",
+          error.message,
+        );
         return null;
       }
 
-      return product ? {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        currency: product.currency,
-        unit: product.unit,
-        isActive: product.is_active,
-        usageCount: product.usage_count,
-        lastUsedAt: product.last_used_at,
-        createdAt: product.created_at,
-        updatedAt: product.updated_at,
-      } : null;
+      return product
+        ? {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            currency: product.currency,
+            unit: product.unit,
+            isActive: product.is_active,
+            usageCount: product.usage_count,
+            lastUsedAt: product.last_used_at,
+            createdAt: product.created_at,
+            updatedAt: product.updated_at,
+          }
+        : null;
     }),
 
   // Use Supabase REST directly to avoid Drizzle connection pool issues
@@ -146,11 +157,16 @@ export const invoiceProductsRouter = createTRPCRouter({
           usage_count: 0,
           created_by: session.user.id,
         })
-        .select("id, name, description, price, currency, unit, is_active, usage_count, created_at")
+        .select(
+          "id, name, description, price, currency, unit, is_active, usage_count, created_at",
+        )
         .single();
 
       if (error) {
-        console.log("[invoiceProducts.create] Supabase REST error:", error.message);
+        console.log(
+          "[invoiceProducts.create] Supabase REST error:",
+          error.message,
+        );
         throw new TRPCError({
           code: error.code === "23505" ? "CONFLICT" : "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -183,7 +199,8 @@ export const invoiceProductsRouter = createTRPCRouter({
       };
 
       if (input.id) upsertData.id = input.id;
-      if (input.description !== undefined) upsertData.description = input.description;
+      if (input.description !== undefined)
+        upsertData.description = input.description;
       if (input.price !== undefined) upsertData.price = input.price;
       if (input.currency !== undefined) upsertData.currency = input.currency;
       if (input.unit !== undefined) upsertData.unit = input.unit;
@@ -191,11 +208,16 @@ export const invoiceProductsRouter = createTRPCRouter({
       const { data: product, error } = await supabase
         .from("invoice_products")
         .upsert(upsertData, { onConflict: "id" })
-        .select("id, name, description, price, currency, unit, is_active, usage_count, created_at")
+        .select(
+          "id, name, description, price, currency, unit, is_active, usage_count, created_at",
+        )
         .single();
 
       if (error) {
-        console.log("[invoiceProducts.upsert] Supabase REST error:", error.message);
+        console.log(
+          "[invoiceProducts.upsert] Supabase REST error:",
+          error.message,
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -223,7 +245,8 @@ export const invoiceProductsRouter = createTRPCRouter({
 
       const updateData: Record<string, unknown> = {};
       if (input.name !== undefined) updateData.name = input.name;
-      if (input.description !== undefined) updateData.description = input.description;
+      if (input.description !== undefined)
+        updateData.description = input.description;
       if (input.price !== undefined) updateData.price = input.price;
       if (input.currency !== undefined) updateData.currency = input.currency;
       if (input.unit !== undefined) updateData.unit = input.unit;
@@ -234,11 +257,16 @@ export const invoiceProductsRouter = createTRPCRouter({
         .update(updateData)
         .eq("id", input.id)
         .eq("team_id", teamId)
-        .select("id, name, description, price, currency, unit, is_active, usage_count, created_at")
+        .select(
+          "id, name, description, price, currency, unit, is_active, usage_count, created_at",
+        )
         .single();
 
       if (error) {
-        console.log("[invoiceProducts.updateProduct] Supabase REST error:", error.message);
+        console.log(
+          "[invoiceProducts.updateProduct] Supabase REST error:",
+          error.message,
+        );
         throw new TRPCError({
           code: error.code === "23505" ? "CONFLICT" : "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -273,7 +301,10 @@ export const invoiceProductsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[invoiceProducts.delete] Supabase REST error:", error.message);
+        console.log(
+          "[invoiceProducts.delete] Supabase REST error:",
+          error.message,
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -309,7 +340,10 @@ export const invoiceProductsRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log("[invoiceProducts.incrementUsage] Supabase REST error:", error.message);
+        console.log(
+          "[invoiceProducts.incrementUsage] Supabase REST error:",
+          error.message,
+        );
       }
 
       return { success: true };
@@ -344,18 +378,27 @@ export const invoiceProductsRouter = createTRPCRouter({
               .from("invoice_products")
               .update({
                 name: trimmedName,
-                price: input.price !== undefined ? input.price : existingProduct.price,
+                price:
+                  input.price !== undefined
+                    ? input.price
+                    : existingProduct.price,
                 currency: input.currency || existingProduct.currency,
-                unit: input.unit !== undefined ? input.unit : existingProduct.unit,
+                unit:
+                  input.unit !== undefined ? input.unit : existingProduct.unit,
                 last_used_at: new Date().toISOString(),
               })
               .eq("id", input.productId)
               .eq("team_id", teamId)
-              .select("id, name, description, price, currency, unit, is_active, usage_count, created_at")
+              .select(
+                "id, name, description, price, currency, unit, is_active, usage_count, created_at",
+              )
               .single();
 
             if (updateError) {
-              console.log("[invoiceProducts.saveLineItemAsProduct] Update error:", updateError.message);
+              console.log(
+                "[invoiceProducts.saveLineItemAsProduct] Update error:",
+                updateError.message,
+              );
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
                 message: updateError.message,
@@ -363,17 +406,19 @@ export const invoiceProductsRouter = createTRPCRouter({
             }
 
             return {
-              product: updatedProduct ? {
-                id: updatedProduct.id,
-                name: updatedProduct.name,
-                description: updatedProduct.description,
-                price: updatedProduct.price,
-                currency: updatedProduct.currency,
-                unit: updatedProduct.unit,
-                isActive: updatedProduct.is_active,
-                usageCount: updatedProduct.usage_count,
-                createdAt: updatedProduct.created_at,
-              } : null,
+              product: updatedProduct
+                ? {
+                    id: updatedProduct.id,
+                    name: updatedProduct.name,
+                    description: updatedProduct.description,
+                    price: updatedProduct.price,
+                    currency: updatedProduct.currency,
+                    unit: updatedProduct.unit,
+                    isActive: updatedProduct.is_active,
+                    usageCount: updatedProduct.usage_count,
+                    createdAt: updatedProduct.created_at,
+                  }
+                : null,
               shouldClearProductId: false,
             };
           }
@@ -382,22 +427,30 @@ export const invoiceProductsRouter = createTRPCRouter({
         // No productId or product not found - create new product
         const { data: newProduct, error: insertError } = await supabase
           .from("invoice_products")
-          .upsert({
-            team_id: teamId,
-            created_by: session.user.id,
-            name: trimmedName,
-            description: null,
-            price: input.price !== undefined ? input.price : null,
-            currency: input.currency || null,
-            unit: input.unit !== undefined ? input.unit : null,
-            is_active: true,
-            usage_count: 0,
-          }, { onConflict: "team_id,name" })
-          .select("id, name, description, price, currency, unit, is_active, usage_count, created_at")
+          .upsert(
+            {
+              team_id: teamId,
+              created_by: session.user.id,
+              name: trimmedName,
+              description: null,
+              price: input.price !== undefined ? input.price : null,
+              currency: input.currency || null,
+              unit: input.unit !== undefined ? input.unit : null,
+              is_active: true,
+              usage_count: 0,
+            },
+            { onConflict: "team_id,name" },
+          )
+          .select(
+            "id, name, description, price, currency, unit, is_active, usage_count, created_at",
+          )
           .single();
 
         if (insertError) {
-          console.log("[invoiceProducts.saveLineItemAsProduct] Insert error:", insertError.message);
+          console.log(
+            "[invoiceProducts.saveLineItemAsProduct] Insert error:",
+            insertError.message,
+          );
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: insertError.message,
@@ -405,21 +458,26 @@ export const invoiceProductsRouter = createTRPCRouter({
         }
 
         return {
-          product: newProduct ? {
-            id: newProduct.id,
-            name: newProduct.name,
-            description: newProduct.description,
-            price: newProduct.price,
-            currency: newProduct.currency,
-            unit: newProduct.unit,
-            isActive: newProduct.is_active,
-            usageCount: newProduct.usage_count,
-            createdAt: newProduct.created_at,
-          } : null,
+          product: newProduct
+            ? {
+                id: newProduct.id,
+                name: newProduct.name,
+                description: newProduct.description,
+                price: newProduct.price,
+                currency: newProduct.currency,
+                unit: newProduct.unit,
+                isActive: newProduct.is_active,
+                usageCount: newProduct.usage_count,
+                createdAt: newProduct.created_at,
+              }
+            : null,
           shouldClearProductId: false,
         };
       } catch (error) {
-        console.error(`[invoiceProducts.saveLineItemAsProduct] Failed to save "${trimmedName}":`, error);
+        console.error(
+          `[invoiceProducts.saveLineItemAsProduct] Failed to save "${trimmedName}":`,
+          error,
+        );
         throw error;
       }
     }),

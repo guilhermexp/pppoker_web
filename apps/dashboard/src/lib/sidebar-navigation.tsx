@@ -12,7 +12,7 @@ import type { SidebarContent } from "./sidebar-types";
 export function getSidebarContent(
   sectionId: string,
   t: (key: string) => string,
-  pathname: string
+  pathname: string,
 ): SidebarContent {
   // Helper para verificar se um path está ativo
   const isActive = (path: string) => {
@@ -50,7 +50,8 @@ export function getSidebarContent(
                 icon: <Icons.Transactions size={16} />,
                 label: t("sidebar.transactions"),
                 path: "/transactions",
-                isActive: isActive("/transactions") && !pathname.includes("categories"),
+                isActive:
+                  isActive("/transactions") && !pathname.includes("categories"),
                 hasDropdown: true,
                 children: [
                   {
@@ -116,7 +117,10 @@ export function getSidebarContent(
                 icon: <Icons.Invoice size={16} />,
                 label: t("sidebar.invoices"),
                 path: "/invoices",
-                isActive: isActive("/invoices") && !pathname.includes("products") && !pathname.includes("type=create"),
+                isActive:
+                  isActive("/invoices") &&
+                  !pathname.includes("products") &&
+                  !pathname.includes("type=create"),
                 hasDropdown: true,
                 children: [
                   {
@@ -272,7 +276,8 @@ export function getSidebarContent(
                 icon: <Icons.Link size={16} />,
                 label: t("sidebar.ligas"),
                 path: "/poker/leagues",
-                isActive: isActive("/poker/leagues") && pathname === "/poker/leagues",
+                isActive:
+                  isActive("/poker/leagues") && pathname === "/poker/leagues",
               },
               {
                 icon: <Icons.Link size={16} />,
@@ -392,7 +397,8 @@ export function getSidebarContent(
                 icon: <Icons.Apps size={16} />,
                 label: t("sidebar.all"),
                 path: "/apps",
-                isActive: isActive("/apps") && !pathname.includes("tab=installed"),
+                isActive:
+                  isActive("/apps") && !pathname.includes("tab=installed"),
               },
               {
                 icon: <Icons.Apps size={16} />,

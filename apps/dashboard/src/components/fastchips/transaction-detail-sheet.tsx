@@ -10,8 +10,7 @@ import { fastChipsTransactions } from "./transactions-data";
 
 export function FastChipsTransactionDetailSheet() {
   const t = useI18n();
-  const { fastchipsTransactionId, setParams } =
-    useFastchipsTransactionParams();
+  const { fastchipsTransactionId, setParams } = useFastchipsTransactionParams();
   const isOpen = Boolean(fastchipsTransactionId);
   const transaction =
     fastChipsTransactions.find((item) => item.id === fastchipsTransactionId) ??

@@ -413,7 +413,9 @@ export const suImportsRouter = createTRPCRouter({
           for (const [externalGameId, data] of gameMetadataMap) {
             const dbGameId = gameIdMap.get(externalGameId);
             if (!dbGameId) {
-              console.error(`Game ID not found for external ID: ${externalGameId}`);
+              console.error(
+                `Game ID not found for external ID: ${externalGameId}`,
+              );
               continue;
             }
 
@@ -627,7 +629,9 @@ export const suImportsRouter = createTRPCRouter({
           for (const [externalGameId, data] of gamePPSRMetadataMap) {
             const dbGameId = gamePPSRIdMap.get(externalGameId);
             if (!dbGameId) {
-              console.error(`PPSR Game ID not found for external ID: ${externalGameId}`);
+              console.error(
+                `PPSR Game ID not found for external ID: ${externalGameId}`,
+              );
               continue;
             }
 

@@ -5,7 +5,10 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/locales/client";
 import { IconNavigation } from "./icon-navigation";
 import { DetailSidebar } from "./detail-sidebar";
-import { getSidebarContent, detectActiveSection } from "@/lib/sidebar-navigation";
+import {
+  getSidebarContent,
+  detectActiveSection,
+} from "@/lib/sidebar-navigation";
 
 /**
  * Componente principal do sidebar two-level do 21st.dev
