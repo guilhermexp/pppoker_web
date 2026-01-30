@@ -78,6 +78,7 @@ export function LeagueImportValidationModal({
   isProcessing = false,
 }: LeagueImportValidationModalProps) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [isExpanded, setIsExpanded] = useState(false);
   const { qualityScore, passedChecks, totalChecks, hasBlockingErrors, checks } =
     validationResult;
   const criticalFailed = checks.filter(
@@ -232,7 +233,7 @@ export function LeagueImportValidationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-[1600px] max-h-[92vh] overflow-hidden flex flex-col p-0 bg-background border border-border shadow-2xl rounded-xl">
+      <DialogContent className={`overflow-hidden flex flex-col p-0 bg-background shadow-2xl ${isExpanded ? "inset-0 translate-x-0 translate-y-0 w-screen max-w-[100vw] h-screen max-h-[100vh] rounded-none border-0" : "max-w-[95vw] w-[1600px] max-h-[92vh] rounded-xl border border-border"}`}>
         <DialogHeader className="flex-shrink-0 px-6 py-5 border-b border-border">
           <div className="flex items-start justify-between gap-6">
             <div>
@@ -252,6 +253,20 @@ export function LeagueImportValidationModal({
                     {currentTabInfo.cols} colunas
                   </span>
                 )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setIsExpanded((v) => !v)}
+                >
+                  {isExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} fill="currentColor" viewBox="0 -960 960 960">
+                      <path d="M440-200v-160H200v-80h320v240h-80Zm160-320v-240H280v-80h320v240h-80Z" />
+                    </svg>
+                  ) : (
+                    <Icons.ExpandContent className="h-3.5 w-3.5" />
+                  )}
+                </Button>
               </div>
               <DialogDescription className="text-muted-foreground text-sm mt-1">
                 {hasBlockingErrors

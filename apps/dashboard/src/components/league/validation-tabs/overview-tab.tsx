@@ -157,21 +157,37 @@ export function LeagueOverviewTab({
     // Nomes da planilha PPST (nomeMesa = nome do torneio)
     const ppstNames = new Set(
       parsedData.jogosPPST
-        .filter((j) => j.metadata?.premiacaoGarantida && j.metadata.premiacaoGarantida > 0)
-        .map((j) => j.metadata.nomeMesa.trim().toUpperCase())
+        .filter(
+          (j) =>
+            j.metadata?.premiacaoGarantida && j.metadata.premiacaoGarantida > 0,
+        )
+        .map((j) => j.metadata.nomeMesa.trim().toUpperCase()),
     );
 
     // Usar torneios completos se disponível, senão fallback para nomes
     if (scheduleData.tournaments && scheduleData.tournaments.length > 0) {
       missingTournaments = scheduleData.tournaments.filter(
-        (t) => !ppstNames.has(t.name)
+        (t) => !ppstNames.has(t.name),
       );
-      missingGTDTotal = missingTournaments.reduce((sum, t) => sum + (t.gtd * 5), 0); // GTD em reais
-    } else if (scheduleData.tournamentNames && scheduleData.tournamentNames.length > 0) {
+      missingGTDTotal = missingTournaments.reduce(
+        (sum, t) => sum + t.gtd * 5,
+        0,
+      ); // GTD em reais
+    } else if (
+      scheduleData.tournamentNames &&
+      scheduleData.tournamentNames.length > 0
+    ) {
       // Fallback para dados antigos (só nomes)
       missingTournaments = scheduleData.tournamentNames
         .filter((name) => !ppstNames.has(name))
-        .map((name) => ({ name, day: "", time: "", gtd: 0, buyIn: "", game: "" }));
+        .map((name) => ({
+          name,
+          day: "",
+          time: "",
+          gtd: 0,
+          buyIn: "",
+          game: "",
+        }));
     }
 
     return {
@@ -258,9 +274,15 @@ export function LeagueOverviewTab({
         totalGTD += jogo.metadata.premiacaoGarantida;
       }
       // Buyin, Ganhos, Taxa - do totalGeral ou soma dos jogadores
-      const buyinFichas = jogo.totalGeral?.buyinFichas || jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
-      const ganhos = jogo.totalGeral?.ganhos || jogo.jogadores.reduce((s, j) => s + j.ganhos, 0);
-      const taxa = jogo.totalGeral?.taxa || jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
+      const buyinFichas =
+        jogo.totalGeral?.buyinFichas ||
+        jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
+      const ganhos =
+        jogo.totalGeral?.ganhos ||
+        jogo.jogadores.reduce((s, j) => s + j.ganhos, 0);
+      const taxa =
+        jogo.totalGeral?.taxa ||
+        jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
 
       totalBuyin += buyinFichas;
       totalGanhos += ganhos;
@@ -277,12 +299,19 @@ export function LeagueOverviewTab({
 
     for (const jogo of parsedData.jogosPPST) {
       // Só considera torneios com GTD
-      if (!jogo.metadata.premiacaoGarantida || jogo.metadata.premiacaoGarantida <= 0) {
+      if (
+        !jogo.metadata.premiacaoGarantida ||
+        jogo.metadata.premiacaoGarantida <= 0
+      ) {
         continue;
       }
 
-      const buyinFichas = jogo.totalGeral?.buyinFichas || jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
-      const taxa = jogo.totalGeral?.taxa || jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
+      const buyinFichas =
+        jogo.totalGeral?.buyinFichas ||
+        jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
+      const taxa =
+        jogo.totalGeral?.taxa ||
+        jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
       const buyinLiquido = buyinFichas - taxa;
       const gtd = jogo.metadata.premiacaoGarantida;
       const resultado = buyinLiquido - gtd;
@@ -300,8 +329,9 @@ export function LeagueOverviewTab({
   // Calculate totals from Geral PPST - busca o bloco com ratio 1:5
   const geralPPSTTotals = useMemo(() => {
     // Procura o bloco com taxaCambio 1:5 (geralmente o primeiro)
-    const bloco = parsedData.geralPPST?.find(b => b.contexto?.taxaCambio === "1:5")
-      || parsedData.geralPPST?.[0];
+    const bloco =
+      parsedData.geralPPST?.find((b) => b.contexto?.taxaCambio === "1:5") ||
+      parsedData.geralPPST?.[0];
     if (!bloco?.total) {
       return {
         ganhosJogador: 0,
@@ -355,10 +385,16 @@ export function LeagueOverviewTab({
     let totalMaos = 0;
 
     for (const jogo of parsedData.jogosPPSR) {
-      const buyin = jogo.totalGeral?.buyinFichas || jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
-      const ganhos = jogo.totalGeral?.ganhosJogadorGeral || jogo.jogadores.reduce((s, j) => s + j.ganhosJogadorGeral, 0);
-      const taxa = jogo.totalGeral?.taxa || jogo.jogadores.reduce((s, j) => s + j.taxa, 0);
-      const maos = jogo.totalGeral?.maos || jogo.jogadores.reduce((s, j) => s + j.maos, 0);
+      const buyin =
+        jogo.totalGeral?.buyinFichas ||
+        jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
+      const ganhos =
+        jogo.totalGeral?.ganhosJogadorGeral ||
+        jogo.jogadores.reduce((s, j) => s + j.ganhosJogadorGeral, 0);
+      const taxa =
+        jogo.totalGeral?.taxa || jogo.jogadores.reduce((s, j) => s + j.taxa, 0);
+      const maos =
+        jogo.totalGeral?.maos || jogo.jogadores.reduce((s, j) => s + j.maos, 0);
       totalBuyin += buyin;
       totalGanhos += ganhos;
       totalTaxa += taxa;
@@ -403,110 +439,178 @@ export function LeagueOverviewTab({
         </div>
       )}
 
+      {/* ── PPST & PPSR lado a lado ── */}
+      <div className="grid grid-cols-2 gap-0 rounded-lg border border-border">
       {/* ── PPST (Torneios) ── */}
-      <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 space-y-3">
+      <div className="p-3 space-y-3">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-          <span className="text-xs font-semibold uppercase tracking-wide text-blue-500">PPST — Torneios</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-blue-500">
+            PPST — Torneios
+          </span>
         </div>
 
         {/* Métricas principais */}
         <div className="grid grid-cols-4 gap-4">
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Torneios</div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Torneios
+            </div>
             <div className="text-xl font-bold">{formatNumber(jogosCount)}</div>
             <div className="flex flex-wrap gap-x-2 text-[10px] text-muted-foreground mt-0.5">
               {gameTypeCounts.mtt > 0 && <span>MTT {gameTypeCounts.mtt}</span>}
-              {gameTypeCounts.spin > 0 && <span>Spin {gameTypeCounts.spin}</span>}
+              {gameTypeCounts.spin > 0 && (
+                <span>Spin {gameTypeCounts.spin}</span>
+              )}
               {gameTypeCounts.pko > 0 && <span>PKO {gameTypeCounts.pko}</span>}
               {gameTypeCounts.mko > 0 && <span>MKO {gameTypeCounts.mko}</span>}
               {gameTypeCounts.sat > 0 && <span>SAT {gameTypeCounts.sat}</span>}
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Ligas</div>
-            <div className="text-xl font-bold">{formatNumber(stats.totalLigasPPST)}</div>
-          </div>
-          <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Jogadores</div>
-            <div className="text-xl font-bold">{formatNumber(stats.totalJogadoresPPST)}</div>
-            {stats.totalParticipacoesPPST && stats.totalParticipacoesPPST !== stats.totalJogadoresPPST && (
-              <div className="text-[10px] text-muted-foreground mt-0.5">
-                Entradas {formatNumber(stats.totalParticipacoesPPST)}
-              </div>
-            )}
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Ligas
+            </div>
+            <div className="text-xl font-bold">
+              {formatNumber(stats.totalLigasPPST)}
+            </div>
           </div>
           <div>
             <div className="text-[10px] text-muted-foreground uppercase">
-              Overlay <span className="text-muted-foreground/60">({overlayStats.overlayCount})</span>
+              Jogadores
             </div>
-            <div className="text-xl font-bold text-red-500">{formatNumber(Math.abs(overlayStats.totalOverlay))}</div>
+            <div className="text-xl font-bold">
+              {formatNumber(stats.totalJogadoresPPST)}
+            </div>
+            {stats.totalParticipacoesPPST &&
+              stats.totalParticipacoesPPST !== stats.totalJogadoresPPST && (
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  Entradas {formatNumber(stats.totalParticipacoesPPST)}
+                </div>
+              )}
+          </div>
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Overlay{" "}
+              <span className="text-muted-foreground/60">
+                ({overlayStats.overlayCount})
+              </span>
+            </div>
+            <div className="text-xl font-bold text-red-500">
+              {formatNumber(Math.abs(overlayStats.totalOverlay))}
+            </div>
           </div>
         </div>
 
         {/* Financeiro */}
-        <div className="grid grid-cols-3 gap-4 border-t border-blue-500/20 pt-3">
+        <div className="grid grid-cols-3 gap-4 border-t border-border pt-3">
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Taxa Total</div>
-            <div className="text-lg font-bold text-[#00C969]">{formatNumber(totalTaxa)}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Taxa Total
+            </div>
+            <div className="text-lg font-bold text-[#00C969]">
+              {formatNumber(totalTaxa)}
+            </div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Ganhos Jogador</div>
-            <div className={`text-lg font-bold ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-[#00C969]"}`}>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Ganhos Jogador
+            </div>
+            <div
+              className={`text-lg font-bold ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-[#00C969]"}`}
+            >
               {formatNumber(geralPPSTTotals.ganhosJogador)}
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Gap GTD</div>
-            <div className={`text-lg font-bold ${geralPPSTTotals.gapGarantido < 0 ? "text-red-500" : geralPPSTTotals.gapGarantido > 0 ? "text-[#00C969]" : ""}`}>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Gap GTD
+            </div>
+            <div
+              className={`text-lg font-bold ${geralPPSTTotals.gapGarantido < 0 ? "text-red-500" : geralPPSTTotals.gapGarantido > 0 ? "text-[#00C969]" : ""}`}
+            >
               {formatNumber(geralPPSTTotals.gapGarantido)}
             </div>
           </div>
         </div>
 
         {/* Detalhes: Σ Partidas + Geral PPST side by side */}
-        <div className="grid grid-cols-2 gap-4 border-t border-blue-500/20 pt-3">
+        <div className="grid grid-cols-2 gap-4 border-t border-border pt-3">
           {/* Σ Partidas */}
           <div className="space-y-1 text-sm">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Σ Partidas</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
+              Σ Partidas
+            </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Buyin</span>
-              <span className="text-blue-500 font-mono">{formatNumber(partidasStats.totalBuyin)}</span>
+              <span className="text-blue-500 font-mono">
+                {formatNumber(partidasStats.totalBuyin)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">GTD</span>
-              <span className="text-[#00C969] font-mono">{formatNumber(partidasStats.totalGTD)}</span>
+              <span className="text-[#00C969] font-mono">
+                {formatNumber(partidasStats.totalGTD)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Ganhos</span>
-              <span className={`font-mono ${partidasStats.totalGanhos < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(partidasStats.totalGanhos)}</span>
+              <span
+                className={`font-mono ${partidasStats.totalGanhos < 0 ? "text-red-500" : "text-green-500"}`}
+              >
+                {formatNumber(partidasStats.totalGanhos)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Taxa</span>
-              <span className="text-green-500 font-mono">{formatNumber(partidasStats.totalTaxa)}</span>
+              <span className="text-green-500 font-mono">
+                {formatNumber(partidasStats.totalTaxa)}
+              </span>
             </div>
           </div>
 
           {/* Geral PPST 1:5 */}
           <div className="space-y-1 text-sm">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Geral PPST 1:5</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
+              Geral PPST 1:5
+            </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Ganhos (col E)</span>
-              <span className={`font-mono ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(geralPPSTTotals.ganhosJogador)}</span>
+              <span
+                className={`font-mono ${geralPPSTTotals.ganhosJogador < 0 ? "text-red-500" : "text-green-500"}`}
+              >
+                {formatNumber(geralPPSTTotals.ganhosJogador)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Taxa (col J)</span>
-              <span className="text-green-500 font-mono">{formatNumber(geralPPSTTotals.ganhosLigaTaxa)}</span>
+              <span className="text-green-500 font-mono">
+                {formatNumber(geralPPSTTotals.ganhosLigaTaxa)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Gap (col O)</span>
-              <span className={`font-mono ${geralPPSTTotals.gapGarantido < 0 ? "text-red-500" : geralPPSTTotals.gapGarantido > 0 ? "text-green-500" : ""}`}>{formatNumber(geralPPSTTotals.gapGarantido)}</span>
+              <span
+                className={`font-mono ${geralPPSTTotals.gapGarantido < 0 ? "text-red-500" : geralPPSTTotals.gapGarantido > 0 ? "text-green-500" : ""}`}
+              >
+                {formatNumber(geralPPSTTotals.gapGarantido)}
+              </span>
             </div>
             {partidasStats.totalGanhos !== geralPPSTTotals.ganhosJogador && (
               <div className="flex justify-between text-xs text-muted-foreground border-t pt-1 mt-1">
                 <span>Δ Ganhos</span>
-                <span className={Math.abs(partidasStats.totalGanhos - geralPPSTTotals.ganhosJogador) > 1 ? "text-amber-500" : "text-green-500"}>
-                  {formatNumber(partidasStats.totalGanhos - geralPPSTTotals.ganhosJogador)}
+                <span
+                  className={
+                    Math.abs(
+                      partidasStats.totalGanhos - geralPPSTTotals.ganhosJogador,
+                    ) > 1
+                      ? "text-amber-500"
+                      : "text-green-500"
+                  }
+                >
+                  {formatNumber(
+                    partidasStats.totalGanhos - geralPPSTTotals.ganhosJogador,
+                  )}
                 </span>
               </div>
             )}
@@ -515,17 +619,23 @@ export function LeagueOverviewTab({
       </div>
 
       {/* ── PPSR (Cash) ── */}
-      <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3 space-y-3">
+      <div className="border-l border-border p-3 space-y-3">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          <span className="text-xs font-semibold uppercase tracking-wide text-green-500">PPSR — Cash</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-green-500">
+            PPSR — Cash
+          </span>
         </div>
 
         {/* Métricas principais */}
         <div className="grid grid-cols-4 gap-4">
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Mesas</div>
-            <div className="text-xl font-bold">{formatNumber(stats.totalJogosPPSR)}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Mesas
+            </div>
+            <div className="text-xl font-bold">
+              {formatNumber(stats.totalJogosPPSR)}
+            </div>
             {Object.keys(cashTypeCounts).length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1">
                 {Object.entries(cashTypeCounts).map(([type, count]) => (
@@ -540,92 +650,155 @@ export function LeagueOverviewTab({
             )}
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Ligas</div>
-            <div className="text-xl font-bold">{formatNumber(stats.totalLigasPPSR)}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Ligas
+            </div>
+            <div className="text-xl font-bold">
+              {formatNumber(stats.totalLigasPPSR)}
+            </div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Jogadores</div>
-            <div className="text-xl font-bold">{formatNumber(stats.totalJogadoresPPSR)}</div>
-            {stats.totalParticipacoesPPSR && stats.totalParticipacoesPPSR !== stats.totalJogadoresPPSR && (
-              <div className="text-[10px] text-muted-foreground mt-0.5">
-                Entradas {formatNumber(stats.totalParticipacoesPPSR)}
-              </div>
-            )}
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Jogadores
+            </div>
+            <div className="text-xl font-bold">
+              {formatNumber(stats.totalJogadoresPPSR)}
+            </div>
+            {stats.totalParticipacoesPPSR &&
+              stats.totalParticipacoesPPSR !== stats.totalJogadoresPPSR && (
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  Entradas {formatNumber(stats.totalParticipacoesPPSR)}
+                </div>
+              )}
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Mãos</div>
-            <div className="text-xl font-bold">{formatNumber(ppsrPartidasStats.totalMaos)}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Mãos
+            </div>
+            <div className="text-xl font-bold">
+              {formatNumber(ppsrPartidasStats.totalMaos)}
+            </div>
           </div>
         </div>
 
         {/* Financeiro */}
-        <div className="grid grid-cols-3 gap-4 border-t border-green-500/20 pt-3">
+        <div className="grid grid-cols-3 gap-4 border-t border-border pt-3">
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Taxa Total</div>
-            <div className="text-lg font-bold text-[#00C969]">{formatNumber(geralPPSRTotals.ganhosLigaTaxa)}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Taxa Total
+            </div>
+            <div className="text-lg font-bold text-[#00C969]">
+              {formatNumber(geralPPSRTotals.ganhosLigaTaxa)}
+            </div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Ganhos Jogador</div>
-            <div className={`text-lg font-bold ${geralPPSRTotals.ganhosJogadorGeral < 0 ? "text-red-500" : "text-[#00C969]"}`}>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Ganhos Jogador
+            </div>
+            <div
+              className={`text-lg font-bold ${geralPPSRTotals.ganhosJogadorGeral < 0 ? "text-red-500" : "text-[#00C969]"}`}
+            >
               {formatNumber(geralPPSRTotals.ganhosJogadorGeral)}
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase">Liga Geral</div>
-            <div className={`text-lg font-bold ${geralPPSRTotals.ganhosLigaGeral < 0 ? "text-red-500" : "text-[#00C969]"}`}>
+            <div className="text-[10px] text-muted-foreground uppercase">
+              Liga Geral
+            </div>
+            <div
+              className={`text-lg font-bold ${geralPPSRTotals.ganhosLigaGeral < 0 ? "text-red-500" : "text-[#00C969]"}`}
+            >
               {formatNumber(geralPPSRTotals.ganhosLigaGeral)}
             </div>
           </div>
         </div>
 
         {/* Detalhes: Σ Partidas + Geral PPSR side by side */}
-        <div className="grid grid-cols-2 gap-4 border-t border-green-500/20 pt-3">
+        <div className="grid grid-cols-2 gap-4 border-t border-border pt-3">
           {/* Σ Partidas PPSR */}
           <div className="space-y-1 text-sm">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Σ Partidas</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
+              Σ Partidas
+            </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Buyin</span>
-              <span className="text-blue-500 font-mono">{formatNumber(ppsrPartidasStats.totalBuyin)}</span>
+              <span className="text-blue-500 font-mono">
+                {formatNumber(ppsrPartidasStats.totalBuyin)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Ganhos</span>
-              <span className={`font-mono ${ppsrPartidasStats.totalGanhos < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(ppsrPartidasStats.totalGanhos)}</span>
+              <span
+                className={`font-mono ${ppsrPartidasStats.totalGanhos < 0 ? "text-red-500" : "text-green-500"}`}
+              >
+                {formatNumber(ppsrPartidasStats.totalGanhos)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Taxa</span>
-              <span className="text-green-500 font-mono">{formatNumber(ppsrPartidasStats.totalTaxa)}</span>
+              <span className="text-green-500 font-mono">
+                {formatNumber(ppsrPartidasStats.totalTaxa)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Mãos</span>
-              <span className="font-mono">{formatNumber(ppsrPartidasStats.totalMaos)}</span>
+              <span className="font-mono">
+                {formatNumber(ppsrPartidasStats.totalMaos)}
+              </span>
             </div>
           </div>
 
           {/* Geral PPSR */}
           <div className="space-y-1 text-sm">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Geral PPSR</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
+              Geral PPSR
+            </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Ganhos Jogador</span>
-              <span className={`font-mono ${geralPPSRTotals.ganhosJogadorGeral < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(geralPPSRTotals.ganhosJogadorGeral)}</span>
+              <span
+                className={`font-mono ${geralPPSRTotals.ganhosJogadorGeral < 0 ? "text-red-500" : "text-green-500"}`}
+              >
+                {formatNumber(geralPPSRTotals.ganhosJogadorGeral)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Taxa Liga</span>
-              <span className="text-green-500 font-mono">{formatNumber(geralPPSRTotals.ganhosLigaTaxa)}</span>
+              <span className="text-green-500 font-mono">
+                {formatNumber(geralPPSRTotals.ganhosLigaTaxa)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Liga Geral</span>
-              <span className={`font-mono ${geralPPSRTotals.ganhosLigaGeral < 0 ? "text-red-500" : "text-green-500"}`}>{formatNumber(geralPPSRTotals.ganhosLigaGeral)}</span>
+              <span
+                className={`font-mono ${geralPPSRTotals.ganhosLigaGeral < 0 ? "text-red-500" : "text-green-500"}`}
+              >
+                {formatNumber(geralPPSRTotals.ganhosLigaGeral)}
+              </span>
             </div>
-            {ppsrPartidasStats.totalGanhos !== geralPPSRTotals.ganhosJogadorGeral && (
+            {ppsrPartidasStats.totalGanhos !==
+              geralPPSRTotals.ganhosJogadorGeral && (
               <div className="flex justify-between text-xs text-muted-foreground border-t pt-1 mt-1">
                 <span>Δ Ganhos</span>
-                <span className={Math.abs(ppsrPartidasStats.totalGanhos - geralPPSRTotals.ganhosJogadorGeral) > 1 ? "text-amber-500" : "text-green-500"}>
-                  {formatNumber(ppsrPartidasStats.totalGanhos - geralPPSRTotals.ganhosJogadorGeral)}
+                <span
+                  className={
+                    Math.abs(
+                      ppsrPartidasStats.totalGanhos -
+                        geralPPSRTotals.ganhosJogadorGeral,
+                    ) > 1
+                      ? "text-amber-500"
+                      : "text-green-500"
+                  }
+                >
+                  {formatNumber(
+                    ppsrPartidasStats.totalGanhos -
+                      geralPPSRTotals.ganhosJogadorGeral,
+                  )}
                 </span>
               </div>
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* ── Conferência Grade (Cross-validation) ── */}
@@ -638,80 +811,131 @@ export function LeagueOverviewTab({
             </span>
           </div>
 
-          {crossValidation.match === false && crossValidation.reason === "different_week" ? (
+          {crossValidation.match === false &&
+          crossValidation.reason === "different_week" ? (
             <div className="flex items-center gap-1 text-[10px] text-amber-500">
               <Icons.AlertCircle className="w-3 h-3" />
-              <span>Grade S{crossValidation.scheduleWeek} ≠ PPST S{crossValidation.ppstWeek}</span>
+              <span>
+                Grade S{crossValidation.scheduleWeek} ≠ PPST S
+                {crossValidation.ppstWeek}
+              </span>
             </div>
           ) : crossValidation.match ? (
             <>
               <div className="grid grid-cols-4 gap-2 text-xs">
                 <div>
-                  <div className="text-[9px] text-muted-foreground">Previsto</div>
-                  <div className="font-mono font-medium">R$ {formatNumber(crossValidation.gtdScheduledReais)}</div>
-                </div>
-                <div>
-                  <div className="text-[9px] text-muted-foreground">Realizado</div>
-                  <div className="font-mono font-medium">R$ {formatNumber(crossValidation.gtdRealizedReais)}</div>
-                </div>
-                <div>
-                  <div className="text-[9px] text-muted-foreground">Diff</div>
-                  <div className={`font-mono font-medium ${
-                    crossValidation.isBalanced ? "text-[#00C969]" : crossValidation.gtdDiffReais > 0 ? "text-amber-500" : "text-blue-500"
-                  }`}>
-                    {crossValidation.isBalanced ? "OK" : `${crossValidation.gtdDiffReais > 0 ? "+" : ""}${formatNumber(crossValidation.gtdDiffReais)}`}
+                  <div className="text-[9px] text-muted-foreground">
+                    Previsto
+                  </div>
+                  <div className="font-mono font-medium">
+                    R$ {formatNumber(crossValidation.gtdScheduledReais)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[9px] text-muted-foreground">Torneios</div>
-                  <div className={`font-mono font-medium ${crossValidation.tournamentsWithGTD !== crossValidation.tournamentsScheduled ? "text-amber-500" : ""}`}>
-                    {crossValidation.tournamentsWithGTD}/{crossValidation.tournamentsScheduled}
+                  <div className="text-[9px] text-muted-foreground">
+                    Realizado
+                  </div>
+                  <div className="font-mono font-medium">
+                    R$ {formatNumber(crossValidation.gtdRealizedReais)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-muted-foreground">Diff</div>
+                  <div
+                    className={`font-mono font-medium ${
+                      crossValidation.isBalanced
+                        ? "text-[#00C969]"
+                        : crossValidation.gtdDiffReais > 0
+                          ? "text-amber-500"
+                          : "text-blue-500"
+                    }`}
+                  >
+                    {crossValidation.isBalanced
+                      ? "OK"
+                      : `${crossValidation.gtdDiffReais > 0 ? "+" : ""}${formatNumber(crossValidation.gtdDiffReais)}`}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-muted-foreground">
+                    Torneios
+                  </div>
+                  <div
+                    className={`font-mono font-medium ${crossValidation.tournamentsWithGTD !== crossValidation.tournamentsScheduled ? "text-amber-500" : ""}`}
+                  >
+                    {crossValidation.tournamentsWithGTD}/
+                    {crossValidation.tournamentsScheduled}
                   </div>
                 </div>
               </div>
               {/* Torneios não encontrados */}
-              {crossValidation.missingTournaments && crossValidation.missingTournaments.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-border/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-[10px] text-amber-500 font-medium">
-                      {crossValidation.missingTournaments.length} torneios da grade não encontrados
-                    </div>
-                    {crossValidation.missingGTDTotal > 0 && (
-                      <div className="text-[10px] text-amber-500">
-                        GTD: R$ {formatNumber(crossValidation.missingGTDTotal)}
+              {crossValidation.missingTournaments &&
+                crossValidation.missingTournaments.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-border/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[10px] text-amber-500 font-medium">
+                        {crossValidation.missingTournaments.length} torneios da
+                        grade não encontrados
                       </div>
-                    )}
-                  </div>
-                  <div className="max-h-[200px] overflow-y-auto border rounded">
-                    <table className="w-full text-[10px]">
-                      <thead className="bg-muted/50 sticky top-0">
-                        <tr>
-                          <th className="text-left px-2 py-1 font-medium">Dia</th>
-                          <th className="text-left px-2 py-1 font-medium">Hora</th>
-                          <th className="text-left px-2 py-1 font-medium">Torneio</th>
-                          <th className="text-left px-2 py-1 font-medium">Tipo</th>
-                          <th className="text-right px-2 py-1 font-medium">GTD</th>
-                          <th className="text-right px-2 py-1 font-medium">Buy-in</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {crossValidation.missingTournaments.map((t, i) => (
-                          <tr key={i} className="border-t border-border/30 hover:bg-muted/30">
-                            <td className="px-2 py-1 text-muted-foreground">{dayLabels[t.day] || t.day}</td>
-                            <td className="px-2 py-1 font-mono">{t.time}</td>
-                            <td className="px-2 py-1 font-medium text-amber-600">{t.name}</td>
-                            <td className="px-2 py-1 text-muted-foreground">{t.game}</td>
-                            <td className="px-2 py-1 text-right font-mono text-green-600">
-                              {t.gtd > 0 ? formatNumber(t.gtd * 5) : "-"}
-                            </td>
-                            <td className="px-2 py-1 text-right font-mono">{t.buyIn || "-"}</td>
+                      {crossValidation.missingGTDTotal > 0 && (
+                        <div className="text-[10px] text-amber-500">
+                          GTD: R${" "}
+                          {formatNumber(crossValidation.missingGTDTotal)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="max-h-[200px] overflow-y-auto border rounded">
+                      <table className="w-full text-[10px]">
+                        <thead className="bg-muted/50 sticky top-0">
+                          <tr>
+                            <th className="text-left px-2 py-1 font-medium">
+                              Dia
+                            </th>
+                            <th className="text-left px-2 py-1 font-medium">
+                              Hora
+                            </th>
+                            <th className="text-left px-2 py-1 font-medium">
+                              Torneio
+                            </th>
+                            <th className="text-left px-2 py-1 font-medium">
+                              Tipo
+                            </th>
+                            <th className="text-right px-2 py-1 font-medium">
+                              GTD
+                            </th>
+                            <th className="text-right px-2 py-1 font-medium">
+                              Buy-in
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {crossValidation.missingTournaments.map((t, i) => (
+                            <tr
+                              key={i}
+                              className="border-t border-border/30 hover:bg-muted/30"
+                            >
+                              <td className="px-2 py-1 text-muted-foreground">
+                                {dayLabels[t.day] || t.day}
+                              </td>
+                              <td className="px-2 py-1 font-mono">{t.time}</td>
+                              <td className="px-2 py-1 font-medium text-amber-600">
+                                {t.name}
+                              </td>
+                              <td className="px-2 py-1 text-muted-foreground">
+                                {t.game}
+                              </td>
+                              <td className="px-2 py-1 text-right font-mono text-green-600">
+                                {t.gtd > 0 ? formatNumber(t.gtd * 5) : "-"}
+                              </td>
+                              <td className="px-2 py-1 text-right font-mono">
+                                {t.buyIn || "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </>
           ) : null}
         </div>
