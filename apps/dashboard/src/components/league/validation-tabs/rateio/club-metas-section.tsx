@@ -8,7 +8,7 @@ import { Spinner } from "@midpoker/ui/spinner";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getWeek, getYear } from "date-fns";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ClubMetaForm } from "./club-meta-form";
 import type { AvailableClub, MetaGroupData } from "./rateio-utils";
 import { formatNumber } from "./rateio-utils";
@@ -21,6 +21,7 @@ interface ClubMetasSectionProps {
   defaultWeekNumber?: number;
   metaGroups?: MetaGroupData[];
   usingFallback?: boolean;
+  overlayTotal?: number;
 }
 
 export function ClubMetasSection({
@@ -29,6 +30,7 @@ export function ClubMetasSection({
   defaultWeekNumber,
   metaGroups,
   usingFallback,
+  overlayTotal = 0,
 }: ClubMetasSectionProps) {
   const trpc = useTRPC();
   const { toast } = useToast();
@@ -156,6 +158,48 @@ export function ClubMetasSection({
     return { groups: result, unassigned };
   }, [metaGroups, availableClubs]);
 
+  // Local state: club overlay % distribution within each group
+  const [clubPercents, setClubPercents] = useState<Record<string, number>>({});
+
+  // Initialize equal distribution when clubsByGroup changes
+  const initialPercents = useMemo(() => {
+    const percents: Record<string, number> = {};
+    if (!clubsByGroup) return percents;
+    for (const { clubs } of clubsByGroup.groups) {
+      if (clubs.length === 0) continue;
+      const equal = Math.round((100 / clubs.length) * 10) / 10;
+      for (const c of clubs) {
+        percents[`${c.ligaId}-${c.clubeId}`] = equal;
+      }
+    }
+    return percents;
+  }, [clubsByGroup]);
+
+  // Merge: local edits override initial values
+  const effectivePercents = useMemo(() => {
+    return { ...initialPercents, ...clubPercents };
+  }, [initialPercents, clubPercents]);
+
+  const handlePercentChange = useCallback(
+    (key: string, value: number) => {
+      setClubPercents((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
+
+  // Collapse state per group – SA starts collapsed
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    if (metaGroups) {
+      for (const g of metaGroups) {
+        if (g.name.toUpperCase() === "SA") {
+          init[g.id] = true;
+        }
+      }
+    }
+    return init;
+  });
+
   // Group metas by SuperUnion + Club
   const grouped = (metas ?? []).reduce((acc: Record<string, any[]>, m: any) => {
     const key = `${m.super_union_id}-${m.club_id}`;
@@ -238,47 +282,117 @@ export function ClubMetasSection({
         clubsByGroup &&
         usingFallback && (
           <>
-            {clubsByGroup.groups.map(({ group, clubs }) => (
-              <div
-                key={group.id}
-                className="border border-dashed rounded-lg p-3 space-y-2"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium">{group.name}</span>
-                  <Badge
-                    variant="outline"
-                    className="text-[9px] border-amber-500/30 text-amber-500"
+            {clubsByGroup.groups.map(({ group, clubs }) => {
+              const groupOverlay =
+                (group.metaPercent / 100) * overlayTotal;
+              const groupPercentSum = clubs.reduce(
+                (sum, c) =>
+                  sum +
+                  (effectivePercents[`${c.ligaId}-${c.clubeId}`] ?? 0),
+                0,
+              );
+              const isCollapsed = !!collapsedGroups[group.id];
+              return (
+                <div
+                  key={group.id}
+                  className="border border-dashed rounded-lg p-3 space-y-2"
+                >
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 w-full text-left"
+                    onClick={() =>
+                      setCollapsedGroups((prev) => ({
+                        ...prev,
+                        [group.id]: !prev[group.id],
+                      }))
+                    }
                   >
-                    Fallback
-                  </Badge>
-                  <span className="text-[10px] text-muted-foreground">
-                    {clubs.length} clubes
-                  </span>
+                    <Icons.ChevronRight
+                      className={`w-3 h-3 text-muted-foreground transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                    />
+                    <span className="text-xs font-medium">{group.name}</span>
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] border-amber-500/30 text-amber-500"
+                    >
+                      Fallback
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground">
+                      {clubs.length} clubes
+                    </span>
+                    {overlayTotal > 0 && (
+                      <span className="text-[10px] text-muted-foreground ml-auto">
+                        {group.metaPercent}% → {formatNumber(groupOverlay)}
+                      </span>
+                    )}
+                  </button>
+                  {!isCollapsed && clubs.length > 0 ? (
+                    <div className="space-y-1">
+                      {clubs.map((c) => {
+                        const key = `${c.ligaId}-${c.clubeId}`;
+                        const pct = effectivePercents[key] ?? 0;
+                        const clubOverlay = (pct / 100) * groupOverlay;
+                        return (
+                          <div
+                            key={key}
+                            className="flex items-center gap-2 text-xs px-2 py-1 rounded bg-muted/30"
+                          >
+                            <span className="font-medium">{c.clubeNome}</span>
+                            <span className="text-muted-foreground">
+                              {c.ligaNome}
+                            </span>
+                            <span className="text-muted-foreground text-[9px]">
+                              ({c.superUnionId}/{c.clubeId})
+                            </span>
+                            {overlayTotal > 0 && (
+                              <div className="flex items-center gap-1 ml-auto">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  step={0.1}
+                                  value={pct}
+                                  onChange={(e) =>
+                                    handlePercentChange(
+                                      key,
+                                      Number(e.target.value) || 0,
+                                    )
+                                  }
+                                  className="w-16 h-6 text-xs text-right font-mono bg-transparent border-b border-muted-foreground/30 outline-none focus:border-foreground"
+                                />
+                                <span className="text-[10px] text-muted-foreground">
+                                  %
+                                </span>
+                                <span className="text-xs font-mono text-red-500 ml-2">
+                                  {formatNumber(clubOverlay)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {overlayTotal > 0 && (
+                        <div className="flex items-center justify-end gap-2 px-2 pt-1 text-[10px] text-muted-foreground">
+                          <span>
+                            Soma: {groupPercentSum.toFixed(1)}%
+                          </span>
+                          <span>|</span>
+                          <span>
+                            {formatNumber(
+                              (groupPercentSum / 100) * groupOverlay,
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : !isCollapsed ? (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhum clube nesta importacao pertence a este grupo.
+                    </p>
+                  ) : null}
                 </div>
-                {clubs.length > 0 ? (
-                  <div className="space-y-1">
-                    {clubs.map((c) => (
-                      <div
-                        key={`${c.ligaId}-${c.clubeId}`}
-                        className="flex items-center gap-2 text-xs px-2 py-1 rounded bg-muted/30"
-                      >
-                        <span className="font-medium">{c.clubeNome}</span>
-                        <span className="text-muted-foreground">
-                          {c.ligaNome}
-                        </span>
-                        <span className="text-muted-foreground text-[9px]">
-                          ({c.superUnionId}/{c.clubeId})
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Nenhum clube nesta importacao pertence a este grupo.
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
             {clubsByGroup.unassigned.length > 0 && (
               <div className="border border-dashed rounded-lg p-3 space-y-2">
                 <div className="flex items-center gap-2">

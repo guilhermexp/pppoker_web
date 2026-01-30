@@ -9,7 +9,7 @@ import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import type { AvailableLeague, MetaGroupData } from "./rateio-utils";
-import { formatPercent } from "./rateio-utils";
+import { formatNumber, formatPercent } from "./rateio-utils";
 import { MetaGroupForm } from "./meta-group-form";
 import { MetaGroupMembers } from "./meta-group-members";
 import { TimeSlotsSection } from "./time-slots-section";
@@ -17,11 +17,13 @@ import { TimeSlotsSection } from "./time-slots-section";
 interface MetaGroupsSectionProps {
   availableLeagues: AvailableLeague[];
   fallbackGroups?: MetaGroupData[];
+  overlayTotal?: number;
 }
 
 export function MetaGroupsSection({
   availableLeagues,
   fallbackGroups,
+  overlayTotal,
 }: MetaGroupsSectionProps) {
   const trpc = useTRPC();
   const { toast } = useToast();
@@ -205,6 +207,11 @@ export function MetaGroupsSection({
                   <Badge variant="outline" className="text-[10px]">
                     {formatPercent(group.metaPercent)}
                   </Badge>
+                  {overlayTotal != null && overlayTotal > 0 && (
+                    <span className="text-xs font-mono text-red-500">
+                      {formatNumber((group.metaPercent / 100) * overlayTotal)}
+                    </span>
+                  )}
                   <Badge
                     variant="outline"
                     className="text-[9px] border-amber-500/30 text-amber-500"
@@ -272,6 +279,11 @@ export function MetaGroupsSection({
                 <Badge variant="outline" className="text-[10px]">
                   {formatPercent(Number(group.meta_percent))}
                 </Badge>
+                {overlayTotal != null && overlayTotal > 0 && (
+                  <span className="text-xs font-mono text-red-500">
+                    {formatNumber((Number(group.meta_percent) / 100) * overlayTotal)}
+                  </span>
+                )}
                 {!group.is_active && (
                   <Badge
                     variant="outline"
