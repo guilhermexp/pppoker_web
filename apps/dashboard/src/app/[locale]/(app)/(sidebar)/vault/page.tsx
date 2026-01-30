@@ -21,10 +21,12 @@ export default async function Page(props: Props) {
 
   const filter = loadDocumentFilterParams(searchParams);
 
-  await queryClient.fetchInfiniteQuery(
+  // Use prefetchInfiniteQuery (non-throwing) to avoid crashing the page
+  // if the server-side fetch fails. The client will retry via useSuspenseInfiniteQuery.
+  await queryClient.prefetchInfiniteQuery(
     trpc.documents.get.infiniteQueryOptions({
-      ...filter,
       pageSize: 20,
+      ...filter,
     }),
   );
 
