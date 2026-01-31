@@ -124,27 +124,27 @@ export function LeagueImportProgressModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-6">
-        <DialogHeader className="space-y-3 mb-1">
-          <DialogTitle className="flex items-center gap-3 text-lg">
+      <DialogContent className="sm:max-w-[420px] p-6">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2.5">
             {isCompleted ? (
               <>
-                <Icons.Check className="h-6 w-6 text-green-500 flex-shrink-0" />
+                <Icons.Check className="h-5 w-5 text-green-500 flex-shrink-0" />
                 Importação Concluída
               </>
             ) : isFailed ? (
               <>
-                <Icons.AlertCircle className="h-6 w-6 text-red-500 flex-shrink-0" />
+                <Icons.AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
                 Importação Falhou
               </>
             ) : (
               <>
-                <Spinner size={24} className="flex-shrink-0" />
+                <Spinner size={20} className="flex-shrink-0" />
                 Processando Importação
               </>
             )}
           </DialogTitle>
-          <DialogDescription className="text-base">
+          <DialogDescription className="text-sm">
             {isCompleted
               ? "Seus dados foram importados com sucesso!"
               : isFailed
@@ -153,12 +153,12 @@ export function LeagueImportProgressModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Progress bar */}
           {!isFailed && (
-            <div className="space-y-2.5">
-              <Progress value={progress} className="h-3" />
-              <p className="text-sm font-medium text-muted-foreground text-center">
+            <div className="space-y-2">
+              <Progress value={progress} className="h-2.5" />
+              <p className="text-xs font-medium text-muted-foreground text-center">
                 {progress}% concluído
               </p>
             </div>
@@ -166,36 +166,36 @@ export function LeagueImportProgressModal({
 
           {/* Stats */}
           {importData && importData.status === "processing" && (
-            <div className="grid grid-cols-2 gap-3 p-5 rounded-lg bg-muted/30">
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">
+            <div className="grid grid-cols-4 gap-3 rounded-lg border border-border p-3">
+              <div className="space-y-0.5">
+                <p className="text-muted-foreground text-[11px] font-medium">
                   Ligas
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-lg font-bold tabular-nums">
                   {importData.total_leagues || 0}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">
+              <div className="space-y-0.5">
+                <p className="text-muted-foreground text-[11px] font-medium">
                   Jogos PPST
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-lg font-bold tabular-nums">
                   {importData.total_games_ppst || 0}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">
+              <div className="space-y-0.5">
+                <p className="text-muted-foreground text-[11px] font-medium">
                   Jogos PPSR
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-lg font-bold tabular-nums">
                   {importData.total_games_ppsr || 0}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-medium">
+              <div className="space-y-0.5">
+                <p className="text-muted-foreground text-[11px] font-medium">
                   Jogadores
                 </p>
-                <p className="text-2xl font-bold">
+                <p className="text-lg font-bold tabular-nums">
                   {(importData.total_players_ppst || 0) +
                     (importData.total_players_ppsr || 0)}
                 </p>
@@ -205,9 +205,9 @@ export function LeagueImportProgressModal({
 
           {/* Error message */}
           {isFailed && importData.processing_errors && (
-            <div className="p-4 rounded-lg bg-destructive/10 text-destructive">
-              <p className="font-semibold mb-2">Erro:</p>
-              <p className="text-sm">
+            <div className="p-3 rounded-lg bg-destructive/10 text-destructive">
+              <p className="font-semibold text-sm mb-1">Erro:</p>
+              <p className="text-xs">
                 {(importData.processing_errors as any)?.message ||
                   "Erro desconhecido"}
               </p>
@@ -216,37 +216,37 @@ export function LeagueImportProgressModal({
 
           {/* Completed stats */}
           {isCompleted && importData && (
-            <div className="grid grid-cols-2 gap-3 p-5 rounded-lg bg-green-500/10">
-              <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+            <div className="grid grid-cols-4 gap-3 rounded-lg border border-green-500/30 bg-green-500/5 p-3">
+              <div className="space-y-0.5">
+                <p className="text-green-700/70 dark:text-green-300/70 text-[11px] font-medium">
                   Ligas
                 </p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                <p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-300">
                   {importData.total_leagues || 0}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+              <div className="space-y-0.5">
+                <p className="text-green-700/70 dark:text-green-300/70 text-[11px] font-medium">
                   Total Jogos
                 </p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                <p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-300">
                   {(importData.total_games_ppst || 0) +
                     (importData.total_games_ppsr || 0)}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+              <div className="space-y-0.5">
+                <p className="text-green-700/70 dark:text-green-300/70 text-[11px] font-medium">
                   Jogadores PPST
                 </p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                <p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-300">
                   {importData.total_players_ppst || 0}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-green-700/70 dark:text-green-300/70 text-xs font-medium">
+              <div className="space-y-0.5">
+                <p className="text-green-700/70 dark:text-green-300/70 text-[11px] font-medium">
                   Jogadores PPSR
                 </p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                <p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-300">
                   {importData.total_players_ppsr || 0}
                 </p>
               </div>
@@ -256,11 +256,12 @@ export function LeagueImportProgressModal({
 
         {/* Close button (only show when completed or failed) */}
         {(isCompleted || isFailed) && (
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-2">
             <Button
               variant={isFailed ? "destructive" : "default"}
+              size="sm"
               onClick={() => onOpenChange(false)}
-              className="min-w-24"
+              className="min-w-20"
             >
               Fechar
             </Button>

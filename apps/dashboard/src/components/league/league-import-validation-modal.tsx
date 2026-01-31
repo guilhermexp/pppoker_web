@@ -22,6 +22,14 @@ import { ptBR } from "date-fns/locale";
 import { useCallback, useMemo, useState } from "react";
 
 import {
+  type StoredRealizedData,
+  type StoredRealizedTournament,
+  convertUtc5ToUtc3,
+  dateToDayOfWeek,
+  extractGameType,
+} from "@/lib/league/tournament-matching";
+
+import {
   LeagueGeralPPSRTab,
   LeagueGeralPPSTTab,
   LeagueJogosPPSRTab,
@@ -33,6 +41,9 @@ import {
 
 // Storage key for SU validation data (used by Painel SU)
 const SU_VALIDATION_STORAGE_KEY = "su-validation-data";
+
+// Storage key for realized PPST tournaments (used by Grade confrontation)
+const REALIZED_TOURNAMENTS_KEY = "ppst-realized-tournaments";
 
 // Helper to get week number from date string (yyyy-MM-dd format)
 function getWeekFromDateString(dateStr: string): number | null {
@@ -225,15 +236,72 @@ export function LeagueImportValidationModal({
     }
   }, [suStats, validationResult.period]);
 
+  // Save realized tournaments for Grade confrontation
+  const saveRealizedTournaments = useCallback(() => {
+    try {
+      const realizedTournaments: StoredRealizedTournament[] =
+        parsedData.jogosPPST
+          .filter(
+            (j) =>
+              j.metadata?.premiacaoGarantida &&
+              j.metadata.premiacaoGarantida > 0,
+          )
+          .map((j) => ({
+            name: j.metadata.nomeMesa.trim().toUpperCase(),
+            date: j.metadata.dataInicio,
+            day: dateToDayOfWeek(j.metadata.dataInicio),
+            time: convertUtc5ToUtc3(j.metadata.horaInicio),
+            gtdFichas: j.metadata.premiacaoGarantida!,
+            gameType: extractGameType(j.metadata.tipoJogo),
+            buyIn:
+              (j.metadata.buyInBase ?? 0) +
+              (j.metadata.buyInBounty ?? 0) +
+              (j.metadata.buyInTaxa ?? 0),
+            entries: j.jogadores.length,
+            overlay:
+              (j.totalGeral?.buyinFichas ?? 0) -
+              (j.totalGeral?.taxa ?? 0) -
+              (j.metadata.premiacaoGarantida ?? 0),
+          }));
+
+      const realizedData: StoredRealizedData = {
+        weekNumber: weekInfo.importWeek!,
+        period: {
+          start: validationResult.period.start || "",
+          end: validationResult.period.end || "",
+        },
+        savedAt: new Date().toISOString(),
+        tournaments: realizedTournaments,
+        totalGTDFichas: realizedTournaments.reduce(
+          (s, t) => s + t.gtdFichas,
+          0,
+        ),
+        totalCount: realizedTournaments.length,
+      };
+      localStorage.setItem(
+        REALIZED_TOURNAMENTS_KEY,
+        JSON.stringify(realizedData),
+      );
+    } catch (error) {
+      console.error(
+        "Failed to save realized tournaments to localStorage:",
+        error,
+      );
+    }
+  }, [parsedData.jogosPPST, weekInfo.importWeek, validationResult.period]);
+
   // Handle approve with save
   const handleApprove = useCallback(() => {
     saveToLocalStorage();
+    saveRealizedTournaments();
     onApprove();
-  }, [saveToLocalStorage, onApprove]);
+  }, [saveToLocalStorage, saveRealizedTournaments, onApprove]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`overflow-hidden flex flex-col p-0 bg-background shadow-2xl ${isExpanded ? "inset-0 translate-x-0 translate-y-0 w-screen max-w-[100vw] h-screen max-h-[100vh] rounded-none border-0" : "max-w-[95vw] w-[1600px] max-h-[92vh] rounded-xl border border-border"}`}>
+      <DialogContent
+        className={`overflow-hidden flex flex-col p-0 bg-background shadow-2xl ${isExpanded ? "inset-0 translate-x-0 translate-y-0 w-screen max-w-[100vw] h-screen max-h-[100vh] rounded-none border-0" : "max-w-[95vw] w-[1600px] max-h-[92vh] rounded-xl border border-border"}`}
+      >
         <DialogHeader className="flex-shrink-0 px-6 py-5 border-b border-border">
           <div className="flex items-start justify-between gap-6">
             <div>
@@ -260,7 +328,13 @@ export function LeagueImportValidationModal({
                   onClick={() => setIsExpanded((v) => !v)}
                 >
                   {isExpanded ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} fill="currentColor" viewBox="0 -960 960 960">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={14}
+                      height={14}
+                      fill="currentColor"
+                      viewBox="0 -960 960 960"
+                    >
                       <path d="M440-200v-160H200v-80h320v240h-80Zm160-320v-240H280v-80h320v240h-80Z" />
                     </svg>
                   ) : (

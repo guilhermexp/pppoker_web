@@ -20,6 +20,7 @@ export function SUWeekViewToggle({
       value={value}
       onValueChange={(v) => onChange(v as SUViewMode)}
       className="w-auto"
+      id="su-week-view"
     >
       <TabsList className="h-8">
         <TabsTrigger

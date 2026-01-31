@@ -965,8 +965,8 @@ function parseGeralSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       // Identificação do Jogador (A-I)
       ppPokerId: String(row.ppPokerId || ""),
       country: row.country || null,
-      nickname: row.nickname || "",
-      memoName: row.memoName || null,
+      nickname: String(row.nickname ?? ""),
+      memoName: row.memoName != null ? String(row.memoName) : null,
       agentNickname: row.agentNickname || null,
       agentPpPokerId: row.agentPpPokerId ? String(row.agentPpPokerId) : null,
       superAgentNickname: row.superAgentNickname || null,
@@ -1296,8 +1296,8 @@ function parseDetalhadoSheet(sheet: XLSX.Sheet): any[] {
     date: row.date ? String(row.date) : null,
     ppPokerId: String(row.ppPokerId || ""),
     country: row.country || null,
-    nickname: row.nickname || "",
-    memoName: row.memoName || null,
+    nickname: String(row.nickname ?? ""),
+    memoName: row.memoName != null ? String(row.memoName) : null,
     agentNickname: row.agentNickname || null,
     agentPpPokerId: row.agentPpPokerId ? String(row.agentPpPokerId) : null,
     superAgentNickname: row.superAgentNickname || null,
@@ -1494,8 +1494,8 @@ function parseUserDetailsSheet(data: any[], sheet?: XLSX.Sheet): any[] {
     const rawData = parseSheetByPosition(sheet, USER_DETAILS_COLUMNS, 3);
     return rawData.map((row) => ({
       ppPokerId: String(row.ppPokerId || ""),
-      nickname: row.nickname || "",
-      memoName: row.memoName || null,
+      nickname: String(row.nickname ?? ""),
+      memoName: row.memoName != null ? String(row.memoName) : null,
       country: row.country || null,
       agentNickname: row.agentNickname || null,
       agentPpPokerId: row.agentPpPokerId ? String(row.agentPpPokerId) : null,
@@ -1658,8 +1658,8 @@ function parseDemonstrativoSheet(sheet: XLSX.Sheet): any[] {
   return rawData.map((row) => ({
     occurredAt: row.occurredAt ? String(row.occurredAt) : "",
     ppPokerId: row.ppPokerId ? String(row.ppPokerId) : "",
-    nickname: row.nickname || "",
-    memoName: row.memoName || null,
+    nickname: String(row.nickname ?? ""),
+    memoName: row.memoName != null ? String(row.memoName) : null,
     type: row.type || null,
     amount: toNumber(row.amount),
   }));
@@ -1688,7 +1688,7 @@ function parseRakebackSheet(data: any[], sheet?: XLSX.Sheet): any[] {
         agentPpPokerId: String(row.agentPpPokerId || ""),
         agentNickname: row.agentNickname || "",
         country: row.country || null,
-        memoName: row.memoName || null,
+        memoName: row.memoName != null ? String(row.memoName) : null,
         superAgentPpPokerId: row.superAgentPpPokerId
           ? String(row.superAgentPpPokerId)
           : null,
@@ -2140,8 +2140,8 @@ export function ImportUploader() {
         // When there's a league, league ID always comes first in the filename
         const fileNameMatch = file.name.match(/^(\d+)-(\d+)-(\d{8})-(\d{8})/);
         if (fileNameMatch) {
-          parsedData.leagueId = fileNameMatch[1];
-          parsedData.clubId = fileNameMatch[2];
+          parsedData.leagueId = Number(fileNameMatch[1]);
+          parsedData.clubId = Number(fileNameMatch[2]);
         }
 
         // Also try to extract clubId from transactions if not in filename
@@ -2150,7 +2150,7 @@ export function ImportUploader() {
             (tx: any) => tx.clubId || tx.senderClubId,
           );
           if (firstTxWithClub) {
-            parsedData.clubId = String(
+            parsedData.clubId = Number(
               firstTxWithClub.clubId || firstTxWithClub.senderClubId,
             );
           }

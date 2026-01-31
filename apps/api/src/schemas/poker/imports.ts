@@ -22,9 +22,9 @@ export const pokerImportSourceTypeSchema = z.enum(["club", "league", "su"]);
 // =============================================================================
 
 export const parsedPlayerSchema = z.object({
-  ppPokerId: z.string(),
-  nickname: z.string(),
-  memoName: z.string().nullable().optional(),
+  ppPokerId: z.coerce.string(),
+  nickname: z.coerce.string(),
+  memoName: z.coerce.string().nullable().optional(),
   country: z.string().nullable().optional(),
   agentNickname: z.string().nullable().optional(),
   agentPpPokerId: z.string().nullable().optional(),
@@ -63,9 +63,9 @@ export const parsedTransactionSchema = z.object({
 });
 
 export const parsedSessionPlayerSchema = z.object({
-  ppPokerId: z.string(),
-  nickname: z.string(),
-  memoName: z.string().nullable().optional(),
+  ppPokerId: z.coerce.string(),
+  nickname: z.coerce.string(),
+  memoName: z.coerce.string().nullable().optional(),
   ranking: z.number().nullable().optional(),
   buyIn: z.number().optional(),
   buyInChips: z.number().optional(),
@@ -107,9 +107,9 @@ export const parsedSessionSchema = z.object({
 });
 
 export const parsedSummarySchema = z.object({
-  ppPokerId: z.string(),
-  nickname: z.string(),
-  memoName: z.string().nullable().optional(),
+  ppPokerId: z.coerce.string(),
+  nickname: z.coerce.string(),
+  memoName: z.coerce.string().nullable().optional(),
   country: z.string().nullable().optional(),
   agentNickname: z.string().nullable().optional(),
   agentPpPokerId: z.string().nullable().optional(),
@@ -161,10 +161,10 @@ export const parsedSummarySchema = z.object({
 
 export const parsedDetailedSchema = z
   .object({
-    ppPokerId: z.string(),
+    ppPokerId: z.coerce.string(),
     date: z.string().nullable().optional(),
-    nickname: z.string().nullable().optional(),
-    memoName: z.string().nullable().optional(),
+    nickname: z.coerce.string().nullable().optional(),
+    memoName: z.coerce.string().nullable().optional(),
     country: z.string().nullable().optional(),
     agentNickname: z.string().nullable().optional(),
     agentPpPokerId: z.string().nullable().optional(),
@@ -190,9 +190,9 @@ export const parsedDetailedSchema = z
   .passthrough();
 
 export const parsedRakebackSchema = z.object({
-  agentPpPokerId: z.string(),
-  agentNickname: z.string(),
-  memoName: z.string().nullable().optional(),
+  agentPpPokerId: z.coerce.string(),
+  agentNickname: z.coerce.string(),
+  memoName: z.coerce.string().nullable().optional(),
   country: z.string().nullable().optional(),
   superAgentPpPokerId: z.string().nullable().optional(),
   averageRakebackPercent: z.number(),
@@ -201,9 +201,9 @@ export const parsedRakebackSchema = z.object({
 
 export const parsedDemonstrativoSchema = z.object({
   occurredAt: z.string().nullable().optional(),
-  ppPokerId: z.string().nullable().optional(),
-  nickname: z.string().nullable().optional(),
-  memoName: z.string().nullable().optional(),
+  ppPokerId: z.coerce.string().nullable().optional(),
+  nickname: z.coerce.string().nullable().optional(),
+  memoName: z.coerce.string().nullable().optional(),
   type: z.string().nullable().optional(),
   amount: z.number().optional(),
 });
@@ -212,8 +212,8 @@ export const parsedDemonstrativoSchema = z.object({
 export const importDataSchema = z
   .object({
     // Common identifiers
-    clubId: z.number().nullable().optional(),
-    leagueId: z.number().nullable().optional(),
+    clubId: z.coerce.number().nullable().optional(),
+    leagueId: z.coerce.number().nullable().optional(),
     periodStart: z.string().nullable().optional(),
     periodEnd: z.string().nullable().optional(),
     // Data arrays - all optional since different spreadsheet types have different data

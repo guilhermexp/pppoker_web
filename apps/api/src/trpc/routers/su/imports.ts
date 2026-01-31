@@ -776,6 +776,21 @@ export const suImportsRouter = createTRPCRouter({
         });
       }
 
+      // Clean up orphaned week period if no other imports reference it
+      if (importRecord.week_period_id) {
+        const { count } = await supabase
+          .from("poker_su_imports")
+          .select("id", { count: "exact", head: true })
+          .eq("week_period_id", importRecord.week_period_id);
+
+        if (count === 0) {
+          await supabase
+            .from("poker_su_week_periods")
+            .delete()
+            .eq("id", importRecord.week_period_id);
+        }
+      }
+
       return { success: true };
     }),
 });

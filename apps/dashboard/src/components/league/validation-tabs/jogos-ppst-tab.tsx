@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  convertUtc5ToUtc3,
+  dateToDayOfWeek,
+} from "@/lib/league/tournament-matching";
+import { dayLabels } from "@/lib/league/tournament-schedule";
 import type { ParsedLeagueJogoPPST } from "@/lib/league/types";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
@@ -86,7 +91,8 @@ const JogoContent = memo(function JogoContent({
       <div className="flex flex-wrap gap-4 text-sm bg-muted/30 rounded-lg p-3">
         <div>
           <span className="text-muted-foreground">Início:</span>{" "}
-          {jogo.metadata.dataInicio} {jogo.metadata.horaInicio}
+          {jogo.metadata.dataInicio}{" "}
+          {convertUtc5ToUtc3(jogo.metadata.horaInicio)}
         </div>
         <div>
           <span className="text-muted-foreground">Fim:</span>{" "}
@@ -722,9 +728,22 @@ const JogoItem = memo(function JogoItem({
           <span className="mr-3 flex-shrink-0 w-[70px]" />
         )}
 
-        {/* Date/time */}
-        <span className="text-muted-foreground flex-shrink-0">
-          {jogo.metadata.dataInicio}
+        {/* Buy-in */}
+        <span className="mr-3 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground mr-0.5">
+            Buy-in
+          </span>
+          <span className="font-mono">{buyInDisplay}</span>
+        </span>
+
+        {/* Date/time + day of week */}
+        <span className="text-muted-foreground flex-shrink-0 flex items-center gap-1.5">
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+            {dayLabels[dateToDayOfWeek(jogo.metadata.dataInicio)] ||
+              dateToDayOfWeek(jogo.metadata.dataInicio)}
+          </Badge>
+          {jogo.metadata.dataInicio.split("-").reverse().join("/")}{" "}
+          {convertUtc5ToUtc3(jogo.metadata.horaInicio)}
         </span>
       </CollapsibleTrigger>
 
