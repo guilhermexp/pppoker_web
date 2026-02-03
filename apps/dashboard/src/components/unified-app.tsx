@@ -154,13 +154,13 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
     <Card key={app.id} className="w-full flex flex-col">
       <Sheet open={params.app === app.id} onOpenChange={() => setParams(null)}>
         <div className="pt-6 px-6 h-16 flex items-center justify-between">
-          {app.type === "official" &&
-          app.logo &&
-          typeof app.logo !== "string" ? (
-            <app.logo />
-          ) : (
-            <img src={app.logo as string} alt={app.name} className="w-8 h-8" />
-          )}
+          {app.logo ? (
+            app.type === "official" && typeof app.logo !== "string" ? (
+              <app.logo />
+            ) : (
+              <img src={app.logo as string} alt={app.name} className="w-8 h-8" />
+            )
+          ) : <div />}
 
           <div className="flex items-center gap-2">
             {app.installed && (

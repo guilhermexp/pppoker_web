@@ -588,7 +588,7 @@ export default {
     su_jogos: "Jogos",
     su_acertos: "Acertos",
     su_import: "Importar Dados",
-    su_grade: "Grade de Torneios",
+    su_grade: "Gerenciamento de Torneios",
     fastchips: "Fast Chips",
     fastchips_transacoes: "Transacoes",
     fastchips_contas_vinculadas: "Contas Vinculadas",

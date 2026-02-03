@@ -409,3 +409,66 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .wiggle-7 {
   animation: wiggle7 1.4s linear infinite;
 }
+
+/* Logo Reveal Animation */
+.logo-reveal {
+  display: grid;
+  grid-template-columns: 0% 3.88% 20.96%;
+  align-items: center;
+  animation: logoRevealGrid 2s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+.logo-reveal-wordmark {
+  overflow: hidden;
+}
+
+.logo-reveal-wordmark svg {
+  width: 100%;
+  height: auto;
+  min-width: 280px;
+}
+
+.logo-reveal-scrim {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.logo-reveal-scrim > div {
+  width: 1px;
+  height: 60%;
+  background: currentColor;
+  opacity: 0.15;
+}
+
+.logo-reveal-logomark {
+  width: 100%;
+  height: auto;
+}
+
+.logo-reveal-spin {
+  animation: logoRevealSpin 2s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  transform-origin: center center;
+}
+
+@keyframes logoRevealGrid {
+  0% {
+    grid-template-columns: 0% 3.88% 20.96%;
+  }
+  34% {
+    grid-template-columns: 75.16% 3.88% 20.96%;
+  }
+  100% {
+    grid-template-columns: 75.16% 3.88% 20.96%;
+  }
+}
+
+@keyframes logoRevealSpin {
+  0% {
+    transform: rotate(-360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

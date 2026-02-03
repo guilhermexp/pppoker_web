@@ -1,4 +1,4 @@
-import type { StoredTournament } from "@/app/[locale]/(app)/(sidebar)/su/grade/page";
+import type { StoredTournament } from "@/app/[locale]/(app)/(sidebar)/su/grade/grade-tab";
 
 // Torneio realizado salvo no localStorage (extraído do import PPST)
 export interface StoredRealizedTournament {
@@ -10,7 +10,7 @@ export interface StoredRealizedTournament {
   gameType: string; // extraído de tipoJogo: "NLH", "PLO", "SPINUP", etc.
   buyIn: number; // metadata.buyInBase
   entries: number; // jogadores.length
-  overlay: number; // buyinFichas - taxa - gtdFichas (negativo = overlay)
+  overlay: number; // (buyinFichas + buyinTicket) - taxa - gtdFichas (negativo = overlay)
 }
 
 export interface StoredRealizedData {
@@ -73,8 +73,9 @@ export interface MatchedPair {
 
 // Extrai game type de tipoJogo: "PPST/NLH" → "NLH", "PPST/PLO PKO" → "PLO"
 export function extractGameType(tipoJogo: string): string {
+  // Remove any organizer prefix before "/" (e.g., "PPST/NLH", "SA/NLH", "MKO/PLO")
   const cleaned = tipoJogo
-    .replace(/^PPST\//i, "")
+    .replace(/^[^/]+\//, "")
     .trim()
     .toUpperCase();
   // Pega o primeiro token: "NLH", "PLO", "SPINUP", etc.

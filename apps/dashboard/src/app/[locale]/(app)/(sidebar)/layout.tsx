@@ -79,7 +79,7 @@ export default async function Layout({
           <Sidebar />
         </ClientOnly>
 
-        <div className="md:ml-[70px] pb-4">
+        <div className="md:ml-[56px] pb-4">
           <ClientOnly>
             <Header />
           </ClientOnly>

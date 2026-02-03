@@ -571,7 +571,7 @@ export default {
     su_jogos: "Games",
     su_acertos: "Settlements",
     su_import: "Import Data",
-    su_grade: "Tournament Schedule",
+    su_grade: "Tournament Management",
     fastchips: "Fast Chips",
     fastchips_transacoes: "Transactions",
     fastchips_contas_vinculadas: "Linked Accounts",

@@ -816,9 +816,8 @@ export function LeagueJogosPPSTTab({
         case "gtd":
           return hasGTD;
         case "overlay": {
-          // Only PPST organized tournaments with GTD that have overlay
-          const isPPSTOrganized = tipoJogo.toUpperCase().startsWith("PPST");
-          if (!isPPSTOrganized || !hasGTD) return false;
+          // All tournaments with GTD that have overlay
+          if (!hasGTD) return false;
           const buyinLiquido =
             (jogo.totalGeral?.buyinFichas ?? 0) - (jogo.totalGeral?.taxa ?? 0);
           const gtd = jogo.metadata.premiacaoGarantida ?? 0;
@@ -921,13 +920,8 @@ export function LeagueJogosPPSTTab({
       totalGeralRecompensa += jogoRecompensa;
       totalGeralValorTicket += jogoValorTicket;
 
-      // Calculate arrecadação (buy-ins collected) for GTD tournaments
-      // IMPORTANT: Only count tournaments organized by PPST (tipoJogo starts with "PPST")
-      const isPPSTOrganized = jogo.metadata.tipoJogo
-        .toUpperCase()
-        .startsWith("PPST");
+      // Calculate arrecadação (buy-ins collected) for all GTD tournaments
       if (
-        isPPSTOrganized &&
         jogo.metadata.premiacaoGarantida &&
         jogo.metadata.premiacaoGarantida > 0
       ) {

@@ -119,6 +119,62 @@ export type AvailableClub = {
   superUnionId: number | null;
 };
 
+// Types for overlay distribution calculation
+export type OverlayDistributionClub = {
+  clubId: number;
+  clubName: string;
+  superUnionId: number;
+  ligaId: number;
+  metaTarget: number;
+  metaType: string;
+  actual: number;
+  shortfall: number;
+  referenceBuyin: number;
+  charge: number;
+  metMeta: boolean;
+};
+
+export type OverlayDistributionTournament = {
+  gameId: string;
+  gameName: string;
+  startedAt: string;
+  dayOfWeek: number;
+  dayOfWeekLabel: string;
+  hour: number;
+  overlayAmount: number;
+  status: "no_matching_metas" | "all_metas_met" | "clubs_charged";
+  clubDistribution: OverlayDistributionClub[];
+  totalClubCharges: number;
+  leagueRemainder: number;
+};
+
+export type OverlayDistributionSummary = {
+  totalOverlayTournaments: number;
+  totalOverlayAmount: number;
+  totalClubCharges: number;
+  leagueRemainder: number;
+  tournamentsWithNoMeta: number;
+  tournamentsAllMetsMet: number;
+};
+
+export type OverlayDistributionClubSummary = {
+  clubId: number;
+  clubName: string;
+  superUnionId: number;
+  ligaId: number;
+  totalCharge: number;
+  tournamentsCharged: number;
+  tournamentsExempt: number;
+};
+
+export type OverlayDistributionResult = {
+  summary: OverlayDistributionSummary;
+  tournaments: OverlayDistributionTournament[];
+  clubSummary: OverlayDistributionClubSummary[];
+};
+
+export type OverlaySelectionMap = Record<string, boolean>;
+
 // Fallback groups when no DB groups are configured
 export const FALLBACK_GROUPS: MetaGroupData[] = [
   {

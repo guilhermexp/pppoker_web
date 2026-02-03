@@ -1,4 +1,3 @@
-import { Logo } from "./assets/logo";
 import { onInitialize } from "./initialize";
 
 export default {
@@ -6,7 +5,6 @@ export default {
   id: "slack",
   category: "Assistant",
   active: true,
-  logo: Logo,
   short_description:
     "Integrating with Slack enables you to use Midday Assistant right from your Slack workspace, you will also get notifications when you have new transactions and more.",
   description:

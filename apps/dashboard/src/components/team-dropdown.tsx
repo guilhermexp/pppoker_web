@@ -78,7 +78,7 @@ export function TeamDropdown({ isExpanded = false }: Props) {
   return (
     <div className="relative h-[32px]" ref={ref}>
       {/* Avatar - fixed position that absolutely never changes */}
-      <div className="fixed left-[19px] bottom-4 w-[32px] h-[32px]">
+      <div className="fixed left-[12px] bottom-4 w-[32px] h-[32px]">
         <div className="relative w-[32px] h-[32px]">
           <AnimatePresence>
             {isActive && (
@@ -164,7 +164,7 @@ export function TeamDropdown({ isExpanded = false }: Props) {
 
       {/* Team name - appears to the right of the fixed avatar */}
       {isExpanded && sortedTeams[0] && (
-        <div className="fixed left-[62px] bottom-4 h-[32px] flex items-center">
+        <div className="fixed left-[55px] bottom-4 h-[32px] flex items-center">
           <span
             className="text-sm text-primary truncate transition-opacity duration-200 ease-in-out cursor-pointer hover:opacity-80"
             onClick={(e) => {
