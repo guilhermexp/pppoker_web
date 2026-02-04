@@ -11,7 +11,7 @@ import { getWeek, getYear } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
 import { ClubMetaForm } from "./club-meta-form";
 import type { AvailableClub, MetaGroupData } from "./rateio-utils";
-import { formatNumber } from "./rateio-utils";
+import { formatNumber, formatPercent } from "./rateio-utils";
 
 const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 
@@ -19,6 +19,8 @@ interface ClubMetasSectionProps {
   availableClubs: AvailableClub[];
   defaultWeekYear?: number;
   defaultWeekNumber?: number;
+  weekStart?: string;
+  weekEnd?: string;
   metaGroups?: MetaGroupData[];
   usingFallback?: boolean;
   overlayTotal?: number;
@@ -28,6 +30,8 @@ export function ClubMetasSection({
   availableClubs,
   defaultWeekYear,
   defaultWeekNumber,
+  weekStart,
+  weekEnd,
   metaGroups,
   usingFallback,
   overlayTotal = 0,
@@ -50,6 +54,30 @@ export function ClubMetasSection({
       weekYear,
       weekNumber,
     }),
+  );
+
+  const overlayEnabled = !!(weekYear && weekNumber && weekStart && weekEnd);
+
+  const { data: overlayDistribution } = useQuery(
+    trpc.su.metas.overlayDistribution.queryOptions(
+      {
+        weekYear: weekYear ?? 0,
+        weekNumber: weekNumber ?? 0,
+        weekStart: weekStart ?? "",
+        weekEnd: weekEnd ?? "",
+      },
+      { enabled: overlayEnabled },
+    ),
+  );
+
+  const { data: overlaySelections } = useQuery(
+    trpc.su.metas["overlaySelections.get"].queryOptions(
+      {
+        weekYear: weekYear ?? 0,
+        weekNumber: weekNumber ?? 0,
+      },
+      { enabled: overlayEnabled },
+    ),
   );
 
   // Mutations
@@ -192,6 +220,43 @@ export function ClubMetasSection({
     return acc;
   }, {});
 
+  const overlayChargeSummary = useMemo(() => {
+    if (!overlayDistribution) {
+      return {
+        hasSelections: false,
+        selectedOverlayTotal: 0,
+        clubChargesByKey: new Map<string, number>(),
+      };
+    }
+
+    const selections = overlaySelections ?? {};
+    let hasSelections = false;
+    let selectedOverlayTotal = 0;
+    const clubChargesByKey = new Map<string, number>();
+
+    for (const t of overlayDistribution.tournaments) {
+      const selected = selections[t.gameId] ?? false;
+      if (!selected) continue;
+
+      hasSelections = true;
+      selectedOverlayTotal += t.overlayAmount;
+
+      for (const club of t.clubDistribution) {
+        const key = `${club.ligaId}-${club.clubId}`;
+        clubChargesByKey.set(
+          key,
+          (clubChargesByKey.get(key) ?? 0) + club.charge,
+        );
+      }
+    }
+
+    return {
+      hasSelections,
+      selectedOverlayTotal: Math.round(selectedOverlayTotal * 100) / 100,
+      clubChargesByKey,
+    };
+  }, [overlayDistribution, overlaySelections]);
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -270,12 +335,13 @@ export function ClubMetasSection({
             {clubsByGroup.groups.map(({ group, clubs }) => {
               const groupOverlay =
                 (group.metaPercent / 100) * overlayTotal;
-              const groupPercentSum = clubs.reduce(
-                (sum, c) =>
-                  sum +
-                  (effectivePercents[`${c.ligaId}-${c.clubeId}`] ?? 0),
-                0,
-              );
+              const groupClubCharges = clubs.reduce((sum, c) => {
+                const key = `${c.ligaId}-${c.clubeId}`;
+                return sum + (overlayChargeSummary.clubChargesByKey.get(key) ?? 0);
+              }, 0);
+              const leaguePays = Math.max(groupOverlay - groupClubCharges, 0);
+              const leaguePercent =
+                groupOverlay > 0 ? (leaguePays / groupOverlay) * 100 : 0;
               const isCollapsed = !!collapsedGroups[group.id];
               return (
                 <div
@@ -313,10 +379,20 @@ export function ClubMetasSection({
                   </button>
                   {!isCollapsed && clubs.length > 0 ? (
                     <div className="space-y-1">
+                      {overlayTotal > 0 && (
+                        <div className="flex items-center justify-between gap-2 px-2 py-1 rounded border bg-muted/30 text-[10px]">
+                          <span className="font-medium">Liga</span>
+                          <span className="text-muted-foreground">
+                            Paga: {formatNumber(leaguePays)} (
+                            {formatPercent(leaguePercent)})
+                          </span>
+                        </div>
+                      )}
                       {clubs.map((c) => {
                         const key = `${c.ligaId}-${c.clubeId}`;
                         const pct = effectivePercents[key] ?? 0;
-                        const clubOverlay = (pct / 100) * groupOverlay;
+                        const clubOverlay =
+                          overlayChargeSummary.clubChargesByKey.get(key) ?? 0;
                         return (
                           <div
                             key={key}
@@ -359,13 +435,7 @@ export function ClubMetasSection({
                       {overlayTotal > 0 && (
                         <div className="flex items-center justify-end gap-2 px-2 pt-1 text-[10px] text-muted-foreground">
                           <span>
-                            Soma: {groupPercentSum.toFixed(1)}%
-                          </span>
-                          <span>|</span>
-                          <span>
-                            {formatNumber(
-                              (groupPercentSum / 100) * groupOverlay,
-                            )}
+                            Soma clubes: {formatNumber(groupClubCharges)}
                           </span>
                         </div>
                       )}

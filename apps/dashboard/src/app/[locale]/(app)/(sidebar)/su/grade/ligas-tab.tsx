@@ -194,6 +194,8 @@ export function LigasTab({
             availableClubs={availableClubs}
             defaultWeekYear={dataWeekYear}
             defaultWeekNumber={dataWeekNumber}
+            weekStart={dataWeekStart}
+            weekEnd={dataWeekEnd}
             metaGroups={metaGroups}
             usingFallback={usingFallback}
             overlayTotal={overlayTotal}
