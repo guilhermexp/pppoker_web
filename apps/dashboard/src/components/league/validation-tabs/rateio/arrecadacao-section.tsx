@@ -303,9 +303,14 @@ export function ArrecadacaoSection({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* LEFT: Arrecadacao Real */}
           <Card className="p-4 space-y-3">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Arrecadacao Real
-            </span>
+            <div>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Arrecadacao Real
+              </span>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Baseado nos torneios selecionados e metas definidas na aba Overlay Clubes.
+              </p>
+            </div>
 
             {/* Summary cards */}
             {summary && (

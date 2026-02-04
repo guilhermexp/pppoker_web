@@ -11,6 +11,7 @@ import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import type {
+  MetaGroupData,
   OverlayDistributionClub,
   OverlayDistributionTournament,
   OverlaySelectionMap,
@@ -22,6 +23,7 @@ interface OverlayDistributionSectionProps {
   weekNumber?: number;
   weekStart?: string;
   weekEnd?: string;
+  metaGroups?: MetaGroupData[];
 }
 
 const STATUS_CONFIG = {
@@ -44,6 +46,7 @@ export function OverlayDistributionSection({
   weekNumber,
   weekStart,
   weekEnd,
+  metaGroups,
 }: OverlayDistributionSectionProps) {
   const trpc = useTRPC();
   const { toast } = useToast();
@@ -123,7 +126,30 @@ export function OverlayDistributionSection({
     }),
   );
 
-  // 5. Compute filtered summary based on selections
+  // 4b. Group selector state — default to first group (BR)
+  const defaultGroupId = metaGroups?.[0] ? (metaGroups[0].id ?? metaGroups[0].name) : null;
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(defaultGroupId);
+
+  // Keep in sync if metaGroups loads after initial render
+  useEffect(() => {
+    if (selectedGroupId === null && defaultGroupId) {
+      setSelectedGroupId(defaultGroupId);
+    }
+  }, [defaultGroupId, selectedGroupId]);
+
+  const selectedGroup = useMemo(() => {
+    if (!selectedGroupId || !metaGroups) return null;
+    return metaGroups.find((g) => (g.id ?? g.name) === selectedGroupId) ?? null;
+  }, [selectedGroupId, metaGroups]);
+
+  const groupMemberSuIds = useMemo(() => {
+    if (!selectedGroup) return null;
+    return new Set(selectedGroup.members.map((m) => m.superUnionId));
+  }, [selectedGroup]);
+
+  const groupPercent = selectedGroup ? selectedGroup.metaPercent / 100 : 1;
+
+  // 5. Compute filtered summary based on selections + group filter
   const computed = useMemo(() => {
     if (!data) return null;
 
@@ -134,18 +160,22 @@ export function OverlayDistributionSection({
       (t) => !selections[t.gameId]?.isSelected,
     );
 
-    // Selected = overlay repassado aos clubes
-    const totalClubCharges = selectedTournaments.reduce(
-      (sum, t) => sum + t.overlayAmount,
+    // Group-scaled overlay per tournament
+    const overlayForTournament = (t: OverlayDistributionTournament) =>
+      t.overlayAmount * groupPercent;
+
+    // Selected = overlay repassado aos clubes (scaled by group %)
+    const totalSelectedOverlay = selectedTournaments.reduce(
+      (sum, t) => sum + overlayForTournament(t),
       0,
     );
-    // Unselected = liga paga sozinha
-    const leagueRemainder = unselectedTournaments.reduce(
-      (sum, t) => sum + t.overlayAmount,
+    // Unselected = liga paga sozinha (scaled by group %)
+    const totalUnselectedOverlay = unselectedTournaments.reduce(
+      (sum, t) => sum + overlayForTournament(t),
       0,
     );
 
-    // Recompute club summary from selected only
+    // Recompute club summary from selected only, filtered by group members
     const clubAccum = new Map<
       string,
       {
@@ -161,6 +191,8 @@ export function OverlayDistributionSection({
 
     for (const t of selectedTournaments) {
       for (const club of t.clubDistribution) {
+        if (groupMemberSuIds && !groupMemberSuIds.has(club.superUnionId))
+          continue;
         const key = `${club.superUnionId}-${club.clubId}`;
         if (!clubAccum.has(key)) {
           clubAccum.set(key, {
@@ -190,16 +222,26 @@ export function OverlayDistributionSection({
       }))
       .sort((a, b) => b.totalCharge - a.totalCharge);
 
+    const totalClubCharges = clubSummary.reduce(
+      (sum, c) => sum + c.totalCharge,
+      0,
+    );
+
     const selectedCount = Object.values(selections).filter((s) => s?.isSelected).length;
+
+    const totalOverlayGroup =
+      data.summary.totalOverlayAmount * groupPercent;
 
     return {
       selectedCount,
-      totalOverlayAll: data.summary.totalOverlayAmount,
+      totalOverlayAll: Math.round(totalOverlayGroup * 100) / 100,
       totalClubCharges: Math.round(totalClubCharges * 100) / 100,
-      leagueRemainder: Math.round(leagueRemainder * 100) / 100,
+      leagueRemainder: Math.round(
+        (totalOverlayGroup - totalClubCharges) * 100,
+      ) / 100,
       clubSummary,
     };
-  }, [data, selections]);
+  }, [data, selections, groupPercent, groupMemberSuIds]);
 
   // 6. Dirty check — has user changed vs saved?
   const isDirty = useMemo(() => {
@@ -220,6 +262,7 @@ export function OverlayDistributionSection({
   // 7. Filters
   const [filterDay, setFilterDay] = useState<"all" | number>("all");
   const [filterHours, setFilterHours] = useState<Set<number>>(new Set());
+  const [sortBy, setSortBy] = useState<"hour" | "gtd">("hour");
 
   // Available days & hours from data
   const { availableDays, availableHours } = useMemo(() => {
@@ -240,15 +283,25 @@ export function OverlayDistributionSection({
     };
   }, [data]);
 
-  // Filtered tournaments for display
+  // Filtered + sorted tournaments for display
   const filteredTournaments = useMemo(() => {
     if (!data) return [];
-    return data.tournaments.filter((t) => {
+    const filtered = data.tournaments.filter((t) => {
       if (filterDay !== "all" && t.dayOfWeek !== filterDay) return false;
       if (filterHours.size > 0 && !filterHours.has(t.hour)) return false;
       return true;
     });
-  }, [data, filterDay, filterHours]);
+    if (sortBy === "gtd") {
+      filtered.sort((a, b) => b.gtdAmount - a.gtdAmount);
+    } else {
+      const daySort = (d: number) => (d === 0 ? 7 : d);
+      filtered.sort(
+        (a, b) =>
+          daySort(a.dayOfWeek) - daySort(b.dayOfWeek) || a.hour - b.hour,
+      );
+    }
+    return filtered;
+  }, [data, filterDay, filterHours, sortBy]);
 
   // Toggle helpers
   function toggleSelection(gameId: string) {
@@ -348,9 +401,49 @@ export function OverlayDistributionSection({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">
-          Distribuicao de Overlay por Clubes
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium">
+            Distribuicao de Overlay por Clubes
+          </span>
+          {metaGroups && metaGroups.length > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">Grupo:</span>
+              <button
+                type="button"
+                onClick={() => setSelectedGroupId(null)}
+                className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
+                  selectedGroupId === null
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                Todos
+              </button>
+              {metaGroups.map((g) => {
+                const gKey = g.id ?? g.name;
+                return (
+                  <button
+                    key={gKey}
+                    type="button"
+                    onClick={() =>
+                      setSelectedGroupId(
+                        selectedGroupId === gKey ? null : gKey,
+                      )
+                    }
+                    className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
+                      selectedGroupId === gKey
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {g.name}{" "}
+                    <span className="opacity-60">{g.metaPercent}%</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
         <span className="text-xs text-muted-foreground">
           S{weekNumber}/{weekYear} ({weekStart} a {weekEnd})
         </span>
@@ -373,7 +466,9 @@ export function OverlayDistributionSection({
         </Card>
         <Card>
           <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground">Total Overlay</p>
+            <p className="text-[10px] text-muted-foreground">
+              Total Overlay{selectedGroup ? ` (${selectedGroup.name} ${selectedGroup.metaPercent}%)` : ""}
+            </p>
             <p className="text-lg font-bold text-red-500">
               {formatNumber(computed?.totalOverlayAll ?? 0)}
             </p>
@@ -529,7 +624,32 @@ export function OverlayDistributionSection({
       {/* Tournament Table */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium">Torneios</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium">Torneios</span>
+            <span className="text-[10px] text-muted-foreground">Ordem:</span>
+            <button
+              type="button"
+              onClick={() => setSortBy("hour")}
+              className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                sortBy === "hour"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              Horario
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy("gtd")}
+              className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                sortBy === "gtd"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              Garantido
+            </button>
+          </div>
           {hasFilters && (
             <span className="text-xs text-muted-foreground">
               {filteredCount} de {totalCount}
@@ -550,6 +670,8 @@ export function OverlayDistributionSection({
                   [t.gameId]: value,
                 }))
               }
+              groupPercent={groupPercent}
+              groupMemberSuIds={groupMemberSuIds}
             />
           ))}
           {filteredCount === 0 && (
@@ -622,15 +744,28 @@ function TournamentRow({
   onToggle,
   metaPlayers,
   onMetaChange,
+  groupPercent,
+  groupMemberSuIds,
 }: {
   tournament: OverlayDistributionTournament;
   isSelected: boolean;
   onToggle: () => void;
   metaPlayers: number;
   onMetaChange: (value: number) => void;
+  groupPercent: number;
+  groupMemberSuIds: Set<number> | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const config = STATUS_CONFIG[tournament.status];
+
+  const scaledOverlay = tournament.overlayAmount * groupPercent;
+  const filteredClubs = groupMemberSuIds
+    ? tournament.clubDistribution.filter((c) =>
+        groupMemberSuIds.has(c.superUnionId),
+      )
+    : tournament.clubDistribution;
+  const filteredCharges = filteredClubs.reduce((s, c) => s + c.charge, 0);
+  const filteredLeagueRemainder = scaledOverlay - filteredCharges;
 
   return (
     <div
@@ -677,11 +812,11 @@ function TournamentRow({
             </Badge>
           )}
           <span className="ml-auto font-mono text-red-500 shrink-0">
-            {formatNumber(tournament.overlayAmount)}
+            {formatNumber(scaledOverlay)}
           </span>
-          {isSelected && tournament.totalClubCharges > 0 && (
+          {isSelected && filteredCharges > 0 && (
             <span className="font-mono text-amber-500 shrink-0">
-              -{formatNumber(tournament.totalClubCharges)}
+              -{formatNumber(filteredCharges)}
             </span>
           )}
           <div className="flex items-center gap-2 ml-3">
@@ -713,7 +848,7 @@ function TournamentRow({
         </button>
       </div>
 
-      {expanded && isSelected && tournament.clubDistribution.length > 0 && (
+      {expanded && isSelected && filteredClubs.length > 0 && (
         <div className="px-3 pb-2">
           <table className="w-full text-[11px]">
             <thead>
@@ -727,7 +862,7 @@ function TournamentRow({
               </tr>
             </thead>
             <tbody>
-              {tournament.clubDistribution.map((club) => (
+              {filteredClubs.map((club) => (
                 <ClubDistRow
                   key={`${club.superUnionId}-${club.clubId}`}
                   club={club}
@@ -740,7 +875,7 @@ function TournamentRow({
                   Liga paga
                 </td>
                 <td className="px-2 py-1 text-right font-mono">
-                  {formatNumber(tournament.leagueRemainder)}
+                  {formatNumber(filteredLeagueRemainder)}
                 </td>
               </tr>
             </tfoot>
@@ -751,16 +886,16 @@ function TournamentRow({
       {expanded && !isSelected && (
         <div className="px-3 pb-2 text-[11px] text-muted-foreground">
           Torneio nao selecionado. Liga paga 100% do overlay (
-          {formatNumber(tournament.overlayAmount)}).
+          {formatNumber(scaledOverlay)}).
         </div>
       )}
 
       {expanded &&
         isSelected &&
-        tournament.clubDistribution.length === 0 && (
+        filteredClubs.length === 0 && (
           <div className="px-3 pb-2 text-[11px] text-muted-foreground">
             Nenhuma meta definida para este horario. Liga paga{" "}
-            {formatNumber(tournament.overlayAmount)}.
+            {formatNumber(scaledOverlay)}.
           </div>
         )}
     </div>

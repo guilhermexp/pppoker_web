@@ -212,9 +212,7 @@ export function ClubMetasSection({
     const init: Record<string, boolean> = {};
     if (metaGroups) {
       for (const g of metaGroups) {
-        if (g.name.toUpperCase() === "SA") {
-          init[g.id] = true;
-        }
+        init[g.id] = true;
       }
     }
     return init;
@@ -236,7 +234,7 @@ export function ClubMetasSection({
         for (const c of clubs) {
           const key = `${c.ligaId}-${c.clubeId}`;
           if (next[key] === undefined) {
-            next[key] = true;
+            next[key] = false;
           }
         }
       }
@@ -367,10 +365,7 @@ export function ClubMetasSection({
           <>
             {(() => {
               const groupSummaries = clubsByGroup.groups.map(({ group, clubs }) => {
-                const isBrGroup = group.name.toUpperCase() === "BR";
-                const groupOverlay = isBrGroup
-                  ? overlayChargeSummary.selectedOverlayTotal
-                  : (group.metaPercent / 100) * overlayTotal;
+                const groupOverlay = (group.metaPercent / 100) * overlayTotal;
                 const groupClubCharges = clubs.reduce((sum, c) => {
                   const key = `${c.ligaId}-${c.clubeId}`;
                   if (!selectedClubs[key]) return sum;
@@ -379,9 +374,7 @@ export function ClubMetasSection({
                     (overlayChargeSummary.clubChargesByKey.get(key) ?? 0)
                   );
                 }, 0);
-                const leaguePays = isBrGroup
-                  ? Math.max(overlayTotal - overlayChargeSummary.selectedOverlayTotal, 0)
-                  : Math.max(groupOverlay - groupClubCharges, 0);
+                const leaguePays = Math.max(groupOverlay - groupClubCharges, 0);
                 return {
                   group,
                   clubs,
@@ -481,9 +474,6 @@ export function ClubMetasSection({
                           </button>
                           {overlayTotal > 0 && (
                             <div className="flex items-center justify-between px-2 text-[10px] text-muted-foreground">
-                              <span>
-                                Total: {formatNumber(groupOverlay)}
-                              </span>
                               <span>
                                 Clubes: {formatNumber(groupClubCharges)}
                               </span>

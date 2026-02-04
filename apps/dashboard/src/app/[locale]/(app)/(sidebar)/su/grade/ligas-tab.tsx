@@ -161,10 +161,10 @@ export function LigasTab({
           Grupos Meta
         </TabsTrigger>
         <TabsTrigger
-          value="club-metas"
+          value="overlay-clubes"
           className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-3 py-2 text-xs"
         >
-          Metas Clube
+          Definir Metas
         </TabsTrigger>
         <TabsTrigger
           value="arrecadacao"
@@ -173,10 +173,10 @@ export function LigasTab({
           Arrecadacao
         </TabsTrigger>
         <TabsTrigger
-          value="overlay-clubes"
+          value="club-metas"
           className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-3 py-2 text-xs"
         >
-          Overlay Clubes
+          Acerto
         </TabsTrigger>
       </TabsList>
 
@@ -219,6 +219,7 @@ export function LigasTab({
             weekNumber={dataWeekNumber}
             weekStart={dataWeekStart}
             weekEnd={dataWeekEnd}
+            metaGroups={metaGroups}
           />
         </TabsContent>
       </div>
