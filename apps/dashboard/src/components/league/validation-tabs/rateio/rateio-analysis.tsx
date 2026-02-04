@@ -103,6 +103,10 @@ export function RateioAnalysis({
         jogo.totalGeral?.buyinFichas ||
         jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) ||
         0;
+      const jogoBuyinTicket =
+        jogo.totalGeral?.buyinTicket ||
+        jogo.jogadores?.reduce((s, j) => s + (j.buyinTicket ?? 0), 0) ||
+        0;
       const jogoTaxa =
         jogo.totalGeral?.taxa ||
         jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) ||
@@ -112,7 +116,7 @@ export function RateioAnalysis({
         gtdTourneysCount++;
         gtdTotalTodos += gtd;
 
-        const buyinLiquido = jogoBuyin - jogoTaxa;
+        const buyinLiquido = jogoBuyin + jogoBuyinTicket - jogoTaxa;
         const resultado = buyinLiquido - gtd;
         const temOverlay = resultado < 0;
 
@@ -149,7 +153,7 @@ export function RateioAnalysis({
 
           for (const jogador of jogo.jogadores ?? []) {
             const ligaId = jogador.ligaId;
-            const liquido = (jogador.buyinFichas ?? 0) - (jogador.taxa ?? 0);
+            const liquido = (jogador.buyinFichas ?? 0) + (jogador.buyinTicket ?? 0) - (jogador.taxa ?? 0);
 
             // Find which group this liga belongs to
             for (const g of metaGroups) {

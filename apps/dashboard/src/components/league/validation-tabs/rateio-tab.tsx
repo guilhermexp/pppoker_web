@@ -14,6 +14,7 @@ import {
 } from "@midpoker/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { getWeek, getYear } from "date-fns";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { Code, Download, FileText, Loader2 } from "lucide-react";
@@ -64,10 +65,44 @@ export function LeagueRateioTab({
     ),
   });
 
+  // Extract available leagues from geralPPST import data (moved up for fallback)
+  const availableLeagues: AvailableLeague[] = useMemo(() => {
+    const seen = new Map<number, AvailableLeague>();
+    for (const bloco of geralPPST) {
+      for (const liga of bloco.ligas) {
+        if (!seen.has(liga.ligaId)) {
+          seen.set(liga.ligaId, {
+            ligaId: liga.ligaId,
+            ligaNome: liga.ligaNome,
+            superUnionId: liga.superUnionId ?? null,
+          });
+        }
+      }
+    }
+    return Array.from(seen.values());
+  }, [geralPPST]);
+
+  // Build dynamic fallback groups: BR has fixed members, SA gets all remaining leagues
+  const dynamicFallbackGroups: MetaGroupData[] = useMemo(() => {
+    const brMemberIds = new Set(FALLBACK_GROUPS[0].members.map((m) => m.superUnionId));
+
+    const saMembers = availableLeagues
+      .filter((l) => !brMemberIds.has(l.ligaId))
+      .map((l) => ({
+        superUnionId: l.ligaId,
+        displayName: l.ligaNome,
+      }));
+
+    return [
+      { ...FALLBACK_GROUPS[0] },
+      { ...FALLBACK_GROUPS[1], members: saMembers },
+    ];
+  }, [availableLeagues]);
+
   // Build enriched meta groups with members + time slots for analysis
   const analysisGroups: MetaGroupData[] = useMemo(() => {
     if (!dbGroups || dbGroups.length === 0) {
-      return FALLBACK_GROUPS;
+      return dynamicFallbackGroups;
     }
 
     const enriched = groupDetailQueries
@@ -94,12 +129,12 @@ export function LeagueRateioTab({
         };
       });
 
-    return enriched.length > 0 ? enriched : FALLBACK_GROUPS;
-  }, [dbGroups, groupDetailQueries]);
+    return enriched.length > 0 ? enriched : dynamicFallbackGroups;
+  }, [dbGroups, groupDetailQueries, dynamicFallbackGroups]);
 
   const usingFallback = !dbGroups || dbGroups.length === 0;
 
-  // Compute overlay stats from jogosPPST
+  // Compute overlay stats from jogosPPST (same formula as jogos-ppst-tab)
   const overlayStats = useMemo(() => {
     let overlayCount = 0;
     let overlayTotal = 0;
@@ -107,20 +142,14 @@ export function LeagueRateioTab({
 
     for (const jogo of jogosPPST) {
       const gtd = jogo.metadata?.premiacaoGarantida ?? 0;
-      const isPPST =
-        jogo.metadata?.tipoJogo?.toUpperCase()?.startsWith("PPST") ?? false;
 
-      if (isPPST && gtd > 0) {
+      if (gtd > 0) {
         gtdCount++;
-        const jogoBuyin =
-          jogo.totalGeral?.buyinFichas ||
-          jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) ||
-          0;
-        const jogoTaxa =
-          jogo.totalGeral?.taxa ||
-          jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) ||
-          0;
-        const resultado = jogoBuyin - jogoTaxa - gtd;
+        const jogoBuyinFichas = jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) ?? 0;
+        const jogoBuyinTicket = jogo.jogadores?.reduce((s, j) => s + (j.buyinTicket ?? 0), 0) ?? 0;
+        const jogoTaxa = jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) ?? 0;
+        const buyinLiquido = jogoBuyinFichas + jogoBuyinTicket - jogoTaxa;
+        const resultado = buyinLiquido - gtd;
         if (resultado < 0) {
           overlayCount++;
           overlayTotal += Math.abs(resultado);
@@ -131,22 +160,6 @@ export function LeagueRateioTab({
     return { overlayCount, overlayTotal, gtdCount };
   }, [jogosPPST]);
 
-  // Extract available leagues from geralPPST import data
-  const availableLeagues: AvailableLeague[] = useMemo(() => {
-    const seen = new Map<number, AvailableLeague>();
-    for (const bloco of geralPPST) {
-      for (const liga of bloco.ligas) {
-        if (!seen.has(liga.ligaId)) {
-          seen.set(liga.ligaId, {
-            ligaId: liga.ligaId,
-            ligaNome: liga.ligaNome,
-            superUnionId: liga.superUnionId ?? null,
-          });
-        }
-      }
-    }
-    return Array.from(seen.values());
-  }, [geralPPST]);
 
   // Extract available clubs from jogosPPST import data
   const availableClubs: AvailableClub[] = useMemo(() => {
@@ -171,6 +184,27 @@ export function LeagueRateioTab({
     }
     return Array.from(seen.values());
   }, [jogosPPST, availableLeagues]);
+
+  // Extract week number from spreadsheet data (first game date)
+  // dataInicio is in YYYY/MM/DD format
+  const spreadsheetWeek = useMemo(() => {
+    for (const jogo of jogosPPST) {
+      const dateStr = jogo.metadata?.dataInicio;
+      if (dateStr) {
+        const date = new Date(dateStr.replace(/\//g, "-"));
+        if (!Number.isNaN(date.getTime())) {
+          return {
+            weekYear: getYear(date),
+            weekNumber: getWeek(date, {
+              weekStartsOn: 0,
+              firstWeekContainsDate: 1,
+            }),
+          };
+        }
+      }
+    }
+    return null;
+  }, [jogosPPST]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -405,7 +439,7 @@ export function LeagueRateioTab({
       <div ref={contentRef} data-canvas-content>
         {/* Overlay Stats - visible across all sub-tabs */}
         {overlayStats.gtdCount > 0 && (
-          <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 mt-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 mt-4 rounded-lg bg-muted/30">
             <div className="flex items-center gap-1.5 text-xs">
               <span className="text-muted-foreground">
                 Torneios c/ overlay:
@@ -454,9 +488,8 @@ export function LeagueRateioTab({
           <TabsContent value="club-metas" className="mt-0">
             <ClubMetasSection
               availableClubs={availableClubs}
-              metaGroups={analysisGroups}
-              usingFallback={usingFallback}
-              overlayTotal={overlayStats.overlayTotal}
+              defaultWeekYear={spreadsheetWeek?.weekYear}
+              defaultWeekNumber={spreadsheetWeek?.weekNumber}
             />
           </TabsContent>
         </div>

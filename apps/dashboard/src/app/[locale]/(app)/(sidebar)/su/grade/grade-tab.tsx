@@ -41,7 +41,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Chave do localStorage para dados da grade
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
-const REALIZED_TOURNAMENTS_KEY = "ppst-realized-tournaments";
 
 // Tipo para torneio salvo
 export interface StoredTournament {
@@ -231,28 +230,19 @@ function DaySection({
   );
 }
 
-export function GradeTab() {
+export function GradeTab({
+  realizedData,
+}: {
+  realizedData?: StoredRealizedData | null;
+}) {
   const [data, setData] = useState<TournamentScheduleData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [realizedData, setRealizedData] = useState<StoredRealizedData | null>(
-    null,
-  );
   const [gradeFilter, setGradeFilter] = useState<
     "all" | "com-gtd" | "sem-gtd" | "overlay"
   >("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  // Ler dados realizados do localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(REALIZED_TOURNAMENTS_KEY);
-      if (stored) setRealizedData(JSON.parse(stored));
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -292,11 +282,6 @@ export function GradeTab() {
   const handleClear = useCallback(() => {
     setData(null);
     setError(null);
-  }, []);
-
-  const handleClearRealized = useCallback(() => {
-    localStorage.removeItem(REALIZED_TOURNAMENTS_KEY);
-    setRealizedData(null);
   }, []);
 
   const groupedEvents = data ? groupEventsByDay(data.events) : {};
@@ -445,6 +430,24 @@ export function GradeTab() {
     );
   }, [data, realizedData]);
 
+  // Stats for PPST realized data
+  const realizedStats = useMemo(() => {
+    if (!realizedData?.tournaments) return null;
+    let count = 0;
+    let withGtd = 0;
+    let overlayCount = 0;
+    let totalOverlay = 0;
+    for (const t of realizedData.tournaments) {
+      count++;
+      if (t.gtdFichas > 0) withGtd++;
+      if (t.overlay < 0) {
+        overlayCount++;
+        totalOverlay += t.overlay;
+      }
+    }
+    return { count, withGtd, overlayCount, totalOverlay };
+  }, [realizedData]);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Hidden file input */}
@@ -456,31 +459,6 @@ export function GradeTab() {
         className="hidden"
       />
 
-      {/* Header - only show when data is loaded */}
-      {data && (
-        <div className="flex items-center justify-end gap-2">
-          {realizedData && (
-            <Button variant="ghost" size="sm" onClick={handleClearRealized}>
-              <Icons.Close className="w-4 h-4 mr-1" />
-              Limpar confrontação
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={handleClear}>
-            <Icons.Close className="w-4 h-4 mr-1" />
-            Limpar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading}
-          >
-            <Icons.Import className="w-4 h-4 mr-2" />
-            {isLoading ? "Carregando..." : "Importar Outra"}
-          </Button>
-        </div>
-      )}
-
       {/* Error */}
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20">
@@ -489,18 +467,157 @@ export function GradeTab() {
         </div>
       )}
 
-      {/* Content */}
-      {data ? (
-        <div className="space-y-6">
-          {/* Week Info & Summary */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border">
-              <Icons.CalendarMonth className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">
-                {data.weekInfo.startDate} - {data.weekInfo.endDate}
-              </span>
+      {/* Two source cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Grade de Torneios card */}
+        <Card className="flex flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-500/10">
+                  <Icons.CalendarMonth className="w-4 h-4 text-blue-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Grade de Torneios</CardTitle>
+                  <CardDescription>
+                    {data
+                      ? `${data.weekInfo.startDate} - ${data.weekInfo.endDate}`
+                      : "Programação semanal PPST"}
+                  </CardDescription>
+                </div>
+              </div>
+              {data && (
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={handleClear}>
+                    <Icons.Close className="w-4 h-4 mr-1" />
+                    Limpar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading}
+                  >
+                    <Icons.Import className="w-4 h-4 mr-1" />
+                    Outra
+                  </Button>
+                </div>
+              )}
             </div>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {data ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 rounded-lg dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icons.PlayOutline className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground font-medium">Torneios</span>
+                  </div>
+                  <p className="text-xl font-mono font-bold">{formatNumber(totals.totalTournaments)}</p>
+                  {weekInfo.scheduleWeek && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Semana {weekInfo.scheduleWeek}</p>
+                  )}
+                </div>
+                <div className="p-4 rounded-lg dark:bg-[#00C969]/5 border border-[#00C969]/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icons.TrendingUp className="w-4 h-4 text-[#00C969]" />
+                    <span className="text-xs text-muted-foreground font-medium">GTD Total</span>
+                  </div>
+                  <p className="text-xl font-mono font-bold text-[#00C969]">{formatNumber(totals.totalGTD)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-mono">R$ {formatNumber(totals.totalGTD * 5)}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed p-6 text-center">
+                <Icons.CalendarMonth className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground mb-3">
+                  Importe a planilha XLSX com a grade semanal.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                >
+                  <Icons.Import className="w-4 h-4 mr-2" />
+                  Upload XLSX
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
+        {/* Jogos PPST card */}
+        <Card className="flex flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-md bg-amber-500/10">
+                  <Icons.SyncAlt className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Jogos PPST</CardTitle>
+                  <CardDescription>
+                    {realizedData?.period
+                      ? `${realizedData.period.start} - ${realizedData.period.end}`
+                      : "Dados importados do sistema"}
+                  </CardDescription>
+                </div>
+              </div>
+              {realizedStats && realizedStats.overlayCount > 0 && (
+                <Badge
+                  variant="outline"
+                  className="bg-red-500/10 text-red-500 border-red-500/20 text-sm px-3 py-1"
+                >
+                  {realizedStats.overlayCount} overlays
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {realizedStats ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 rounded-lg dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icons.PlayOutline className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground font-medium">Torneios</span>
+                  </div>
+                  <p className="text-xl font-mono font-bold">{realizedStats.count}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{realizedStats.withGtd} com GTD</p>
+                </div>
+                <div className={`p-4 rounded-lg ${realizedStats.overlayCount > 0 ? "dark:bg-red-500/5 border border-red-500/20" : "dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]"}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icons.TrendingDown className={`w-4 h-4 ${realizedStats.overlayCount > 0 ? "text-red-500" : "text-muted-foreground"}`} />
+                    <span className="text-xs text-muted-foreground font-medium">Overlay</span>
+                  </div>
+                  <p className={`text-xl font-mono font-bold ${realizedStats.overlayCount > 0 ? "text-red-500" : ""}`}>
+                    {realizedStats.overlayCount > 0 ? formatNumber(realizedStats.totalOverlay) : "0"}
+                  </p>
+                  {realizedStats.overlayCount > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                      {realizedStats.overlayCount} torneios
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed p-6 text-center">
+                <Icons.AlertCircle className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Importe e aprove dados PPST na tela de{" "}
+                  <span className="font-medium text-foreground">Importação</span>.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Content below cards (when schedule data exists) */}
+      {data && (
+        <div className="space-y-6">
+          {/* Week Info & Filters */}
+          <div className="flex items-center gap-4 flex-wrap">
             {weekInfo.scheduleWeek && (
               <div
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
@@ -520,36 +637,6 @@ export function GradeTab() {
                 )}
               </div>
             )}
-
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border">
-              <Icons.PlayOutline className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">
-                <span className="font-bold">
-                  {formatNumber(totals.totalTournaments)}
-                </span>{" "}
-                torneios
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
-              <Icons.TrendingUp className="w-4 h-4 text-green-500" />
-              <span className="text-sm text-green-600">
-                GTD Total:{" "}
-                <span className="font-bold">
-                  {formatNumber(totals.totalGTD)}
-                </span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border">
-              <span className="text-sm text-muted-foreground">
-                R${" "}
-                <span className="font-bold text-foreground">
-                  {formatNumber(totals.totalGTD * 5)}
-                </span>
-                <span className="text-xs ml-1 opacity-60">(×5)</span>
-              </span>
-            </div>
 
             {/* Filtro */}
             <div className="flex items-center gap-1 ml-auto">
@@ -878,36 +965,6 @@ export function GradeTab() {
               })}
             </CardContent>
           </Card>
-        </div>
-      ) : (
-        /* Empty State */
-        <div className="h-[calc(100vh-350px)] flex items-center justify-center">
-          <div className="relative z-20 m-auto flex w-full max-w-[380px] flex-col">
-            <div className="flex w-full flex-col relative text-center">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/50 mx-auto mb-4">
-                <Icons.CalendarMonth className="w-6 h-6 text-muted-foreground" />
-              </div>
-
-              <h2 className="font-medium text-lg mb-2">
-                Importar grade de torneios
-              </h2>
-
-              <p className="text-sm text-muted-foreground mb-6">
-                Faça upload da planilha XLSX com a programação semanal de
-                torneios PPST.
-              </p>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-              >
-                <Icons.Import className="w-4 h-4 mr-2" />
-                Upload XLSX
-              </Button>
-            </div>
-          </div>
         </div>
       )}
     </div>

@@ -176,6 +176,9 @@ export type OverlayDistributionResult = {
 export type OverlaySelectionMap = Record<string, boolean>;
 
 // Fallback groups when no DB groups are configured
+// BR is pre-defined (fixed members). SA has NO pre-defined members —
+// its members are populated dynamically from the imported spreadsheet
+// (all leagues not in BR).
 export const FALLBACK_GROUPS: MetaGroupData[] = [
   {
     id: "fallback-br",
@@ -195,13 +198,7 @@ export const FALLBACK_GROUPS: MetaGroupData[] = [
     name: "SA",
     metaPercent: 40,
     isActive: true,
-    members: [
-      { superUnionId: 1534, displayName: "Colombiana", fallbackPercent: 12 },
-      { superUnionId: 1578, displayName: "Latinos", fallbackPercent: 12 },
-      { superUnionId: 2006, displayName: "Evolution.", fallbackPercent: 8 },
-      { superUnionId: 2126, displayName: "Nuts", fallbackPercent: 4 },
-      { superUnionId: 2343, displayName: "Golden", fallbackPercent: 2 },
-    ],
+    members: [],
     timeSlots: [],
   },
 ];

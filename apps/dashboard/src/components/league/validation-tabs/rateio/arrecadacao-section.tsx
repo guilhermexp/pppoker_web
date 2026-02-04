@@ -1,11 +1,12 @@
 "use client";
 
+import { useTRPC } from "@/trpc/client";
 import { Card, CardContent } from "@midpoker/ui/card";
-import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
 import type { MetaGroupData } from "./rateio-utils";
 import { formatNumber } from "./rateio-utils";
-
-const OVERLAY_CLUBS_STORAGE_KEY = "ppst-overlay-clubs";
 
 interface ClubData {
   clubeId: number;
@@ -18,39 +19,32 @@ interface ClubData {
   overlayGameCount: number;
 }
 
-interface OverlayClubsData {
-  clubs: ClubData[];
-  summary: {
-    totalOverlayGames: number;
-    totalOverlayAmount: number;
-    totalBuyin: number;
-    totalTaxa: number;
-    totalLiquido: number;
-    totalClubs: number;
-  };
-  weekNumber: number;
-  period: { start: string; end: string };
-  savedAt: string;
-}
-
 interface ArrecadacaoSectionProps {
   metaGroups?: MetaGroupData[];
 }
 
 export function ArrecadacaoSection({ metaGroups }: ArrecadacaoSectionProps) {
-  const [data, setData] = useState<OverlayClubsData | null>(null);
+  const trpc = useTRPC();
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
 
-  // Read per-club overlay data from localStorage (same source as Overlays Internos)
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(OVERLAY_CLUBS_STORAGE_KEY);
-      if (stored) {
-        setData(JSON.parse(stored));
+  const toggleGroup = (groupId: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
       }
-    } catch {
-      /* ignore */
-    }
-  }, []);
+      return next;
+    });
+  };
+
+  // Read per-club overlay data from the database via tRPC
+  const { data } = useQuery(
+    trpc.su.analytics.getOverlayClubs.queryOptions(undefined),
+  );
 
   const clubs = data?.clubs ?? [];
   const summary = data?.summary;
@@ -113,7 +107,7 @@ export function ArrecadacaoSection({ metaGroups }: ArrecadacaoSectionProps) {
       {/* Summary cards */}
       {summary && clubs.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card>
+          <Card className="border-0 bg-muted/10">
             <CardContent className="p-3">
               <p className="text-[10px] text-muted-foreground">
                 Torneios c/ Overlay
@@ -121,7 +115,7 @@ export function ArrecadacaoSection({ metaGroups }: ArrecadacaoSectionProps) {
               <p className="text-lg font-bold">{summary.totalOverlayGames}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-0 bg-muted/10">
             <CardContent className="p-3">
               <p className="text-[10px] text-muted-foreground">Total Overlay</p>
               <p className="text-lg font-bold text-red-500">
@@ -129,7 +123,7 @@ export function ArrecadacaoSection({ metaGroups }: ArrecadacaoSectionProps) {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-0 bg-muted/10">
             <CardContent className="p-3">
               <p className="text-[10px] text-muted-foreground">
                 Arrecadado Liquido
@@ -139,7 +133,7 @@ export function ArrecadacaoSection({ metaGroups }: ArrecadacaoSectionProps) {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-0 bg-muted/10">
             <CardContent className="p-3">
               <p className="text-[10px] text-muted-foreground">
                 Clubes Participantes
@@ -152,14 +146,15 @@ export function ArrecadacaoSection({ metaGroups }: ArrecadacaoSectionProps) {
 
       {/* Empty state */}
       {clubs.length === 0 && (
-        <div className="text-center py-6 text-sm text-muted-foreground border rounded-lg">
-          Nenhum dado de overlay disponivel. Importe e valide dados na aba de importacao.
+        <div className="text-center py-6 text-sm text-muted-foreground rounded-lg">
+          Nenhum dado de overlay disponivel. Importe e valide dados na aba de
+          importacao.
         </div>
       )}
 
       {/* Table by club */}
       {clubs.length > 0 && (
-        <div className="border rounded-lg overflow-hidden">
+        <div className="rounded-lg overflow-hidden">
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-muted/50 text-left">
@@ -174,7 +169,12 @@ export function ArrecadacaoSection({ metaGroups }: ArrecadacaoSectionProps) {
             </thead>
             <tbody>
               {clubsByGroup
-                ? renderGroupedRows(clubsByGroup, totalLiquido)
+                ? renderGroupedRows(
+                    clubsByGroup,
+                    totalLiquido,
+                    collapsedGroups,
+                    toggleGroup,
+                  )
                 : clubs.map((club) => (
                     <ClubRow
                       key={`${club.ligaId}-${club.clubeId}`}
@@ -225,7 +225,7 @@ function ClubRow({
 }) {
   const pct = totalLiquido > 0 ? (club.liquido / totalLiquido) * 100 : 0;
   return (
-    <tr className={className ?? "border-t border-border/50"}>
+    <tr className={className ?? "border-t border-white/[0.04]"}>
       <td className="px-3 py-1.5">
         <span className="font-medium">{club.clubeNome}</span>
         <span className="text-muted-foreground ml-1 text-[9px]">
@@ -256,23 +256,48 @@ function renderGroupedRows(
     unassigned: ClubData[];
   },
   totalLiquido: number,
+  collapsedGroups: Set<string>,
+  toggleGroup: (id: string) => void,
 ) {
   const rows: React.ReactNode[] = [];
 
-  for (const { group, clubs: groupClubs } of groupedData.groups) {
+  const sortedGroups = [...groupedData.groups].sort((a, b) =>
+    a.group.name.localeCompare(b.group.name),
+  );
+
+  for (let i = 0; i < sortedGroups.length; i++) {
+    const { group, clubs: groupClubs } = sortedGroups[i];
     const groupLiquido = groupClubs.reduce((s, c) => s + c.liquido, 0);
     const groupPct =
       totalLiquido > 0 ? (groupLiquido / totalLiquido) * 100 : 0;
+    const isCollapsed = collapsedGroups.has(group.id);
+
+    // Spacer between groups
+    if (i > 0) {
+      rows.push(
+        <tr key={`spacer-${group.id}`}>
+          <td className="h-6" colSpan={7} />
+        </tr>,
+      );
+    }
 
     rows.push(
       <tr
         key={`group-${group.id}`}
-        className="bg-muted/40 border-t border-border"
+        className="bg-muted/40 cursor-pointer select-none hover:bg-muted/60"
+        onClick={() => toggleGroup(group.id)}
       >
         <td className="px-3 py-1.5 font-medium" colSpan={4}>
-          {group.name}
-          <span className="text-muted-foreground ml-2 font-normal">
-            ({groupClubs.length} clubes)
+          <span className="inline-flex items-center gap-1.5">
+            {isCollapsed ? (
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            {group.name}
+            <span className="text-muted-foreground font-normal">
+              ({groupClubs.length} clubes)
+            </span>
           </span>
         </td>
         <td className="px-3 py-1.5 text-right font-mono font-medium">
@@ -285,42 +310,64 @@ function renderGroupedRows(
       </tr>,
     );
 
-    for (const club of groupClubs) {
-      rows.push(
-        <ClubRow
-          key={`${club.ligaId}-${club.clubeId}`}
-          club={club}
-          totalLiquido={totalLiquido}
-          className="border-t border-border/30"
-        />,
-      );
+    if (!isCollapsed) {
+      for (const club of groupClubs) {
+        rows.push(
+          <ClubRow
+            key={`${club.ligaId}-${club.clubeId}`}
+            club={club}
+            totalLiquido={totalLiquido}
+            className="border-t border-white/[0.04]"
+          />,
+        );
+      }
     }
   }
 
   if (groupedData.unassigned.length > 0) {
+    const isCollapsed = collapsedGroups.has("unassigned");
+
+    if (sortedGroups.length > 0) {
+      rows.push(
+        <tr key="spacer-unassigned">
+          <td className="h-6" colSpan={7} />
+        </tr>,
+      );
+    }
+
     rows.push(
       <tr
         key="group-unassigned"
-        className="bg-muted/40 border-t border-border"
+        className="bg-muted/40 cursor-pointer select-none hover:bg-muted/60"
+        onClick={() => toggleGroup("unassigned")}
       >
         <td className="px-3 py-1.5 font-medium" colSpan={7}>
-          Sem Grupo
-          <span className="text-muted-foreground ml-2 font-normal">
-            ({groupedData.unassigned.length} clubes)
+          <span className="inline-flex items-center gap-1.5">
+            {isCollapsed ? (
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            Sem Grupo
+            <span className="text-muted-foreground font-normal">
+              ({groupedData.unassigned.length} clubes)
+            </span>
           </span>
         </td>
       </tr>,
     );
 
-    for (const club of groupedData.unassigned) {
-      rows.push(
-        <ClubRow
-          key={`unassigned-${club.ligaId}-${club.clubeId}`}
-          club={club}
-          totalLiquido={totalLiquido}
-          className="border-t border-border/30"
-        />,
-      );
+    if (!isCollapsed) {
+      for (const club of groupedData.unassigned) {
+        rows.push(
+          <ClubRow
+            key={`unassigned-${club.ligaId}-${club.clubeId}`}
+            club={club}
+            totalLiquido={totalLiquido}
+            className="border-t border-white/[0.04]"
+          />,
+        );
+      }
     }
   }
 

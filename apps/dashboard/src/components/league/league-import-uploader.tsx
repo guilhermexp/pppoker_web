@@ -27,7 +27,6 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
 import { LeagueImportValidationModal } from "./league-import-validation-modal";
-import { LeagueImportProgressModal } from "./league-import-progress-modal";
 import { SUImportsList } from "../su/su-imports-list";
 
 // ============================================================================
@@ -1409,10 +1408,9 @@ export function LeagueImportUploader() {
   const [validationResult, setValidationResult] =
     useState<LeagueValidationResult | null>(null);
   const [showValidationModal, setShowValidationModal] = useState(false);
-  const [showProgressModal, setShowProgressModal] = useState(false);
-  const [currentImportId, setCurrentImportId] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const toastIdRef = useRef<string | null>(null);
+  const importToastDismissRef = useRef<(() => void) | null>(null);
 
   // Mutations for saving data
   const createImportMutation = useMutation(
@@ -1430,11 +1428,13 @@ export function LeagueImportUploader() {
   const processImportMutation = useMutation(
     trpc.su.imports.process.mutationOptions({
       onSuccess: (data) => {
+        importToastDismissRef.current?.();
+        importToastDismissRef.current = null;
+        setIsProcessing(false);
         toast({
           title: "Importação concluída!",
           description: `${data.stats.totalLeagues} ligas, ${data.stats.totalGamesPPST} jogos PPST, ${data.stats.totalGamesPPSR} jogos PPSR processados.`,
         });
-        // Invalidate queries to refresh data
         queryClient.invalidateQueries({
           queryKey: trpc.su.imports.list.queryKey(),
         });
@@ -1446,6 +1446,9 @@ export function LeagueImportUploader() {
         });
       },
       onError: (error) => {
+        importToastDismissRef.current?.();
+        importToastDismissRef.current = null;
+        setIsProcessing(false);
         toast({
           variant: "destructive",
           title: "Erro ao processar importação",
@@ -1627,13 +1630,20 @@ export function LeagueImportUploader() {
         qualityScore: validationResult.qualityScore,
       });
 
-      // Step 2: Save import ID and show progress modal
+      // Step 2: Show progress toast and start processing
       if (!importRecord?.id) {
         throw new Error("Failed to create import record");
       }
-      setCurrentImportId(importRecord.id);
       setShowValidationModal(false);
-      setShowProgressModal(true);
+
+      const { dismiss } = toast({
+        variant: "progress",
+        title: "Processando importação...",
+        description: parsedData.fileName,
+        progress: 40,
+        duration: Number.POSITIVE_INFINITY,
+      });
+      importToastDismissRef.current = dismiss;
 
       // Step 3: Start processing in background (don't await)
       processImportMutation.mutate({
@@ -1659,6 +1669,7 @@ export function LeagueImportUploader() {
     validationResult,
     createImportMutation,
     processImportMutation,
+    toast,
   ]);
 
   const handleReject = useCallback(() => {
@@ -1666,31 +1677,6 @@ export function LeagueImportUploader() {
     setParsedData(null);
     setValidationResult(null);
   }, []);
-
-  const handleProgressComplete = useCallback(() => {
-    setIsProcessing(false);
-    setCurrentImportId(null);
-    queryClient.invalidateQueries({
-      queryKey: trpc.su.imports.list.queryKey(),
-    });
-    toast({
-      title: "Importação concluída!",
-      description: "Seus dados foram processados com sucesso.",
-    });
-  }, [queryClient, trpc.su.imports.list, toast]);
-
-  const handleProgressError = useCallback(
-    (error: string) => {
-      setIsProcessing(false);
-      setCurrentImportId(null);
-      toast({
-        variant: "destructive",
-        title: "Erro na importação",
-        description: error,
-      });
-    },
-    [toast],
-  );
 
   return (
     <>
@@ -1771,14 +1757,6 @@ export function LeagueImportUploader() {
         />
       )}
 
-      {/* Progress modal - shows real-time import progress */}
-      <LeagueImportProgressModal
-        open={showProgressModal}
-        onOpenChange={setShowProgressModal}
-        importId={currentImportId}
-        onComplete={handleProgressComplete}
-        onError={handleProgressError}
-      />
     </>
   );
 }

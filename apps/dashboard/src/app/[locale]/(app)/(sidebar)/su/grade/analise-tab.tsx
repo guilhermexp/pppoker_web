@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  type SAOverlayData,
-  parseSAOverlaySpreadsheet,
-} from "@/lib/league/overlay-spreadsheet-parser";
-import type { StoredRealizedData } from "@/lib/league/tournament-matching";
-import { matchTournaments } from "@/lib/league/tournament-matching";
+import type { SAOverlayData } from "@/lib/league/overlay-spreadsheet-parser";
+import { type StoredRealizedData, matchTournaments } from "@/lib/league/tournament-matching";
 import type { TournamentScheduleData } from "@/lib/league/tournament-schedule";
-import { Button } from "@midpoker/ui/button";
 import {
   Card,
   CardContent,
@@ -24,90 +19,27 @@ import {
   TableHeader,
   TableRow,
 } from "@midpoker/ui/table";
-import { useToast } from "@midpoker/ui/use-toast";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { StoredTournament } from "./grade-tab";
 
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
-const REALIZED_TOURNAMENTS_KEY = "ppst-realized-tournaments";
-export const SA_OVERLAY_STORAGE_KEY = "sa-overlay-data";
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("pt-BR").format(value);
 }
 
-function StatCard({
-  label,
-  value,
-  subValue,
-  icon: Icon,
-  variant = "default",
+export function AnaliseTab({
+  realizedData,
+  saData,
 }: {
-  label: string;
-  value: string;
-  subValue?: string;
-  icon: React.ComponentType<{ className?: string }>;
-  variant?: "default" | "danger" | "success" | "warning";
+  realizedData?: StoredRealizedData | null;
+  saData?: SAOverlayData | null;
 }) {
-  const styles = {
-    default: {
-      bg: "dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]",
-      icon: "text-muted-foreground",
-      value: "",
-    },
-    danger: {
-      bg: "dark:bg-red-500/5 border border-red-500/20",
-      icon: "text-red-500",
-      value: "text-red-500",
-    },
-    success: {
-      bg: "dark:bg-[#00C969]/5 border border-[#00C969]/20",
-      icon: "text-[#00C969]",
-      value: "text-[#00C969]",
-    },
-    warning: {
-      bg: "dark:bg-amber-500/5 border border-amber-500/20",
-      icon: "text-amber-500",
-      value: "text-amber-500",
-    },
-  };
-  const s = styles[variant];
-
-  return (
-    <div className={`p-4 rounded-lg ${s.bg}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className={`w-4 h-4 ${s.icon}`} />
-        <span className="text-xs text-muted-foreground font-medium">
-          {label}
-        </span>
-      </div>
-      <p className={`text-xl font-mono font-bold ${s.value}`}>{value}</p>
-      {subValue && (
-        <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-          {subValue}
-        </p>
-      )}
-    </div>
-  );
-}
-
-export function AnaliseTab() {
-  const [saData, setSaData] = useState<SAOverlayData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-
   const [scheduleData, setScheduleData] =
     useState<TournamentScheduleData | null>(null);
-  const [realizedData, setRealizedData] = useState<StoredRealizedData | null>(
-    null,
-  );
 
   useEffect(() => {
     try {
-      const storedRealized = localStorage.getItem(REALIZED_TOURNAMENTS_KEY);
-      if (storedRealized) setRealizedData(JSON.parse(storedRealized));
-
       const storedScheduleRaw = localStorage.getItem(SCHEDULE_STORAGE_KEY);
       if (storedScheduleRaw) {
         const parsed = JSON.parse(storedScheduleRaw);
@@ -139,9 +71,6 @@ export function AnaliseTab() {
           });
         }
       }
-
-      const storedSA = localStorage.getItem(SA_OVERLAY_STORAGE_KEY);
-      if (storedSA) setSaData(JSON.parse(storedSA));
     } catch {
       /* ignore */
     }
@@ -172,45 +101,6 @@ export function AnaliseTab() {
 
   const hasImportedData = scheduleData && realizedData;
 
-  const handleSAFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      setIsLoading(true);
-      const { dismiss } = toast({
-        variant: "spinner",
-        title: "Processando planilha...",
-        description: file.name,
-        duration: Number.POSITIVE_INFINITY,
-      });
-
-      try {
-        const result = await parseSAOverlaySpreadsheet(file);
-        setSaData(result);
-        localStorage.setItem(SA_OVERLAY_STORAGE_KEY, JSON.stringify(result));
-        dismiss();
-      } catch (err) {
-        dismiss();
-        toast({
-          variant: "destructive",
-          title: "Erro ao processar",
-          description: "Verifique se é um XLSX válido com aba RESUMEN.",
-        });
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      }
-    },
-    [toast],
-  );
-
-  const handleClear = useCallback(() => {
-    setSaData(null);
-    localStorage.removeItem(SA_OVERLAY_STORAGE_KEY);
-  }, []);
-
   const saTotals = useMemo(() => {
     if (!saData?.resumen.length) return null;
     return {
@@ -224,14 +114,6 @@ export function AnaliseTab() {
 
   return (
     <div className="flex flex-col gap-6">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={handleSAFileSelect}
-        className="hidden"
-      />
-
       {/* Comparação: nosso overlay vs SA */}
       {hasImportedData && saTotals && (
         <Card>
@@ -317,30 +199,11 @@ export function AnaliseTab() {
                   Planilha Sul-Americana
                 </CardTitle>
                 <CardDescription>
-                  Comparação de overlays com o grupo sul-americano
+                  {saData?.filename
+                    ? saData.filename
+                    : "Comparação de overlays com o grupo sul-americano"}
                 </CardDescription>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {saData && (
-                <Button variant="ghost" size="sm" onClick={handleClear}>
-                  <Icons.Close className="w-4 h-4 mr-1" />
-                  Limpar
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-              >
-                <Icons.Import className="w-4 h-4 mr-2" />
-                {isLoading
-                  ? "Processando..."
-                  : saData
-                    ? "Importar Outra"
-                    : "Importar XLSX"}
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -350,12 +213,7 @@ export function AnaliseTab() {
               {/* RESUMEN table */}
               {saData.resumen.length > 0 && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold">Resumo por Union</h3>
-                    <span className="text-xs text-muted-foreground">
-                      {saData.filename}
-                    </span>
-                  </div>
+                  <h3 className="text-sm font-semibold">Resumo por Union</h3>
                   <div className="rounded-lg border overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -518,24 +376,12 @@ export function AnaliseTab() {
               )}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed p-10 text-center">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/50 mx-auto mb-4">
-                <Icons.Import className="w-6 h-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium mb-1">Importar Planilha SA</p>
-              <p className="text-xs text-muted-foreground mb-4">
-                Faça upload do XLSX do grupo sul-americano para comparar
-                overlays.
+            <div className="rounded-lg border border-dashed p-6 text-center">
+              <Icons.Import className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">
+                Importe a planilha SA na aba{" "}
+                <span className="font-medium text-foreground">Overlays</span>.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-              >
-                <Icons.Import className="w-4 h-4 mr-2" />
-                Upload XLSX
-              </Button>
             </div>
           )}
         </CardContent>

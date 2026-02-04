@@ -655,45 +655,24 @@ export const suMetasRouter = createTRPCRouter({
   "clubs.list": protectedProcedure.query(async ({ ctx: { teamId } }) => {
     const supabase = await createAdminClient();
 
-    // Get distinct clubs from game players
-    const { data: clubRows, error: clubError } = await supabase
-      .from("poker_su_game_players")
-      .select("clube_id, clube_nome, liga_id, super_union_id")
-      .eq("team_id", teamId);
+    const { data: clubRows, error } = await supabase.rpc(
+      "get_distinct_su_clubs",
+      { p_team_id: teamId },
+    );
 
-    if (clubError) {
+    if (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to fetch clubs",
       });
     }
 
-    // Deduplicate by liga_id + clube_id
-    const seen = new Map<string, (typeof clubRows)[number]>();
-    for (const row of clubRows ?? []) {
-      const key = `${row.liga_id}-${row.clube_id}`;
-      if (!seen.has(key)) {
-        seen.set(key, row);
-      }
-    }
-
-    // Fetch leagues for enrichment
-    const { data: leagues } = await supabase
-      .from("poker_su_leagues")
-      .select("liga_id, liga_nome")
-      .eq("team_id", teamId);
-
-    const leagueMap = new Map<number, string>();
-    for (const l of leagues ?? []) {
-      leagueMap.set(l.liga_id, l.liga_nome);
-    }
-
-    return Array.from(seen.values())
+    return (clubRows ?? [])
       .map((c: any) => ({
         clubeId: c.clube_id,
         clubeNome: c.clube_nome,
         ligaId: c.liga_id,
-        ligaNome: leagueMap.get(c.liga_id) ?? `Liga ${c.liga_id}`,
+        ligaNome: c.liga_nome,
         superUnionId: c.super_union_id,
       }))
       .sort((a, b) => a.clubeNome.localeCompare(b.clubeNome));
@@ -956,7 +935,7 @@ export const suMetasRouter = createTRPCRouter({
         )
         .eq("team_id", teamId)
         .in("game_id", gameIds)
-        .limit(50000);
+        .limit(1000000);
 
       if (playersError) {
         throw new TRPCError({
@@ -1350,7 +1329,8 @@ export const suMetasRouter = createTRPCRouter({
         .select("*")
         .eq("team_id", teamId)
         .eq("week_year", input.sourceWeekYear)
-        .eq("week_number", input.sourceWeekNumber);
+        .eq("week_number", input.sourceWeekNumber)
+        .limit(1000000);
 
       if (!previousMetas || previousMetas.length === 0) {
         throw new TRPCError({

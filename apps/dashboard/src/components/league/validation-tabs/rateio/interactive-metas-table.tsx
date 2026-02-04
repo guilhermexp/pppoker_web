@@ -60,17 +60,21 @@ export function InteractiveMetasTable({
         jogo.totalGeral?.buyinFichas ||
         jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) ||
         0;
+      const jogoBuyinTicket =
+        jogo.totalGeral?.buyinTicket ||
+        jogo.jogadores?.reduce((s, j) => s + (j.buyinTicket ?? 0), 0) ||
+        0;
       const jogoTaxa =
         jogo.totalGeral?.taxa ||
         jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) ||
         0;
-      const resultado = jogoBuyin - jogoTaxa - gtd;
+      const resultado = jogoBuyin + jogoBuyinTicket - jogoTaxa - gtd;
 
       if (resultado >= 0) continue; // No overlay
 
       for (const jogador of jogo.jogadores ?? []) {
         const ligaId = jogador.ligaId;
-        const liquido = (jogador.buyinFichas ?? 0) - (jogador.taxa ?? 0);
+        const liquido = (jogador.buyinFichas ?? 0) + (jogador.buyinTicket ?? 0) - (jogador.taxa ?? 0);
         acc[ligaId] = (acc[ligaId] ?? 0) + liquido;
       }
     }

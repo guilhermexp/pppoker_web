@@ -131,7 +131,7 @@ export function ClubMetasSection({
     return map;
   }, [availableClubs]);
 
-  // Organize available clubs by meta group (for fallback display)
+  // Organize available clubs by meta group (for fallback display in Gerenciamento)
   const clubsByGroup = useMemo(() => {
     if (!metaGroups || metaGroups.length === 0 || availableClubs.length === 0) {
       return null;
@@ -161,24 +161,8 @@ export function ClubMetasSection({
   // Local state: club overlay % distribution within each group
   const [clubPercents, setClubPercents] = useState<Record<string, number>>({});
 
-  // Initialize equal distribution when clubsByGroup changes
-  const initialPercents = useMemo(() => {
-    const percents: Record<string, number> = {};
-    if (!clubsByGroup) return percents;
-    for (const { clubs } of clubsByGroup.groups) {
-      if (clubs.length === 0) continue;
-      const equal = Math.round((100 / clubs.length) * 10) / 10;
-      for (const c of clubs) {
-        percents[`${c.ligaId}-${c.clubeId}`] = equal;
-      }
-    }
-    return percents;
-  }, [clubsByGroup]);
-
-  // Merge: local edits override initial values
-  const effectivePercents = useMemo(() => {
-    return { ...initialPercents, ...clubPercents };
-  }, [initialPercents, clubPercents]);
+  // Club percents start at 0 – only filled when user manually sets a value
+  const effectivePercents = clubPercents;
 
   const handlePercentChange = useCallback(
     (key: string, value: number) => {
@@ -277,6 +261,7 @@ export function ClubMetasSection({
         </div>
       )}
 
+      {/* Fallback display: show clubs grouped by meta group (used in Gerenciamento) */}
       {!isLoading &&
         Object.keys(grouped).length === 0 &&
         clubsByGroup &&

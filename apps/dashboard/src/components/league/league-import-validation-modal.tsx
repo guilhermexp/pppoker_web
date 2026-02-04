@@ -17,17 +17,7 @@ import {
 import { Icons } from "@midpoker/ui/icons";
 import { Spinner } from "@midpoker/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
-import { getWeek, parse } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useCallback, useMemo, useState } from "react";
-
-import {
-  type StoredRealizedData,
-  type StoredRealizedTournament,
-  convertUtc5ToUtc3,
-  dateToDayOfWeek,
-  extractGameType,
-} from "@/lib/league/tournament-matching";
 
 import {
   LeagueGeralPPSRTab,
@@ -41,30 +31,6 @@ import {
 
 // Storage key for SU validation data (used by Painel SU)
 const SU_VALIDATION_STORAGE_KEY = "su-validation-data";
-
-// Storage key for realized PPST tournaments (used by Grade confrontation)
-const REALIZED_TOURNAMENTS_KEY = "ppst-realized-tournaments";
-
-// Storage key for per-club overlay aggregation (used by Arrecadação tab)
-const OVERLAY_CLUBS_STORAGE_KEY = "ppst-overlay-clubs";
-
-// Helper to get week number from date string (yyyy-MM-dd format)
-function getWeekFromDateString(dateStr: string): number | null {
-  try {
-    // Try yyyy-MM-dd format first
-    let date = parse(dateStr, "yyyy-MM-dd", new Date());
-    if (Number.isNaN(date.getTime())) {
-      // Try dd/MM/yyyy format
-      date = parse(dateStr, "dd/MM/yyyy", new Date(), { locale: ptBR });
-    }
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-    return getWeek(date, { weekStartsOn: 0, firstWeekContainsDate: 1 });
-  } catch {
-    return null;
-  }
-}
 
 // Helper to check if a liga is Brazilian (uses centralized KNOWN_LEAGUE_IDS)
 function isBrasileiraLiga(tipo: string, id: string): boolean {
@@ -99,32 +65,6 @@ export function LeagueImportValidationModal({
     (c) => c.status === "failed" && c.severity === "critical",
   ).length;
   const currentTabInfo = TAB_COLUMNS[activeTab];
-
-  // Calculate week numbers
-  const weekInfo = useMemo(() => {
-    const currentWeek = getWeek(new Date(), {
-      weekStartsOn: 0,
-      firstWeekContainsDate: 1,
-    });
-
-    let importWeekStart: number | null = null;
-    let importWeekEnd: number | null = null;
-
-    if (validationResult.period.start) {
-      importWeekStart = getWeekFromDateString(validationResult.period.start);
-    }
-    if (validationResult.period.end) {
-      importWeekEnd = getWeekFromDateString(validationResult.period.end);
-    }
-
-    const importWeek = importWeekStart ?? importWeekEnd;
-
-    return {
-      currentWeek,
-      importWeek,
-      isSameWeek: importWeek === currentWeek,
-    };
-  }, [validationResult.period.start, validationResult.period.end]);
 
   // Get counts for tabs
   const geralPPSTCount = validationResult.stats.totalLigasPPST;
@@ -239,181 +179,11 @@ export function LeagueImportValidationModal({
     }
   }, [suStats, validationResult.period]);
 
-  // Save realized tournaments for Grade confrontation
-  const saveRealizedTournaments = useCallback(() => {
-    try {
-      const realizedTournaments: StoredRealizedTournament[] =
-        parsedData.jogosPPST
-          .filter(
-            (j) =>
-              j.metadata?.premiacaoGarantida &&
-              j.metadata.premiacaoGarantida > 0,
-          )
-          .map((j) => ({
-            name: j.metadata.nomeMesa.trim().toUpperCase(),
-            date: j.metadata.dataInicio,
-            day: dateToDayOfWeek(j.metadata.dataInicio),
-            time: convertUtc5ToUtc3(j.metadata.horaInicio),
-            gtdFichas: j.metadata.premiacaoGarantida!,
-            gameType: extractGameType(j.metadata.tipoJogo),
-            buyIn:
-              (j.metadata.buyInBase ?? 0) +
-              (j.metadata.buyInBounty ?? 0) +
-              (j.metadata.buyInTaxa ?? 0),
-            entries: j.jogadores.length,
-            overlay:
-              (j.totalGeral?.buyinFichas ?? 0) +
-              (j.totalGeral?.buyinTicket ?? 0) -
-              (j.totalGeral?.taxa ?? 0) -
-              (j.metadata.premiacaoGarantida ?? 0),
-          }));
-
-      const realizedData: StoredRealizedData = {
-        weekNumber: weekInfo.importWeek!,
-        period: {
-          start: validationResult.period.start || "",
-          end: validationResult.period.end || "",
-        },
-        savedAt: new Date().toISOString(),
-        tournaments: realizedTournaments,
-        totalGTDFichas: realizedTournaments.reduce(
-          (s, t) => s + t.gtdFichas,
-          0,
-        ),
-        totalCount: realizedTournaments.length,
-      };
-      localStorage.setItem(
-        REALIZED_TOURNAMENTS_KEY,
-        JSON.stringify(realizedData),
-      );
-    } catch (error) {
-      console.error(
-        "Failed to save realized tournaments to localStorage:",
-        error,
-      );
-    }
-  }, [parsedData.jogosPPST, weekInfo.importWeek, validationResult.period]);
-
-  // Save per-club overlay aggregation for Arrecadação tab
-  const saveOverlayClubs = useCallback(() => {
-    try {
-      // All tournaments with GTD > 0 that have overlay
-      const overlayGames = parsedData.jogosPPST.filter((j) => {
-        if (
-          !j.metadata?.premiacaoGarantida ||
-          j.metadata.premiacaoGarantida <= 0
-        )
-          return false;
-        // Overlay check: buyin líquido < GTD (inclui tickets)
-        const overlay =
-          (j.totalGeral?.buyinFichas ?? 0) +
-          (j.totalGeral?.buyinTicket ?? 0) -
-          (j.totalGeral?.taxa ?? 0) -
-          (j.metadata.premiacaoGarantida ?? 0);
-        return overlay < 0;
-      });
-
-      // Aggregate per club
-      const clubMap = new Map<
-        string,
-        {
-          clubeId: number;
-          clubeNome: string;
-          ligaId: number;
-          superUnionId: number | null;
-          totalBuyin: number;
-          totalTaxa: number;
-          gameIds: Set<number>;
-        }
-      >();
-
-      for (let gi = 0; gi < overlayGames.length; gi++) {
-        const jogo = overlayGames[gi];
-        for (const jogador of jogo.jogadores) {
-          const key = `${jogador.ligaId}-${jogador.clubeId}`;
-          let entry = clubMap.get(key);
-          if (!entry) {
-            entry = {
-              clubeId: jogador.clubeId,
-              clubeNome: jogador.clubeNome,
-              ligaId: jogador.ligaId,
-              superUnionId: jogador.superUnionId,
-              totalBuyin: 0,
-              totalTaxa: 0,
-              gameIds: new Set(),
-            };
-            clubMap.set(key, entry);
-          }
-          entry.totalBuyin += jogador.buyinFichas ?? 0;
-          entry.totalTaxa += "taxa" in jogador ? (jogador.taxa ?? 0) : 0;
-          entry.gameIds.add(gi);
-        }
-      }
-
-      const clubs = Array.from(clubMap.values())
-        .map((c) => ({
-          clubeId: c.clubeId,
-          clubeNome: c.clubeNome,
-          ligaId: c.ligaId,
-          superUnionId: c.superUnionId,
-          totalBuyin: c.totalBuyin,
-          totalTaxa: c.totalTaxa,
-          liquido: c.totalBuyin - c.totalTaxa,
-          overlayGameCount: c.gameIds.size,
-        }))
-        .sort((a, b) => b.liquido - a.liquido);
-
-      // Game-level overlay totals
-      let totalOverlayAmount = 0;
-      for (const jogo of overlayGames) {
-        const overlay =
-          (jogo.totalGeral?.buyinFichas ?? 0) +
-          (jogo.totalGeral?.buyinTicket ?? 0) -
-          (jogo.totalGeral?.taxa ?? 0) -
-          (jogo.metadata.premiacaoGarantida ?? 0);
-        totalOverlayAmount += overlay; // negative
-      }
-
-      const summaryBuyin = clubs.reduce((s, c) => s + c.totalBuyin, 0);
-      const summaryTaxa = clubs.reduce((s, c) => s + c.totalTaxa, 0);
-
-      const overlayClubsData = {
-        clubs,
-        summary: {
-          totalOverlayGames: overlayGames.length,
-          totalOverlayAmount,
-          totalBuyin: summaryBuyin,
-          totalTaxa: summaryTaxa,
-          totalLiquido: summaryBuyin - summaryTaxa,
-          totalClubs: clubs.length,
-        },
-        weekNumber: weekInfo.importWeek!,
-        period: {
-          start: validationResult.period.start || "",
-          end: validationResult.period.end || "",
-        },
-        savedAt: new Date().toISOString(),
-      };
-
-      localStorage.setItem(
-        OVERLAY_CLUBS_STORAGE_KEY,
-        JSON.stringify(overlayClubsData),
-      );
-    } catch (error) {
-      console.error(
-        "Failed to save overlay clubs to localStorage:",
-        error,
-      );
-    }
-  }, [parsedData.jogosPPST, weekInfo.importWeek, validationResult.period]);
-
   // Handle approve with save
   const handleApprove = useCallback(() => {
     saveToLocalStorage();
-    saveRealizedTournaments();
-    saveOverlayClubs();
     onApprove();
-  }, [saveToLocalStorage, saveRealizedTournaments, saveOverlayClubs, onApprove]);
+  }, [saveToLocalStorage, onApprove]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -567,6 +337,11 @@ export function LeagueImportValidationModal({
                   data={parsedData.jogosPPST}
                   inicioCount={parsedData.jogosPPSTInicioCount}
                   unknownFormatsCount={parsedData.unknownGameFormats?.length}
+                  geralTotals={parsedData.geralPPST?.[0]?.total ? {
+                    ganhosJogador: parsedData.geralPPST[0].total.ganhosJogador,
+                    ganhosLigaTaxa: parsedData.geralPPST[0].total.ganhosLigaTaxa,
+                    gapGarantido: parsedData.geralPPST[0].total.gapGarantido,
+                  } : undefined}
                 />
               )}
             </TabsContent>

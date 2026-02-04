@@ -8,15 +8,19 @@ import {
   type MetaGroupData,
   FALLBACK_GROUPS,
 } from "@/components/league/validation-tabs/rateio/rateio-utils";
+import type { StoredRealizedData } from "@/lib/league/tournament-matching";
 import { useTRPC } from "@/trpc/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
-const REALIZED_TOURNAMENTS_KEY = "ppst-realized-tournaments";
 
-export function LigasTab() {
+export function LigasTab({
+  realizedData,
+}: {
+  realizedData?: StoredRealizedData | null;
+}) {
   const [activeSubTab, setActiveSubTab] = useState("meta-groups");
   const trpc = useTRPC();
 
@@ -51,9 +55,27 @@ export function LigasTab() {
     ),
   });
 
+  // Fallback: BR fixo, SA = todas as ligas do banco que não estão no BR
+  const fallbackGroups: MetaGroupData[] = useMemo(() => {
+    const brMemberIds = new Set(
+      FALLBACK_GROUPS[0].members.map((m) => m.superUnionId),
+    );
+    const saMembers = availableLeagues
+      .filter((l) => !brMemberIds.has(l.ligaId))
+      .map((l) => ({
+        superUnionId: l.ligaId,
+        displayName: l.ligaNome,
+      }));
+
+    return [
+      { ...FALLBACK_GROUPS[0] },
+      { ...FALLBACK_GROUPS[1], members: saMembers },
+    ];
+  }, [availableLeagues]);
+
   const metaGroups: MetaGroupData[] = useMemo(() => {
     if (!dbGroups || dbGroups.length === 0) {
-      return FALLBACK_GROUPS;
+      return fallbackGroups;
     }
 
     const enriched = groupDetailQueries
@@ -80,71 +102,46 @@ export function LigasTab() {
         };
       });
 
-    return enriched.length > 0 ? enriched : FALLBACK_GROUPS;
-  }, [dbGroups, groupDetailQueries]);
+    return enriched.length > 0 ? enriched : fallbackGroups;
+  }, [dbGroups, groupDetailQueries, fallbackGroups]);
 
   const usingFallback = !dbGroups || dbGroups.length === 0;
 
   // ---------------------------------------------------------------------------
-  // Read overlay total + week info from localStorage (read-only)
+  // Week info from realized data (banco)
   // ---------------------------------------------------------------------------
 
-  const [overlayTotal, setOverlayTotal] = useState(0);
-  const [dataWeekNumber, setDataWeekNumber] = useState<number | undefined>();
-  const [dataWeekYear, setDataWeekYear] = useState<number | undefined>();
-  const [dataWeekStart, setDataWeekStart] = useState<string | undefined>();
-  const [dataWeekEnd, setDataWeekEnd] = useState<string | undefined>();
+  const dataWeekStart = realizedData?.period?.start ?? undefined;
+  const dataWeekEnd = realizedData?.period?.end ?? undefined;
 
-  useEffect(() => {
-    try {
-      const scheduleRaw = localStorage.getItem(SCHEDULE_STORAGE_KEY);
-      const realizedRaw = localStorage.getItem(REALIZED_TOURNAMENTS_KEY);
+  const dataWeekYear = useMemo(() => {
+    if (!dataWeekStart) return undefined;
+    const d = new Date(dataWeekStart);
+    return d.getFullYear();
+  }, [dataWeekStart]);
 
-      const scheduleData = scheduleRaw ? JSON.parse(scheduleRaw) : null;
-      const realizedData = realizedRaw ? JSON.parse(realizedRaw) : null;
+  const dataWeekNumber = useMemo(() => {
+    if (realizedData?.weekNumber) return realizedData.weekNumber;
+    if (!dataWeekStart) return undefined;
+    const d = new Date(dataWeekStart);
+    const startOfYear = new Date(d.getFullYear(), 0, 1);
+    const dayOfYear = Math.floor(
+      (d.getTime() - startOfYear.getTime()) / 86400000,
+    );
+    return Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
+  }, [realizedData?.weekNumber, dataWeekStart]);
 
-      // Extract week number from loaded data
-      const weekNum =
-        scheduleData?.weekNumber ?? realizedData?.weekNumber ?? undefined;
-      if (weekNum) {
-        setDataWeekNumber(weekNum);
-        setDataWeekYear(new Date().getFullYear());
+  // Compute overlay total from realized data
+  const overlayTotal = useMemo(() => {
+    if (!realizedData?.tournaments) return 0;
+    let total = 0;
+    for (const t of realizedData.tournaments) {
+      if (t.overlay < 0) {
+        total += Math.abs(t.overlay);
       }
-
-      // Extract period dates (DD/MM format) and convert to YYYY-MM-DD
-      const periodStart =
-        scheduleData?.weekInfo?.startDate ??
-        realizedData?.period?.start ??
-        null;
-      const periodEnd =
-        scheduleData?.weekInfo?.endDate ?? realizedData?.period?.end ?? null;
-
-      if (periodStart && periodEnd) {
-        const year = new Date().getFullYear();
-        const toISO = (ddmm: string) => {
-          const match = ddmm.match(/(\d{1,2})\/(\d{1,2})/);
-          if (!match) return undefined;
-          const [, d, m] = match;
-          return `${year}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-        };
-        setDataWeekStart(toISO(periodStart));
-        setDataWeekEnd(toISO(periodEnd));
-      }
-
-      // Compute overlay total
-      if (realizedData?.tournaments) {
-        let total = 0;
-        for (const t of realizedData.tournaments) {
-          if (t.overlay < 0) {
-            total += Math.abs(t.overlay);
-          }
-        }
-        setOverlayTotal(total);
-      }
-    } catch {
-      /* ignore */
     }
-  }, []);
+    return total;
+  }, [realizedData]);
 
   // ---------------------------------------------------------------------------
   // Render

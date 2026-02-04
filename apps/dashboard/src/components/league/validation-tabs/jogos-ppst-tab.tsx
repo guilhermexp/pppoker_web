@@ -37,6 +37,7 @@ import {
 import {
   AlertTriangle,
   Ban,
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -50,10 +51,17 @@ import {
 import type React from "react";
 import { memo, useMemo, useState } from "react";
 
+interface GeralPPSTTotals {
+  ganhosJogador: number;
+  ganhosLigaTaxa: number;
+  gapGarantido: number;
+}
+
 interface LeagueJogosPPSTTabProps {
   data: ParsedLeagueJogoPPST[];
   inicioCount?: number; // Total games in spreadsheet (headers)
   unknownFormatsCount?: number; // Unrecognized formats
+  geralTotals?: GeralPPSTTotals; // Totals from Geral PPST tab for validation
 }
 
 const ITEMS_PER_PAGE = 50;
@@ -602,7 +610,7 @@ const JogoItem = memo(function JogoItem({
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
-      <CollapsibleTrigger className="flex items-center w-full px-3 py-1.5 hover:bg-muted/30 border-b border-border/50 text-xs">
+      <CollapsibleTrigger className="flex items-center w-full px-3 py-1.5 hover:bg-muted/30 border-b border-white/[0.04] text-xs">
         {/* Expand icon */}
         {isOpen ? (
           <ChevronDown className="h-3 w-3 mr-1 text-muted-foreground flex-shrink-0" />
@@ -782,6 +790,7 @@ export function LeagueJogosPPSTTab({
   data,
   inicioCount = 0,
   unknownFormatsCount = 0,
+  geralTotals,
 }: LeagueJogosPPSTTabProps) {
   const [openJogos, setOpenJogos] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -819,7 +828,7 @@ export function LeagueJogosPPSTTab({
           // All tournaments with GTD that have overlay
           if (!hasGTD) return false;
           const buyinLiquido =
-            (jogo.totalGeral?.buyinFichas ?? 0) - (jogo.totalGeral?.taxa ?? 0);
+            (jogo.totalGeral?.buyinFichas ?? 0) + (jogo.totalGeral?.buyinTicket ?? 0) - (jogo.totalGeral?.taxa ?? 0);
           const gtd = jogo.metadata.premiacaoGarantida ?? 0;
           const resultado = buyinLiquido - gtd;
           return resultado < 0; // Only show if overlay (negative result)
@@ -884,31 +893,16 @@ export function LeagueJogosPPSTTab({
         }
       }
 
-      // Calcula totais com fallback para soma dos jogadores (fórmulas Excel não são lidas)
-      const jogoBuyinFichas =
-        jogo.totalGeral.buyinFichas ||
-        jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
-      const jogoBuyinTicket =
-        jogo.totalGeral.buyinTicket ||
-        jogo.jogadores.reduce((s, j) => s + (j.buyinTicket ?? 0), 0);
-      const jogoGanhos =
-        jogo.totalGeral.ganhos ||
-        jogo.jogadores.reduce((s, j) => s + j.ganhos, 0);
-      const jogoTaxa =
-        jogo.totalGeral.taxa ||
-        jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
-      const jogoGapGarantido =
-        jogo.totalGeral.gapGarantido ||
-        jogo.jogadores.reduce((s, j) => s + (j.gapGarantido ?? 0), 0);
-      const jogoPremio =
-        jogo.totalGeral.premio ||
-        jogo.jogadores.reduce((s, j) => s + (j.premio ?? 0), 0);
-      const jogoRecompensa =
-        jogo.totalGeral.recompensa ||
-        jogo.jogadores.reduce((s, j) => s + (j.recompensa ?? 0), 0);
-      const jogoValorTicket =
-        jogo.totalGeral.valorTicket ||
-        jogo.jogadores.reduce((s, j) => s + (j.valorTicket ?? 0), 0);
+      // Sempre soma dos jogadores individuais (não usa totalGeral da planilha)
+      // Assim podemos comparar com a aba Geral PPST para validar
+      const jogoBuyinFichas = jogo.jogadores.reduce((s, j) => s + (j.buyinFichas ?? 0), 0);
+      const jogoBuyinTicket = jogo.jogadores.reduce((s, j) => s + (j.buyinTicket ?? 0), 0);
+      const jogoGanhos = jogo.jogadores.reduce((s, j) => s + (j.ganhos ?? 0), 0);
+      const jogoTaxa = jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
+      const jogoGapGarantido = jogo.jogadores.reduce((s, j) => s + (j.gapGarantido ?? 0), 0);
+      const jogoPremio = jogo.jogadores.reduce((s, j) => s + (j.premio ?? 0), 0);
+      const jogoRecompensa = jogo.jogadores.reduce((s, j) => s + (j.recompensa ?? 0), 0);
+      const jogoValorTicket = jogo.jogadores.reduce((s, j) => s + (j.valorTicket ?? 0), 0);
 
       totalBuyin += jogoBuyinFichas;
       totalGeralBuyin += jogoBuyinFichas;
@@ -928,13 +922,13 @@ export function LeagueJogosPPSTTab({
         totalGTD += jogo.metadata.premiacaoGarantida;
         gtdTourneysCount++;
 
-        // Usa o total com fallback
-        totalArrecadacaoGTD += jogoBuyinFichas;
+        // Usa o total com fallback (fichas + tickets = buyin real)
+        totalArrecadacaoGTD += jogoBuyinFichas + jogoBuyinTicket;
         totalTaxaGTD += jogoTaxa;
 
-        // Calculate overlay: (Buyin - Taxa) - GTD
+        // Calculate overlay: (Buyin + Ticket - Taxa) - GTD
         // Only sum negative results (overlays), ignore profits
-        const buyinLiquido = jogoBuyinFichas - jogoTaxa;
+        const buyinLiquido = jogoBuyinFichas + jogoBuyinTicket - jogoTaxa;
         const resultado = buyinLiquido - jogo.metadata.premiacaoGarantida;
         if (resultado < 0) {
           totalOverlayOnly += resultado; // Add negative value (overlay)
@@ -1056,7 +1050,7 @@ export function LeagueJogosPPSTTab({
       {/* Summary Stats Header */}
       <div className="space-y-4">
         {/* Game Types Legend */}
-        <div className="bg-muted/20 rounded-lg p-3 border">
+        <div className="bg-muted/10 rounded-lg p-3">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
             Tipos de Torneio
           </div>
@@ -1107,10 +1101,9 @@ export function LeagueJogosPPSTTab({
               </div>
             )}
           </div>
-
           {/* Detailed game types breakdown */}
           {Object.keys(summaryStats.gameTypes).length > 0 && (
-            <div className="mt-2 pt-2 border-t border-border/50">
+            <div className="mt-2 pt-2 border-t border-white/[0.04]">
               <div className="text-[10px] text-muted-foreground mb-1">
                 Detalhado:
               </div>
@@ -1128,6 +1121,157 @@ export function LeagueJogosPPSTTab({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Summary Totals */}
+        <div className="bg-muted/10 rounded-lg p-3">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+            Resumo Financeiro
+            {geralTotals && (
+              <span className="text-[9px] normal-case tracking-normal text-muted-foreground/60">
+                (comparado com Geral PPST)
+              </span>
+            )}
+          </div>
+          <TooltipProvider delayDuration={100}>
+            <div className="flex items-start justify-between text-xs font-mono">
+              {/* Buyin Total / Buyin - Taxa / Taxa */}
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground w-20">Buyin Total</span>
+                  <span className="text-blue-400">{formatCurrency(summaryStats.totalBuyin)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground w-20">Buyin - Taxa</span>
+                  <span className="text-cyan-400">{formatCurrency(summaryStats.totalBuyin - summaryStats.totalGeralTaxa)}</span>
+                </div>
+                <div className="flex items-center gap-1.5 border-t border-border/50 pt-0.5">
+                  <span className="text-[10px] text-muted-foreground w-20">= Taxa</span>
+                  <span className="text-green-500 font-medium">{formatCurrency(summaryStats.totalGeralTaxa)}</span>
+                </div>
+              </div>
+
+              {/* Separator */}
+              <div className="w-px h-12 bg-border/50 mx-2" />
+
+              {/* GTD */}
+              <div className="flex flex-col gap-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
+                      GTD ({summaryStats.gtdTourneysCount}) <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                    <p className="font-medium mb-1">Garantido Total</p>
+                    <p className="text-muted-foreground">Soma do prêmio garantido de todos os {summaryStats.gtdTourneysCount} torneios com GTD.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-[#00C969] text-sm font-medium">{formatCurrency(summaryStats.totalGTD)}</span>
+              </div>
+
+              {/* Separator */}
+              <div className="w-px h-12 bg-border/50 mx-2" />
+
+              {/* GTD Overlay */}
+              <div className="flex flex-col gap-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
+                      GTD Overlay <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                    <p className="font-medium mb-1">GTD dos Torneios c/ Overlay</p>
+                    <p className="text-muted-foreground">Soma do GTD apenas dos torneios que tiveram overlay.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-[#00C969] text-sm font-medium">{formatCurrency(summaryStats.gtdOverlay)}</span>
+              </div>
+
+              {/* Separator */}
+              <div className="w-px h-12 bg-border/50 mx-2" />
+
+              {/* Só Overlay */}
+              <div className="flex flex-col gap-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
+                      Overlay ({summaryStats.overlayCount}) <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[280px] text-xs">
+                    <p className="font-medium mb-1">Overlay Total</p>
+                    <p className="text-muted-foreground">
+                      Soma apenas dos torneios que <span className="text-red-400">não alcançaram</span> a arrecadação mínima.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex items-center gap-1">
+                  <span className="text-red-500 text-sm font-medium">{formatCurrency(summaryStats.totalOverlayOnly)}</span>
+                  {geralTotals && (
+                    Math.round(summaryStats.totalOverlayOnly * 100) === Math.round(geralTotals.gapGarantido * 100)
+                      ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+                      : <Tooltip><TooltipTrigger asChild><AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" /></TooltipTrigger><TooltipContent side="bottom" className="text-xs"><p>Divergência: Geral PPST Gap = {formatCurrency(geralTotals.gapGarantido)}</p></TooltipContent></Tooltip>
+                  )}
+                </div>
+              </div>
+
+              {/* Separator */}
+              <div className="w-px h-12 bg-border/50 mx-2" />
+
+              {/* Ganhos */}
+              <div className="flex flex-col gap-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
+                      Ganhos <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                    <p className="font-medium mb-1">Ganhos dos Jogadores</p>
+                    <p className="text-muted-foreground">Soma de todos os ganhos/perdas dos jogadores.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex items-center gap-1">
+                  <span className={`text-sm font-medium ${summaryStats.totalGeralGanhos < 0 ? "text-red-500" : "text-green-500"}`}>
+                    {formatCurrency(summaryStats.totalGeralGanhos)}
+                  </span>
+                  {geralTotals && (
+                    Math.round(summaryStats.totalGeralGanhos * 100) === Math.round(geralTotals.ganhosJogador * 100)
+                      ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+                      : <Tooltip><TooltipTrigger asChild><AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" /></TooltipTrigger><TooltipContent side="bottom" className="text-xs"><p>Divergência: Geral PPST = {formatCurrency(geralTotals.ganhosJogador)}</p></TooltipContent></Tooltip>
+                  )}
+                </div>
+              </div>
+
+              {/* Separator */}
+              <div className="w-px h-12 bg-border/50 mx-2" />
+
+              {/* Taxa */}
+              <div className="flex flex-col gap-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
+                      Taxa <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                    <p className="font-medium mb-1">Taxa Total</p>
+                    <p className="text-muted-foreground">Soma de todas as taxas cobradas em todos os torneios.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex items-center gap-1">
+                  <span className="text-green-500 text-sm font-medium">{formatCurrency(summaryStats.totalGeralTaxa)}</span>
+                  {geralTotals && (
+                    Math.round(summaryStats.totalGeralTaxa * 100) === Math.round(geralTotals.ganhosLigaTaxa * 100)
+                      ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+                      : <Tooltip><TooltipTrigger asChild><AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" /></TooltipTrigger><TooltipContent side="bottom" className="text-xs"><p>Divergência: Geral PPST = {formatCurrency(geralTotals.ganhosLigaTaxa)}</p></TooltipContent></Tooltip>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TooltipProvider>
         </div>
       </div>
 
@@ -1168,302 +1312,8 @@ export function LeagueJogosPPSTTab({
             </Select>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          {/* Totals */}
-          <TooltipProvider delayDuration={100}>
-            <div className="flex items-center gap-3 text-xs font-mono">
-              {/* Buyin Total / Buyin - Taxa / Taxa (stacked) */}
-              <div className="flex flex-col items-end border-r border-border/50 pr-3 mr-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 cursor-help">
-                      <span className="text-[9px] text-muted-foreground">
-                        Buyin Total
-                      </span>
-                      <span className="text-blue-400">
-                        {formatCurrency(summaryStats.totalBuyin)}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">Arrecadação Total</p>
-                    <p className="text-muted-foreground">
-                      Soma de todos os buy-ins de todos os torneios (inclui
-                      taxa).
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 cursor-help">
-                      <span className="text-[9px] text-muted-foreground">
-                        Buyin - Taxa
-                      </span>
-                      <span className="text-cyan-400">
-                        {formatCurrency(
-                          summaryStats.totalBuyin - summaryStats.totalGeralTaxa,
-                        )}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">
-                      Arrecadação Líquida Total
-                    </p>
-                    <p className="text-muted-foreground">
-                      Soma de (Buyin - Taxa) de todos os torneios. Valor líquido
-                      para premiação.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <div className="flex items-center gap-1 border-t border-border/50 pt-0.5 mt-0.5">
-                  <span className="text-[9px] text-muted-foreground">=</span>
-                  <span className="text-[9px] text-muted-foreground">Taxa</span>
-                  <span className="text-green-500 font-medium">
-                    {formatCurrency(summaryStats.totalGeralTaxa)}
-                  </span>
-                </div>
-                {/* Diferença: Taxa sem GTD */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 cursor-help text-[8px] mt-1 opacity-70">
-                      <span className="text-muted-foreground">sem GTD:</span>
-                      <span className="text-amber-500">
-                        {formatCurrency(
-                          summaryStats.totalGeralTaxa -
-                            summaryStats.totalTaxaGTD,
-                        )}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">Taxa de Torneios sem GTD</p>
-                    <p className="text-muted-foreground">
-                      Taxa Total - Taxa GTD = Taxa dos torneios sem garantido
-                      (SPINs, etc).
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-
-              {/* GTD */}
-              <div className="flex flex-col items-end">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-[9px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      GTD ({summaryStats.gtdTourneysCount})
-                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">Garantido Total</p>
-                    <p className="text-muted-foreground">
-                      Soma do prêmio garantido de todos os{" "}
-                      {summaryStats.gtdTourneysCount} torneios com GTD.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <span className="text-[#00C969]">
-                  {formatCurrency(summaryStats.totalGTD)}
-                </span>
-              </div>
-
-              {/* Buyin GTD / Buyin GTD - Taxa / Taxa GTD (stacked) */}
-              <div className="flex flex-col items-end border-r border-border/50 pr-3 mr-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 cursor-help">
-                      <span className="text-[9px] text-muted-foreground">
-                        Buyin GTD
-                      </span>
-                      <span className="text-blue-500">
-                        {formatCurrency(summaryStats.totalArrecadacaoGTD)}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">Arrecadação Bruta (GTD)</p>
-                    <p className="text-muted-foreground">
-                      Soma de todos os buy-ins dos torneios com GTD (inclui
-                      taxa).
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 cursor-help">
-                      <span className="text-[9px] text-muted-foreground">
-                        Buyin GTD - Taxa
-                      </span>
-                      <span className="text-cyan-500">
-                        {formatCurrency(
-                          summaryStats.totalArrecadacaoGTD -
-                            summaryStats.totalTaxaGTD,
-                        )}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">
-                      Arrecadação Líquida (GTD)
-                    </p>
-                    <p className="text-muted-foreground">
-                      Buy-ins menos taxas dos torneios com GTD. Comparado com
-                      GTD para calcular overlay.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <div className="flex items-center gap-1 border-t border-border/50 pt-0.5 mt-0.5">
-                  <span className="text-[9px] text-muted-foreground">=</span>
-                  <span className="text-[9px] text-muted-foreground">
-                    Taxa GTD
-                  </span>
-                  <span className="text-green-500 font-medium">
-                    {formatCurrency(summaryStats.totalTaxaGTD)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Só Overlay */}
-              <div className="flex flex-col items-end">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-[9px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      Só Overlay ({summaryStats.overlayCount})
-                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[280px] text-xs"
-                  >
-                    <p className="font-medium mb-1">Overlay Total</p>
-                    <p className="text-muted-foreground">
-                      Soma apenas dos torneios que{" "}
-                      <span className="text-red-400">não alcançaram</span> a
-                      arrecadação mínima. Quando (Buyin - Taxa) {"<"} GTD, a
-                      diferença é o overlay que a liga precisa cobrir.
-                    </p>
-                    <p className="text-muted-foreground mt-1">
-                      <span className="text-amber-400">
-                        {summaryStats.overlayCount}
-                      </span>{" "}
-                      torneios tiveram overlay.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <span className="text-red-500">
-                  {formatCurrency(summaryStats.totalOverlayOnly)}
-                </span>
-              </div>
-
-              {/* GTD Overlay */}
-              <div className="flex flex-col items-end">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-[9px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      GTD Overlay
-                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">
-                      GTD dos Torneios c/ Overlay
-                    </p>
-                    <p className="text-muted-foreground">
-                      Soma do GTD apenas dos torneios que tiveram overlay.
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-[10px]">
-                      GTD Overlay - Arrec. Overlay = Só Overlay
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <span className="text-[#00C969]">
-                  {formatCurrency(summaryStats.gtdOverlay)}
-                </span>
-              </div>
-
-              {/* Ganhos */}
-              <div className="flex flex-col items-end">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-[9px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      Ganhos
-                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">Ganhos dos Jogadores</p>
-                    <p className="text-muted-foreground">
-                      Soma de todos os ganhos/perdas dos jogadores em todos os
-                      torneios. Valor negativo significa que os jogadores
-                      perderam no total.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <span
-                  className={
-                    summaryStats.totalGeralGanhos < 0
-                      ? "text-red-500"
-                      : "text-green-500"
-                  }
-                >
-                  {formatCurrency(summaryStats.totalGeralGanhos)}
-                </span>
-              </div>
-
-              {/* Taxa */}
-              <div className="flex flex-col items-end">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-[9px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      Taxa
-                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="max-w-[250px] text-xs"
-                  >
-                    <p className="font-medium mb-1">Taxa Total</p>
-                    <p className="text-muted-foreground">
-                      Soma de todas as taxas cobradas em todos os torneios. Este
-                      é o valor que a liga arrecada com taxas.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <span className="text-green-500">
-                  {formatCurrency(summaryStats.totalGeralTaxa)}
-                </span>
-              </div>
-            </div>
-          </TooltipProvider>
-          <div className="flex items-center gap-1">
-            {/* First page */}
+        <div className="flex items-center gap-1">
+          {/* First page */}
             <Button
               variant="outline"
               size="sm"
@@ -1535,10 +1385,9 @@ export function LeagueJogosPPSTTab({
             </Button>
           </div>
         </div>
-      </div>
 
       {/* Games List */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="rounded-lg overflow-hidden">
         {paginatedData.map((jogo, pageIndex) => {
           const globalIndex = getGlobalIndex(pageIndex);
           return (

@@ -107,7 +107,8 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         .select("id")
         .eq("team_id", teamId)
         .eq("status", "completed")
-        .eq("week_period_id", weekPeriod.id);
+        .eq("week_period_id", weekPeriod.id)
+        .limit(1000000);
 
       const importIds = imports?.map((i) => i.id) ?? [];
 
@@ -117,7 +118,8 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         .select("*")
         .eq("team_id", teamId)
         .eq("week_period_id", weekPeriod.id)
-        .order("liga_nome", { ascending: true });
+        .order("liga_nome", { ascending: true })
+        .limit(1000000);
 
       if (summariesError) {
         throw new TRPCError({
@@ -135,7 +137,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
           .eq("team_id", teamId)
           .in("import_id", importIds)
           .order("started_at", { ascending: false })
-          .limit(50000);
+          .limit(1000000);
 
         if (gamesError) {
           throw new TRPCError({
@@ -402,7 +404,8 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         .from("poker_su_league_summary")
         .select("*")
         .eq("team_id", teamId)
-        .eq("week_period_id", weekPeriod.id);
+        .eq("week_period_id", weekPeriod.id)
+        .limit(1000000);
 
       if (summariesError) {
         throw new TRPCError({
@@ -417,7 +420,8 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         .select("id")
         .eq("team_id", teamId)
         .eq("status", "completed")
-        .eq("week_period_id", weekPeriod.id);
+        .eq("week_period_id", weekPeriod.id)
+        .limit(1000000);
 
       const closeImportIds = closeImports?.map((i) => i.id) ?? [];
 
@@ -429,7 +433,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
           .select("game_type, player_count")
           .eq("team_id", teamId)
           .in("import_id", closeImportIds)
-          .limit(50000);
+          .limit(1000000);
         games = gamesData ?? [];
       }
 
@@ -453,7 +457,8 @@ export const suWeekPeriodsRouter = createTRPCRouter({
           .from("poker_su_game_players")
           .select("game_id")
           .eq("team_id", teamId)
-          .eq("liga_id", summary.liga_id);
+          .eq("liga_id", summary.liga_id)
+          .limit(1000000);
 
         const uniqueGameIds = new Set(ligaGames?.map((g) => g.game_id) ?? []);
 

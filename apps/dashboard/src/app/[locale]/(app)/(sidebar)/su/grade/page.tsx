@@ -1,5 +1,7 @@
 "use client";
 
+import type { SAOverlayData } from "@/lib/league/overlay-spreadsheet-parser";
+import type { StoredRealizedData } from "@/lib/league/tournament-matching";
 import { useTRPC } from "@/trpc/client";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
@@ -16,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnaliseTab } from "./analise-tab";
 import { GradeTab } from "./grade-tab";
 import { LigasTab } from "./ligas-tab";
@@ -25,9 +27,8 @@ import { OverlaysTab } from "./overlays-tab";
 // Re-export types for backward compatibility
 export type { StoredTournament, StoredScheduleData } from "./grade-tab";
 
-// localStorage keys (must match the tabs)
+// localStorage keys (schedule + SA overlay are still localStorage-based)
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
-const REALIZED_TOURNAMENTS_KEY = "ppst-realized-tournaments";
 const SA_OVERLAY_STORAGE_KEY = "sa-overlay-data";
 
 // Special value for the "current (unsaved)" option
@@ -38,6 +39,30 @@ export default function TournamentManagementPage() {
   const [selectedWeek, setSelectedWeek] = useState(CURRENT_WEEK_VALUE);
   // Incrementing key forces tab re-renders when loading saved data
   const [tabsKey, setTabsKey] = useState(0);
+  // Holds realized data from a saved week (loaded from tournament_analyses)
+  const [savedWeekRealizedData, setSavedWeekRealizedData] =
+    useState<StoredRealizedData | null>(null);
+
+  // SA overlay data — lifted here so OverlaysTab and AnaliseTab share state
+  const [saData, setSaData] = useState<SAOverlayData | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SA_OVERLAY_STORAGE_KEY);
+      if (raw) setSaData(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const handleSaDataChange = useCallback((data: SAOverlayData | null) => {
+    setSaData(data);
+    if (data) {
+      localStorage.setItem(SA_OVERLAY_STORAGE_KEY, JSON.stringify(data));
+    } else {
+      localStorage.removeItem(SA_OVERLAY_STORAGE_KEY);
+    }
+  }, []);
 
   const { toast } = useToast();
   const trpc = useTRPC();
@@ -50,6 +75,17 @@ export default function TournamentManagementPage() {
   const { data: savedWeeks, isLoading: isLoadingWeeks } = useQuery(
     trpc.su.tournamentAnalyses.list.queryOptions(),
   );
+
+  // Fetch realized tournaments from DB (current open week)
+  const { data: dbRealizedData } = useQuery(
+    trpc.su.analytics.getRealizedTournaments.queryOptions(undefined),
+  );
+
+  // Determine which realized data to use: saved week overrides DB data
+  const isSavedWeek = selectedWeek !== CURRENT_WEEK_VALUE;
+  const realizedData: StoredRealizedData | null = isSavedWeek
+    ? savedWeekRealizedData
+    : (dbRealizedData ?? null);
 
   // =========================================================================
   // Mutations
@@ -84,6 +120,7 @@ export default function TournamentManagementPage() {
           queryKey: trpc.su.tournamentAnalyses.list.queryKey(),
         });
         setSelectedWeek(CURRENT_WEEK_VALUE);
+        setSavedWeekRealizedData(null);
         toast({
           title: "Análise removida",
           description: "A análise da semana foi removida.",
@@ -97,14 +134,12 @@ export default function TournamentManagementPage() {
   // =========================================================================
 
   const handleSave = useCallback(() => {
-    // Read all 3 localStorage keys
+    // Read schedule from localStorage (still localStorage-based)
     const scheduleRaw = localStorage.getItem(SCHEDULE_STORAGE_KEY);
-    const realizedRaw = localStorage.getItem(REALIZED_TOURNAMENTS_KEY);
-    const saRaw = localStorage.getItem(SA_OVERLAY_STORAGE_KEY);
-
     const scheduleData = scheduleRaw ? JSON.parse(scheduleRaw) : null;
-    const realizedData = realizedRaw ? JSON.parse(realizedRaw) : null;
-    const saOverlayData = saRaw ? JSON.parse(saRaw) : null;
+
+    // SA overlay data comes from lifted state
+    const saOverlayData = saData;
 
     if (!scheduleData && !realizedData && !saOverlayData) {
       toast({
@@ -117,14 +152,14 @@ export default function TournamentManagementPage() {
     }
 
     // Extract week info from scheduleData (primary source)
-    const weekNumber = scheduleData?.weekNumber ?? realizedData?.weekNumber ?? 0;
+    const weekNumber =
+      scheduleData?.weekNumber ?? realizedData?.weekNumber ?? 0;
     const now = new Date();
-    const weekYear =
-      weekNumber > 0
-        ? now.getFullYear()
-        : now.getFullYear();
-    const weekStart = scheduleData?.weekInfo?.startDate ?? realizedData?.period?.start ?? "";
-    const weekEnd = scheduleData?.weekInfo?.endDate ?? realizedData?.period?.end ?? "";
+    const weekYear = now.getFullYear();
+    const weekStart =
+      scheduleData?.weekInfo?.startDate ?? realizedData?.period?.start ?? "";
+    const weekEnd =
+      scheduleData?.weekInfo?.endDate ?? realizedData?.period?.end ?? "";
 
     if (weekNumber === 0) {
       toast({
@@ -178,15 +213,15 @@ export default function TournamentManagementPage() {
       saTotalUsd,
       crossMatchCount: 0,
     });
-  }, [saveMutation, toast]);
+  }, [saveMutation, toast, realizedData, saData]);
 
   const handleWeekChange = useCallback(
     async (value: string) => {
       setSelectedWeek(value);
 
       if (value === CURRENT_WEEK_VALUE) {
-        // No-op: tabs already read from whatever is in localStorage
-        // Just force re-render so tabs re-read localStorage
+        // Switch back to current week: clear saved week data
+        setSavedWeekRealizedData(null);
         setTabsKey((k) => k + 1);
         return;
       }
@@ -213,7 +248,7 @@ export default function TournamentManagementPage() {
           return;
         }
 
-        // Write JSONB data into localStorage so tabs can read it
+        // Write schedule and SA data to localStorage (still localStorage-based)
         if (data.schedule_data) {
           localStorage.setItem(
             SCHEDULE_STORAGE_KEY,
@@ -223,25 +258,19 @@ export default function TournamentManagementPage() {
           localStorage.removeItem(SCHEDULE_STORAGE_KEY);
         }
 
-        if (data.realized_data) {
-          localStorage.setItem(
-            REALIZED_TOURNAMENTS_KEY,
-            JSON.stringify(data.realized_data),
-          );
-        } else {
-          localStorage.removeItem(REALIZED_TOURNAMENTS_KEY);
-        }
+        // SA overlay data goes through lifted state (also persists to localStorage)
+        handleSaDataChange(
+          data.sa_overlay_data
+            ? (data.sa_overlay_data as SAOverlayData)
+            : null,
+        );
 
-        if (data.sa_overlay_data) {
-          localStorage.setItem(
-            SA_OVERLAY_STORAGE_KEY,
-            JSON.stringify(data.sa_overlay_data),
-          );
-        } else {
-          localStorage.removeItem(SA_OVERLAY_STORAGE_KEY);
-        }
+        // Realized data from saved week goes through state (not localStorage)
+        setSavedWeekRealizedData(
+          (data.realized_data as StoredRealizedData) ?? null,
+        );
 
-        // Force tabs to re-render and re-read localStorage
+        // Force tabs to re-render
         setTabsKey((k) => k + 1);
 
         toast({
@@ -256,7 +285,7 @@ export default function TournamentManagementPage() {
         });
       }
     },
-    [queryClient, trpc, toast],
+    [queryClient, trpc, toast, handleSaDataChange],
   );
 
   const handleDelete = useCallback(() => {
@@ -274,7 +303,6 @@ export default function TournamentManagementPage() {
   // Derived state
   // =========================================================================
 
-  const isSavedWeek = selectedWeek !== CURRENT_WEEK_VALUE;
   const selectedSavedWeek = isSavedWeek
     ? savedWeeks?.find(
         (w) => `${w.week_year}-${w.week_number}` === selectedWeek,
@@ -411,16 +439,16 @@ export default function TournamentManagementPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="grade" forceMount className={cn("mt-4", activeTab !== "grade" && "hidden")}>
-          <GradeTab key={`grade-${tabsKey}`} />
+          <GradeTab key={`grade-${tabsKey}`} realizedData={realizedData} />
         </TabsContent>
         <TabsContent value="overlays" forceMount className={cn("mt-4", activeTab !== "overlays" && "hidden")}>
-          <OverlaysTab key={`overlays-${tabsKey}`} />
+          <OverlaysTab key={`overlays-${tabsKey}`} realizedData={realizedData} saData={saData} onSaDataChange={handleSaDataChange} />
         </TabsContent>
         <TabsContent value="analise" forceMount className={cn("mt-4", activeTab !== "analise" && "hidden")}>
-          <AnaliseTab key={`analise-${tabsKey}`} />
+          <AnaliseTab key={`analise-${tabsKey}`} realizedData={realizedData} saData={saData} />
         </TabsContent>
         <TabsContent value="ligas" forceMount className={cn("mt-4", activeTab !== "ligas" && "hidden")}>
-          <LigasTab key={`ligas-${tabsKey}`} />
+          <LigasTab key={`ligas-${tabsKey}`} realizedData={realizedData} />
         </TabsContent>
       </Tabs>
     </div>

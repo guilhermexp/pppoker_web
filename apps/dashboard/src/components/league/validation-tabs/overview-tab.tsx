@@ -309,10 +309,13 @@ export function LeagueOverviewTab({
       const buyinFichas =
         jogo.totalGeral?.buyinFichas ||
         jogo.jogadores.reduce((s, j) => s + j.buyinFichas, 0);
+      const buyinTicket =
+        jogo.totalGeral?.buyinTicket ||
+        jogo.jogadores.reduce((s, j) => s + (j.buyinTicket ?? 0), 0);
       const taxa =
         jogo.totalGeral?.taxa ||
         jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
-      const buyinLiquido = buyinFichas - taxa;
+      const buyinLiquido = buyinFichas + buyinTicket - taxa;
       const gtd = jogo.metadata.premiacaoGarantida;
       const resultado = buyinLiquido - gtd;
 

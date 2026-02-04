@@ -9,6 +9,94 @@ const periodSchema = z.object({
   viewMode: z.enum(["current_week", "historical"]).optional(),
 });
 
+// Helper: resolve import IDs for open week period
+async function resolveOpenWeekImportIds(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  teamId: string,
+): Promise<string[]> {
+  const { data: openPeriod } = await supabase
+    .from("poker_su_week_periods")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("status", "open")
+    .order("week_start", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!openPeriod) return [];
+
+  const { data: imports } = await supabase
+    .from("poker_su_imports")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("status", "completed")
+    .eq("week_period_id", openPeriod.id);
+
+  return imports?.map((i) => i.id) ?? [];
+}
+
+// Map game_variant enum values to uppercase game type strings
+function variantToGameType(variant: string | null): string {
+  if (!variant) return "NLH";
+  switch (variant) {
+    case "nlh":
+    case "short":
+    case "6plus":
+      return "NLH";
+    case "plo4":
+    case "plo5":
+    case "plo6":
+      return "PLO";
+    case "spinup":
+      return "SPINUP";
+    case "pko":
+      return "PKO";
+    case "mko":
+      return "MKO";
+    case "sat":
+      return "SAT";
+    case "ofc":
+      return "OFC";
+    default:
+      return variant.toUpperCase();
+  }
+}
+
+// Convert UTC timestamp to day-of-week string (MONDAY, TUESDAY, etc.)
+function timestampToDayOfWeek(ts: string): string {
+  const d = new Date(ts);
+  const days = [
+    "SUNDAY",
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+  ];
+  return days[d.getUTCDay()] || "MONDAY";
+}
+
+// Format timestamp as HH:MM in UTC-3 (Brasília)
+function timestampToTimeUtc3(ts: string): string {
+  const d = new Date(ts);
+  // UTC-3 offset
+  const utc3 = new Date(d.getTime() - 3 * 60 * 60 * 1000);
+  const hh = String(utc3.getUTCHours()).padStart(2, "0");
+  const mm = String(utc3.getUTCMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+// Format timestamp as YYYY/MM/DD in UTC-3
+function timestampToDateStr(ts: string): string {
+  const d = new Date(ts);
+  const utc3 = new Date(d.getTime() - 3 * 60 * 60 * 1000);
+  const y = utc3.getUTCFullYear();
+  const m = String(utc3.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(utc3.getUTCDate()).padStart(2, "0");
+  return `${y}/${m}/${day}`;
+}
+
 export const suAnalyticsRouter = createTRPCRouter({
   /**
    * Get comprehensive dashboard stats for SU
@@ -108,7 +196,8 @@ export const suAnalyticsRouter = createTRPCRouter({
         .from("poker_su_league_summary")
         .select("*")
         .eq("team_id", teamId)
-        .in("import_id", importIds);
+        .in("import_id", importIds)
+        .limit(1000000);
 
       if (summariesError) {
         throw new TRPCError({
@@ -126,6 +215,7 @@ export const suAnalyticsRouter = createTRPCRouter({
         { data: ppstPlayerData },
         { data: ppsrPlayerData },
         { data: gtdGames },
+        { data: gameStatsRows },
       ] = await Promise.all([
         // Total PPST count
         supabase
@@ -184,41 +274,34 @@ export const suAnalyticsRouter = createTRPCRouter({
           .gt("premiacao_garantida", 0)
           .in("import_id", importIds)
           .limit(50000),
+        // Aggregated taxa + ganhos via SQL function (no row limit)
+        supabase.rpc("get_game_stats_by_imports", {
+          p_team_id: teamId,
+          p_import_ids: importIds,
+        }),
       ]);
+
+      const gameStats = gameStatsRows?.[0] ?? null;
 
       const totalGamesPPST = countPPST ?? 0;
       const totalGamesPPSR = countPPSR ?? 0;
 
-      // Step 4: Calculate stats from summaries
+      // Step 4: Calculate stats
       const totalLeagues = new Set(summaries?.map((s) => s.liga_id)).size;
 
-      const leagueEarningsPPST =
-        summaries?.reduce(
-          (sum, s) => sum + Number(s.ppst_ganhos_liga_taxa ?? 0),
-          0,
-        ) ?? 0;
-
-      const leagueEarningsPPSR =
-        summaries?.reduce(
-          (sum, s) => sum + Number(s.ppsr_ganhos_liga_taxa ?? 0),
-          0,
-        ) ?? 0;
+      // Taxa e ganhos agregados direto no banco (sem limite de linhas)
+      const leagueEarningsPPST = Number(gameStats?.ppst_total_taxa ?? 0);
+      const leagueEarningsPPSR = Number(gameStats?.ppsr_total_taxa ?? 0);
+      const playerWinningsPPST = Number(
+        gameStats?.ppst_total_ganhos_jogador ?? 0,
+      );
+      const playerWinningsPPSR = Number(
+        gameStats?.ppsr_total_ganhos_jogador ?? 0,
+      );
 
       const gapGuaranteedTotal =
         summaries?.reduce(
           (sum, s) => sum + Number(s.ppst_gap_garantido ?? 0),
-          0,
-        ) ?? 0;
-
-      const playerWinningsPPST =
-        summaries?.reduce(
-          (sum, s) => sum + Number(s.ppst_ganhos_jogador ?? 0),
-          0,
-        ) ?? 0;
-
-      const playerWinningsPPSR =
-        summaries?.reduce(
-          (sum, s) => sum + Number(s.ppsr_ganhos_jogador ?? 0),
           0,
         ) ?? 0;
 
@@ -369,6 +452,264 @@ export const suAnalyticsRouter = createTRPCRouter({
         topLeagues,
         gamesPPSTByType,
         gamesPPSRByType,
+      };
+    }),
+
+  /**
+   * Get realized tournaments from the database.
+   * Replaces localStorage key "ppst-realized-tournaments".
+   * Returns PPST games with premiacao_garantida > 0 in the same shape
+   * as StoredRealizedData used by the frontend tabs.
+   */
+  getRealizedTournaments: protectedProcedure
+    .input(
+      z
+        .object({
+          weekNumber: z.number().optional(),
+          weekYear: z.number().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Resolve import IDs from the open week period
+      const importIds = await resolveOpenWeekImportIds(supabase, teamId);
+
+      if (importIds.length === 0) {
+        return null;
+      }
+
+      // Get the period dates from import metadata
+      const { data: importMeta } = await supabase
+        .from("poker_su_imports")
+        .select("period_start, period_end")
+        .in("id", importIds)
+        .limit(1)
+        .maybeSingle();
+
+      // Fetch PPST games with GTD > 0
+      const { data: games, error } = await supabase
+        .from("poker_su_games")
+        .select(
+          "table_name, started_at, game_variant, premiacao_garantida, buyin_base, buyin_bounty, buyin_taxa, player_count, total_buyin, total_taxa",
+        )
+        .eq("team_id", teamId)
+        .eq("game_type", "ppst")
+        .gt("premiacao_garantida", 0)
+        .in("import_id", importIds)
+        .limit(50000);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch realized tournaments",
+        });
+      }
+
+      const tournaments = (games ?? []).map((g) => {
+        const gtd = Number(g.premiacao_garantida ?? 0);
+        const totalBuyin = Number(g.total_buyin ?? 0);
+        const totalTaxa = Number(g.total_taxa ?? 0);
+        // overlay = (total buyin - taxa) - gtd   (negative = overlay)
+        const overlay = totalBuyin - totalTaxa - gtd;
+
+        return {
+          name: (g.table_name ?? "").trim().toUpperCase(),
+          date: timestampToDateStr(g.started_at),
+          day: timestampToDayOfWeek(g.started_at),
+          time: timestampToTimeUtc3(g.started_at),
+          gtdFichas: gtd,
+          gameType: variantToGameType(g.game_variant),
+          buyIn:
+            Number(g.buyin_base ?? 0) +
+            Number(g.buyin_bounty ?? 0) +
+            Number(g.buyin_taxa ?? 0),
+          entries: g.player_count ?? 0,
+          overlay,
+        };
+      });
+
+      return {
+        weekNumber: input?.weekNumber ?? 0,
+        period: {
+          start: importMeta?.period_start ?? "",
+          end: importMeta?.period_end ?? "",
+        },
+        savedAt: new Date().toISOString(),
+        tournaments,
+        totalGTDFichas: tournaments.reduce((s, t) => s + t.gtdFichas, 0),
+        totalCount: tournaments.length,
+      };
+    }),
+
+  /**
+   * Get per-club overlay aggregation from the database.
+   * Replaces localStorage key "ppst-overlay-clubs".
+   * Returns clubs with buyin/taxa/liquido for games that have overlay,
+   * in the same shape as the ArrecadacaoSection expects.
+   */
+  getOverlayClubs: protectedProcedure
+    .input(
+      z
+        .object({
+          weekNumber: z.number().optional(),
+          weekYear: z.number().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      const importIds = await resolveOpenWeekImportIds(supabase, teamId);
+
+      if (importIds.length === 0) {
+        return null;
+      }
+
+      // Get period from imports
+      const { data: importMeta } = await supabase
+        .from("poker_su_imports")
+        .select("period_start, period_end")
+        .in("id", importIds)
+        .limit(1)
+        .maybeSingle();
+
+      // Get PPST games with GTD > 0 that have overlay (buyin - taxa < gtd)
+      const { data: gtdGames, error: gamesError } = await supabase
+        .from("poker_su_games")
+        .select("id, premiacao_garantida, total_buyin, total_taxa")
+        .eq("team_id", teamId)
+        .eq("game_type", "ppst")
+        .gt("premiacao_garantida", 0)
+        .in("import_id", importIds)
+        .limit(50000);
+
+      if (gamesError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch games for overlay clubs",
+        });
+      }
+
+      // Filter to only games with overlay
+      const overlayGameIds: string[] = [];
+      let totalOverlayAmount = 0;
+
+      for (const g of gtdGames ?? []) {
+        const buyinLiquido =
+          Number(g.total_buyin ?? 0) - Number(g.total_taxa ?? 0);
+        const gtd = Number(g.premiacao_garantida ?? 0);
+        const overlay = buyinLiquido - gtd;
+        if (overlay < 0) {
+          overlayGameIds.push(g.id);
+          totalOverlayAmount += overlay;
+        }
+      }
+
+      if (overlayGameIds.length === 0) {
+        return {
+          clubs: [],
+          summary: {
+            totalOverlayGames: 0,
+            totalOverlayAmount: 0,
+            totalBuyin: 0,
+            totalTaxa: 0,
+            totalLiquido: 0,
+            totalClubs: 0,
+          },
+          weekNumber: input?.weekNumber ?? 0,
+          period: {
+            start: importMeta?.period_start ?? "",
+            end: importMeta?.period_end ?? "",
+          },
+          savedAt: new Date().toISOString(),
+        };
+      }
+
+      // Fetch players from overlay games, aggregated by club
+      const { data: players, error: playersError } = await supabase
+        .from("poker_su_game_players")
+        .select(
+          "game_id, clube_id, clube_nome, liga_id, super_union_id, buyin_fichas, taxa",
+        )
+        .eq("team_id", teamId)
+        .in("game_id", overlayGameIds)
+        .limit(50000);
+
+      if (playersError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch game players for overlay clubs",
+        });
+      }
+
+      // Aggregate per club
+      const clubMap = new Map<
+        string,
+        {
+          clubeId: number;
+          clubeNome: string;
+          ligaId: number;
+          superUnionId: number | null;
+          totalBuyin: number;
+          totalTaxa: number;
+          gameIds: Set<string>;
+        }
+      >();
+
+      for (const p of players ?? []) {
+        const key = `${p.liga_id}-${p.clube_id}`;
+        let entry = clubMap.get(key);
+        if (!entry) {
+          entry = {
+            clubeId: p.clube_id,
+            clubeNome: p.clube_nome ?? "",
+            ligaId: p.liga_id,
+            superUnionId: p.super_union_id,
+            totalBuyin: 0,
+            totalTaxa: 0,
+            gameIds: new Set(),
+          };
+          clubMap.set(key, entry);
+        }
+        entry.totalBuyin += Number(p.buyin_fichas ?? 0);
+        entry.totalTaxa += Number(p.taxa ?? 0);
+        entry.gameIds.add(p.game_id);
+      }
+
+      const clubs = Array.from(clubMap.values())
+        .map((c) => ({
+          clubeId: c.clubeId,
+          clubeNome: c.clubeNome,
+          ligaId: c.ligaId,
+          superUnionId: c.superUnionId,
+          totalBuyin: c.totalBuyin,
+          totalTaxa: c.totalTaxa,
+          liquido: c.totalBuyin - c.totalTaxa,
+          overlayGameCount: c.gameIds.size,
+        }))
+        .sort((a, b) => b.liquido - a.liquido);
+
+      const summaryBuyin = clubs.reduce((s, c) => s + c.totalBuyin, 0);
+      const summaryTaxa = clubs.reduce((s, c) => s + c.totalTaxa, 0);
+
+      return {
+        clubs,
+        summary: {
+          totalOverlayGames: overlayGameIds.length,
+          totalOverlayAmount,
+          totalBuyin: summaryBuyin,
+          totalTaxa: summaryTaxa,
+          totalLiquido: summaryBuyin - summaryTaxa,
+          totalClubs: clubs.length,
+        },
+        weekNumber: input?.weekNumber ?? 0,
+        period: {
+          start: importMeta?.period_start ?? "",
+          end: importMeta?.period_end ?? "",
+        },
+        savedAt: new Date().toISOString(),
       };
     }),
 });

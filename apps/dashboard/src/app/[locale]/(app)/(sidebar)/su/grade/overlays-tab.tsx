@@ -1,12 +1,16 @@
 "use client";
 
-import type { SAOverlayData } from "@/lib/league/overlay-spreadsheet-parser";
+import {
+  type SAOverlayData,
+  parseSAOverlaySpreadsheet,
+} from "@/lib/league/overlay-spreadsheet-parser";
 import type { MatchResult } from "@/lib/league/tournament-matching";
 import type { StoredRealizedData } from "@/lib/league/tournament-matching";
 import { matchTournaments } from "@/lib/league/tournament-matching";
 import { dayLabels, dayOrder } from "@/lib/league/tournament-schedule";
 import type { TournamentScheduleData } from "@/lib/league/tournament-schedule";
 import { Badge } from "@midpoker/ui/badge";
+import { Button } from "@midpoker/ui/button";
 import {
   Card,
   CardContent,
@@ -14,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@midpoker/ui/card";
+import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
 import {
   Table,
@@ -23,12 +28,13 @@ import {
   TableHeader,
   TableRow,
 } from "@midpoker/ui/table";
-import { useEffect, useMemo, useState } from "react";
-import { SA_OVERLAY_STORAGE_KEY } from "./analise-tab";
+import { useToast } from "@midpoker/ui/use-toast";
+import { FileSpreadsheet, Upload } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import type { StoredTournament } from "./grade-tab";
 
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
-const REALIZED_TOURNAMENTS_KEY = "ppst-realized-tournaments";
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("pt-BR").format(value);
@@ -143,19 +149,67 @@ type ComparisonRow = {
   matched: boolean;
 };
 
-export function OverlaysTab() {
+export function OverlaysTab({
+  realizedData,
+  saData,
+  onSaDataChange,
+}: {
+  realizedData?: StoredRealizedData | null;
+  saData?: SAOverlayData | null;
+  onSaDataChange?: (data: SAOverlayData | null) => void;
+}) {
   const [scheduleData, setScheduleData] =
     useState<TournamentScheduleData | null>(null);
-  const [realizedData, setRealizedData] = useState<StoredRealizedData | null>(
-    null,
+  const [isProcessingSA, setIsProcessingSA] = useState(false);
+  const { toast } = useToast();
+
+  const processSAFile = useCallback(
+    async (file: File) => {
+      setIsProcessingSA(true);
+      const { dismiss } = toast({
+        variant: "spinner",
+        title: "Processando planilha...",
+        description: file.name,
+        duration: Number.POSITIVE_INFINITY,
+      });
+
+      try {
+        const result = await parseSAOverlaySpreadsheet(file);
+        onSaDataChange?.(result);
+        dismiss();
+      } catch (err) {
+        dismiss();
+        toast({
+          variant: "destructive",
+          title: "Erro ao processar",
+          description: "Verifique se é um XLSX válido com aba RESUMEN.",
+        });
+        console.error(err);
+      } finally {
+        setIsProcessingSA(false);
+      }
+    },
+    [toast, onSaDataChange],
   );
-  const [saData, setSaData] = useState<SAOverlayData | null>(null);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: useCallback(
+      (acceptedFiles: File[]) => {
+        const file = acceptedFiles[0];
+        if (file) processSAFile(file);
+      },
+      [processSAFile],
+    ),
+    accept: {
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.ms-excel": [".xls"],
+    },
+    maxFiles: 1,
+    disabled: isProcessingSA,
+  });
 
   useEffect(() => {
     try {
-      const storedRealized = localStorage.getItem(REALIZED_TOURNAMENTS_KEY);
-      if (storedRealized) setRealizedData(JSON.parse(storedRealized));
-
       const storedScheduleRaw = localStorage.getItem(SCHEDULE_STORAGE_KEY);
       if (storedScheduleRaw) {
         const parsed = JSON.parse(storedScheduleRaw);
@@ -187,9 +241,6 @@ export function OverlaysTab() {
           });
         }
       }
-
-      const storedSA = localStorage.getItem(SA_OVERLAY_STORAGE_KEY);
-      if (storedSA) setSaData(JSON.parse(storedSA));
     } catch {
       /* ignore */
     }
@@ -448,19 +499,57 @@ export function OverlaysTab() {
                 </div>
                 <div>
                   <CardTitle className="text-base">Torneios SA</CardTitle>
-                  <CardDescription>Planilha sul-americana</CardDescription>
+                  <CardDescription>
+                    {saData?.filename
+                      ? saData.filename
+                      : "Planilha sul-americana"}
+                  </CardDescription>
                 </div>
               </div>
+              {saData && onSaDataChange && (
+                <Button variant="ghost" size="sm" onClick={() => onSaDataChange(null)}>
+                  <Icons.Close className="w-4 h-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent className="flex-1">
             {!hasSAData ? (
-              <div className="rounded-lg border border-dashed p-6 text-center">
-                <Icons.Import className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Importe a planilha SA na aba{" "}
-                  <span className="font-medium text-foreground">Análise</span>.
-                </p>
+              <div
+                {...getRootProps()}
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
+                  isDragActive
+                    ? "border-primary bg-primary/5"
+                    : "border-muted-foreground/25 hover:border-primary/50",
+                  isProcessingSA && "opacity-50 cursor-not-allowed",
+                )}
+              >
+                <input {...getInputProps()} />
+                <div className="flex flex-col items-center gap-3">
+                  {isProcessingSA ? (
+                    <>
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+                      <p className="text-sm text-muted-foreground">Processando...</p>
+                    </>
+                  ) : isDragActive ? (
+                    <>
+                      <Upload className="h-10 w-10 text-primary" />
+                      <p className="text-sm text-primary font-medium">Solte o arquivo aqui</p>
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet className="h-10 w-10 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Arraste a planilha SA aqui</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          ou clique para selecionar (.xlsx)
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             ) : saTotals ? (
               <div className="grid grid-cols-2 gap-3">
