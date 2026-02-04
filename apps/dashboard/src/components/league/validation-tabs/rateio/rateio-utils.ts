@@ -141,6 +141,8 @@ export type OverlayDistributionTournament = {
   dayOfWeek: number;
   dayOfWeekLabel: string;
   hour: number;
+  buyinBase: number;
+  gtdAmount: number;
   overlayAmount: number;
   status: "no_matching_metas" | "all_metas_met" | "clubs_charged";
   clubDistribution: OverlayDistributionClub[];
@@ -173,7 +175,12 @@ export type OverlayDistributionResult = {
   clubSummary: OverlayDistributionClubSummary[];
 };
 
-export type OverlaySelectionMap = Record<string, boolean>;
+export type OverlaySelectionEntry = {
+  isSelected: boolean;
+  metaPlayers: number;
+};
+
+export type OverlaySelectionMap = Record<string, OverlaySelectionEntry>;
 
 // Fallback groups when no DB groups are configured
 // BR is pre-defined (fixed members). SA has NO pre-defined members —

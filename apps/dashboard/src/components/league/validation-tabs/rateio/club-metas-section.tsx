@@ -3,12 +3,13 @@
 import { useTRPC } from "@/trpc/client";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
+import { Checkbox } from "@midpoker/ui/checkbox";
 import { Icons } from "@midpoker/ui/icons";
 import { Spinner } from "@midpoker/ui/spinner";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getWeek, getYear } from "date-fns";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ClubMetaForm } from "./club-meta-form";
 import type { AvailableClub, MetaGroupData } from "./rateio-utils";
 import { formatNumber, formatPercent } from "./rateio-utils";
@@ -188,6 +189,9 @@ export function ClubMetasSection({
 
   // Local state: club overlay % distribution within each group
   const [clubPercents, setClubPercents] = useState<Record<string, number>>({});
+  const [selectedClubs, setSelectedClubs] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Club percents start at 0 – only filled when user manually sets a value
   const effectivePercents = clubPercents;
@@ -198,6 +202,10 @@ export function ClubMetasSection({
     },
     [],
   );
+
+  const handleClubSelection = useCallback((key: string, checked: boolean) => {
+    setSelectedClubs((prev) => ({ ...prev, [key]: checked }));
+  }, []);
 
   // Collapse state per group – SA starts collapsed
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
@@ -220,11 +228,29 @@ export function ClubMetasSection({
     return acc;
   }, {});
 
+  useEffect(() => {
+    if (!clubsByGroup) return;
+    setSelectedClubs((prev) => {
+      const next = { ...prev };
+      for (const { clubs } of clubsByGroup.groups) {
+        for (const c of clubs) {
+          const key = `${c.ligaId}-${c.clubeId}`;
+          if (next[key] === undefined) {
+            next[key] = true;
+          }
+        }
+      }
+      return next;
+    });
+  }, [clubsByGroup]);
+
   const overlayChargeSummary = useMemo(() => {
     if (!overlayDistribution) {
       return {
         hasSelections: false,
         selectedOverlayTotal: 0,
+        selectedTournaments: [],
+        unselectedTournaments: [],
         clubChargesByKey: new Map<string, number>(),
       };
     }
@@ -233,26 +259,33 @@ export function ClubMetasSection({
     let hasSelections = false;
     let selectedOverlayTotal = 0;
     const clubChargesByKey = new Map<string, number>();
+    const selectedTournaments: typeof overlayDistribution.tournaments = [];
+    const unselectedTournaments: typeof overlayDistribution.tournaments = [];
 
     for (const t of overlayDistribution.tournaments) {
       const selected = selections[t.gameId] ?? false;
-      if (!selected) continue;
+      if (selected) {
+        hasSelections = true;
+        selectedOverlayTotal += t.overlayAmount;
+        selectedTournaments.push(t);
 
-      hasSelections = true;
-      selectedOverlayTotal += t.overlayAmount;
-
-      for (const club of t.clubDistribution) {
-        const key = `${club.ligaId}-${club.clubId}`;
-        clubChargesByKey.set(
-          key,
-          (clubChargesByKey.get(key) ?? 0) + club.charge,
-        );
+        for (const club of t.clubDistribution) {
+          const key = `${club.ligaId}-${club.clubId}`;
+          clubChargesByKey.set(
+            key,
+            (clubChargesByKey.get(key) ?? 0) + club.charge,
+          );
+        }
+      } else {
+        unselectedTournaments.push(t);
       }
     }
 
     return {
       hasSelections,
       selectedOverlayTotal: Math.round(selectedOverlayTotal * 100) / 100,
+      selectedTournaments,
+      unselectedTournaments,
       clubChargesByKey,
     };
   }, [overlayDistribution, overlaySelections]);
@@ -332,122 +365,226 @@ export function ClubMetasSection({
         clubsByGroup &&
         usingFallback && (
           <>
-            {clubsByGroup.groups.map(({ group, clubs }) => {
-              const groupOverlay =
-                (group.metaPercent / 100) * overlayTotal;
-              const groupClubCharges = clubs.reduce((sum, c) => {
-                const key = `${c.ligaId}-${c.clubeId}`;
-                return sum + (overlayChargeSummary.clubChargesByKey.get(key) ?? 0);
-              }, 0);
-              const leaguePays = Math.max(groupOverlay - groupClubCharges, 0);
+            {(() => {
+              const groupSummaries = clubsByGroup.groups.map(({ group, clubs }) => {
+                const isBrGroup = group.name.toUpperCase() === "BR";
+                const groupOverlay = isBrGroup
+                  ? overlayChargeSummary.selectedOverlayTotal
+                  : (group.metaPercent / 100) * overlayTotal;
+                const groupClubCharges = clubs.reduce((sum, c) => {
+                  const key = `${c.ligaId}-${c.clubeId}`;
+                  if (!selectedClubs[key]) return sum;
+                  return (
+                    sum +
+                    (overlayChargeSummary.clubChargesByKey.get(key) ?? 0)
+                  );
+                }, 0);
+                const leaguePays = isBrGroup
+                  ? Math.max(overlayTotal - overlayChargeSummary.selectedOverlayTotal, 0)
+                  : Math.max(groupOverlay - groupClubCharges, 0);
+                return {
+                  group,
+                  clubs,
+                  groupOverlay,
+                  groupClubCharges,
+                  leaguePays,
+                };
+              });
+
+              const leagueGroup =
+                groupSummaries.find(
+                  (s) => s.group.name.toUpperCase() === "BR",
+                ) ?? groupSummaries[0];
+              const leagueTotal = leagueGroup?.leaguePays ?? 0;
               const leaguePercent =
-                groupOverlay > 0 ? (leaguePays / groupOverlay) * 100 : 0;
-              const isCollapsed = !!collapsedGroups[group.id];
+                overlayTotal > 0 ? (leagueTotal / overlayTotal) * 100
+                  : 0;
+
+              const brDays = new Set<string>();
+              const brHours = new Set<number>();
+              for (const t of overlayChargeSummary.selectedTournaments) {
+                brDays.add(t.dayOfWeekLabel);
+                brHours.add(t.hour);
+              }
+              const brDaysLabel = Array.from(brDays).join(", ");
+              const brHoursLabel = Array.from(brHours)
+                .sort((a, b) => a - b)
+                .map((h) => `${String(h).padStart(2, "0")}h`)
+                .join(", ");
+
               return (
-                <div
-                  key={group.id}
-                  className="border border-dashed rounded-lg p-3 space-y-2"
-                >
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 w-full text-left"
-                    onClick={() =>
-                      setCollapsedGroups((prev) => ({
-                        ...prev,
-                        [group.id]: !prev[group.id],
-                      }))
-                    }
-                  >
-                    <Icons.ChevronRight
-                      className={`w-3 h-3 text-muted-foreground transition-transform ${isCollapsed ? "" : "rotate-90"}`}
-                    />
-                    <span className="text-xs font-medium">{group.name}</span>
-                    <Badge
-                      variant="outline"
-                      className="text-[9px] border-amber-500/30 text-amber-500"
-                    >
-                      Fallback
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">
-                      {clubs.length} clubes
-                    </span>
-                    {overlayTotal > 0 && (
-                      <span className="text-[10px] text-muted-foreground ml-auto">
-                        {group.metaPercent}% → {formatNumber(groupOverlay)}
-                      </span>
-                    )}
-                  </button>
-                  {!isCollapsed && clubs.length > 0 ? (
-                    <div className="space-y-1">
-                      {overlayTotal > 0 && (
-                        <div className="flex items-center justify-between gap-2 px-2 py-1 rounded border bg-muted/30 text-[10px]">
-                          <span className="font-medium">Liga</span>
-                          <span className="text-muted-foreground">
-                            Paga: {formatNumber(leaguePays)} (
-                            {formatPercent(leaguePercent)})
-                          </span>
-                        </div>
-                      )}
-                      {clubs.map((c) => {
-                        const key = `${c.ligaId}-${c.clubeId}`;
-                        const pct = effectivePercents[key] ?? 0;
-                        const clubOverlay =
-                          overlayChargeSummary.clubChargesByKey.get(key) ?? 0;
-                        return (
-                          <div
-                            key={key}
-                            className="flex items-center gap-2 text-xs px-2 py-1 rounded bg-muted/30"
-                          >
-                            <span className="font-medium">{c.clubeNome}</span>
-                            <span className="text-muted-foreground">
-                              {c.ligaNome}
-                            </span>
-                            <span className="text-muted-foreground text-[9px]">
-                              ({c.superUnionId}/{c.clubeId})
-                            </span>
-                            {overlayTotal > 0 && (
-                              <div className="flex items-center gap-1 ml-auto">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  step={0.1}
-                                  value={pct}
-                                  onChange={(e) =>
-                                    handlePercentChange(
-                                      key,
-                                      Number(e.target.value) || 0,
-                                    )
-                                  }
-                                  className="w-16 h-6 text-xs text-right font-mono bg-transparent border-b border-muted-foreground/30 outline-none focus:border-foreground"
-                                />
-                                <span className="text-[10px] text-muted-foreground">
-                                  %
-                                </span>
-                                <span className="text-xs font-mono text-red-500 ml-2">
-                                  {formatNumber(clubOverlay)}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                      {overlayTotal > 0 && (
-                        <div className="flex items-center justify-end gap-2 px-2 pt-1 text-[10px] text-muted-foreground">
-                          <span>
-                            Soma clubes: {formatNumber(groupClubCharges)}
-                          </span>
-                        </div>
+                <>
+                  <div className="border border-dashed rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2 w-full text-left">
+                      <span className="text-xs font-medium">Liga</span>
+                      <Badge
+                        variant="outline"
+                        className="text-[9px] border-amber-500/30 text-amber-500"
+                      >
+                        Fallback
+                      </Badge>
+                      {leagueGroup && overlayTotal > 0 && (
+                        <span className="text-[10px] text-muted-foreground ml-auto">
+                          Paga: {formatNumber(leagueTotal)} (
+                          {formatPercent(leaguePercent)})
+                        </span>
                       )}
                     </div>
-                  ) : !isCollapsed ? (
-                    <p className="text-xs text-muted-foreground">
-                      Nenhum clube nesta importacao pertence a este grupo.
-                    </p>
-                  ) : null}
-                </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Liga ficou responsavel por{" "}
+                      {overlayChargeSummary.unselectedTournaments.length}{" "}
+                      torneios.
+                    </div>
+                  </div>
+
+                  {groupSummaries.map(
+                    ({ group, clubs, groupOverlay, groupClubCharges }) => {
+                      const groupLeaguePays = Math.max(
+                        groupOverlay - groupClubCharges,
+                        0,
+                      );
+                      const groupLeaguePercent =
+                        groupOverlay > 0
+                          ? (groupLeaguePays / groupOverlay) * 100
+                          : 0;
+                      const isCollapsed = !!collapsedGroups[group.id];
+                      return (
+                        <div
+                          key={group.id}
+                          className="border border-dashed rounded-lg p-3 space-y-2"
+                        >
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 w-full text-left"
+                            onClick={() =>
+                              setCollapsedGroups((prev) => ({
+                                ...prev,
+                                [group.id]: !prev[group.id],
+                              }))
+                            }
+                          >
+                            <Icons.ChevronRight
+                              className={`w-3 h-3 text-muted-foreground transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                            />
+                            <span className="text-xs font-medium">
+                              {group.name}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] border-amber-500/30 text-amber-500"
+                            >
+                              Fallback
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">
+                              {clubs.length} clubes
+                            </span>
+                          </button>
+                          {overlayTotal > 0 && (
+                            <div className="flex items-center justify-between px-2 text-[10px] text-muted-foreground">
+                              <span>
+                                Total: {formatNumber(groupOverlay)}
+                              </span>
+                              <span>
+                                Clubes: {formatNumber(groupClubCharges)}
+                              </span>
+                              <span>
+                                Liga: {formatNumber(groupLeaguePays)} (
+                                {formatPercent(groupLeaguePercent)})
+                              </span>
+                            </div>
+                          )}
+                          {!isCollapsed && clubs.length > 0 ? (
+                            <div className="space-y-1">
+                              {group.name.toUpperCase() === "BR" && (
+                                <div className="px-2 text-[10px] text-muted-foreground">
+                                  BR ficou responsavel por{" "}
+                                  {overlayChargeSummary.selectedTournaments.length}{" "}
+                                  torneios
+                                  {brDaysLabel ? `, dias: ${brDaysLabel}` : ""}
+                                  {brHoursLabel
+                                    ? `, horarios: ${brHoursLabel}`
+                                    : ""}
+                                  .
+                                </div>
+                              )}
+                              {clubs.map((c) => {
+                                const key = `${c.ligaId}-${c.clubeId}`;
+                                const pct = effectivePercents[key] ?? 0;
+                                const isSelected = selectedClubs[key] ?? true;
+                                const clubOverlay =
+                                  isSelected
+                                    ? overlayChargeSummary.clubChargesByKey.get(
+                                        key,
+                                      ) ?? 0
+                                    : 0;
+                                return (
+                                  <div
+                                    key={key}
+                                    className={`flex items-center gap-2 text-xs px-2 py-1 rounded bg-muted/30 ${isSelected ? "" : "opacity-60"}`}
+                                  >
+                                    <Checkbox
+                                      checked={isSelected}
+                                      onCheckedChange={(value) =>
+                                        handleClubSelection(key, Boolean(value))
+                                      }
+                                      className="h-3 w-3"
+                                    />
+                                    <span className="font-medium">
+                                      {c.clubeNome}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      {c.ligaNome}
+                                    </span>
+                                    <span className="text-muted-foreground text-[9px]">
+                                      ({c.superUnionId}/{c.clubeId})
+                                    </span>
+                                    {overlayTotal > 0 && (
+                                      <div className="flex items-center gap-1 ml-auto">
+                                        <input
+                                          type="number"
+                                          min={0}
+                                          max={100}
+                                          step={0.1}
+                                          value={pct}
+                                          onChange={(e) =>
+                                            handlePercentChange(
+                                              key,
+                                              Number(e.target.value) || 0,
+                                            )
+                                          }
+                                          className="w-16 h-6 text-xs text-right font-mono bg-transparent border-b border-muted-foreground/30 outline-none focus:border-foreground"
+                                        />
+                                        <span className="text-[10px] text-muted-foreground">
+                                          %
+                                        </span>
+                                        <span className="text-xs font-mono text-red-500 ml-2">
+                                          {formatNumber(clubOverlay)}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              {overlayTotal > 0 && (
+                                <div className="flex items-center justify-end gap-2 px-2 pt-1 text-[10px] text-muted-foreground">
+                                  <span>
+                                    Soma clubes: {formatNumber(groupClubCharges)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : !isCollapsed ? (
+                            <p className="text-xs text-muted-foreground">
+                              Nenhum clube nesta importacao pertence a este grupo.
+                            </p>
+                          ) : null}
+                        </div>
+                      );
+                    },
+                  )}
+                </>
               );
-            })}
+            })()}
             {clubsByGroup.unassigned.length > 0 && (
               <div className="border border-dashed rounded-lg p-3 space-y-2">
                 <div className="flex items-center gap-2">

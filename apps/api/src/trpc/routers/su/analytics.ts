@@ -555,35 +555,49 @@ export const suAnalyticsRouter = createTRPCRouter({
         .object({
           weekNumber: z.number().optional(),
           weekYear: z.number().optional(),
+          weekStart: z.string().optional(),
+          weekEnd: z.string().optional(),
         })
         .optional(),
     )
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
-      const importIds = await resolveOpenWeekImportIds(supabase, teamId);
+      const useDateRange = Boolean(input?.weekStart && input?.weekEnd);
+      const importIds = useDateRange
+        ? []
+        : await resolveOpenWeekImportIds(supabase, teamId);
 
-      if (importIds.length === 0) {
+      if (!useDateRange && importIds.length === 0) {
         return null;
       }
 
       // Get period from imports
-      const { data: importMeta } = await supabase
-        .from("poker_su_imports")
-        .select("period_start, period_end")
-        .in("id", importIds)
-        .limit(1)
-        .maybeSingle();
+      const importMeta = useDateRange
+        ? { period_start: input?.weekStart ?? "", period_end: input?.weekEnd ?? "" }
+        : (
+            await supabase
+              .from("poker_su_imports")
+              .select("period_start, period_end")
+              .in("id", importIds)
+              .limit(1)
+              .maybeSingle()
+          ).data;
 
       // Get PPST games with GTD > 0 that have overlay (buyin - taxa < gtd)
-      const { data: gtdGames, error: gamesError } = await supabase
+      const baseGamesQuery = supabase
         .from("poker_su_games")
-        .select("id, premiacao_garantida, total_buyin, total_taxa")
+        .select("id, game_id, premiacao_garantida, total_buyin, total_taxa")
         .eq("team_id", teamId)
         .eq("game_type", "ppst")
-        .gt("premiacao_garantida", 0)
-        .in("import_id", importIds)
-        .limit(50000);
+        .gt("premiacao_garantida", 0);
+
+      const { data: gtdGames, error: gamesError } = useDateRange
+        ? await baseGamesQuery
+            .gte("started_at", `${input?.weekStart}T00:00:00`)
+            .lte("started_at", `${input?.weekEnd}T23:59:59`)
+            .limit(50000)
+        : await baseGamesQuery.in("import_id", importIds).limit(50000);
 
       if (gamesError) {
         throw new TRPCError({
@@ -593,17 +607,60 @@ export const suAnalyticsRouter = createTRPCRouter({
       }
 
       // Filter to only games with overlay
-      const overlayGameIds: string[] = [];
-      let totalOverlayAmount = 0;
-
+      const overlayGames: {
+        id: string;
+        game_id: string;
+        premiacao_garantida: number | null;
+        total_buyin: number | null;
+        total_taxa: number | null;
+      }[] = [];
       for (const g of gtdGames ?? []) {
         const buyinLiquido =
           Number(g.total_buyin ?? 0) - Number(g.total_taxa ?? 0);
         const gtd = Number(g.premiacao_garantida ?? 0);
         const overlay = buyinLiquido - gtd;
         if (overlay < 0) {
-          overlayGameIds.push(g.id);
-          totalOverlayAmount += overlay;
+          overlayGames.push(g);
+        }
+      }
+
+      // If selections exist for this week, limit to selected overlay games
+      let filteredOverlayGames = overlayGames;
+      if (input?.weekYear && input?.weekNumber) {
+        const { data: selections, error: selectionError } = await supabase
+          .from("poker_su_overlay_selections")
+          .select("game_id, is_selected")
+          .eq("team_id", teamId)
+          .eq("week_year", input.weekYear)
+          .eq("week_number", input.weekNumber);
+
+        if (selectionError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch overlay selections",
+          });
+        }
+
+        const selectedGameIds = new Set(
+          (selections ?? [])
+            .filter((s) => s.is_selected)
+            .map((s) => s.game_id),
+        );
+
+        filteredOverlayGames = overlayGames.filter((g) =>
+          selectedGameIds.has(g.game_id),
+        );
+      }
+
+      const overlayGameIds = filteredOverlayGames.map((g) => g.id);
+      let totalOverlayAmount = 0;
+      for (const g of filteredOverlayGames) {
+        const buyinLiquido =
+          Number(g.total_buyin ?? 0) - Number(g.total_taxa ?? 0);
+        const gtd = Number(g.premiacao_garantida ?? 0);
+        const overlay = buyinLiquido - gtd;
+        if (overlay < 0) {
+          totalOverlayAmount += Math.abs(overlay);
         }
       }
 
@@ -644,6 +701,43 @@ export const suAnalyticsRouter = createTRPCRouter({
         });
       }
 
+      // Build game lookup for details
+      const gameLookup = new Map<
+        string,
+        { gameId: string; name: string; startedAt: string }
+      >();
+      for (const g of filteredOverlayGames) {
+        gameLookup.set(g.id, {
+          gameId: g.game_id,
+          name: g.game_id,
+          startedAt: "",
+        });
+      }
+
+      if (overlayGameIds.length > 0) {
+        const { data: gameMeta, error: metaError } = await supabase
+          .from("poker_su_games")
+          .select("id, game_id, table_name, started_at")
+          .eq("team_id", teamId)
+          .in("id", overlayGameIds)
+          .limit(50000);
+
+        if (metaError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch game metadata",
+          });
+        }
+
+        for (const g of gameMeta ?? []) {
+          gameLookup.set(g.id, {
+            gameId: g.game_id,
+            name: g.table_name ?? g.game_id,
+            startedAt: g.started_at,
+          });
+        }
+      }
+
       // Aggregate per club
       const clubMap = new Map<
         string,
@@ -654,8 +748,23 @@ export const suAnalyticsRouter = createTRPCRouter({
           superUnionId: number | null;
           totalBuyin: number;
           totalTaxa: number;
+          totalEntries: number;
           gameIds: Set<string>;
         }
+      >();
+      const clubGameMap = new Map<
+        string,
+        Map<
+          string,
+          {
+            gameId: string;
+            gameName: string;
+            startedAt: string;
+            entries: number;
+            totalBuyin: number;
+            totalTaxa: number;
+          }
+        >
       >();
 
       for (const p of players ?? []) {
@@ -669,13 +778,35 @@ export const suAnalyticsRouter = createTRPCRouter({
             superUnionId: p.super_union_id,
             totalBuyin: 0,
             totalTaxa: 0,
+            totalEntries: 0,
             gameIds: new Set(),
           };
           clubMap.set(key, entry);
         }
         entry.totalBuyin += Number(p.buyin_fichas ?? 0);
         entry.totalTaxa += Number(p.taxa ?? 0);
+        entry.totalEntries += 1;
         entry.gameIds.add(p.game_id);
+
+        if (!clubGameMap.has(key)) {
+          clubGameMap.set(key, new Map());
+        }
+        const gameDetails = clubGameMap.get(key)!;
+        if (!gameDetails.has(p.game_id)) {
+          const meta = gameLookup.get(p.game_id);
+          gameDetails.set(p.game_id, {
+            gameId: meta?.gameId ?? p.game_id,
+            gameName: meta?.name ?? p.game_id,
+            startedAt: meta?.startedAt ?? "",
+            entries: 0,
+            totalBuyin: 0,
+            totalTaxa: 0,
+          });
+        }
+        const detail = gameDetails.get(p.game_id)!;
+        detail.entries += 1;
+        detail.totalBuyin += Number(p.buyin_fichas ?? 0);
+        detail.totalTaxa += Number(p.taxa ?? 0);
       }
 
       const clubs = Array.from(clubMap.values())
@@ -686,6 +817,7 @@ export const suAnalyticsRouter = createTRPCRouter({
           superUnionId: c.superUnionId,
           totalBuyin: c.totalBuyin,
           totalTaxa: c.totalTaxa,
+          totalEntries: c.totalEntries,
           liquido: c.totalBuyin - c.totalTaxa,
           overlayGameCount: c.gameIds.size,
         }))
@@ -694,8 +826,39 @@ export const suAnalyticsRouter = createTRPCRouter({
       const summaryBuyin = clubs.reduce((s, c) => s + c.totalBuyin, 0);
       const summaryTaxa = clubs.reduce((s, c) => s + c.totalTaxa, 0);
 
+      const clubDetails = Array.from(clubGameMap.entries()).reduce(
+        (acc, [key, games]) => {
+          acc[key] = Array.from(games.values())
+            .map((g) => ({
+              ...g,
+              totalBuyin: Math.round(g.totalBuyin * 100) / 100,
+              totalTaxa: Math.round(g.totalTaxa * 100) / 100,
+              liquido: Math.round((g.totalBuyin - g.totalTaxa) * 100) / 100,
+            }))
+            .sort(
+              (a, b) =>
+                new Date(a.startedAt).getTime() -
+                new Date(b.startedAt).getTime(),
+            );
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            gameId: string;
+            gameName: string;
+            startedAt: string;
+            entries: number;
+            totalBuyin: number;
+            totalTaxa: number;
+            liquido: number;
+          }[]
+        >,
+      );
+
       return {
         clubs,
+        clubDetails,
         summary: {
           totalOverlayGames: overlayGameIds.length,
           totalOverlayAmount,

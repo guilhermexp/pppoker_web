@@ -203,7 +203,14 @@ export function LigasTab({
         </TabsContent>
 
         <TabsContent value="arrecadacao" className="mt-0">
-          <ArrecadacaoSection metaGroups={metaGroups} />
+          <ArrecadacaoSection
+            availableClubs={availableClubs}
+            weekYear={dataWeekYear}
+            weekNumber={dataWeekNumber}
+            weekStart={dataWeekStart}
+            weekEnd={dataWeekEnd}
+            metaGroups={metaGroups}
+          />
         </TabsContent>
 
         <TabsContent value="overlay-clubes" className="mt-0">

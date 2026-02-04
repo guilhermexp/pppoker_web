@@ -77,18 +77,31 @@ export function OverlayDistributionSection({
 
   // 3. Local selection state
   const [selections, setSelections] = useState<OverlaySelectionMap>({});
+  const [tournamentMetaPlayers, setTournamentMetaPlayers] = useState<
+    Record<string, number>
+  >({});
 
   // Initialize selections from saved data when both queries resolve
   useEffect(() => {
     if (!data || savedSelections === undefined) return;
     const initial: OverlaySelectionMap = {};
     for (const t of data.tournaments) {
-      initial[t.gameId] =
-        savedSelections[t.gameId] !== undefined
-          ? savedSelections[t.gameId]
-          : false;
+      const saved = savedSelections[t.gameId];
+      initial[t.gameId] = {
+        isSelected: saved ? saved.isSelected : false,
+        metaPlayers: saved ? saved.metaPlayers : 0,
+      };
     }
     setSelections(initial);
+    setTournamentMetaPlayers((prev) => {
+      const next = { ...prev };
+      for (const t of data.tournaments) {
+        if (next[t.gameId] === undefined) {
+          next[t.gameId] = savedSelections[t.gameId]?.metaPlayers ?? 0;
+        }
+      }
+      return next;
+    });
   }, [data, savedSelections]);
 
   // 4. Save mutation
@@ -115,10 +128,10 @@ export function OverlayDistributionSection({
     if (!data) return null;
 
     const selectedTournaments = data.tournaments.filter(
-      (t) => selections[t.gameId],
+      (t) => selections[t.gameId]?.isSelected,
     );
     const unselectedTournaments = data.tournaments.filter(
-      (t) => !selections[t.gameId],
+      (t) => !selections[t.gameId]?.isSelected,
     );
 
     // Selected = overlay repassado aos clubes
@@ -177,7 +190,7 @@ export function OverlayDistributionSection({
       }))
       .sort((a, b) => b.totalCharge - a.totalCharge);
 
-    const selectedCount = Object.values(selections).filter(Boolean).length;
+    const selectedCount = Object.values(selections).filter((s) => s?.isSelected).length;
 
     return {
       selectedCount,
@@ -192,19 +205,21 @@ export function OverlayDistributionSection({
   const isDirty = useMemo(() => {
     if (!data || savedSelections === undefined) return false;
     for (const t of data.tournaments) {
-      const saved =
-        savedSelections[t.gameId] !== undefined
-          ? savedSelections[t.gameId]
-          : false;
-      const current = selections[t.gameId] ?? false;
-      if (saved !== current) return true;
+      const saved = savedSelections[t.gameId];
+      const current = selections[t.gameId];
+      const savedSelected = saved ? saved.isSelected : false;
+      const savedMeta = saved ? saved.metaPlayers : 0;
+      const currentSelected = current ? current.isSelected : false;
+      const currentMeta = current ? current.metaPlayers : 0;
+      if (savedSelected !== currentSelected) return true;
+      if (savedMeta !== currentMeta) return true;
     }
     return false;
   }, [data, savedSelections, selections]);
 
   // 7. Filters
   const [filterDay, setFilterDay] = useState<"all" | number>("all");
-  const [filterHour, setFilterHour] = useState<"all" | number>("all");
+  const [filterHours, setFilterHours] = useState<Set<number>>(new Set());
 
   // Available days & hours from data
   const { availableDays, availableHours } = useMemo(() => {
@@ -230,25 +245,34 @@ export function OverlayDistributionSection({
     if (!data) return [];
     return data.tournaments.filter((t) => {
       if (filterDay !== "all" && t.dayOfWeek !== filterDay) return false;
-      if (filterHour !== "all" && t.hour !== filterHour) return false;
+      if (filterHours.size > 0 && !filterHours.has(t.hour)) return false;
       return true;
     });
-  }, [data, filterDay, filterHour]);
+  }, [data, filterDay, filterHours]);
 
   // Toggle helpers
   function toggleSelection(gameId: string) {
-    setSelections((prev) => ({ ...prev, [gameId]: !prev[gameId] }));
+    setSelections((prev) => ({
+      ...prev,
+      [gameId]: {
+        isSelected: !(prev[gameId]?.isSelected ?? false),
+        metaPlayers: prev[gameId]?.metaPlayers ?? 0,
+      },
+    }));
   }
 
   function toggleAll() {
     if (!filteredTournaments.length) return;
     const allFilteredSelected = filteredTournaments.every(
-      (t) => selections[t.gameId],
+      (t) => selections[t.gameId]?.isSelected,
     );
     setSelections((prev) => {
       const next = { ...prev };
       for (const t of filteredTournaments) {
-        next[t.gameId] = !allFilteredSelected;
+        next[t.gameId] = {
+          isSelected: !allFilteredSelected,
+          metaPlayers: next[t.gameId]?.metaPlayers ?? 0,
+        };
       }
       return next;
     });
@@ -261,7 +285,26 @@ export function OverlayDistributionSection({
       weekNumber,
       selections: data.tournaments.map((t) => ({
         gameId: t.gameId,
-        isSelected: selections[t.gameId] ?? false,
+        isSelected: selections[t.gameId]?.isSelected ?? false,
+        metaPlayers: selections[t.gameId]?.metaPlayers ?? 0,
+      })),
+    });
+  }
+
+  function handleClearSelection() {
+    if (!weekYear || !weekNumber || !data) return;
+    const cleared: OverlaySelectionMap = {};
+    for (const t of data.tournaments) {
+      cleared[t.gameId] = { isSelected: false, metaPlayers: 0 };
+    }
+    setSelections(cleared);
+    saveMutation.mutate({
+      weekYear,
+      weekNumber,
+      selections: data.tournaments.map((t) => ({
+        gameId: t.gameId,
+        isSelected: false,
+        metaPlayers: 0,
       })),
     });
   }
@@ -297,8 +340,9 @@ export function OverlayDistributionSection({
   const filteredCount = filteredTournaments.length;
   const allFilteredSelected =
     filteredCount > 0 &&
-    filteredTournaments.every((t) => selections[t.gameId]);
-  const hasFilters = filterDay !== "all" || filterHour !== "all";
+    filteredTournaments.every((t) => selections[t.gameId]?.isSelected);
+  const hasAnySelected = Object.values(selections).some(Boolean);
+  const hasFilters = filterDay !== "all" || filterHours.size > 0;
 
   return (
     <div className="space-y-4">
@@ -389,9 +433,9 @@ export function OverlayDistributionSection({
         <span className="text-xs text-muted-foreground ml-2">Hora:</span>
         <button
           type="button"
-          onClick={() => setFilterHour("all")}
+          onClick={() => setFilterHours(new Set())}
           className={`px-2 py-0.5 rounded text-xs transition-colors ${
-            filterHour === "all"
+            filterHours.size === 0
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
@@ -403,10 +447,18 @@ export function OverlayDistributionSection({
             key={h}
             type="button"
             onClick={() =>
-              setFilterHour(filterHour === h ? "all" : h)
+              setFilterHours((prev) => {
+                const next = new Set(prev);
+                if (next.has(h)) {
+                  next.delete(h);
+                } else {
+                  next.add(h);
+                }
+                return next;
+              })
             }
             className={`px-2 py-0.5 rounded text-xs transition-colors ${
-              filterHour === h
+              filterHours.has(h)
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
@@ -420,7 +472,7 @@ export function OverlayDistributionSection({
             type="button"
             onClick={() => {
               setFilterDay("all");
-              setFilterHour("all");
+              setFilterHours(new Set());
             }}
             className="px-2 py-0.5 rounded text-xs text-red-500 hover:bg-red-500/10 transition-colors"
           >
@@ -448,19 +500,30 @@ export function OverlayDistributionSection({
             {selectedCount}/{totalCount} selecionados
           </span>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={!isDirty || saveMutation.isPending}
-          onClick={handleSave}
-        >
-          {saveMutation.isPending ? (
-            <Spinner className="w-3 h-3 mr-1" />
-          ) : (
-            <Icons.Check className="w-3 h-3 mr-1" />
-          )}
-          Salvar Selecao
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!hasAnySelected || saveMutation.isPending}
+            onClick={handleClearSelection}
+          >
+            <Icons.Delete className="w-3 h-3 mr-1" />
+            Limpar Selecao
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!isDirty || saveMutation.isPending}
+            onClick={handleSave}
+          >
+            {saveMutation.isPending ? (
+              <Spinner className="w-3 h-3 mr-1" />
+            ) : (
+              <Icons.Check className="w-3 h-3 mr-1" />
+            )}
+            Salvar Selecao
+          </Button>
+        </div>
       </div>
 
       {/* Tournament Table */}
@@ -478,8 +541,15 @@ export function OverlayDistributionSection({
             <TournamentRow
               key={t.gameId}
               tournament={t}
-              isSelected={selections[t.gameId] ?? false}
+              isSelected={selections[t.gameId]?.isSelected ?? false}
               onToggle={() => toggleSelection(t.gameId)}
+              metaPlayers={tournamentMetaPlayers[t.gameId] ?? 0}
+              onMetaChange={(value) =>
+                setTournamentMetaPlayers((prev) => ({
+                  ...prev,
+                  [t.gameId]: value,
+                }))
+              }
             />
           ))}
           {filteredCount === 0 && (
@@ -550,10 +620,14 @@ function TournamentRow({
   tournament,
   isSelected,
   onToggle,
+  metaPlayers,
+  onMetaChange,
 }: {
   tournament: OverlayDistributionTournament;
   isSelected: boolean;
   onToggle: () => void;
+  metaPlayers: number;
+  onMetaChange: (value: number) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const config = STATUS_CONFIG[tournament.status];
@@ -585,6 +659,9 @@ function TournamentRow({
             {tournament.dayOfWeekLabel}{" "}
             {String(tournament.hour).padStart(2, "0")}h
           </span>
+          <span className="px-1.5 py-0.5 rounded bg-muted text-foreground font-medium text-[10px] shrink-0">
+            GTD {formatNumber(tournament.gtdAmount)}
+          </span>
           <Badge
             variant="outline"
             className={`text-[9px] shrink-0 ${config.className}`}
@@ -607,6 +684,32 @@ function TournamentRow({
               -{formatNumber(tournament.totalClubCharges)}
             </span>
           )}
+          <div className="flex items-center gap-2 ml-3">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span>Meta</span>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={metaPlayers}
+                onChange={(e) =>
+                  onMetaChange(Math.max(0, Number(e.target.value) || 0))
+                }
+                className="w-12 h-6 text-[10px] text-right font-mono bg-transparent border-b border-muted-foreground/30 outline-none focus:border-foreground"
+              />
+              <span>jog</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground">
+              x{" "}
+              <span className="text-foreground font-mono">
+                Buyin {formatNumber(tournament.buyinBase)}
+              </span>{" "}
+              ={" "}
+              <span className="text-blue-500 font-mono">
+                {formatNumber(metaPlayers * tournament.buyinBase)}
+              </span>
+            </span>
+          </div>
         </button>
       </div>
 

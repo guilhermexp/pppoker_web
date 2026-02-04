@@ -1017,6 +1017,8 @@ export const suMetasRouter = createTRPCRouter({
         dayOfWeek: number;
         dayOfWeekLabel: string;
         hour: number;
+        buyinBase: number;
+        gtdAmount: number;
         overlayAmount: number;
         status: "no_matching_metas" | "all_metas_met" | "clubs_charged";
         clubDistribution: {
@@ -1093,6 +1095,8 @@ export const suMetasRouter = createTRPCRouter({
             dayOfWeek,
             dayOfWeekLabel: DAY_LABELS[dayOfWeek] ?? "?",
             hour,
+            buyinBase,
+            gtdAmount: premiacaoGarantida,
             overlayAmount,
             status: "no_matching_metas",
             clubDistribution: [],
@@ -1198,6 +1202,8 @@ export const suMetasRouter = createTRPCRouter({
           dayOfWeek,
           dayOfWeekLabel: DAY_LABELS[dayOfWeek] ?? "?",
           hour,
+          buyinBase,
+          gtdAmount: premiacaoGarantida,
           overlayAmount,
           status,
           clubDistribution: clubDist,
@@ -1249,7 +1255,7 @@ export const suMetasRouter = createTRPCRouter({
 
       const { data, error } = await supabase
         .from("poker_su_overlay_selections")
-        .select("game_id, is_selected")
+        .select("game_id, is_selected, meta_players")
         .eq("team_id", teamId)
         .eq("week_year", input.weekYear)
         .eq("week_number", input.weekNumber);
@@ -1261,9 +1267,15 @@ export const suMetasRouter = createTRPCRouter({
         });
       }
 
-      const result: Record<string, boolean> = {};
+      const result: Record<
+        string,
+        { isSelected: boolean; metaPlayers: number }
+      > = {};
       for (const row of data ?? []) {
-        result[row.game_id] = row.is_selected;
+        result[row.game_id] = {
+          isSelected: row.is_selected,
+          metaPlayers: Number(row.meta_players ?? 0),
+        };
       }
       return result;
     }),
@@ -1277,6 +1289,7 @@ export const suMetasRouter = createTRPCRouter({
           z.object({
             gameId: z.string(),
             isSelected: z.boolean(),
+            metaPlayers: z.number().optional(),
           }),
         ),
       }),
@@ -1291,6 +1304,7 @@ export const suMetasRouter = createTRPCRouter({
         week_number: input.weekNumber,
         game_id: s.gameId,
         is_selected: s.isSelected,
+        meta_players: s.metaPlayers ?? 0,
         created_by_id: userId,
       }));
 
