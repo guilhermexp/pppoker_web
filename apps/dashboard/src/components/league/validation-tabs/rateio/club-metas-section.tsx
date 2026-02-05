@@ -4,6 +4,13 @@ import { useTRPC } from "@/trpc/client";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import { Checkbox } from "@midpoker/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@midpoker/ui/dialog";
 import { Icons } from "@midpoker/ui/icons";
 import { Spinner } from "@midpoker/ui/spinner";
 import { useToast } from "@midpoker/ui/use-toast";
@@ -48,13 +55,22 @@ export function ClubMetasSection({
       getWeek(now, { weekStartsOn: 0, firstWeekContainsDate: 1 }),
   );
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showDealForm, setShowDealForm] = useState(false);
+  const [saveAsDefaultDialog, setSaveAsDefaultDialog] = useState<{
+    meta: any;
+    open: boolean;
+  } | null>(null);
 
-  // Query
+  // Queries
   const { data: metas, isLoading } = useQuery(
     trpc.su.metas["clubMetas.getByWeek"].queryOptions({
       weekYear,
       weekNumber,
     }),
+  );
+
+  const { data: clubDeals = [], isLoading: dealsLoading } = useQuery(
+    trpc.su.metas["clubDeals.list"].queryOptions(),
   );
 
   const overlayEnabled = !!(weekYear && weekNumber && weekStart && weekEnd);
@@ -81,13 +97,103 @@ export function ClubMetasSection({
     ),
   );
 
-  // Mutations
+  // Deal mutations
+  const createDealMutation = useMutation(
+    trpc.su.metas["clubDeals.create"].mutationOptions({
+      onSuccess: () => {
+        toast({ title: "Deal criado" });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas["clubDeals.list"].queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas.overlayDistribution.queryKey(),
+        });
+        setShowDealForm(false);
+      },
+      onError: (error) => {
+        toast({
+          title: "Erro ao criar deal",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    }),
+  );
+
+  const updateDealMutation = useMutation(
+    trpc.su.metas["clubDeals.update"].mutationOptions({
+      onSuccess: () => {
+        toast({ title: "Deal atualizado" });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas["clubDeals.list"].queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas.overlayDistribution.queryKey(),
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Erro ao atualizar deal",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    }),
+  );
+
+  const deleteDealMutation = useMutation(
+    trpc.su.metas["clubDeals.delete"].mutationOptions({
+      onSuccess: () => {
+        toast({ title: "Deal removido" });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas["clubDeals.list"].queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas.overlayDistribution.queryKey(),
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Erro ao remover deal",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    }),
+  );
+
+  const saveFromOverrideMutation = useMutation(
+    trpc.su.metas["clubDeals.saveFromOverride"].mutationOptions({
+      onSuccess: () => {
+        toast({ title: "Salvo como padrao" });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas["clubDeals.list"].queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas.overlayDistribution.queryKey(),
+        });
+        setSaveAsDefaultDialog(null);
+      },
+      onError: (error) => {
+        toast({
+          title: "Erro ao salvar como padrao",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    }),
+  );
+
+  // Meta mutations
   const createMetaMutation = useMutation(
     trpc.su.metas["clubMetas.create"].mutationOptions({
       onSuccess: () => {
         toast({ title: "Meta criada" });
         queryClient.invalidateQueries({
           queryKey: trpc.su.metas["clubMetas.getByWeek"].queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas.overlayDistribution.queryKey(),
         });
         setShowCreateForm(false);
       },
@@ -107,6 +213,9 @@ export function ClubMetasSection({
         toast({ title: "Meta removida" });
         queryClient.invalidateQueries({
           queryKey: trpc.su.metas["clubMetas.getByWeek"].queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.su.metas.overlayDistribution.queryKey(),
         });
       },
       onError: (error) => {
@@ -160,6 +269,17 @@ export function ClubMetasSection({
     return map;
   }, [availableClubs]);
 
+  // Group deals by club key
+  const dealsByClub = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const d of clubDeals) {
+      const key = `${d.super_union_id}-${d.club_id}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(d);
+    }
+    return map;
+  }, [clubDeals]);
+
   // Organize available clubs by meta group (for fallback display in Gerenciamento)
   const clubsByGroup = useMemo(() => {
     if (!metaGroups || metaGroups.length === 0 || availableClubs.length === 0) {
@@ -193,7 +313,7 @@ export function ClubMetasSection({
     {},
   );
 
-  // Club percents start at 0 – only filled when user manually sets a value
+  // Club percents start at 0 -- only filled when user manually sets a value
   const effectivePercents = clubPercents;
 
   const handlePercentChange = useCallback(
@@ -207,7 +327,7 @@ export function ClubMetasSection({
     setSelectedClubs((prev) => ({ ...prev, [key]: checked }));
   }, []);
 
-  // Collapse state per group – SA starts collapsed
+  // Collapse state per group -- SA starts collapsed
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     if (metaGroups) {
@@ -218,6 +338,17 @@ export function ClubMetasSection({
     return init;
   });
 
+  // Expanded clubs (for showing deals inline)
+  const [expandedClubs, setExpandedClubs] = useState<Set<string>>(new Set());
+  const toggleClubExpand = useCallback((key: string) => {
+    setExpandedClubs((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
   // Group metas by SuperUnion + Club
   const grouped = (metas ?? []).reduce((acc: Record<string, any[]>, m: any) => {
     const key = `${m.super_union_id}-${m.club_id}`;
@@ -225,6 +356,14 @@ export function ClubMetasSection({
     acc[key].push(m);
     return acc;
   }, {});
+
+  // Merge deals + metas into a unified view per club
+  const allClubKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const key of Object.keys(grouped)) keys.add(key);
+    for (const key of dealsByClub.keys()) keys.add(key);
+    return Array.from(keys).sort();
+  }, [grouped, dealsByClub]);
 
   useEffect(() => {
     if (!clubsByGroup) return;
@@ -288,6 +427,21 @@ export function ClubMetasSection({
     };
   }, [overlayDistribution, overlaySelections]);
 
+  // Handle "Salvar como padrao" from a weekly meta
+  const handleSaveAsDefault = (meta: any) => {
+    saveFromOverrideMutation.mutate({
+      superUnionId: meta.super_union_id,
+      clubId: meta.club_id,
+      dayOfWeek: meta.day_of_week ?? null,
+      hourStart: meta.hour_start ?? null,
+      hourEnd: meta.hour_end ?? null,
+      targetType: meta.target_type,
+      targetValue: Number(meta.target_value),
+      referenceBuyin: meta.reference_buyin ? Number(meta.reference_buyin) : null,
+      note: meta.note ?? undefined,
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -341,6 +495,14 @@ export function ClubMetasSection({
               : "Herdar Semana Anterior"}
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => setShowDealForm(true)}
+          >
+            + Novo Deal
+          </Button>
+          <Button
             size="sm"
             className="h-7 text-xs"
             onClick={() => setShowCreateForm(true)}
@@ -351,7 +513,7 @@ export function ClubMetasSection({
       </div>
 
       {/* Content */}
-      {isLoading && (
+      {(isLoading || dealsLoading) && (
         <div className="flex items-center justify-center py-8">
           <Spinner className="w-5 h-5" />
         </div>
@@ -359,7 +521,9 @@ export function ClubMetasSection({
 
       {/* Fallback display: show clubs grouped by meta group (used in Gerenciamento) */}
       {!isLoading &&
+        !dealsLoading &&
         Object.keys(grouped).length === 0 &&
+        clubDeals.length === 0 &&
         clubsByGroup &&
         usingFallback && (
           <>
@@ -605,81 +769,205 @@ export function ClubMetasSection({
         )}
 
       {!isLoading &&
-        Object.keys(grouped).length === 0 &&
+        !dealsLoading &&
+        allClubKeys.length === 0 &&
         (!clubsByGroup || !usingFallback) && (
           <div className="text-center py-6 text-sm text-muted-foreground border rounded-lg">
-            Nenhuma meta configurada para esta semana.
+            Nenhuma meta ou deal configurado para esta semana.
           </div>
         )}
 
+      {/* Merged view: deals + weekly metas per club */}
       {!isLoading &&
-        Object.entries(grouped).map(([key, clubMetas]) => {
-          const first = clubMetas[0];
-          const clubInfo = clubLookup.get(
-            `${first.super_union_id}-${first.club_id}`,
-          );
+        !dealsLoading &&
+        allClubKeys.map((key) => {
+          const clubMetas = grouped[key] ?? [];
+          const deals = dealsByClub.get(key) ?? [];
+          if (clubMetas.length === 0 && deals.length === 0) return null;
+
+          const first = clubMetas[0] ?? deals[0];
+          const suId = first.super_union_id;
+          const cId = first.club_id;
+          const clubInfo = clubLookup.get(`${suId}-${cId}`);
+          const isExpanded = expandedClubs.has(key);
+
           return (
             <div key={key} className="border rounded-lg p-3 space-y-2">
-              <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="flex items-center gap-2 w-full text-left"
+                onClick={() => toggleClubExpand(key)}
+              >
+                <Icons.ChevronRight
+                  className={`w-3 h-3 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                />
                 <span className="text-xs font-medium">
-                  {clubInfo?.ligaNome ?? `Liga ${first.super_union_id}`}
+                  {clubInfo?.ligaNome ?? `Liga ${suId}`}
                 </span>
                 <span className="text-muted-foreground text-xs">
-                  {clubInfo?.clubeNome ?? `Clube ${first.club_id}`}
+                  {clubInfo?.clubeNome ?? `Clube ${cId}`}
                 </span>
                 <span className="text-muted-foreground text-[9px]">
-                  ({first.super_union_id}/{first.club_id})
+                  ({suId}/{cId})
                 </span>
-              </div>
-
-              <div className="space-y-1">
-                {clubMetas.map((m: any) => (
-                  <div
-                    key={m.id}
-                    className="flex items-center justify-between text-xs px-2 py-1 rounded bg-muted/30"
+                {deals.length > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] border-blue-500/30 text-blue-500"
                   >
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[9px]">
-                        {m.target_type === "players" ? "Jogadores" : "Buyins"}
-                      </Badge>
-                      <span className="font-mono">
-                        {m.target_type === "players"
-                          ? `${m.targetValue} jogadores`
-                          : formatNumber(m.targetValue)}
-                      </span>
-                      {m.day_of_week != null && (
-                        <span className="text-muted-foreground">
-                          {DAY_LABELS[m.day_of_week]}
-                        </span>
-                      )}
-                      {m.hour_start != null && m.hour_end != null && (
-                        <span className="text-muted-foreground">
-                          {m.hour_start}h-{m.hour_end}h
-                        </span>
-                      )}
-                      {m.note && (
-                        <span className="text-muted-foreground italic truncate max-w-[120px]">
-                          {m.note}
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 w-5 p-0 hover:text-red-500"
-                      onClick={() => deleteMetaMutation.mutate({ id: m.id })}
-                      disabled={deleteMetaMutation.isPending}
+                    {deals.length} deal{deals.length > 1 ? "s" : ""}
+                  </Badge>
+                )}
+                {clubMetas.length > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] border-muted-foreground/30 text-muted-foreground"
+                  >
+                    S{weekNumber}
+                  </Badge>
+                )}
+              </button>
+
+              {isExpanded && (
+                <div className="space-y-1 pl-5">
+                  {/* Deals */}
+                  {deals.map((d: any) => (
+                    <div
+                      key={d.id}
+                      className="flex items-center justify-between text-xs px-2 py-1 rounded bg-blue-500/5 border border-blue-500/10"
                     >
-                      <Icons.Trash className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] border-blue-500/30 text-blue-500"
+                        >
+                          Deal
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px]">
+                          {d.target_type === "players"
+                            ? "Jogadores"
+                            : "Buyins"}
+                        </Badge>
+                        <span className="font-mono">
+                          {d.target_type === "players"
+                            ? `${d.targetValue} jogadores`
+                            : formatNumber(d.targetValue)}
+                        </span>
+                        {d.day_of_week != null ? (
+                          <span className="text-muted-foreground">
+                            {DAY_LABELS[d.day_of_week]}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Todos</span>
+                        )}
+                        {d.hour_start != null && d.hour_end != null && (
+                          <span className="text-muted-foreground">
+                            {d.hour_start}h-{d.hour_end}h
+                          </span>
+                        )}
+                        {d.referenceBuyin != null && (
+                          <span className="text-muted-foreground text-[9px]">
+                            ref: {formatNumber(d.referenceBuyin)}
+                          </span>
+                        )}
+                        {d.note && (
+                          <span className="text-muted-foreground italic truncate max-w-[120px]">
+                            {d.note}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 hover:text-red-500"
+                        onClick={() =>
+                          deleteDealMutation.mutate({ id: d.id })
+                        }
+                        disabled={deleteDealMutation.isPending}
+                      >
+                        <Icons.Trash className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+
+                  {/* Weekly metas */}
+                  {clubMetas.map((m: any) => (
+                    <div
+                      key={m.id}
+                      className="flex items-center justify-between text-xs px-2 py-1 rounded bg-muted/30"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] border-muted-foreground/30 text-muted-foreground"
+                        >
+                          Semana {weekNumber}
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px]">
+                          {m.target_type === "players"
+                            ? "Jogadores"
+                            : "Buyins"}
+                        </Badge>
+                        <span className="font-mono">
+                          {m.target_type === "players"
+                            ? `${m.targetValue} jogadores`
+                            : formatNumber(m.targetValue)}
+                        </span>
+                        {m.day_of_week != null && (
+                          <span className="text-muted-foreground">
+                            {DAY_LABELS[m.day_of_week]}
+                          </span>
+                        )}
+                        {m.hour_start != null && m.hour_end != null && (
+                          <span className="text-muted-foreground">
+                            {m.hour_start}h-{m.hour_end}h
+                          </span>
+                        )}
+                        {m.note && (
+                          <span className="text-muted-foreground italic truncate max-w-[120px]">
+                            {m.note}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 px-1 text-[9px] text-blue-500 hover:text-blue-400"
+                          onClick={() =>
+                            setSaveAsDefaultDialog({ meta: m, open: true })
+                          }
+                          title="Salvar como deal padrao"
+                        >
+                          Salvar padrao
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0 hover:text-red-500"
+                          onClick={() =>
+                            deleteMetaMutation.mutate({ id: m.id })
+                          }
+                          disabled={deleteMetaMutation.isPending}
+                        >
+                          <Icons.Trash className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {deals.length === 0 && clubMetas.length === 0 && (
+                    <p className="text-[10px] text-muted-foreground px-2">
+                      Sem acordo
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
 
-      {/* Create Dialog */}
+      {/* Create Meta Dialog */}
       <ClubMetaForm
         open={showCreateForm}
         onOpenChange={setShowCreateForm}
@@ -690,6 +978,65 @@ export function ClubMetasSection({
         availableClubs={availableClubs}
         mode="create"
       />
+
+      {/* Create Deal Dialog (reuses ClubMetaForm but submits to deals endpoint) */}
+      <ClubMetaForm
+        open={showDealForm}
+        onOpenChange={setShowDealForm}
+        onSubmit={(data) => {
+          const { weekYear: _wy, weekNumber: _wn, ...rest } = data;
+          createDealMutation.mutate(rest);
+        }}
+        isPending={createDealMutation.isPending}
+        weekYear={weekYear}
+        weekNumber={weekNumber}
+        availableClubs={availableClubs}
+        mode="create"
+      />
+
+      {/* Save as Default dialog */}
+      <Dialog
+        open={!!saveAsDefaultDialog?.open}
+        onOpenChange={(open) => {
+          if (!open) setSaveAsDefaultDialog(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Salvar como padrao?</DialogTitle>
+            <DialogDescription>
+              Escolha como aplicar esta alteracao.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Button
+              className="w-full justify-start"
+              variant="outline"
+              onClick={() => {
+                if (saveAsDefaultDialog?.meta) {
+                  handleSaveAsDefault(saveAsDefaultDialog.meta);
+                }
+              }}
+              disabled={saveFromOverrideMutation.isPending}
+            >
+              <span className="text-sm">
+                {saveFromOverrideMutation.isPending
+                  ? "Salvando..."
+                  : "Salvar como padrao (Deal permanente)"}
+              </span>
+            </Button>
+            <Button
+              className="w-full justify-start"
+              variant="ghost"
+              onClick={() => setSaveAsDefaultDialog(null)}
+            >
+              <span className="text-sm">
+                Manter apenas esta semana
+              </span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -72,6 +72,29 @@ const updateClubMetaSchema = z.object({
   hourEnd: z.number().int().min(0).max(23).nullable().optional(),
 });
 
+const createClubDealSchema = z.object({
+  superUnionId: z.number(),
+  clubId: z.number(),
+  dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
+  hourStart: z.number().int().min(0).max(23).nullable().optional(),
+  hourEnd: z.number().int().min(0).max(23).nullable().optional(),
+  targetType: z.enum(["players", "buyins"]),
+  targetValue: z.number().min(0),
+  referenceBuyin: z.number().nullable().optional(),
+  note: z.string().optional(),
+});
+
+const updateClubDealSchema = z.object({
+  id: z.string().uuid(),
+  targetValue: z.number().min(0).optional(),
+  referenceBuyin: z.number().nullable().optional(),
+  dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
+  hourStart: z.number().int().min(0).max(23).nullable().optional(),
+  hourEnd: z.number().int().min(0).max(23).nullable().optional(),
+  isActive: z.boolean().optional(),
+  note: z.string().nullable().optional(),
+});
+
 // =============================================================================
 // Helper: validate sum of active group percentages
 // =============================================================================
@@ -944,7 +967,7 @@ export const suMetasRouter = createTRPCRouter({
         });
       }
 
-      // 3. Fetch club metas for this week
+      // 3a. Fetch club metas for this week
       const { data: clubMetas, error: metasError } = await supabase
         .from("poker_su_club_metas")
         .select("*")
@@ -956,6 +979,20 @@ export const suMetasRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch club metas",
+        });
+      }
+
+      // 3b. Fetch active club deals (persistent agreements)
+      const { data: clubDeals, error: dealsError } = await supabase
+        .from("poker_su_club_deals")
+        .select("*")
+        .eq("team_id", teamId)
+        .eq("is_active", true);
+
+      if (dealsError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch club deals",
         });
       }
 
@@ -1033,6 +1070,7 @@ export const suMetasRouter = createTRPCRouter({
           referenceBuyin: number;
           charge: number;
           metMeta: boolean;
+          source: "weekly_meta" | "deal";
         }[];
         totalClubCharges: number;
         leagueRemainder: number;
@@ -1075,7 +1113,8 @@ export const suMetasRouter = createTRPCRouter({
         const buyinBase = Number(game.buyin_base ?? 0);
 
         // Find matching metas for this game's time slot
-        const matchingMetas = (clubMetas ?? []).filter((m: any) => {
+        // Weekly metas take priority over deals for the same club+day+hour
+        const matchingWeeklyMetas = (clubMetas ?? []).filter((m: any) => {
           const dayMatch =
             m.day_of_week == null || m.day_of_week === dayOfWeek;
           const hourMatch =
@@ -1084,6 +1123,40 @@ export const suMetasRouter = createTRPCRouter({
             (hour >= m.hour_start && hour < m.hour_end);
           return dayMatch && hourMatch;
         });
+
+        // Build set of club+targetType keys covered by weekly metas
+        const weeklyMetaKeys = new Set<string>();
+        for (const m of matchingWeeklyMetas) {
+          weeklyMetaKeys.add(
+            `${m.super_union_id}-${m.club_id}-${m.target_type}`,
+          );
+        }
+
+        // Find matching deals for clubs NOT covered by weekly metas
+        const matchingDeals = (clubDeals ?? []).filter((d: any) => {
+          const dayMatch =
+            d.day_of_week == null || d.day_of_week === dayOfWeek;
+          const hourMatch =
+            d.hour_start == null ||
+            d.hour_end == null ||
+            (hour >= d.hour_start && hour < d.hour_end);
+          if (!dayMatch || !hourMatch) return false;
+          // Only include deal if no weekly meta covers this club+targetType
+          const key = `${d.super_union_id}-${d.club_id}-${d.target_type}`;
+          return !weeklyMetaKeys.has(key);
+        });
+
+        // Merge: weekly metas (tagged) + deals (tagged)
+        const matchingMetas: (any & { _source: "weekly_meta" | "deal" })[] = [
+          ...matchingWeeklyMetas.map((m: any) => ({
+            ...m,
+            _source: "weekly_meta" as const,
+          })),
+          ...matchingDeals.map((d: any) => ({
+            ...d,
+            _source: "deal" as const,
+          })),
+        ];
 
         if (matchingMetas.length === 0) {
           // No metas for this slot -> league pays alone
@@ -1159,6 +1232,7 @@ export const suMetasRouter = createTRPCRouter({
             referenceBuyin,
             charge: Math.round(charge * 100) / 100,
             metMeta,
+            source: meta._source,
           });
 
           // Accumulate club summary
@@ -1385,5 +1459,250 @@ export const suMetasRouter = createTRPCRouter({
       }
 
       return { count: data?.length ?? 0 };
+    }),
+
+  // ===========================================================================
+  // Club Deals (persistent volume agreements)
+  // ===========================================================================
+
+  "clubDeals.list": protectedProcedure
+    .input(
+      z
+        .object({
+          superUnionId: z.number().optional(),
+          clubId: z.number().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      let query = supabase
+        .from("poker_su_club_deals")
+        .select("*")
+        .eq("team_id", teamId)
+        .eq("is_active", true)
+        .order("super_union_id", { ascending: true });
+
+      if (input?.superUnionId) {
+        query = query.eq("super_union_id", input.superUnionId);
+      }
+      if (input?.clubId) {
+        query = query.eq("club_id", input.clubId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch club deals",
+        });
+      }
+
+      return (data ?? []).map((d: any) => ({
+        ...d,
+        targetValue: Number(d.target_value),
+        referenceBuyin: d.reference_buyin ? Number(d.reference_buyin) : null,
+      }));
+    }),
+
+  "clubDeals.getByClub": protectedProcedure
+    .input(
+      z.object({
+        superUnionId: z.number(),
+        clubId: z.number(),
+      }),
+    )
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      const { data, error } = await supabase
+        .from("poker_su_club_deals")
+        .select("*")
+        .eq("team_id", teamId)
+        .eq("super_union_id", input.superUnionId)
+        .eq("club_id", input.clubId)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch club deals",
+        });
+      }
+
+      return (data ?? []).map((d: any) => ({
+        ...d,
+        targetValue: Number(d.target_value),
+        referenceBuyin: d.reference_buyin ? Number(d.reference_buyin) : null,
+      }));
+    }),
+
+  "clubDeals.create": protectedProcedure
+    .input(createClubDealSchema)
+    .mutation(async ({ input, ctx: { teamId, session } }) => {
+      const supabase = await createAdminClient();
+      const userId = session?.user?.id;
+
+      const { data, error } = await supabase
+        .from("poker_su_club_deals")
+        .insert({
+          team_id: teamId,
+          super_union_id: input.superUnionId,
+          club_id: input.clubId,
+          day_of_week: input.dayOfWeek ?? null,
+          hour_start: input.hourStart ?? null,
+          hour_end: input.hourEnd ?? null,
+          target_type: input.targetType,
+          target_value: input.targetValue,
+          reference_buyin: input.referenceBuyin ?? null,
+          note: input.note ?? null,
+          created_by_id: userId,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === "23505") {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Ja existe um deal com esses parametros",
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create club deal",
+        });
+      }
+
+      return {
+        ...data,
+        targetValue: Number(data.target_value),
+        referenceBuyin: data.reference_buyin
+          ? Number(data.reference_buyin)
+          : null,
+      };
+    }),
+
+  "clubDeals.update": protectedProcedure
+    .input(updateClubDealSchema)
+    .mutation(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      const updateData: Record<string, unknown> = {};
+      if (input.targetValue !== undefined)
+        updateData.target_value = input.targetValue;
+      if (input.referenceBuyin !== undefined)
+        updateData.reference_buyin = input.referenceBuyin;
+      if (input.dayOfWeek !== undefined)
+        updateData.day_of_week = input.dayOfWeek;
+      if (input.hourStart !== undefined)
+        updateData.hour_start = input.hourStart;
+      if (input.hourEnd !== undefined) updateData.hour_end = input.hourEnd;
+      if (input.isActive !== undefined) updateData.is_active = input.isActive;
+      if (input.note !== undefined) updateData.note = input.note;
+
+      const { data, error } = await supabase
+        .from("poker_su_club_deals")
+        .update(updateData)
+        .eq("team_id", teamId)
+        .eq("id", input.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update club deal",
+        });
+      }
+
+      return {
+        ...data,
+        targetValue: Number(data.target_value),
+        referenceBuyin: data.reference_buyin
+          ? Number(data.reference_buyin)
+          : null,
+      };
+    }),
+
+  "clubDeals.delete": protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      const { error } = await supabase
+        .from("poker_su_club_deals")
+        .delete()
+        .eq("team_id", teamId)
+        .eq("id", input.id);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete club deal",
+        });
+      }
+
+      return { success: true };
+    }),
+
+  "clubDeals.saveFromOverride": protectedProcedure
+    .input(
+      z.object({
+        superUnionId: z.number(),
+        clubId: z.number(),
+        dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
+        hourStart: z.number().int().min(0).max(23).nullable().optional(),
+        hourEnd: z.number().int().min(0).max(23).nullable().optional(),
+        targetType: z.enum(["players", "buyins"]),
+        targetValue: z.number().min(0),
+        referenceBuyin: z.number().nullable().optional(),
+        note: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx: { teamId, session } }) => {
+      const supabase = await createAdminClient();
+      const userId = session?.user?.id;
+
+      const { data, error } = await supabase
+        .from("poker_su_club_deals")
+        .upsert(
+          {
+            team_id: teamId,
+            super_union_id: input.superUnionId,
+            club_id: input.clubId,
+            day_of_week: input.dayOfWeek ?? null,
+            hour_start: input.hourStart ?? null,
+            hour_end: input.hourEnd ?? null,
+            target_type: input.targetType,
+            target_value: input.targetValue,
+            reference_buyin: input.referenceBuyin ?? null,
+            note: input.note ?? null,
+            created_by_id: userId,
+          },
+          {
+            onConflict:
+              "team_id,super_union_id,club_id,day_of_week,hour_start,hour_end,target_type",
+          },
+        )
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to save club deal from override",
+        });
+      }
+
+      return {
+        ...data,
+        targetValue: Number(data.target_value),
+        referenceBuyin: data.reference_buyin
+          ? Number(data.reference_buyin)
+          : null,
+      };
     }),
 });

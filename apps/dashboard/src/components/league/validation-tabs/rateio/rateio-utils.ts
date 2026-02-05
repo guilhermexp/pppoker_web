@@ -119,6 +119,21 @@ export type AvailableClub = {
   superUnionId: number | null;
 };
 
+// Club Deal: persistent volume agreement (no week scope)
+export type ClubDeal = {
+  id: string;
+  superUnionId: number;
+  clubId: number;
+  dayOfWeek: number | null;
+  hourStart: number | null;
+  hourEnd: number | null;
+  targetType: "players" | "buyins";
+  targetValue: number;
+  referenceBuyin: number | null;
+  isActive: boolean;
+  note: string | null;
+};
+
 // Types for overlay distribution calculation
 export type OverlayDistributionClub = {
   clubId: number;
@@ -132,6 +147,7 @@ export type OverlayDistributionClub = {
   referenceBuyin: number;
   charge: number;
   metMeta: boolean;
+  source: "weekly_meta" | "deal";
 };
 
 export type OverlayDistributionTournament = {
