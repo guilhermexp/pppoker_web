@@ -231,6 +231,7 @@
       "name": "@midpoker/cache",
       "version": "0.0.1",
       "dependencies": {
+        "@midpoker/logger": "workspace:*",
         "@types/redis": "^4.0.11",
         "redis": "^5.10.0",
       },
@@ -257,6 +258,7 @@
       "name": "@midpoker/db",
       "dependencies": {
         "@date-fns/utc": "^2.1.1",
+        "@midpoker/cache": "workspace:*",
         "@midpoker/categories": "workspace:*",
         "@midpoker/encryption": "workspace:*",
         "@midpoker/invoice": "workspace:*",
