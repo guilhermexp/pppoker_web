@@ -1,14 +1,10 @@
-import { useQueryStates } from "nuqs";
 import { createLoader, parseAsArrayOf, parseAsString } from "nuqs/server";
+import { createNestedParamsHook } from "./create-params-hook";
 
 export const sortParamsSchema = {
   sort: parseAsArrayOf(parseAsString),
 };
 
-export function useSortParams() {
-  const [params, setParams] = useQueryStates(sortParamsSchema);
-
-  return { params, setParams };
-}
+export const useSortParams = createNestedParamsHook(sortParamsSchema);
 
 export const loadSortParams = createLoader(sortParamsSchema);

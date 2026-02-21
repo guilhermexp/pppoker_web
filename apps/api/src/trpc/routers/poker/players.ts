@@ -3,6 +3,7 @@ import {
   calculateBatchActivityMetrics,
   calculatePlayerActivityMetrics,
 } from "@api/utils/poker-activity";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 import {
   bulkCreatePlayersSchema,
@@ -184,7 +185,10 @@ export const pokerPlayersRouter = createTRPCRouter({
       const { data, error, count } = await query;
 
       if (error) {
-        console.log("[pokerPlayers.get] Supabase error:", error.message);
+        logger.error(
+          { error: error.message },
+          "pokerPlayers.get Supabase error",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -261,7 +265,7 @@ export const pokerPlayersRouter = createTRPCRouter({
 
       // Fetch rake/winnings stats for all players in current page
       const playerIds = (data ?? []).map((p) => p.id);
-      let statsMap: Record<
+      const statsMap: Record<
         string,
         { totalRake: number; totalWinnings: number }
       > = {};
@@ -358,7 +362,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         if (error.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Player not found",
+            message: "Jogador nao encontrado",
           });
         }
         throw new TRPCError({
@@ -559,7 +563,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         if (error.code === "23505") {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "A player with this PPPoker ID already exists",
+            message: "Ja existe um jogador com este ID do PPPoker",
           });
         }
         throw new TRPCError({

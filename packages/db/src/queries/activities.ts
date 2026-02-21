@@ -1,8 +1,8 @@
+import { and, desc, eq, inArray, lte, ne } from "drizzle-orm";
+import type { SQL } from "drizzle-orm/sql/sql";
 import type { Database } from "../client";
 import { activities } from "../schema";
 import type { activityStatusEnum, activityTypeEnum } from "../schema";
-import { and, desc, eq, inArray, lte, ne } from "drizzle-orm";
-import type { SQL } from "drizzle-orm/sql/sql";
 
 type CreateActivityParams = {
   teamId: string;

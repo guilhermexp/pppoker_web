@@ -1,3 +1,4 @@
+import { logger } from "@midpoker/logger";
 import type { Database } from "../client";
 import { createActivity } from "../queries/activities";
 import type { activityTypeEnum } from "../schema";
@@ -25,11 +26,10 @@ export function logActivity(options: LogActivityOptions) {
       priority: options.priority ?? 7,
       metadata: options.metadata,
     }).catch((error) => {
-      console.warn("Activity logging failed", {
-        error,
-        teamId: options.teamId,
-        type: options.type,
-      });
+      logger.warn(
+        { error, teamId: options.teamId, type: options.type },
+        "Activity logging failed",
+      );
     });
   } catch {
     // Even if the call itself throws, ignore it

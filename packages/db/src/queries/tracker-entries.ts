@@ -1,5 +1,3 @@
-import type { Database } from "../client";
-import { teams, trackerEntries } from "../schema";
 import {
   endOfMonth,
   endOfWeek,
@@ -8,6 +6,8 @@ import {
   startOfWeek,
 } from "date-fns";
 import { and, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import type { Database } from "../client";
+import { teams, trackerEntries } from "../schema";
 import { createActivity } from "./activities";
 
 type GetTrackerRecordsByDateParams = {

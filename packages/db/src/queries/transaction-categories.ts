@@ -1,6 +1,7 @@
+import { logger } from "@midpoker/logger";
+import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import type { Database } from "../client";
 import { transactionCategories } from "../schema";
-import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { generateCategoryEmbedding } from "../utils/embeddings";
 import { createActivity } from "./activities";
 
@@ -221,9 +222,9 @@ export const createTransactionCategory = async (
       name: result.name,
       system: false, // User-created category
     }).catch((error) => {
-      console.error(
-        `Failed to generate embedding for category "${result.name}":`,
-        error,
+      logger.error(
+        { categoryName: result.name, error },
+        "Failed to generate embedding for category",
       );
     });
   }
@@ -300,9 +301,9 @@ export const updateTransactionCategory = async (
       name: updates.name,
       system: result.system || false,
     }).catch((error) => {
-      console.error(
-        `Failed to update embedding for category "${updates.name}":`,
-        error,
+      logger.error(
+        { categoryName: updates.name, error },
+        "Failed to update embedding for category",
       );
     });
   }

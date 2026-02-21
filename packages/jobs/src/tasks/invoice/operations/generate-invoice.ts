@@ -1,6 +1,7 @@
 import { generateInvoiceSchema } from "@jobs/schema";
 import { processDocument } from "@jobs/tasks/document/process-document";
 import { PdfTemplate, renderToBuffer } from "@midpoker/invoice";
+import type { Invoice } from "@midpoker/invoice/types";
 import { createClient } from "@midpoker/supabase/job";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import camelcaseKeys from "camelcase-keys";
@@ -37,8 +38,9 @@ export const generateInvoice = schemaTask({
       deep: true,
     });
 
-    // @ts-expect-error - Template JSONB while EditorDoc in components
-    const buffer = await renderToBuffer(await PdfTemplate(camelCaseInvoice));
+    const buffer = await renderToBuffer(
+      await PdfTemplate(camelCaseInvoice as unknown as Invoice),
+    );
 
     const filename = `${invoiceData?.invoice_number}.pdf`;
     const fullPath = `${invoiceData?.team_id}/invoices/${filename}`;

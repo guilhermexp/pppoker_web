@@ -1,3 +1,6 @@
+import { buildSearchQuery } from "@midpoker/db/utils/search-query";
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm/sql/sql";
 import type { Database } from "../client";
 import {
   customers,
@@ -6,9 +9,6 @@ import {
   trackerProjectTags,
   trackerProjects,
 } from "../schema";
-import { buildSearchQuery } from "@midpoker/db/utils/search-query";
-import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
-import type { SQL } from "drizzle-orm/sql/sql";
 import { createActivity } from "./activities";
 
 export type GetTrackerProjectsParams = {

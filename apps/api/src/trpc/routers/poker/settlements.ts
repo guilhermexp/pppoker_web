@@ -1,7 +1,7 @@
 import { createAdminClient } from "@api/services/supabase";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 import {
+  closeWeekSettlementSchema,
   createPokerSettlementSchema,
   deletePokerSettlementSchema,
   getPokerSettlementByIdSchema,
@@ -167,7 +167,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         if (error.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Settlement not found",
+            message: "Acerto nao encontrado",
           });
         }
         throw new TRPCError({
@@ -272,7 +272,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         if (fetchError.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Settlement not found",
+            message: "Acerto nao encontrado",
           });
         }
         throw new TRPCError({
@@ -289,7 +289,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
       if (!allowedTransitions.includes(newStatus)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `Invalid status transition: cannot change from '${currentStatus}' to '${newStatus}'. Allowed transitions: ${allowedTransitions.length > 0 ? allowedTransitions.join(", ") : "none (terminal state)"}`,
+          message: `Transicao de status invalida: nao e possivel alterar de '${currentStatus}' para '${newStatus}'. Transicoes permitidas: ${allowedTransitions.length > 0 ? allowedTransitions.join(", ") : "nenhuma (estado final)"}`,
         });
       }
 
@@ -334,7 +334,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         if (fetchError.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Settlement not found",
+            message: "Acerto nao encontrado",
           });
         }
         throw new TRPCError({
@@ -348,7 +348,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
       if (input.paidAmount > netAmount) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `Paid amount (${input.paidAmount}) cannot exceed net amount (${netAmount})`,
+          message: `Valor pago (${input.paidAmount}) nao pode exceder o valor liquido (${netAmount})`,
         });
       }
 
@@ -398,7 +398,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         if (fetchError.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Settlement not found",
+            message: "Acerto nao encontrado",
           });
         }
         throw new TRPCError({
@@ -412,7 +412,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
-            "Cannot delete a completed settlement. Change status to cancelled first if needed.",
+            "Nao e possivel excluir um acerto concluido. Altere o status para cancelado primeiro, se necessario.",
         });
       }
 
@@ -420,7 +420,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
-            "Cannot delete a settlement with recorded payments. Reverse the payment first.",
+            "Nao e possivel excluir um acerto com pagamentos registrados. Reverta o pagamento primeiro.",
         });
       }
 
@@ -488,15 +488,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
    * Close the current week - creates settlements for all players with non-zero balances
    */
   closeWeek: protectedProcedure
-    .input(
-      z
-        .object({
-          periodStart: z.string().optional(),
-          periodEnd: z.string().optional(),
-          note: z.string().optional(),
-        })
-        .optional(),
-    )
+    .input(closeWeekSettlementSchema)
     .mutation(async ({ input, ctx: { teamId, userId } }) => {
       const supabase = await createAdminClient();
 
@@ -526,7 +518,7 @@ export const pokerSettlementsRouter = createTRPCRouter({
         return {
           success: true,
           settlementsCreated: 0,
-          message: "No players with outstanding balances",
+          message: "Nenhum jogador com saldo pendente",
         };
       }
 

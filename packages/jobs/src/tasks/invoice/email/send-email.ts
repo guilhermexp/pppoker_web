@@ -34,8 +34,7 @@ export const sendInvoiceEmail = schemaTask({
 
     let attachments: { content: string; filename: string }[] | undefined;
 
-    // @ts-expect-error template is a jsonb field
-    if (invoice.template.includePdf) {
+    if ((invoice.template as Record<string, unknown>)?.includePdf) {
       const { data: attachmentData } = await supabase.storage
         .from("vault")
         .download(fullPath);
@@ -55,8 +54,8 @@ export const sendInvoiceEmail = schemaTask({
     const customerEmail = invoice?.customer?.email;
     const userEmail = invoice?.user?.email;
 
-    // @ts-expect-error template is a jsonb field
-    const shouldSendCopy = invoice?.template?.sendCopy;
+    const shouldSendCopy = (invoice?.template as Record<string, unknown>)
+      ?.sendCopy;
 
     const bcc = [
       ...(invoice?.customer?.billing_email

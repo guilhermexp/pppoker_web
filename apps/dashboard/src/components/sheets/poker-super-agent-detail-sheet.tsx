@@ -433,7 +433,7 @@ function FinancialTab({
 
   const handleRakebackSave = () => {
     const value = Number.parseFloat(rakebackValue);
-    if (!isNaN(value) && value >= 0 && value <= 100) {
+    if (!Number.isNaN(value) && value >= 0 && value <= 100) {
       updateRakebackMutation.mutate({
         id: superAgent.id,
         rakebackPercent: value,

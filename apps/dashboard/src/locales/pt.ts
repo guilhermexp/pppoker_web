@@ -689,13 +689,6 @@ export default {
     currency_description: "Moeda da conta",
     create_button: "Criar",
   },
-  chat: {
-    create_account_title: "Criar conta bancaria",
-    create_account_description:
-      "Para responder perguntas financeiras, preciso de acesso as suas transacoes e saldos bancarios. Crie uma conta para continuar.",
-    create_account_button: "Criar conta",
-    maybe_later: "Talvez depois",
-  },
   transactions: {
     no_results: "Sem resultados",
     no_results_description: "Tente outra busca ou ajuste os filtros",
@@ -806,25 +799,6 @@ export default {
   },
   search: {
     find_anything: "Buscar qualquer coisa...",
-  },
-
-  // Table column headers
-  table: {
-    columns: {
-      name: "Nome",
-      contact_person: "Pessoa de contato",
-      email: "Email",
-      invoices: "Faturas",
-      projects: "Projetos",
-      tags: "Tags",
-      actions: "Acoes",
-      date: "Data",
-      description: "Descricao",
-      amount: "Valor",
-      category: "Categoria",
-      account: "Conta",
-      status: "Status",
-    },
   },
 
   // Common actions

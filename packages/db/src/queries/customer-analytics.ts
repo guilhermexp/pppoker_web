@@ -1,6 +1,6 @@
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type { Database } from "../client";
 import { customers, invoiceStatusEnum, invoices } from "../schema";
-import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 export type GetTopRevenueClientParams = {
   teamId: string;

@@ -1,5 +1,5 @@
-import type { Database } from "../client";
 import { sql } from "drizzle-orm";
+import type { Database } from "../client";
 
 export type GlobalSearchReturnType = {
   id: string;

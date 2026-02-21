@@ -828,7 +828,9 @@ export function LeagueJogosPPSTTab({
           // All tournaments with GTD that have overlay
           if (!hasGTD) return false;
           const buyinLiquido =
-            (jogo.totalGeral?.buyinFichas ?? 0) + (jogo.totalGeral?.buyinTicket ?? 0) - (jogo.totalGeral?.taxa ?? 0);
+            (jogo.totalGeral?.buyinFichas ?? 0) +
+            (jogo.totalGeral?.buyinTicket ?? 0) -
+            (jogo.totalGeral?.taxa ?? 0);
           const gtd = jogo.metadata.premiacaoGarantida ?? 0;
           const resultado = buyinLiquido - gtd;
           return resultado < 0; // Only show if overlay (negative result)
@@ -895,14 +897,35 @@ export function LeagueJogosPPSTTab({
 
       // Sempre soma dos jogadores individuais (não usa totalGeral da planilha)
       // Assim podemos comparar com a aba Geral PPST para validar
-      const jogoBuyinFichas = jogo.jogadores.reduce((s, j) => s + (j.buyinFichas ?? 0), 0);
-      const jogoBuyinTicket = jogo.jogadores.reduce((s, j) => s + (j.buyinTicket ?? 0), 0);
-      const jogoGanhos = jogo.jogadores.reduce((s, j) => s + (j.ganhos ?? 0), 0);
+      const jogoBuyinFichas = jogo.jogadores.reduce(
+        (s, j) => s + (j.buyinFichas ?? 0),
+        0,
+      );
+      const jogoBuyinTicket = jogo.jogadores.reduce(
+        (s, j) => s + (j.buyinTicket ?? 0),
+        0,
+      );
+      const jogoGanhos = jogo.jogadores.reduce(
+        (s, j) => s + (j.ganhos ?? 0),
+        0,
+      );
       const jogoTaxa = jogo.jogadores.reduce((s, j) => s + (j.taxa ?? 0), 0);
-      const jogoGapGarantido = jogo.jogadores.reduce((s, j) => s + (j.gapGarantido ?? 0), 0);
-      const jogoPremio = jogo.jogadores.reduce((s, j) => s + (j.premio ?? 0), 0);
-      const jogoRecompensa = jogo.jogadores.reduce((s, j) => s + (j.recompensa ?? 0), 0);
-      const jogoValorTicket = jogo.jogadores.reduce((s, j) => s + (j.valorTicket ?? 0), 0);
+      const jogoGapGarantido = jogo.jogadores.reduce(
+        (s, j) => s + (j.gapGarantido ?? 0),
+        0,
+      );
+      const jogoPremio = jogo.jogadores.reduce(
+        (s, j) => s + (j.premio ?? 0),
+        0,
+      );
+      const jogoRecompensa = jogo.jogadores.reduce(
+        (s, j) => s + (j.recompensa ?? 0),
+        0,
+      );
+      const jogoValorTicket = jogo.jogadores.reduce(
+        (s, j) => s + (j.valorTicket ?? 0),
+        0,
+      );
 
       totalBuyin += jogoBuyinFichas;
       totalGeralBuyin += jogoBuyinFichas;
@@ -1138,16 +1161,30 @@ export function LeagueJogosPPSTTab({
               {/* Buyin Total / Buyin - Taxa / Taxa */}
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground w-20">Buyin Total</span>
-                  <span className="text-blue-400">{formatCurrency(summaryStats.totalBuyin)}</span>
+                  <span className="text-[10px] text-muted-foreground w-20">
+                    Buyin Total
+                  </span>
+                  <span className="text-blue-400">
+                    {formatCurrency(summaryStats.totalBuyin)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground w-20">Buyin - Taxa</span>
-                  <span className="text-cyan-400">{formatCurrency(summaryStats.totalBuyin - summaryStats.totalGeralTaxa)}</span>
+                  <span className="text-[10px] text-muted-foreground w-20">
+                    Buyin - Taxa
+                  </span>
+                  <span className="text-cyan-400">
+                    {formatCurrency(
+                      summaryStats.totalBuyin - summaryStats.totalGeralTaxa,
+                    )}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5 border-t border-border/50 pt-0.5">
-                  <span className="text-[10px] text-muted-foreground w-20">= Taxa</span>
-                  <span className="text-green-500 font-medium">{formatCurrency(summaryStats.totalGeralTaxa)}</span>
+                  <span className="text-[10px] text-muted-foreground w-20">
+                    = Taxa
+                  </span>
+                  <span className="text-green-500 font-medium">
+                    {formatCurrency(summaryStats.totalGeralTaxa)}
+                  </span>
                 </div>
               </div>
 
@@ -1159,15 +1196,24 @@ export function LeagueJogosPPSTTab({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      GTD ({summaryStats.gtdTourneysCount}) <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                      GTD ({summaryStats.gtdTourneysCount}){" "}
+                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                  <TooltipContent
+                    side="bottom"
+                    className="max-w-[250px] text-xs"
+                  >
                     <p className="font-medium mb-1">Garantido Total</p>
-                    <p className="text-muted-foreground">Soma do prêmio garantido de todos os {summaryStats.gtdTourneysCount} torneios com GTD.</p>
+                    <p className="text-muted-foreground">
+                      Soma do prêmio garantido de todos os{" "}
+                      {summaryStats.gtdTourneysCount} torneios com GTD.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-[#00C969] text-sm font-medium">{formatCurrency(summaryStats.totalGTD)}</span>
+                <span className="text-[#00C969] text-sm font-medium">
+                  {formatCurrency(summaryStats.totalGTD)}
+                </span>
               </div>
 
               {/* Separator */}
@@ -1178,15 +1224,25 @@ export function LeagueJogosPPSTTab({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      GTD Overlay <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                      GTD Overlay{" "}
+                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
-                    <p className="font-medium mb-1">GTD dos Torneios c/ Overlay</p>
-                    <p className="text-muted-foreground">Soma do GTD apenas dos torneios que tiveram overlay.</p>
+                  <TooltipContent
+                    side="bottom"
+                    className="max-w-[250px] text-xs"
+                  >
+                    <p className="font-medium mb-1">
+                      GTD dos Torneios c/ Overlay
+                    </p>
+                    <p className="text-muted-foreground">
+                      Soma do GTD apenas dos torneios que tiveram overlay.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-[#00C969] text-sm font-medium">{formatCurrency(summaryStats.gtdOverlay)}</span>
+                <span className="text-[#00C969] text-sm font-medium">
+                  {formatCurrency(summaryStats.gtdOverlay)}
+                </span>
               </div>
 
               {/* Separator */}
@@ -1197,23 +1253,43 @@ export function LeagueJogosPPSTTab({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-[10px] text-muted-foreground cursor-help flex items-center gap-0.5">
-                      Overlay ({summaryStats.overlayCount}) <HelpCircle className="w-2.5 h-2.5 opacity-50" />
+                      Overlay ({summaryStats.overlayCount}){" "}
+                      <HelpCircle className="w-2.5 h-2.5 opacity-50" />
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[280px] text-xs">
+                  <TooltipContent
+                    side="bottom"
+                    className="max-w-[280px] text-xs"
+                  >
                     <p className="font-medium mb-1">Overlay Total</p>
                     <p className="text-muted-foreground">
-                      Soma apenas dos torneios que <span className="text-red-400">não alcançaram</span> a arrecadação mínima.
+                      Soma apenas dos torneios que{" "}
+                      <span className="text-red-400">não alcançaram</span> a
+                      arrecadação mínima.
                     </p>
                   </TooltipContent>
                 </Tooltip>
                 <div className="flex items-center gap-1">
-                  <span className="text-red-500 text-sm font-medium">{formatCurrency(summaryStats.totalOverlayOnly)}</span>
-                  {geralTotals && (
-                    Math.round(summaryStats.totalOverlayOnly * 100) === Math.round(geralTotals.gapGarantido * 100)
-                      ? <CheckCircle2 className="w-3 h-3 text-green-500" />
-                      : <Tooltip><TooltipTrigger asChild><AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" /></TooltipTrigger><TooltipContent side="bottom" className="text-xs"><p>Divergência: Geral PPST Gap = {formatCurrency(geralTotals.gapGarantido)}</p></TooltipContent></Tooltip>
-                  )}
+                  <span className="text-red-500 text-sm font-medium">
+                    {formatCurrency(summaryStats.totalOverlayOnly)}
+                  </span>
+                  {geralTotals &&
+                    (Math.round(summaryStats.totalOverlayOnly * 100) ===
+                    Math.round(geralTotals.gapGarantido * 100) ? (
+                      <CheckCircle2 className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          <p>
+                            Divergência: Geral PPST Gap ={" "}
+                            {formatCurrency(geralTotals.gapGarantido)}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                 </div>
               </div>
 
@@ -1228,20 +1304,39 @@ export function LeagueJogosPPSTTab({
                       Ganhos <HelpCircle className="w-2.5 h-2.5 opacity-50" />
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                  <TooltipContent
+                    side="bottom"
+                    className="max-w-[250px] text-xs"
+                  >
                     <p className="font-medium mb-1">Ganhos dos Jogadores</p>
-                    <p className="text-muted-foreground">Soma de todos os ganhos/perdas dos jogadores.</p>
+                    <p className="text-muted-foreground">
+                      Soma de todos os ganhos/perdas dos jogadores.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
                 <div className="flex items-center gap-1">
-                  <span className={`text-sm font-medium ${summaryStats.totalGeralGanhos < 0 ? "text-red-500" : "text-green-500"}`}>
+                  <span
+                    className={`text-sm font-medium ${summaryStats.totalGeralGanhos < 0 ? "text-red-500" : "text-green-500"}`}
+                  >
                     {formatCurrency(summaryStats.totalGeralGanhos)}
                   </span>
-                  {geralTotals && (
-                    Math.round(summaryStats.totalGeralGanhos * 100) === Math.round(geralTotals.ganhosJogador * 100)
-                      ? <CheckCircle2 className="w-3 h-3 text-green-500" />
-                      : <Tooltip><TooltipTrigger asChild><AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" /></TooltipTrigger><TooltipContent side="bottom" className="text-xs"><p>Divergência: Geral PPST = {formatCurrency(geralTotals.ganhosJogador)}</p></TooltipContent></Tooltip>
-                  )}
+                  {geralTotals &&
+                    (Math.round(summaryStats.totalGeralGanhos * 100) ===
+                    Math.round(geralTotals.ganhosJogador * 100) ? (
+                      <CheckCircle2 className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          <p>
+                            Divergência: Geral PPST ={" "}
+                            {formatCurrency(geralTotals.ganhosJogador)}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                 </div>
               </div>
 
@@ -1256,18 +1351,37 @@ export function LeagueJogosPPSTTab({
                       Taxa <HelpCircle className="w-2.5 h-2.5 opacity-50" />
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                  <TooltipContent
+                    side="bottom"
+                    className="max-w-[250px] text-xs"
+                  >
                     <p className="font-medium mb-1">Taxa Total</p>
-                    <p className="text-muted-foreground">Soma de todas as taxas cobradas em todos os torneios.</p>
+                    <p className="text-muted-foreground">
+                      Soma de todas as taxas cobradas em todos os torneios.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
                 <div className="flex items-center gap-1">
-                  <span className="text-green-500 text-sm font-medium">{formatCurrency(summaryStats.totalGeralTaxa)}</span>
-                  {geralTotals && (
-                    Math.round(summaryStats.totalGeralTaxa * 100) === Math.round(geralTotals.ganhosLigaTaxa * 100)
-                      ? <CheckCircle2 className="w-3 h-3 text-green-500" />
-                      : <Tooltip><TooltipTrigger asChild><AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" /></TooltipTrigger><TooltipContent side="bottom" className="text-xs"><p>Divergência: Geral PPST = {formatCurrency(geralTotals.ganhosLigaTaxa)}</p></TooltipContent></Tooltip>
-                  )}
+                  <span className="text-green-500 text-sm font-medium">
+                    {formatCurrency(summaryStats.totalGeralTaxa)}
+                  </span>
+                  {geralTotals &&
+                    (Math.round(summaryStats.totalGeralTaxa * 100) ===
+                    Math.round(geralTotals.ganhosLigaTaxa * 100) ? (
+                      <CheckCircle2 className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          <p>
+                            Divergência: Geral PPST ={" "}
+                            {formatCurrency(geralTotals.ganhosLigaTaxa)}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                 </div>
               </div>
             </div>
@@ -1314,77 +1428,77 @@ export function LeagueJogosPPSTTab({
         </div>
         <div className="flex items-center gap-1">
           {/* First page */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(1)}
-              disabled={currentPage === 1}
-              className="gap-1"
-            >
-              <ChevronsLeft className="h-4 w-4" />
-              <span className="text-[10px] text-muted-foreground">
-                (primeiro)
-              </span>
-            </Button>
-            {/* Previous page */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex items-center gap-1">
-              {/* Show page numbers */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "ghost"}
-                    size="sm"
-                    className="w-8 h-8 p-0"
-                    onClick={() => goToPage(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
-            </div>
-            {/* Next page */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            {/* Last page */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="gap-1"
-            >
-              <span className="text-[10px] text-muted-foreground">
-                (último pela Planilha)
-              </span>
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(1)}
+            disabled={currentPage === 1}
+            className="gap-1"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+            <span className="text-[10px] text-muted-foreground">
+              (primeiro)
+            </span>
+          </Button>
+          {/* Previous page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-1">
+            {/* Show page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "ghost"}
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={() => goToPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
           </div>
+          {/* Next page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          {/* Last page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="gap-1"
+          >
+            <span className="text-[10px] text-muted-foreground">
+              (último pela Planilha)
+            </span>
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
         </div>
+      </div>
 
       {/* Games List */}
       <div className="rounded-lg overflow-hidden">

@@ -1,7 +1,10 @@
 "use client";
 
 import type { SAOverlayData } from "@/lib/league/overlay-spreadsheet-parser";
-import { type StoredRealizedData, matchTournaments } from "@/lib/league/tournament-matching";
+import {
+  type StoredRealizedData,
+  matchTournaments,
+} from "@/lib/league/tournament-matching";
 import type { TournamentScheduleData } from "@/lib/league/tournament-schedule";
 import {
   Card,
@@ -79,9 +82,7 @@ export function AnaliseTab({
   const totalOverlay = useMemo(() => {
     if (!scheduleData || !realizedData) return 0;
     const scheduleTournaments: StoredTournament[] = scheduleData.events
-      .filter(
-        (e) => (Number.parseFloat(e.gtd.replace(/[^\d.]/g, "")) || 0) > 0,
-      )
+      .filter((e) => (Number.parseFloat(e.gtd.replace(/[^\d.]/g, "")) || 0) > 0)
       .map((e) => ({
         name: e.name.trim().toUpperCase(),
         day: e.day,
@@ -160,8 +161,7 @@ export function AnaliseTab({
                     {formatNumber(Math.round(saTotals.ppst * 100) / 100)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                    R${" "}
-                    {formatNumber(Math.round(saTotals.ppst * 5 * 100) / 100)}
+                    R$ {formatNumber(Math.round(saTotals.ppst * 5 * 100) / 100)}
                   </p>
                 </div>
               </div>
@@ -251,9 +251,7 @@ export function AnaliseTab({
                               className={`text-right font-mono text-sm ${row.ppst < 0 ? "text-red-500" : ""}`}
                             >
                               {row.ppst
-                                ? formatNumber(
-                                    Math.round(row.ppst * 100) / 100,
-                                  )
+                                ? formatNumber(Math.round(row.ppst * 100) / 100)
                                 : "-"}
                             </TableCell>
                             <TableCell
@@ -269,9 +267,7 @@ export function AnaliseTab({
                               className={`text-right font-mono text-sm text-muted-foreground ${row.sat && row.sat < 0 ? "text-red-500" : ""}`}
                             >
                               {row.sat
-                                ? formatNumber(
-                                    Math.round(row.sat * 100) / 100,
-                                  )
+                                ? formatNumber(Math.round(row.sat * 100) / 100)
                                 : "-"}
                             </TableCell>
                             <TableCell
@@ -321,9 +317,8 @@ export function AnaliseTab({
                                   <div className="text-[10px] text-muted-foreground">
                                     R${" "}
                                     {formatNumber(
-                                      Math.round(
-                                        saTotals.satLocal * 5 * 100,
-                                      ) / 100,
+                                      Math.round(saTotals.satLocal * 5 * 100) /
+                                        100,
                                     )}
                                   </div>
                                 </>

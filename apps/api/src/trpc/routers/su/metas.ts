@@ -1,99 +1,35 @@
+import {
+  addMetaGroupMemberInput,
+  bulkCreateClubMetasInput,
+  bulkMetaGroupMembersInput,
+  createClubDealInput,
+  createClubMetaInput,
+  createMetaGroupInput,
+  createTimeSlotInput,
+  deleteClubDealInput,
+  deleteClubMetaInput,
+  deleteMetaGroupInput,
+  deleteTimeSlotInput,
+  getClubDealsByClubInput,
+  getClubMetasByWeekInput,
+  getMetaGroupByIdInput,
+  getOverlaySelectionsInput,
+  inheritClubMetasInput,
+  listClubDealsInput,
+  listMetaGroupTimeSlotsInput,
+  listMetaGroupsInput,
+  overlayDistributionInput,
+  removeMetaGroupMemberInput,
+  saveClubDealFromOverrideInput,
+  saveOverlaySelectionsInput,
+  updateClubDealInput,
+  updateClubMetaInput,
+  updateMetaGroupInput,
+  updateTimeSlotInput,
+} from "@api/schemas/su/metas";
 import { createAdminClient } from "@api/services/supabase";
-import { z } from "@hono/zod-openapi";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-// =============================================================================
-// Schemas
-// =============================================================================
-
-const createMetaGroupSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().optional(),
-  metaPercent: z.number().min(0).max(100),
-  memberIds: z
-    .array(
-      z.object({
-        superUnionId: z.number(),
-        suLeagueId: z.string().uuid().optional(),
-        displayName: z.string().optional(),
-      }),
-    )
-    .optional(),
-});
-
-const updateMetaGroupSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().nullable().optional(),
-  metaPercent: z.number().min(0).max(100).optional(),
-  isActive: z.boolean().optional(),
-});
-
-const createTimeSlotSchema = z.object({
-  metaGroupId: z.string().uuid(),
-  name: z.string().min(1).max(100),
-  hourStart: z.number().int().min(0).max(23),
-  hourEnd: z.number().int().min(0).max(23),
-  metaPercent: z.number().min(0).max(100),
-  isActive: z.boolean().optional(),
-});
-
-const updateTimeSlotSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1).max(100).optional(),
-  hourStart: z.number().int().min(0).max(23).optional(),
-  hourEnd: z.number().int().min(0).max(23).optional(),
-  metaPercent: z.number().min(0).max(100).optional(),
-  isActive: z.boolean().optional(),
-});
-
-const createClubMetaSchema = z.object({
-  superUnionId: z.number(),
-  clubId: z.number(),
-  weekYear: z.number(),
-  weekNumber: z.number(),
-  dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
-  hourStart: z.number().int().min(0).max(23).nullable().optional(),
-  hourEnd: z.number().int().min(0).max(23).nullable().optional(),
-  targetType: z.enum(["players", "buyins"]),
-  targetValue: z.number().min(0),
-  referenceBuyin: z.number().nullable().optional(),
-  note: z.string().optional(),
-});
-
-const updateClubMetaSchema = z.object({
-  id: z.string().uuid(),
-  targetValue: z.number().min(0).optional(),
-  referenceBuyin: z.number().nullable().optional(),
-  note: z.string().nullable().optional(),
-  dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
-  hourStart: z.number().int().min(0).max(23).nullable().optional(),
-  hourEnd: z.number().int().min(0).max(23).nullable().optional(),
-});
-
-const createClubDealSchema = z.object({
-  superUnionId: z.number(),
-  clubId: z.number(),
-  dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
-  hourStart: z.number().int().min(0).max(23).nullable().optional(),
-  hourEnd: z.number().int().min(0).max(23).nullable().optional(),
-  targetType: z.enum(["players", "buyins"]),
-  targetValue: z.number().min(0),
-  referenceBuyin: z.number().nullable().optional(),
-  note: z.string().optional(),
-});
-
-const updateClubDealSchema = z.object({
-  id: z.string().uuid(),
-  targetValue: z.number().min(0).optional(),
-  referenceBuyin: z.number().nullable().optional(),
-  dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
-  hourStart: z.number().int().min(0).max(23).nullable().optional(),
-  hourEnd: z.number().int().min(0).max(23).nullable().optional(),
-  isActive: z.boolean().optional(),
-  note: z.string().nullable().optional(),
-});
 
 // =============================================================================
 // Helper: validate sum of active group percentages
@@ -139,7 +75,7 @@ export const suMetasRouter = createTRPCRouter({
   // ===========================================================================
 
   "metaGroups.list": protectedProcedure
-    .input(z.object({ activeOnly: z.boolean().optional() }).optional())
+    .input(listMetaGroupsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -158,7 +94,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch meta groups",
+          message: "Erro ao buscar grupos de meta",
         });
       }
 
@@ -170,7 +106,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroups.getById": protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(getMetaGroupByIdInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -182,7 +118,10 @@ export const suMetasRouter = createTRPCRouter({
         .single();
 
       if (error || !group) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Grupo nao encontrado",
+        });
       }
 
       const { data: members } = await supabase
@@ -209,7 +148,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroups.create": protectedProcedure
-    .input(createMetaGroupSchema)
+    .input(createMetaGroupInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -244,7 +183,7 @@ export const suMetasRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create meta group",
+          message: "Erro ao criar grupo de meta",
         });
       }
 
@@ -278,7 +217,7 @@ export const suMetasRouter = createTRPCRouter({
           }
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to add members to group",
+            message: "Erro ao adicionar membros ao grupo",
           });
         }
       }
@@ -287,7 +226,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroups.update": protectedProcedure
-    .input(updateMetaGroupSchema)
+    .input(updateMetaGroupInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -326,7 +265,7 @@ export const suMetasRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update meta group",
+          message: "Erro ao atualizar grupo de meta",
         });
       }
 
@@ -334,7 +273,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroups.delete": protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(deleteMetaGroupInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -347,7 +286,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete meta group",
+          message: "Erro ao excluir grupo de meta",
         });
       }
 
@@ -359,14 +298,7 @@ export const suMetasRouter = createTRPCRouter({
   // ===========================================================================
 
   "metaGroupMembers.add": protectedProcedure
-    .input(
-      z.object({
-        metaGroupId: z.string().uuid(),
-        superUnionId: z.number(),
-        suLeagueId: z.string().uuid().optional(),
-        displayName: z.string().optional(),
-      }),
-    )
+    .input(addMetaGroupMemberInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -391,7 +323,7 @@ export const suMetasRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to add member",
+          message: "Erro ao adicionar membro",
         });
       }
 
@@ -399,7 +331,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroupMembers.remove": protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(removeMetaGroupMemberInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -412,7 +344,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to remove member",
+          message: "Erro ao remover membro",
         });
       }
 
@@ -420,18 +352,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroupMembers.bulk": protectedProcedure
-    .input(
-      z.object({
-        metaGroupId: z.string().uuid(),
-        members: z.array(
-          z.object({
-            superUnionId: z.number(),
-            suLeagueId: z.string().uuid().optional(),
-            displayName: z.string().optional(),
-          }),
-        ),
-      }),
-    )
+    .input(bulkMetaGroupMembersInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -466,7 +387,7 @@ export const suMetasRouter = createTRPCRouter({
           }
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to bulk update members",
+            message: "Erro ao atualizar membros em lote",
           });
         }
       }
@@ -479,7 +400,7 @@ export const suMetasRouter = createTRPCRouter({
   // ===========================================================================
 
   "metaGroupTimeSlots.list": protectedProcedure
-    .input(z.object({ metaGroupId: z.string().uuid() }))
+    .input(listMetaGroupTimeSlotsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -493,7 +414,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch time slots",
+          message: "Erro ao buscar faixas de horario",
         });
       }
 
@@ -504,7 +425,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroupTimeSlots.create": protectedProcedure
-    .input(createTimeSlotSchema)
+    .input(createTimeSlotInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -544,7 +465,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create time slot",
+          message: "Erro ao criar faixa de horario",
         });
       }
 
@@ -552,7 +473,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroupTimeSlots.update": protectedProcedure
-    .input(updateTimeSlotSchema)
+    .input(updateTimeSlotInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -567,7 +488,7 @@ export const suMetasRouter = createTRPCRouter({
       if (!currentSlot) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Time slot not found",
+          message: "Faixa de horario nao encontrada",
         });
       }
 
@@ -615,7 +536,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update time slot",
+          message: "Erro ao atualizar faixa de horario",
         });
       }
 
@@ -623,7 +544,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "metaGroupTimeSlots.delete": protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(deleteTimeSlotInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -636,7 +557,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete time slot",
+          message: "Erro ao excluir faixa de horario",
         });
       }
 
@@ -664,7 +585,7 @@ export const suMetasRouter = createTRPCRouter({
     if (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch leagues",
+        message: "Erro ao buscar ligas",
       });
     }
 
@@ -686,7 +607,7 @@ export const suMetasRouter = createTRPCRouter({
     if (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch clubs",
+        message: "Erro ao buscar clubes",
       });
     }
 
@@ -706,14 +627,7 @@ export const suMetasRouter = createTRPCRouter({
   // ===========================================================================
 
   "clubMetas.getByWeek": protectedProcedure
-    .input(
-      z.object({
-        weekYear: z.number(),
-        weekNumber: z.number(),
-        superUnionId: z.number().optional(),
-        clubId: z.number().optional(),
-      }),
-    )
+    .input(getClubMetasByWeekInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -737,7 +651,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch club metas",
+          message: "Erro ao buscar metas de clubes",
         });
       }
 
@@ -749,7 +663,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubMetas.create": protectedProcedure
-    .input(createClubMetaSchema)
+    .input(createClubMetaInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -783,7 +697,7 @@ export const suMetasRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create club meta",
+          message: "Erro ao criar meta de clube",
         });
       }
 
@@ -797,7 +711,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubMetas.update": protectedProcedure
-    .input(updateClubMetaSchema)
+    .input(updateClubMetaInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -824,7 +738,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update club meta",
+          message: "Erro ao atualizar meta de clube",
         });
       }
 
@@ -838,7 +752,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubMetas.delete": protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(deleteClubMetaInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -851,7 +765,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete club meta",
+          message: "Erro ao excluir meta de clube",
         });
       }
 
@@ -859,7 +773,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubMetas.bulkCreate": protectedProcedure
-    .input(z.object({ metas: z.array(createClubMetaSchema) }))
+    .input(bulkCreateClubMetasInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -891,7 +805,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to bulk create club metas",
+          message: "Erro ao criar metas de clubes em lote",
         });
       }
 
@@ -903,14 +817,7 @@ export const suMetasRouter = createTRPCRouter({
   // ===========================================================================
 
   overlayDistribution: protectedProcedure
-    .input(
-      z.object({
-        weekYear: z.number(),
-        weekNumber: z.number(),
-        weekStart: z.string(), // "YYYY-MM-DD"
-        weekEnd: z.string(), // "YYYY-MM-DD"
-      }),
-    )
+    .input(overlayDistributionInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -930,7 +837,7 @@ export const suMetasRouter = createTRPCRouter({
       if (gamesError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch games",
+          message: "Erro ao buscar jogos",
         });
       }
 
@@ -963,7 +870,7 @@ export const suMetasRouter = createTRPCRouter({
       if (playersError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch game players",
+          message: "Erro ao buscar jogadores das partidas",
         });
       }
 
@@ -978,7 +885,7 @@ export const suMetasRouter = createTRPCRouter({
       if (metasError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch club metas",
+          message: "Erro ao buscar metas de clubes",
         });
       }
 
@@ -992,7 +899,7 @@ export const suMetasRouter = createTRPCRouter({
       if (dealsError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch club deals",
+          message: "Erro ao buscar deals de clubes",
         });
       }
 
@@ -1102,7 +1009,9 @@ export const suMetasRouter = createTRPCRouter({
         const totalBuyin = Number(game.total_buyin ?? 0);
         const totalTaxa = Number(game.total_taxa ?? 0);
         const premiacaoGarantida = Number(game.premiacao_garantida ?? 0);
-        const overlayAmount = Math.abs(totalBuyin - totalTaxa - premiacaoGarantida);
+        const overlayAmount = Math.abs(
+          totalBuyin - totalTaxa - premiacaoGarantida,
+        );
         totalOverlayAmount += overlayAmount;
 
         // DB stores PPPoker timezone (UTC-5) as +00; convert to BRT (UTC-3) = +2h
@@ -1115,8 +1024,7 @@ export const suMetasRouter = createTRPCRouter({
         // Find matching metas for this game's time slot
         // Weekly metas take priority over deals for the same club+day+hour
         const matchingWeeklyMetas = (clubMetas ?? []).filter((m: any) => {
-          const dayMatch =
-            m.day_of_week == null || m.day_of_week === dayOfWeek;
+          const dayMatch = m.day_of_week == null || m.day_of_week === dayOfWeek;
           const hourMatch =
             m.hour_start == null ||
             m.hour_end == null ||
@@ -1134,8 +1042,7 @@ export const suMetasRouter = createTRPCRouter({
 
         // Find matching deals for clubs NOT covered by weekly metas
         const matchingDeals = (clubDeals ?? []).filter((d: any) => {
-          const dayMatch =
-            d.day_of_week == null || d.day_of_week === dayOfWeek;
+          const dayMatch = d.day_of_week == null || d.day_of_week === dayOfWeek;
           const hourMatch =
             d.hour_start == null ||
             d.hour_end == null ||
@@ -1220,9 +1127,7 @@ export const suMetasRouter = createTRPCRouter({
 
           clubDist.push({
             clubId: meta.club_id,
-            clubName:
-              entry?.clubeNome ??
-              `Clube ${meta.club_id}`,
+            clubName: entry?.clubeNome ?? `Clube ${meta.club_id}`,
             superUnionId: meta.super_union_id,
             ligaId: entry?.ligaId ?? 0,
             metaTarget: targetValue,
@@ -1239,9 +1144,7 @@ export const suMetasRouter = createTRPCRouter({
           if (!clubChargesAccum.has(clubKey)) {
             clubChargesAccum.set(clubKey, {
               clubId: meta.club_id,
-              clubName:
-                entry?.clubeNome ??
-                `Clube ${meta.club_id}`,
+              clubName: entry?.clubeNome ?? `Clube ${meta.club_id}`,
               superUnionId: meta.super_union_id,
               ligaId: entry?.ligaId ?? 0,
               totalCharge: 0,
@@ -1292,7 +1195,10 @@ export const suMetasRouter = createTRPCRouter({
           new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime(),
       );
 
-      const leagueRemainder = Math.max(0, totalOverlayAmount - totalClubCharges);
+      const leagueRemainder = Math.max(
+        0,
+        totalOverlayAmount - totalClubCharges,
+      );
 
       return {
         summary: {
@@ -1318,12 +1224,7 @@ export const suMetasRouter = createTRPCRouter({
   // ===========================================================================
 
   "overlaySelections.get": protectedProcedure
-    .input(
-      z.object({
-        weekYear: z.number(),
-        weekNumber: z.number(),
-      }),
-    )
+    .input(getOverlaySelectionsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -1337,7 +1238,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch overlay selections",
+          message: "Erro ao buscar selecoes de overlay",
         });
       }
 
@@ -1355,19 +1256,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "overlaySelections.save": protectedProcedure
-    .input(
-      z.object({
-        weekYear: z.number(),
-        weekNumber: z.number(),
-        selections: z.array(
-          z.object({
-            gameId: z.string(),
-            isSelected: z.boolean(),
-            metaPlayers: z.number().optional(),
-          }),
-        ),
-      }),
-    )
+    .input(saveOverlaySelectionsInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -1391,7 +1280,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to save overlay selections",
+          message: "Erro ao salvar selecoes de overlay",
         });
       }
 
@@ -1399,14 +1288,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubMetas.inheritFromPrevious": protectedProcedure
-    .input(
-      z.object({
-        targetWeekYear: z.number(),
-        targetWeekNumber: z.number(),
-        sourceWeekYear: z.number(),
-        sourceWeekNumber: z.number(),
-      }),
-    )
+    .input(inheritClubMetasInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -1454,7 +1336,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to inherit metas from previous week",
+          message: "Erro ao herdar metas da semana anterior",
         });
       }
 
@@ -1466,14 +1348,7 @@ export const suMetasRouter = createTRPCRouter({
   // ===========================================================================
 
   "clubDeals.list": protectedProcedure
-    .input(
-      z
-        .object({
-          superUnionId: z.number().optional(),
-          clubId: z.number().optional(),
-        })
-        .optional(),
-    )
+    .input(listClubDealsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -1496,7 +1371,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch club deals",
+          message: "Erro ao buscar deals de clubes",
         });
       }
 
@@ -1508,12 +1383,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubDeals.getByClub": protectedProcedure
-    .input(
-      z.object({
-        superUnionId: z.number(),
-        clubId: z.number(),
-      }),
-    )
+    .input(getClubDealsByClubInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -1528,7 +1398,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch club deals",
+          message: "Erro ao buscar deals de clubes",
         });
       }
 
@@ -1540,7 +1410,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubDeals.create": protectedProcedure
-    .input(createClubDealSchema)
+    .input(createClubDealInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -1572,7 +1442,7 @@ export const suMetasRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create club deal",
+          message: "Erro ao criar deal de clube",
         });
       }
 
@@ -1586,7 +1456,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubDeals.update": protectedProcedure
-    .input(updateClubDealSchema)
+    .input(updateClubDealInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -1614,7 +1484,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update club deal",
+          message: "Erro ao atualizar deal de clube",
         });
       }
 
@@ -1628,7 +1498,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubDeals.delete": protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(deleteClubDealInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -1641,7 +1511,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete club deal",
+          message: "Erro ao excluir deal de clube",
         });
       }
 
@@ -1649,19 +1519,7 @@ export const suMetasRouter = createTRPCRouter({
     }),
 
   "clubDeals.saveFromOverride": protectedProcedure
-    .input(
-      z.object({
-        superUnionId: z.number(),
-        clubId: z.number(),
-        dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
-        hourStart: z.number().int().min(0).max(23).nullable().optional(),
-        hourEnd: z.number().int().min(0).max(23).nullable().optional(),
-        targetType: z.enum(["players", "buyins"]),
-        targetValue: z.number().min(0),
-        referenceBuyin: z.number().nullable().optional(),
-        note: z.string().optional(),
-      }),
-    )
+    .input(saveClubDealFromOverrideInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -1693,7 +1551,7 @@ export const suMetasRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to save club deal from override",
+          message: "Erro ao salvar deal de clube a partir de override",
         });
       }
 

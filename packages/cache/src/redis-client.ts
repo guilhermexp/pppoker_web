@@ -1,3 +1,4 @@
+import { logger } from "@midpoker/logger";
 import type { RedisClientType } from "redis";
 import { getSharedRedisClient } from "./shared-redis";
 
@@ -43,10 +44,7 @@ export class RedisCache {
       const value = await redis.get(this.getKey(key));
       return this.parseValue<T>(value);
     } catch (error) {
-      console.error(
-        `Redis get error for ${this.prefix} cache, key "${key}":`,
-        error,
-      );
+      logger.error({ prefix: this.prefix, key, error }, "Redis get error");
       return undefined;
     }
   }
@@ -63,10 +61,7 @@ export class RedisCache {
         await redis.expire(redisKey, ttl);
       }
     } catch (error) {
-      console.error(
-        `Redis set error for ${this.prefix} cache, key "${key}":`,
-        error,
-      );
+      logger.error({ prefix: this.prefix, key, error }, "Redis set error");
     }
   }
 
@@ -75,10 +70,7 @@ export class RedisCache {
       const redis = this.getRedisClient();
       await redis.del(this.getKey(key));
     } catch (error) {
-      console.error(
-        `Redis delete error for ${this.prefix} cache, key "${key}":`,
-        error,
-      );
+      logger.error({ prefix: this.prefix, key, error }, "Redis delete error");
     }
   }
 

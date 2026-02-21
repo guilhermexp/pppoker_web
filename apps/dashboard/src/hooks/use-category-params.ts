@@ -1,15 +1,9 @@
-import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsString } from "nuqs";
+import { createParamsHook } from "./create-params-hook";
 
-export function useCategoryParams() {
-  const [params, setParams] = useQueryStates({
-    categoryId: parseAsString,
-    createCategory: parseAsBoolean,
-    name: parseAsString,
-    q: parseAsString,
-  });
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useCategoryParams = createParamsHook({
+  categoryId: parseAsString,
+  createCategory: parseAsBoolean,
+  name: parseAsString,
+  q: parseAsString,
+});

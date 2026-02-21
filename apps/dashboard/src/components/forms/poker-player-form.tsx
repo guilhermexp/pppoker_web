@@ -120,7 +120,7 @@ export function PokerPlayerForm({ data }: Props) {
       id: values.id || undefined,
       memoName: values.memoName || null,
       agentId: values.agentId || null,
-      email: values.email && values.email.trim() ? values.email.trim() : null,
+      email: values.email?.trim() ? values.email.trim() : null,
       phone: values.phone || null,
       note: values.note || null,
     };

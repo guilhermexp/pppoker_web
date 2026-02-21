@@ -1,5 +1,6 @@
 import { createAdminClient } from "@api/services/supabase";
 import { calculateBatchActivityMetrics } from "@api/utils/poker-activity";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 import {
   cancelPokerImportSchema,
@@ -251,7 +252,7 @@ export const pokerImportsRouter = createTRPCRouter({
         if (error.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Import not found",
+            message: "Importacao nao encontrada",
           });
         }
         throw new TRPCError({
@@ -336,7 +337,7 @@ export const pokerImportsRouter = createTRPCRouter({
       if (fetchError || !importRecord) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Import not found",
+          message: "Importacao nao encontrada",
         });
       }
 
@@ -475,14 +476,14 @@ export const pokerImportsRouter = createTRPCRouter({
       if (fetchError || !importRecord) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Import not found",
+          message: "Importacao nao encontrada",
         });
       }
 
       if (importRecord.status !== "validated") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Import must be validated before processing",
+          message: "A importacao deve ser validada antes do processamento",
         });
       }
 
@@ -1647,8 +1648,9 @@ export const pokerImportsRouter = createTRPCRouter({
 
                 if (error) {
                   // Don't fail the import for activity metrics errors
-                  console.error(
-                    `Failed to update activity metrics for player ${playerId}: ${error.message}`,
+                  logger.error(
+                    { playerId, error: error.message },
+                    "Failed to update activity metrics for player",
                   );
                 }
               }
@@ -1656,8 +1658,9 @@ export const pokerImportsRouter = createTRPCRouter({
           }
         } catch (activityError: any) {
           // Don't fail the import for activity calculation errors
-          console.error(
-            `Activity metrics calculation error: ${activityError.message}`,
+          logger.error(
+            { error: activityError.message },
+            "Activity metrics calculation error",
           );
           processingErrors.push(
             `Warning: Failed to calculate activity metrics: ${activityError.message}`,

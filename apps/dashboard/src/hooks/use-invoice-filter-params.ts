@@ -1,5 +1,5 @@
-import { useQueryStates } from "nuqs";
 import { createLoader, parseAsArrayOf, parseAsString } from "nuqs/server";
+import { createFilterParamsHook } from "./create-params-hook";
 
 const invoiceFilterParamsSchema = {
   q: parseAsString,
@@ -9,14 +9,8 @@ const invoiceFilterParamsSchema = {
   end: parseAsString,
 };
 
-export function useInvoiceFilterParams() {
-  const [filter, setFilter] = useQueryStates(invoiceFilterParamsSchema);
-
-  return {
-    filter,
-    setFilter,
-    hasFilters: Object.values(filter).some((value) => value !== null),
-  };
-}
+export const useInvoiceFilterParams = createFilterParamsHook(
+  invoiceFilterParamsSchema,
+);
 
 export const loadInvoiceFilterParams = createLoader(invoiceFilterParamsSchema);

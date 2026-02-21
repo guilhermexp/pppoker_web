@@ -1,3 +1,4 @@
+import { logger } from "@midpoker/logger";
 import { createClient } from "@midpoker/supabase/job";
 import { schemaTask } from "@trigger.dev/sdk";
 import convert from "heic-convert";
@@ -17,7 +18,7 @@ export const convertHeic = schemaTask({
   run: async ({ filePath }) => {
     const supabase = createClient();
 
-    console.log("Converting HEIC to JPG");
+    logger.info("Converting HEIC to JPG");
 
     const { data } = await supabase.storage
       .from("vault")

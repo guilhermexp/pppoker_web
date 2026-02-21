@@ -21,6 +21,8 @@ import {
   varchar,
   vector,
 } from "drizzle-orm/pg-core";
+import type { EditorDoc, LineItem, Template } from "@midpoker/invoice/types";
+import type { DocumentMetadata, SlackConfig } from "./types/jsonb";
 
 export const tsvector = customType<{
   data: string;
@@ -682,9 +684,9 @@ export const invoices = pgTable(
     customerId: uuid("customer_id"),
     amount: numericCasted({ precision: 10, scale: 2 }),
     currency: text(),
-    lineItems: jsonb("line_items"),
-    paymentDetails: jsonb("payment_details"),
-    customerDetails: jsonb("customer_details"),
+    lineItems: jsonb("line_items").$type<LineItem[]>(),
+    paymentDetails: jsonb("payment_details").$type<EditorDoc | null>(),
+    customerDetails: jsonb("customer_details").$type<EditorDoc | null>(),
     companyDatails: jsonb("company_datails"),
     note: text(),
     internalNote: text("internal_note"),
@@ -708,10 +710,10 @@ export const invoices = pgTable(
     filePath: text("file_path").array(),
     status: invoiceStatusEnum().default("draft").notNull(),
     viewedAt: timestamp("viewed_at", { withTimezone: true, mode: "string" }),
-    fromDetails: jsonb("from_details"),
+    fromDetails: jsonb("from_details").$type<EditorDoc | null>(),
     issueDate: timestamp("issue_date", { withTimezone: true, mode: "string" }),
-    template: jsonb(),
-    noteDetails: jsonb("note_details"),
+    template: jsonb().$type<Template>(),
+    noteDetails: jsonb("note_details").$type<EditorDoc | null>(),
     customerName: text("customer_name"),
     token: text().default("").notNull(),
     sentTo: text("sent_to"),
@@ -723,8 +725,8 @@ export const invoices = pgTable(
     fileSize: bigint("file_size", { mode: "number" }),
     userId: uuid("user_id"),
     subtotal: numericCasted({ precision: 10, scale: 2 }),
-    topBlock: jsonb("top_block"),
-    bottomBlock: jsonb("bottom_block"),
+    topBlock: jsonb("top_block").$type<EditorDoc | null>(),
+    bottomBlock: jsonb("bottom_block").$type<EditorDoc | null>(),
     sentAt: timestamp("sent_at", { withTimezone: true, mode: "string" }),
     scheduledAt: timestamp("scheduled_at", {
       withTimezone: true,
@@ -1379,7 +1381,7 @@ export const documents = pgTable(
       withTimezone: true,
       mode: "string",
     }).defaultNow(),
-    metadata: jsonb(),
+    metadata: jsonb().$type<DocumentMetadata>(),
     pathTokens: text("path_tokens").array(),
     teamId: uuid("team_id"),
     parentId: text("parent_id"),
@@ -1477,7 +1479,7 @@ export const apps = pgTable(
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
     teamId: uuid("team_id").defaultRandom(),
-    config: jsonb(),
+    config: jsonb().$type<SlackConfig | Record<string, unknown>>(),
     createdAt: timestamp("created_at", {
       withTimezone: true,
       mode: "string",
@@ -1545,9 +1547,9 @@ export const invoiceTemplates = pgTable(
     noteLabel: text("note_label"),
     logoUrl: text("logo_url"),
     currency: text(),
-    paymentDetails: jsonb("payment_details"),
-    fromDetails: jsonb("from_details"),
-    noteDetails: jsonb("note_details"),
+    paymentDetails: jsonb("payment_details").$type<EditorDoc | null>(),
+    fromDetails: jsonb("from_details").$type<EditorDoc | null>(),
+    noteDetails: jsonb("note_details").$type<EditorDoc | null>(),
     size: invoiceSizeEnum().default("a4"),
     dateFormat: text("date_format"),
     includeVat: boolean("include_vat"),
@@ -3385,6 +3387,50 @@ export const pokerWeekPeriodStatusEnum = pgEnum("poker_week_period_status", [
 ]);
 
 // =============================================================================
+// POKER SUPER UNION (SU) - ENUMS
+// =============================================================================
+
+export const pokerSuWeekPeriodStatusEnum = pgEnum(
+  "poker_su_week_period_status",
+  ["open", "closed"],
+);
+
+export const pokerSuImportStatusEnum = pgEnum("poker_su_import_status", [
+  "pending",
+  "validating",
+  "validated",
+  "processing",
+  "completed",
+  "failed",
+  "cancelled",
+]);
+
+export const pokerSuSettlementStatusEnum = pgEnum(
+  "poker_su_settlement_status",
+  ["pending", "partial", "completed", "disputed", "cancelled"],
+);
+
+export const pokerSuGameTypeEnum = pgEnum("poker_su_game_type", [
+  "ppst",
+  "ppsr",
+]);
+
+export const pokerSuGameVariantEnum = pgEnum("poker_su_game_variant", [
+  "nlh",
+  "plo4",
+  "plo5",
+  "plo6",
+  "ofc",
+  "short",
+  "6plus",
+  "spinup",
+  "pko",
+  "mko",
+  "satellite",
+  "other",
+]);
+
+// =============================================================================
 // POKER CLUB MANAGEMENT - TABLES
 // =============================================================================
 
@@ -4390,6 +4436,1187 @@ export const pokerTeamClubs = pgTable(
 );
 
 // =============================================================================
+// POKER SUPER UNION (SU) - TABLES
+// =============================================================================
+
+/**
+ * Poker SU Leagues - Leagues linked to a SuperUnion
+ * Stores registry of leagues (ligas) with their PPPoker IDs
+ */
+export const pokerSuLeagues = pgTable(
+  "poker_su_leagues",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // PPPoker Identity
+    ligaId: integer("liga_id").notNull(),
+    ligaNome: text("liga_nome").notNull(),
+    superUnionId: integer("super_union_id"),
+
+    // Configuration
+    taxaCambio: text("taxa_cambio"),
+    isActive: boolean("is_active").default(true),
+
+    // Notes
+    note: text("note"),
+    metadata: jsonb("metadata"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_leagues_team_id_liga_id_key").on(
+      table.teamId,
+      table.ligaId,
+    ),
+
+    // Indexes
+    index("poker_su_leagues_team_id_idx").on(table.teamId),
+    index("poker_su_leagues_liga_id_idx").on(table.ligaId),
+    index("poker_su_leagues_super_union_id_idx").on(table.superUnionId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_leagues_team_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("SU leagues can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Week Periods - Weekly periods for SuperUnion
+ * Manages open/closed SU weekly periods
+ */
+export const pokerSuWeekPeriods = pgTable(
+  "poker_su_week_periods",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Period boundaries
+    weekStart: date("week_start").notNull(),
+    weekEnd: date("week_end").notNull(),
+    timezone: text("timezone").default("UTC -0500"),
+
+    // Status
+    status: pokerSuWeekPeriodStatusEnum().default("open").notNull(),
+
+    // Closing metadata
+    closedAt: timestamp("closed_at", { withTimezone: true, mode: "string" }),
+    closedById: uuid("closed_by_id"),
+
+    // Statistics snapshot (calculated at close time)
+    totalLeagues: integer("total_leagues").default(0),
+    totalGamesPpst: integer("total_games_ppst").default(0),
+    totalGamesPpsr: integer("total_games_ppsr").default(0),
+    totalPlayersPpst: integer("total_players_ppst").default(0),
+    totalPlayersPpsr: integer("total_players_ppsr").default(0),
+    totalLeagueEarnings: numericCasted("total_league_earnings", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    totalGapGuaranteed: numericCasted("total_gap_guaranteed", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    totalPlayerWinnings: numericCasted("total_player_winnings", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    totalSettlements: integer("total_settlements").default(0),
+    settlementsGrossAmount: numericCasted("settlements_gross_amount", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    settlementsNetAmount: numericCasted("settlements_net_amount", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // Notes
+    note: text("note"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_week_periods_team_id_week_start_key").on(
+      table.teamId,
+      table.weekStart,
+    ),
+
+    // Indexes
+    index("poker_su_week_periods_team_id_idx").on(table.teamId),
+    index("poker_su_week_periods_status_idx").on(table.status),
+    index("poker_su_week_periods_week_start_idx").on(table.weekStart),
+    index("poker_su_week_periods_team_status_idx").on(
+      table.teamId,
+      table.status,
+    ),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_week_periods_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.closedById],
+      foreignColumns: [users.id],
+      name: "poker_su_week_periods_closed_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("SU week periods can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Imports - Import history for SU spreadsheets
+ */
+export const pokerSuImports = pgTable(
+  "poker_su_imports",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // File info
+    fileName: text("file_name").notNull(),
+    fileSize: integer("file_size"),
+    fileType: text("file_type"),
+
+    // Status
+    status: pokerSuImportStatusEnum().default("pending").notNull(),
+
+    // Period covered by import
+    periodStart: date("period_start"),
+    periodEnd: date("period_end"),
+    timezone: text("timezone"),
+
+    // Week period reference
+    weekPeriodId: uuid("week_period_id"),
+
+    // Statistics
+    totalLeagues: integer("total_leagues").default(0),
+    totalGamesPpst: integer("total_games_ppst").default(0),
+    totalGamesPpsr: integer("total_games_ppsr").default(0),
+    totalPlayersPpst: integer("total_players_ppst").default(0),
+    totalPlayersPpsr: integer("total_players_ppsr").default(0),
+
+    // Validation results
+    validationPassed: boolean("validation_passed").default(false),
+    validationErrors: jsonb("validation_errors"),
+    validationWarnings: jsonb("validation_warnings"),
+    qualityScore: integer("quality_score").default(0),
+
+    // Processing
+    processedAt: timestamp("processed_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    processedById: uuid("processed_by_id"),
+    processingErrors: jsonb("processing_errors"),
+
+    // Raw data snapshot
+    rawData: jsonb("raw_data"),
+  },
+  (table) => [
+    // Indexes
+    index("poker_su_imports_team_id_idx").on(table.teamId),
+    index("poker_su_imports_status_idx").on(table.status),
+    index("poker_su_imports_week_period_id_idx").on(table.weekPeriodId),
+    index("poker_su_imports_created_at_idx").on(table.createdAt),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_imports_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.weekPeriodId],
+      foreignColumns: [pokerSuWeekPeriods.id],
+      name: "poker_su_imports_week_period_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.processedById],
+      foreignColumns: [users.id],
+      name: "poker_su_imports_processed_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("SU imports can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU League Summary - Summary per league (Geral PPST/PPSR tabs)
+ * Stores aggregated league-level results for a given period
+ */
+export const pokerSuLeagueSummary = pgTable(
+  "poker_su_league_summary",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Period and Source
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+    importId: uuid("import_id"),
+    weekPeriodId: uuid("week_period_id"),
+
+    // League reference
+    suLeagueId: uuid("su_league_id"),
+    ligaId: integer("liga_id").notNull(),
+    ligaNome: text("liga_nome").notNull(),
+    superUnionId: integer("super_union_id"),
+
+    // Context from spreadsheet
+    taxaCambio: text("taxa_cambio"),
+
+    // PPST Values (from Geral do PPST)
+    ppstGanhosJogador: numericCasted("ppst_ganhos_jogador", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstValorTicketGanho: numericCasted("ppst_valor_ticket_ganho", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstBuyinTicket: numericCasted("ppst_buyin_ticket", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstValorPremioPersonalizado: numericCasted(
+      "ppst_valor_premio_personalizado",
+      { precision: 14, scale: 2 },
+    ).default(0),
+    ppstGanhosLigaGeral: numericCasted("ppst_ganhos_liga_geral", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstGanhosLigaTaxa: numericCasted("ppst_ganhos_liga_taxa", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstBuyinSpinup: numericCasted("ppst_buyin_spinup", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstPremiacaoSpinup: numericCasted("ppst_premiacao_spinup", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstValorTicketEntregue: numericCasted("ppst_valor_ticket_entregue", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstBuyinTicketLiga: numericCasted("ppst_buyin_ticket_liga", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstGapGarantido: numericCasted("ppst_gap_garantido", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // PPSR Values (from Geral do PPSR)
+    ppsrGanhosJogador: numericCasted("ppsr_ganhos_jogador", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppsrGanhosLigaGeral: numericCasted("ppsr_ganhos_liga_geral", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppsrGanhosLigaTaxa: numericCasted("ppsr_ganhos_liga_taxa", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppsrRakeTotal: numericCasted("ppsr_rake_total", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // Note: total_ganhos_jogador and total_ganhos_liga_taxa are GENERATED ALWAYS AS
+    // computed columns in the database, so they are not included as writable columns here.
+    // They will still be readable when selecting from the table.
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_league_summary_team_liga_period_key").on(
+      table.teamId,
+      table.ligaId,
+      table.periodStart,
+      table.periodEnd,
+    ),
+
+    // Indexes
+    index("poker_su_league_summary_team_id_idx").on(table.teamId),
+    index("poker_su_league_summary_liga_id_idx").on(table.ligaId),
+    index("poker_su_league_summary_period_idx").on(
+      table.periodStart,
+      table.periodEnd,
+    ),
+    index("poker_su_league_summary_week_period_id_idx").on(table.weekPeriodId),
+    index("poker_su_league_summary_import_id_idx").on(table.importId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_league_summary_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.importId],
+      foreignColumns: [pokerSuImports.id],
+      name: "poker_su_league_summary_import_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.weekPeriodId],
+      foreignColumns: [pokerSuWeekPeriods.id],
+      name: "poker_su_league_summary_week_period_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.suLeagueId],
+      foreignColumns: [pokerSuLeagues.id],
+      name: "poker_su_league_summary_su_league_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("SU league summary can be viewed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Games - Individual PPST and PPSR games
+ * Stores detailed per-game data from SuperUnion spreadsheets
+ */
+export const pokerSuGames = pgTable(
+  "poker_su_games",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Period and Source
+    importId: uuid("import_id"),
+    weekPeriodId: uuid("week_period_id"),
+
+    // Game Identity (from PPPoker)
+    gameType: pokerSuGameTypeEnum("game_type").notNull(),
+    gameVariant: pokerSuGameVariantEnum("game_variant")
+      .default("nlh")
+      .notNull(),
+    gameId: text("game_id").notNull(),
+    tableName: text("table_name"),
+
+    // Game Timing
+    startedAt: timestamp("started_at", {
+      withTimezone: true,
+      mode: "string",
+    }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true, mode: "string" }),
+
+    // Creator
+    creatorId: text("creator_id"),
+    creatorName: text("creator_name"),
+
+    // Game Configuration (PPST)
+    buyinBase: numericCasted("buyin_base", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    buyinBounty: numericCasted("buyin_bounty", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    buyinTaxa: numericCasted("buyin_taxa", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    premiacaoGarantida: numericCasted("premiacao_garantida", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    isSatellite: boolean("is_satellite").default(false),
+
+    // Game Configuration (PPSR)
+    blinds: text("blinds"),
+    minBuyin: numericCasted("min_buyin", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    maxBuyin: numericCasted("max_buyin", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // Aggregated Stats
+    playerCount: integer("player_count").default(0),
+    totalBuyin: numericCasted("total_buyin", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    totalGanhosJogador: numericCasted("total_ganhos_jogador", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    totalTaxa: numericCasted("total_taxa", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    totalGapGarantido: numericCasted("total_gap_garantido", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    totalRecompensa: numericCasted("total_recompensa", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // Raw data
+    rawData: jsonb("raw_data"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_games_team_type_game_id_key").on(
+      table.teamId,
+      table.gameType,
+      table.gameId,
+    ),
+
+    // Indexes
+    index("poker_su_games_team_id_idx").on(table.teamId),
+    index("poker_su_games_game_type_idx").on(table.gameType),
+    index("poker_su_games_started_at_idx").on(table.startedAt),
+    index("poker_su_games_import_id_idx").on(table.importId),
+    index("poker_su_games_week_period_id_idx").on(table.weekPeriodId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_games_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.importId],
+      foreignColumns: [pokerSuImports.id],
+      name: "poker_su_games_import_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.weekPeriodId],
+      foreignColumns: [pokerSuWeekPeriods.id],
+      name: "poker_su_games_week_period_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("SU games can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Game Players - Players per game
+ * Stores individual player results within each SU game
+ */
+export const pokerSuGamePlayers = pgTable(
+  "poker_su_game_players",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Game reference
+    gameId: uuid("game_id").notNull(),
+
+    // League reference
+    superUnionId: integer("super_union_id"),
+    ligaId: integer("liga_id").notNull(),
+    clubeId: integer("clube_id").notNull(),
+    clubeNome: text("clube_nome"),
+
+    // Player identity (from PPPoker)
+    jogadorId: integer("jogador_id").notNull(),
+    apelido: text("apelido").notNull(),
+    nomeMemorado: text("nome_memorado"),
+
+    // Results
+    ranking: integer("ranking"),
+    buyinFichas: numericCasted("buyin_fichas", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    buyinTicket: numericCasted("buyin_ticket", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ganhos: numericCasted("ganhos", { precision: 14, scale: 2 }).default(0),
+    taxa: numericCasted("taxa", { precision: 14, scale: 2 }).default(0),
+    gapGarantido: numericCasted("gap_garantido", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // SPINUP specific
+    premio: numericCasted("premio", { precision: 14, scale: 2 }).default(0),
+
+    // PKO/MKO specific
+    recompensa: numericCasted("recompensa", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // Satellite specific
+    nomeTicket: text("nome_ticket"),
+    valorTicket: numericCasted("valor_ticket", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+
+    // PPSR specific
+    handsPlayed: integer("hands_played").default(0),
+    rakePaid: numericCasted("rake_paid", { precision: 14, scale: 2 }).default(
+      0,
+    ),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_game_players_game_jogador_key").on(
+      table.gameId,
+      table.jogadorId,
+    ),
+
+    // Indexes
+    index("poker_su_game_players_team_id_idx").on(table.teamId),
+    index("poker_su_game_players_game_id_idx").on(table.gameId),
+    index("poker_su_game_players_liga_id_idx").on(table.ligaId),
+    index("poker_su_game_players_jogador_id_idx").on(table.jogadorId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_game_players_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.gameId],
+      foreignColumns: [pokerSuGames.id],
+      name: "poker_su_game_players_game_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("SU game players can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Settlements - Settlements between SU and Leagues
+ * Tracks financial settlements per league per period
+ */
+export const pokerSuSettlements = pgTable(
+  "poker_su_settlements",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    // Period
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+    weekPeriodId: uuid("week_period_id"),
+
+    // Liga reference
+    suLeagueId: uuid("su_league_id"),
+    ligaId: integer("liga_id").notNull(),
+    ligaNome: text("liga_nome").notNull(),
+
+    // Status
+    status: pokerSuSettlementStatusEnum().default("pending").notNull(),
+
+    // PPST Amounts
+    ppstLeagueFee: numericCasted("ppst_league_fee", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstGapGuaranteed: numericCasted("ppst_gap_guaranteed", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppstGamesCount: integer("ppst_games_count").default(0),
+
+    // PPSR Amounts
+    ppsrLeagueFee: numericCasted("ppsr_league_fee", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    ppsrGamesCount: integer("ppsr_games_count").default(0),
+
+    // Calculated amounts
+    grossAmount: numericCasted("gross_amount", {
+      precision: 14,
+      scale: 2,
+    }).notNull(),
+    adjustmentAmount: numericCasted("adjustment_amount", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    netAmount: numericCasted("net_amount", {
+      precision: 14,
+      scale: 2,
+    }).notNull(),
+
+    // Payment tracking
+    paidAmount: numericCasted("paid_amount", {
+      precision: 14,
+      scale: 2,
+    }).default(0),
+    paidAt: timestamp("paid_at", { withTimezone: true, mode: "string" }),
+
+    // Audit
+    createdById: uuid("created_by_id"),
+    note: text("note"),
+  },
+  (table) => [
+    // Indexes
+    index("poker_su_settlements_team_id_idx").on(table.teamId),
+    index("poker_su_settlements_liga_id_idx").on(table.ligaId),
+    index("poker_su_settlements_status_idx").on(table.status),
+    index("poker_su_settlements_period_idx").on(
+      table.periodStart,
+      table.periodEnd,
+    ),
+    index("poker_su_settlements_week_period_id_idx").on(table.weekPeriodId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_settlements_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.weekPeriodId],
+      foreignColumns: [pokerSuWeekPeriods.id],
+      name: "poker_su_settlements_week_period_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.suLeagueId],
+      foreignColumns: [pokerSuLeagues.id],
+      name: "poker_su_settlements_su_league_id_fkey",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [table.createdById],
+      foreignColumns: [users.id],
+      name: "poker_su_settlements_created_by_id_fkey",
+    }).onDelete("set null"),
+
+    // RLS Policies
+    pgPolicy("SU settlements can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Meta Groups - Named groups with percentage of total GTD
+ * Replaces hardcoded BR=60%/SA=40% distribution
+ */
+export const pokerSuMetaGroups = pgTable(
+  "poker_su_meta_groups",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    name: text("name").notNull(),
+    description: text("description"),
+    metaPercent: numericCasted("meta_percent", {
+      precision: 5,
+      scale: 2,
+    })
+      .default(0)
+      .notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdById: uuid("created_by_id"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_meta_groups_team_id_name_key").on(
+      table.teamId,
+      table.name,
+    ),
+
+    // Indexes
+    index("idx_poker_su_meta_groups_team_id").on(table.teamId),
+    index("idx_poker_su_meta_groups_active").on(table.teamId, table.isActive),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_meta_groups_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.createdById],
+      foreignColumns: [usersInAuth.id],
+      name: "poker_su_meta_groups_created_by_id_fkey",
+    }),
+
+    // RLS Policies
+    pgPolicy("SU meta groups can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Meta Group Members - Which SuperUnions/Leagues belong to each group
+ */
+export const pokerSuMetaGroupMembers = pgTable(
+  "poker_su_meta_group_members",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    metaGroupId: uuid("meta_group_id").notNull(),
+    superUnionId: integer("super_union_id").notNull(),
+    suLeagueId: uuid("su_league_id"),
+    displayName: text("display_name"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_meta_group_members_team_su_key").on(
+      table.teamId,
+      table.superUnionId,
+    ),
+
+    // Indexes
+    index("idx_poker_su_meta_group_members_team_id").on(table.teamId),
+    index("idx_poker_su_meta_group_members_group").on(table.metaGroupId),
+    index("idx_poker_su_meta_group_members_su").on(
+      table.teamId,
+      table.superUnionId,
+    ),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_meta_group_members_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.metaGroupId],
+      foreignColumns: [pokerSuMetaGroups.id],
+      name: "poker_su_meta_group_members_meta_group_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.suLeagueId],
+      foreignColumns: [pokerSuLeagues.id],
+      name: "poker_su_meta_group_members_su_league_id_fkey",
+    }),
+
+    // RLS Policies
+    pgPolicy("SU meta group members can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Meta Group Time Slots - Percentage overrides by time range within a group
+ */
+export const pokerSuMetaGroupTimeSlots = pgTable(
+  "poker_su_meta_group_time_slots",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    metaGroupId: uuid("meta_group_id").notNull(),
+    name: text("name").notNull(),
+    hourStart: integer("hour_start").notNull(),
+    hourEnd: integer("hour_end").notNull(),
+    metaPercent: numericCasted("meta_percent", {
+      precision: 5,
+      scale: 2,
+    })
+      .default(0)
+      .notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+  },
+  (table) => [
+    // Indexes
+    index("idx_poker_su_meta_group_time_slots_team_id").on(table.teamId),
+    index("idx_poker_su_meta_group_time_slots_group").on(table.metaGroupId),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_meta_group_time_slots_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.metaGroupId],
+      foreignColumns: [pokerSuMetaGroups.id],
+      name: "poker_su_meta_group_time_slots_meta_group_id_fkey",
+    }).onDelete("cascade"),
+
+    // RLS Policies
+    pgPolicy("SU meta group time slots can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Club Metas - Granular targets per club/week/day/hour
+ * Weekly volume targets for clubs within a SuperUnion
+ */
+export const pokerSuClubMetas = pgTable(
+  "poker_su_club_metas",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    superUnionId: integer("super_union_id").notNull(),
+    clubId: integer("club_id").notNull(),
+    weekYear: integer("week_year").notNull(),
+    weekNumber: integer("week_number").notNull(),
+    dayOfWeek: integer("day_of_week"),
+    hourStart: integer("hour_start"),
+    hourEnd: integer("hour_end"),
+    targetType: text("target_type").notNull(),
+    targetValue: numericCasted("target_value", {
+      precision: 14,
+      scale: 2,
+    })
+      .default(0)
+      .notNull(),
+    referenceBuyin: numericCasted("reference_buyin", {
+      precision: 14,
+      scale: 2,
+    }),
+    note: text("note"),
+    createdById: uuid("created_by_id"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_club_metas_full_key").on(
+      table.teamId,
+      table.superUnionId,
+      table.clubId,
+      table.weekYear,
+      table.weekNumber,
+      table.dayOfWeek,
+      table.hourStart,
+      table.hourEnd,
+      table.targetType,
+    ),
+
+    // Indexes
+    index("idx_poker_su_club_metas_team_id").on(table.teamId),
+    index("idx_poker_su_club_metas_week").on(
+      table.teamId,
+      table.weekYear,
+      table.weekNumber,
+    ),
+    index("idx_poker_su_club_metas_club").on(
+      table.teamId,
+      table.superUnionId,
+      table.clubId,
+    ),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_club_metas_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.createdById],
+      foreignColumns: [usersInAuth.id],
+      name: "poker_su_club_metas_created_by_id_fkey",
+    }),
+
+    // RLS Policies
+    pgPolicy("SU club metas can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Overlay Selections - Track which overlay tournaments are selected for club distribution
+ */
+export const pokerSuOverlaySelections = pgTable(
+  "poker_su_overlay_selections",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    weekYear: integer("week_year").notNull(),
+    weekNumber: integer("week_number").notNull(),
+    gameId: text("game_id").notNull(),
+    isSelected: boolean("is_selected").default(true).notNull(),
+    metaPlayers: integer("meta_players").default(0).notNull(),
+    createdById: uuid("created_by_id"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_overlay_selections_team_week_game_key").on(
+      table.teamId,
+      table.weekYear,
+      table.weekNumber,
+      table.gameId,
+    ),
+
+    // Indexes
+    index("idx_poker_su_overlay_selections_team_id").on(table.teamId),
+    index("idx_poker_su_overlay_selections_week").on(
+      table.teamId,
+      table.weekYear,
+      table.weekNumber,
+    ),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_overlay_selections_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.createdById],
+      foreignColumns: [usersInAuth.id],
+      name: "poker_su_overlay_selections_created_by_id_fkey",
+    }),
+
+    // RLS Policies
+    pgPolicy("SU overlay selections can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+/**
+ * Poker SU Club Deals - Persistent volume agreements per club
+ * Default/permanent deals; weekly metas override these
+ */
+export const pokerSuClubDeals = pgTable(
+  "poker_su_club_deals",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+
+    superUnionId: integer("super_union_id").notNull(),
+    clubId: integer("club_id").notNull(),
+    dayOfWeek: integer("day_of_week"),
+    hourStart: integer("hour_start"),
+    hourEnd: integer("hour_end"),
+    targetType: text("target_type").notNull(),
+    targetValue: numericCasted("target_value", {
+      precision: 14,
+      scale: 2,
+    })
+      .default(0)
+      .notNull(),
+    referenceBuyin: numericCasted("reference_buyin", {
+      precision: 14,
+      scale: 2,
+    }),
+    isActive: boolean("is_active").default(true).notNull(),
+    note: text("note"),
+    createdById: uuid("created_by_id"),
+  },
+  (table) => [
+    // Unique constraint
+    unique("poker_su_club_deals_full_key").on(
+      table.teamId,
+      table.superUnionId,
+      table.clubId,
+      table.dayOfWeek,
+      table.hourStart,
+      table.hourEnd,
+      table.targetType,
+    ),
+
+    // Indexes
+    index("idx_poker_su_club_deals_team").on(table.teamId),
+    index("idx_poker_su_club_deals_club").on(
+      table.teamId,
+      table.superUnionId,
+      table.clubId,
+    ),
+    index("idx_poker_su_club_deals_active").on(table.teamId, table.isActive),
+
+    // Foreign Keys
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "poker_su_club_deals_team_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.createdById],
+      foreignColumns: [usersInAuth.id],
+      name: "poker_su_club_deals_created_by_id_fkey",
+    }),
+
+    // RLS Policies
+    pgPolicy("SU club deals can be managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`(team_id IN (SELECT private.get_teams_for_authenticated_user()))`,
+    }),
+  ],
+);
+
+// =============================================================================
+// POKER SUPER UNION (SU) - TYPES
+// =============================================================================
+
+export type PokerSuLeague = typeof pokerSuLeagues.$inferSelect;
+export type NewPokerSuLeague = typeof pokerSuLeagues.$inferInsert;
+export type PokerSuWeekPeriod = typeof pokerSuWeekPeriods.$inferSelect;
+export type NewPokerSuWeekPeriod = typeof pokerSuWeekPeriods.$inferInsert;
+export type PokerSuImport = typeof pokerSuImports.$inferSelect;
+export type NewPokerSuImport = typeof pokerSuImports.$inferInsert;
+export type PokerSuLeagueSummary = typeof pokerSuLeagueSummary.$inferSelect;
+export type NewPokerSuLeagueSummary = typeof pokerSuLeagueSummary.$inferInsert;
+export type PokerSuGame = typeof pokerSuGames.$inferSelect;
+export type NewPokerSuGame = typeof pokerSuGames.$inferInsert;
+export type PokerSuGamePlayer = typeof pokerSuGamePlayers.$inferSelect;
+export type NewPokerSuGamePlayer = typeof pokerSuGamePlayers.$inferInsert;
+export type PokerSuSettlement = typeof pokerSuSettlements.$inferSelect;
+export type NewPokerSuSettlement = typeof pokerSuSettlements.$inferInsert;
+export type PokerSuMetaGroup = typeof pokerSuMetaGroups.$inferSelect;
+export type NewPokerSuMetaGroup = typeof pokerSuMetaGroups.$inferInsert;
+export type PokerSuMetaGroupMember =
+  typeof pokerSuMetaGroupMembers.$inferSelect;
+export type NewPokerSuMetaGroupMember =
+  typeof pokerSuMetaGroupMembers.$inferInsert;
+export type PokerSuMetaGroupTimeSlot =
+  typeof pokerSuMetaGroupTimeSlots.$inferSelect;
+export type NewPokerSuMetaGroupTimeSlot =
+  typeof pokerSuMetaGroupTimeSlots.$inferInsert;
+export type PokerSuClubMeta = typeof pokerSuClubMetas.$inferSelect;
+export type NewPokerSuClubMeta = typeof pokerSuClubMetas.$inferInsert;
+export type PokerSuOverlaySelection =
+  typeof pokerSuOverlaySelections.$inferSelect;
+export type NewPokerSuOverlaySelection =
+  typeof pokerSuOverlaySelections.$inferInsert;
+export type PokerSuClubDeal = typeof pokerSuClubDeals.$inferSelect;
+export type NewPokerSuClubDeal = typeof pokerSuClubDeals.$inferInsert;
+
+// =============================================================================
 // POKER CLUB MANAGEMENT - RELATIONS
 // =============================================================================
 
@@ -4589,6 +5816,228 @@ export const pokerTeamClubsRelations = relations(pokerTeamClubs, ({ one }) => ({
     relationName: "linkedTeamClub",
   }),
 }));
+
+// =============================================================================
+// POKER SUPER UNION (SU) - RELATIONS
+// =============================================================================
+
+export const pokerSuLeaguesRelations = relations(
+  pokerSuLeagues,
+  ({ one, many }) => ({
+    team: one(teams, {
+      fields: [pokerSuLeagues.teamId],
+      references: [teams.id],
+    }),
+    summaries: many(pokerSuLeagueSummary),
+    settlements: many(pokerSuSettlements),
+    metaGroupMembers: many(pokerSuMetaGroupMembers),
+  }),
+);
+
+export const pokerSuWeekPeriodsRelations = relations(
+  pokerSuWeekPeriods,
+  ({ one, many }) => ({
+    team: one(teams, {
+      fields: [pokerSuWeekPeriods.teamId],
+      references: [teams.id],
+    }),
+    closedBy: one(users, {
+      fields: [pokerSuWeekPeriods.closedById],
+      references: [users.id],
+    }),
+    imports: many(pokerSuImports),
+    games: many(pokerSuGames),
+    summaries: many(pokerSuLeagueSummary),
+    settlements: many(pokerSuSettlements),
+  }),
+);
+
+export const pokerSuImportsRelations = relations(
+  pokerSuImports,
+  ({ one, many }) => ({
+    team: one(teams, {
+      fields: [pokerSuImports.teamId],
+      references: [teams.id],
+    }),
+    weekPeriod: one(pokerSuWeekPeriods, {
+      fields: [pokerSuImports.weekPeriodId],
+      references: [pokerSuWeekPeriods.id],
+    }),
+    processedBy: one(users, {
+      fields: [pokerSuImports.processedById],
+      references: [users.id],
+    }),
+    summaries: many(pokerSuLeagueSummary),
+    games: many(pokerSuGames),
+  }),
+);
+
+export const pokerSuLeagueSummaryRelations = relations(
+  pokerSuLeagueSummary,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuLeagueSummary.teamId],
+      references: [teams.id],
+    }),
+    import: one(pokerSuImports, {
+      fields: [pokerSuLeagueSummary.importId],
+      references: [pokerSuImports.id],
+    }),
+    weekPeriod: one(pokerSuWeekPeriods, {
+      fields: [pokerSuLeagueSummary.weekPeriodId],
+      references: [pokerSuWeekPeriods.id],
+    }),
+    suLeague: one(pokerSuLeagues, {
+      fields: [pokerSuLeagueSummary.suLeagueId],
+      references: [pokerSuLeagues.id],
+    }),
+  }),
+);
+
+export const pokerSuGamesRelations = relations(
+  pokerSuGames,
+  ({ one, many }) => ({
+    team: one(teams, {
+      fields: [pokerSuGames.teamId],
+      references: [teams.id],
+    }),
+    import: one(pokerSuImports, {
+      fields: [pokerSuGames.importId],
+      references: [pokerSuImports.id],
+    }),
+    weekPeriod: one(pokerSuWeekPeriods, {
+      fields: [pokerSuGames.weekPeriodId],
+      references: [pokerSuWeekPeriods.id],
+    }),
+    players: many(pokerSuGamePlayers),
+  }),
+);
+
+export const pokerSuGamePlayersRelations = relations(
+  pokerSuGamePlayers,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuGamePlayers.teamId],
+      references: [teams.id],
+    }),
+    game: one(pokerSuGames, {
+      fields: [pokerSuGamePlayers.gameId],
+      references: [pokerSuGames.id],
+    }),
+  }),
+);
+
+export const pokerSuSettlementsRelations = relations(
+  pokerSuSettlements,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuSettlements.teamId],
+      references: [teams.id],
+    }),
+    weekPeriod: one(pokerSuWeekPeriods, {
+      fields: [pokerSuSettlements.weekPeriodId],
+      references: [pokerSuWeekPeriods.id],
+    }),
+    suLeague: one(pokerSuLeagues, {
+      fields: [pokerSuSettlements.suLeagueId],
+      references: [pokerSuLeagues.id],
+    }),
+    createdBy: one(users, {
+      fields: [pokerSuSettlements.createdById],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const pokerSuMetaGroupsRelations = relations(
+  pokerSuMetaGroups,
+  ({ one, many }) => ({
+    team: one(teams, {
+      fields: [pokerSuMetaGroups.teamId],
+      references: [teams.id],
+    }),
+    createdBy: one(usersInAuth, {
+      fields: [pokerSuMetaGroups.createdById],
+      references: [usersInAuth.id],
+    }),
+    members: many(pokerSuMetaGroupMembers),
+    timeSlots: many(pokerSuMetaGroupTimeSlots),
+  }),
+);
+
+export const pokerSuMetaGroupMembersRelations = relations(
+  pokerSuMetaGroupMembers,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuMetaGroupMembers.teamId],
+      references: [teams.id],
+    }),
+    metaGroup: one(pokerSuMetaGroups, {
+      fields: [pokerSuMetaGroupMembers.metaGroupId],
+      references: [pokerSuMetaGroups.id],
+    }),
+    suLeague: one(pokerSuLeagues, {
+      fields: [pokerSuMetaGroupMembers.suLeagueId],
+      references: [pokerSuLeagues.id],
+    }),
+  }),
+);
+
+export const pokerSuMetaGroupTimeSlotsRelations = relations(
+  pokerSuMetaGroupTimeSlots,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuMetaGroupTimeSlots.teamId],
+      references: [teams.id],
+    }),
+    metaGroup: one(pokerSuMetaGroups, {
+      fields: [pokerSuMetaGroupTimeSlots.metaGroupId],
+      references: [pokerSuMetaGroups.id],
+    }),
+  }),
+);
+
+export const pokerSuClubMetasRelations = relations(
+  pokerSuClubMetas,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuClubMetas.teamId],
+      references: [teams.id],
+    }),
+    createdBy: one(usersInAuth, {
+      fields: [pokerSuClubMetas.createdById],
+      references: [usersInAuth.id],
+    }),
+  }),
+);
+
+export const pokerSuOverlaySelectionsRelations = relations(
+  pokerSuOverlaySelections,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuOverlaySelections.teamId],
+      references: [teams.id],
+    }),
+    createdBy: one(usersInAuth, {
+      fields: [pokerSuOverlaySelections.createdById],
+      references: [usersInAuth.id],
+    }),
+  }),
+);
+
+export const pokerSuClubDealsRelations = relations(
+  pokerSuClubDeals,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [pokerSuClubDeals.teamId],
+      references: [teams.id],
+    }),
+    createdBy: one(usersInAuth, {
+      fields: [pokerSuClubDeals.createdById],
+      references: [usersInAuth.id],
+    }),
+  }),
+);
 
 // =============================================================================
 // FASTCHIPS (CHIPPIX) - ENUMS

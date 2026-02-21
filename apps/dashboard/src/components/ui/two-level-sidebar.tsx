@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { useI18n } from "@/locales/client";
-import { IconNavigation } from "./icon-navigation";
-import { DetailSidebar } from "./detail-sidebar";
 import {
-  getSidebarContent,
   detectActiveSection,
+  getSidebarContent,
 } from "@/lib/sidebar-navigation";
+import { useI18n } from "@/locales/client";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { DetailSidebar } from "./detail-sidebar";
+import { IconNavigation } from "./icon-navigation";
 
 /**
  * Componente principal do sidebar two-level do 21st.dev

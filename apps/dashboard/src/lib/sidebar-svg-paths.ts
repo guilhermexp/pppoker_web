@@ -80,7 +80,7 @@ export function AvatarCircle({
 }) {
   return (
     <div
-      className={`rounded-full bg-neutral-700 flex items-center justify-center ${className}`}
+      className={`rounded-full bg-neutral-700 flex items-center justify-center $className`}
       style={{ width: size, height: size }}
     >
       <svg

@@ -1,8 +1,8 @@
 "use client";
 
+import { softSpringEasing } from "@/lib/sidebar-svg-paths";
 import { Search } from "@carbon/icons-react";
 import { useState } from "react";
-import { softSpringEasing } from "@/lib/sidebar-svg-paths";
 
 interface SearchContainerProps {
   /** Se o sidebar está colapsado */

@@ -275,12 +275,19 @@ const Item = ({
               "border border-transparent h-[40px] transition-all duration-200 ease-&lsqb;cubic-bezier(0.4,0,0.2,1)&rsqb; mr-[15px]",
               isActive &&
                 "bg-[#F2F1EF] dark:bg-secondary border-[#DCDAD2] dark:border-[#2C2C2C]",
-              isExpanded ? "ml-[15px] w-[calc(100%-30px)]" : "ml-[8px] w-[40px]",
+              isExpanded
+                ? "ml-[15px] w-[calc(100%-30px)]"
+                : "ml-[8px] w-[40px]",
             )}
           />
 
           {/* Icon - always in same position from sidebar edge */}
-          <div className={cn("absolute top-0 w-[40px] h-[40px] flex items-center justify-center dark:text-[#666666] text-black group-hover:!text-primary pointer-events-none", isExpanded ? "left-[15px]" : "left-[8px]")}>
+          <div
+            className={cn(
+              "absolute top-0 w-[40px] h-[40px] flex items-center justify-center dark:text-[#666666] text-black group-hover:!text-primary pointer-events-none",
+              isExpanded ? "left-[15px]" : "left-[8px]",
+            )}
+          >
             <div className={cn(isActive && "dark:!text-white")}>
               <Icon />
             </div>

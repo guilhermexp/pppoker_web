@@ -508,14 +508,14 @@ export function SessionsTab({ sessions }: SessionsTabProps) {
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
   const summaryStats = useMemo(() => {
-    let totalCash = 0,
-      totalMTT = 0,
-      totalSitNG = 0,
-      totalSpin = 0;
-    let totalBuyIn = 0,
-      totalRake = 0,
-      totalGTD = 0,
-      totalPlayers = 0;
+    let totalCash = 0;
+    let totalMTT = 0;
+    let totalSitNG = 0;
+    let totalSpin = 0;
+    let totalBuyIn = 0;
+    let totalRake = 0;
+    let totalGTD = 0;
+    let totalPlayers = 0;
     const gameTypes: Record<string, number> = {};
 
     for (const s of sessions) {

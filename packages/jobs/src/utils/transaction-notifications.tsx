@@ -17,7 +17,7 @@ export async function handleTransactionSlackNotifications(
 ) {
   const supabase = createClient();
 
-  // TODO: Get correct locale for formatting the amount
+  // TODO(#7): Get correct locale for formatting the amount
   const slackTransactions = transactions.map((transaction) => ({
     amount: Intl.NumberFormat("en-US", {
       style: "currency",

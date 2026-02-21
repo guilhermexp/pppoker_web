@@ -4,6 +4,7 @@ import {
   createSlackApp,
   getSlackInstaller,
 } from "@midpoker/app-store/slack";
+import type { SlackConfig } from "@midpoker/db/types/jsonb";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v3";
 
@@ -107,17 +108,15 @@ export async function GET(request: NextRequest) {
     });
 
     if (createdSlackIntegration?.config) {
+      const slackConfig = createdSlackIntegration.config as SlackConfig;
       const slackApp = createSlackApp({
-        // @ts-expect-error - config is JSONB
-        token: createdSlackIntegration?.config?.access_token,
-        // @ts-expect-error - config is JSONB
-        botId: createdSlackIntegration?.config?.bot_user_id,
+        token: slackConfig.access_token,
+        botId: slackConfig.bot_user_id,
       });
 
       try {
         await slackApp.client.chat.postMessage({
-          // @ts-expect-error - config is JSONB
-          channel: createdSlackIntegration?.config?.channel_id,
+          channel: slackConfig.channel_id,
           unfurl_links: false,
           unfurl_media: false,
           blocks: [

@@ -1,13 +1,11 @@
+import {
+  dashboardStatsInput,
+  getOverlayClubsInput,
+  getRealizedTournamentsInput,
+} from "@api/schemas/su/analytics";
 import { createAdminClient } from "@api/services/supabase";
-import { z } from "@hono/zod-openapi";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-const periodSchema = z.object({
-  from: z.string().optional(),
-  to: z.string().optional(),
-  viewMode: z.enum(["current_week", "historical"]).optional(),
-});
 
 // Helper: resolve import IDs for open week period
 async function resolveOpenWeekImportIds(
@@ -105,7 +103,7 @@ export const suAnalyticsRouter = createTRPCRouter({
    * - historical: Shows only committed data (closed weeks)
    */
   getDashboardStats: protectedProcedure
-    .input(periodSchema.optional())
+    .input(dashboardStatsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
       const viewMode = input?.viewMode ?? "current_week";
@@ -202,7 +200,7 @@ export const suAnalyticsRouter = createTRPCRouter({
       if (summariesError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch league summaries",
+          message: "Erro ao buscar resumos das ligas",
         });
       }
 
@@ -462,14 +460,7 @@ export const suAnalyticsRouter = createTRPCRouter({
    * as StoredRealizedData used by the frontend tabs.
    */
   getRealizedTournaments: protectedProcedure
-    .input(
-      z
-        .object({
-          weekNumber: z.number().optional(),
-          weekYear: z.number().optional(),
-        })
-        .optional(),
-    )
+    .input(getRealizedTournamentsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -503,7 +494,7 @@ export const suAnalyticsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch realized tournaments",
+          message: "Erro ao buscar torneios realizados",
         });
       }
 
@@ -550,16 +541,7 @@ export const suAnalyticsRouter = createTRPCRouter({
    * in the same shape as the ArrecadacaoSection expects.
    */
   getOverlayClubs: protectedProcedure
-    .input(
-      z
-        .object({
-          weekNumber: z.number().optional(),
-          weekYear: z.number().optional(),
-          weekStart: z.string().optional(),
-          weekEnd: z.string().optional(),
-        })
-        .optional(),
-    )
+    .input(getOverlayClubsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -574,7 +556,10 @@ export const suAnalyticsRouter = createTRPCRouter({
 
       // Get period from imports
       const importMeta = useDateRange
-        ? { period_start: input?.weekStart ?? "", period_end: input?.weekEnd ?? "" }
+        ? {
+            period_start: input?.weekStart ?? "",
+            period_end: input?.weekEnd ?? "",
+          }
         : (
             await supabase
               .from("poker_su_imports")
@@ -602,7 +587,7 @@ export const suAnalyticsRouter = createTRPCRouter({
       if (gamesError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch games for overlay clubs",
+          message: "Erro ao buscar jogos para clubes de overlay",
         });
       }
 
@@ -637,14 +622,12 @@ export const suAnalyticsRouter = createTRPCRouter({
         if (selectionError) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to fetch overlay selections",
+            message: "Erro ao buscar selecoes de overlay",
           });
         }
 
         const selectedGameIds = new Set(
-          (selections ?? [])
-            .filter((s) => s.is_selected)
-            .map((s) => s.game_id),
+          (selections ?? []).filter((s) => s.is_selected).map((s) => s.game_id),
         );
 
         filteredOverlayGames = overlayGames.filter((g) =>
@@ -697,7 +680,7 @@ export const suAnalyticsRouter = createTRPCRouter({
       if (playersError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch game players for overlay clubs",
+          message: "Erro ao buscar jogadores para clubes de overlay",
         });
       }
 
@@ -725,7 +708,7 @@ export const suAnalyticsRouter = createTRPCRouter({
         if (metaError) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to fetch game metadata",
+            message: "Erro ao buscar metadados do jogo",
           });
         }
 

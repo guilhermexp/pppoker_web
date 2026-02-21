@@ -1,50 +1,12 @@
+import {
+  deleteTournamentAnalysisInput,
+  getByWeekInput,
+  listTournamentAnalysesInput,
+  saveTournamentAnalysisInput,
+} from "@api/schemas/su/tournament-analyses";
 import { createAdminClient } from "@api/services/supabase";
-import { z } from "@hono/zod-openapi";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-// =============================================================================
-// Schemas
-// =============================================================================
-
-const saveSchema = z.object({
-  weekYear: z.number(),
-  weekNumber: z.number(),
-  weekStart: z.string().optional(),
-  weekEnd: z.string().optional(),
-  // JSONB data
-  scheduleData: z.unknown().optional(),
-  realizedData: z.unknown().optional(),
-  saOverlayData: z.unknown().optional(),
-  // Summary metrics
-  scheduleTournamentCount: z.number().int().default(0),
-  scheduleTotalGtdUsd: z.number().default(0),
-  overlayCount: z.number().int().default(0),
-  overlayTotalBrl: z.number().default(0),
-  saPpstUsd: z.number().default(0),
-  saTotalUsd: z.number().default(0),
-  crossMatchCount: z.number().int().default(0),
-  note: z.string().optional(),
-});
-
-const getByWeekSchema = z.object({
-  weekYear: z.number(),
-  weekNumber: z.number(),
-});
-
-const listSchema = z
-  .object({
-    limit: z.number().int().min(1).max(100).default(52),
-  })
-  .optional();
-
-const deleteSchema = z.object({
-  id: z.string().uuid(),
-});
-
-// =============================================================================
-// Router
-// =============================================================================
 
 export const suTournamentAnalysesRouter = createTRPCRouter({
   // ===========================================================================
@@ -52,7 +14,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
   // ===========================================================================
 
   save: protectedProcedure
-    .input(saveSchema)
+    .input(saveTournamentAnalysisInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const supabase = await createAdminClient();
       const userId = session?.user?.id;
@@ -88,7 +50,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to save tournament analysis",
+          message: "Erro ao salvar analise de torneio",
         });
       }
 
@@ -100,7 +62,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
   // ===========================================================================
 
   getByWeek: protectedProcedure
-    .input(getByWeekSchema)
+    .input(getByWeekInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -115,7 +77,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
       if (error && error.code !== "PGRST116") {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tournament analysis",
+          message: "Erro ao buscar analise de torneio",
         });
       }
 
@@ -127,7 +89,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
   // ===========================================================================
 
   list: protectedProcedure
-    .input(listSchema)
+    .input(listTournamentAnalysesInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
       const limit = input?.limit ?? 52;
@@ -145,7 +107,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to list tournament analyses",
+          message: "Erro ao listar analises de torneios",
         });
       }
 
@@ -157,7 +119,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
   // ===========================================================================
 
   delete: protectedProcedure
-    .input(deleteSchema)
+    .input(deleteTournamentAnalysisInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -170,7 +132,7 @@ export const suTournamentAnalysesRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete tournament analysis",
+          message: "Erro ao excluir analise de torneio",
         });
       }
 

@@ -7,6 +7,7 @@ import InvoiceReminderEmail from "@midpoker/email/emails/invoice-reminder";
 import TransactionsEmail from "@midpoker/email/emails/transactions";
 import TransactionsExportedEmail from "@midpoker/email/emails/transactions-exported";
 import { render } from "@midpoker/email/render";
+import { logger } from "@midpoker/logger";
 import { nanoid } from "nanoid";
 import { type CreateEmailOptions, Resend } from "resend";
 import type { EmailInput } from "../base";
@@ -59,13 +60,13 @@ export class EmailService {
           try {
             const response = await this.client.emails.send(payload);
             if (response.error) {
-              console.error("Failed to send email:", response.error);
+              logger.error({ error: response.error }, "Failed to send email");
               failed++;
             } else {
               sent++;
             }
           } catch (error) {
-            console.error("Failed to send email:", error);
+            logger.error({ error }, "Failed to send email");
             failed++;
           }
         }
@@ -74,7 +75,7 @@ export class EmailService {
         const response = await this.client.batch.send(emailPayloads);
 
         if (response.error) {
-          console.error("Failed to send emails:", response.error);
+          logger.error({ error: response.error }, "Failed to send emails");
           failed = eligibleEmails.length;
         } else {
           sent = eligibleEmails.length;
@@ -87,7 +88,7 @@ export class EmailService {
         failed,
       };
     } catch (error) {
-      console.error("Failed to send emails:", error);
+      logger.error({ error }, "Failed to send emails");
       return {
         sent: 0,
         skipped: emails.length - eligibleEmails.length,

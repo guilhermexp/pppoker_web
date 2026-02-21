@@ -7,6 +7,7 @@ import {
   upsertDocumentTags,
 } from "@midpoker/db/queries";
 import { Embed } from "@midpoker/documents/embed";
+import { logger } from "@midpoker/logger";
 import slugify from "@sindresorhus/slugify";
 import { schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
@@ -52,9 +53,12 @@ export const embedDocumentTags = schemaTask({
       const { embeddings, model } = await embed.embedMany(newTagNames);
 
       if (!embeddings || embeddings.length !== newTagNames.length) {
-        console.error(
-          "Embeddings result is missing or length mismatch:",
-          embeddings,
+        logger.error(
+          {
+            embeddingsLength: embeddings?.length,
+            expectedLength: newTagNames.length,
+          },
+          "Embeddings result is missing or length mismatch",
         );
         throw new Error("Failed to generate embeddings for all new tags.");
       }
@@ -69,11 +73,12 @@ export const embedDocumentTags = schemaTask({
       // Upsert embeddings to handle potential race conditions or duplicates
       await upsertDocumentTagEmbeddings(getDb(), newEmbeddingsToInsert);
 
-      console.log(
-        `Successfully inserted/updated ${newEmbeddingsToInsert.length} embeddings.`,
+      logger.info(
+        { count: newEmbeddingsToInsert.length },
+        "Successfully inserted/updated embeddings",
       );
     } else {
-      console.log("No new tags to embed.");
+      logger.info("No new tags to embed");
     }
 
     // 5. Upsert all tags into document_tags for the team
@@ -86,7 +91,7 @@ export const embedDocumentTags = schemaTask({
     const upsertedTagsData = await upsertDocumentTags(getDb(), tagsToUpsert);
 
     if (!upsertedTagsData || upsertedTagsData.length === 0) {
-      console.error("Upsert operation returned no data for document tags.");
+      logger.error("Upsert operation returned no data for document tags");
       throw new Error("Failed to get IDs from upserted document tags.");
     }
 
@@ -110,8 +115,9 @@ export const embedDocumentTags = schemaTask({
         processingStatus: "completed",
       });
     } else {
-      console.log(
-        `No tags resulted from the upsert process for document ${documentId}, cannot assign.`,
+      logger.info(
+        { documentId },
+        "No tags resulted from the upsert process, cannot assign",
       );
     }
   },

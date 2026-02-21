@@ -1,10 +1,10 @@
-import { useQueryStates } from "nuqs";
 import {
   createLoader,
   parseAsArrayOf,
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs/server";
+import { createFilterParamsHook } from "./create-params-hook";
 
 export const useTrackerFilterParamsSchema = {
   q: parseAsString,
@@ -15,15 +15,9 @@ export const useTrackerFilterParamsSchema = {
   end: parseAsString,
 };
 
-export function useTrackerFilterParams() {
-  const [filter, setFilter] = useQueryStates(useTrackerFilterParamsSchema);
-
-  return {
-    filter,
-    setFilter,
-    hasFilters: Object.values(filter).some((value) => value !== null),
-  };
-}
+export const useTrackerFilterParams = createFilterParamsHook(
+  useTrackerFilterParamsSchema,
+);
 
 export const loadTrackerFilterParams = createLoader(
   useTrackerFilterParamsSchema,

@@ -189,8 +189,7 @@ export const columns: ColumnDef<Invoice>[] = [
     header: "VAT Rate",
     accessorKey: "vatRate",
     cell: ({ row }) => {
-      // @ts-expect-error template is a jsonb field
-      const vatRate = row.original.template.vatRate as number | undefined;
+      const vatRate = row.original.template?.vatRate as number | undefined;
       const value =
         vatRate !== undefined && vatRate !== null ? `${vatRate}%` : "-";
       return (
@@ -225,8 +224,7 @@ export const columns: ColumnDef<Invoice>[] = [
     header: "Tax Rate",
     accessorKey: "taxRate",
     cell: ({ row }) => {
-      // @ts-expect-error template is a jsonb field
-      const taxRate = row.original.template.taxRate as number | undefined;
+      const taxRate = row.original.template?.taxRate as number | undefined;
       const value =
         taxRate !== undefined && taxRate !== null ? `${taxRate}%` : "-";
       return (

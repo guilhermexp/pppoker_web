@@ -1,4 +1,3 @@
-import { useQueryStates } from "nuqs";
 import {
   createLoader,
   parseAsArrayOf,
@@ -6,6 +5,7 @@ import {
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs/server";
+import { createFilterParamsHook } from "./create-params-hook";
 
 export const transactionFilterParamsSchema = {
   q: parseAsString,
@@ -32,18 +32,10 @@ export const transactionFilterParamsSchema = {
   manual: parseAsStringLiteral(["exclude", "include"] as const),
 };
 
-export function useTransactionFilterParams() {
-  const [filter, setFilter] = useQueryStates(transactionFilterParamsSchema, {
-    // Clear URL when values are null/default
-    clearOnDefault: true,
-  });
-
-  return {
-    filter,
-    setFilter,
-    hasFilters: Object.values(filter).some((value) => value !== null),
-  };
-}
+export const useTransactionFilterParams = createFilterParamsHook(
+  transactionFilterParamsSchema,
+  { clearOnDefault: true },
+);
 
 export const loadTransactionFilterParams = createLoader(
   transactionFilterParamsSchema,

@@ -15,6 +15,7 @@
     "@fast-csv/format": "5.0.5",
     "@midpoker/app-store": "workspace:*",
     "@midpoker/db": "workspace:*",
+    "@midpoker/logger": "workspace:*",
     "@midpoker/documents": "workspace:*",
     "@midpoker/email": "workspace:*",
     "@midpoker/import": "workspace:*",

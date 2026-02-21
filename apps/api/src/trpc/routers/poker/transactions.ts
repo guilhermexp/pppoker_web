@@ -1,4 +1,5 @@
 import { createAdminClient } from "@api/services/supabase";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 import {
   deletePokerTransactionSchema,
@@ -148,7 +149,10 @@ export const pokerTransactionsRouter = createTRPCRouter({
       const { data, error, count } = await query;
 
       if (error) {
-        console.log("[pokerTransactions.get] Supabase error:", error.message);
+        logger.error(
+          { error: error.message },
+          "pokerTransactions.get Supabase error",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -238,7 +242,7 @@ export const pokerTransactionsRouter = createTRPCRouter({
         if (error.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Transaction not found",
+            message: "Transacao nao encontrada",
           });
         }
         throw new TRPCError({
@@ -413,7 +417,7 @@ export const pokerTransactionsRouter = createTRPCRouter({
         if (fetchError.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Transaction not found",
+            message: "Transacao nao encontrada",
           });
         }
         throw new TRPCError({
@@ -460,8 +464,9 @@ export const pokerTransactionsRouter = createTRPCRouter({
             .eq("id", transaction.sender_player_id);
 
           if (senderError) {
-            console.error(
-              `Failed to update sender chip_balance after transaction delete: ${senderError.message}`,
+            logger.error(
+              { error: senderError.message },
+              "Failed to update sender chip_balance after transaction delete",
             );
           }
         }
@@ -487,8 +492,9 @@ export const pokerTransactionsRouter = createTRPCRouter({
             .eq("id", transaction.recipient_player_id);
 
           if (recipientError) {
-            console.error(
-              `Failed to update recipient chip_balance after transaction delete: ${recipientError.message}`,
+            logger.error(
+              { error: recipientError.message },
+              "Failed to update recipient chip_balance after transaction delete",
             );
           }
         }

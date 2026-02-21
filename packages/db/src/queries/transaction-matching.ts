@@ -1,12 +1,3 @@
-import type { Database } from "../client";
-import {
-  inbox,
-  inboxEmbeddings,
-  transactionAttachments,
-  transactionEmbeddings,
-  transactionMatchSuggestions,
-  transactions,
-} from "../schema";
 import { logger } from "@midpoker/logger";
 import {
   and,
@@ -19,6 +10,15 @@ import {
   notExists,
   sql,
 } from "drizzle-orm";
+import type { Database } from "../client";
+import {
+  inbox,
+  inboxEmbeddings,
+  transactionAttachments,
+  transactionEmbeddings,
+  transactionMatchSuggestions,
+  transactions,
+} from "../schema";
 import {
   CALIBRATION_LIMITS,
   EMBEDDING_THRESHOLDS,
@@ -1142,8 +1142,15 @@ export async function findMatches(
 
       // Debug amount scoring for first candidate
       if (candidate === candidateTransactions[0]) {
-        console.log(
-          `💰 AMOUNT DEBUG: inbox=${inboxItem.amount} ${inboxItem.currency}, candidate=${candidate.amount} ${candidate.currency}, score=${amountScore}`,
+        logger.debug(
+          {
+            inboxAmount: inboxItem.amount,
+            inboxCurrency: inboxItem.currency,
+            candidateAmount: candidate.amount,
+            candidateCurrency: candidate.currency,
+            amountScore,
+          },
+          "Amount scoring debug",
         );
       }
       const currencyScore = calculateCurrencyScore(
@@ -1153,8 +1160,13 @@ export async function findMatches(
 
       // Debug currency scoring for first candidate
       if (candidate === candidateTransactions[0]) {
-        console.log(
-          `💱 CURRENCY DEBUG: inbox="${inboxItem.currency}", candidate="${candidate.currency}", score=${currencyScore}`,
+        logger.debug(
+          {
+            inboxCurrency: inboxItem.currency,
+            candidateCurrency: candidate.currency,
+            currencyScore,
+          },
+          "Currency scoring debug",
         );
       }
       const dateScore = calculateDateScore(
@@ -1379,8 +1391,13 @@ export async function findMatches(
 
       // Debug the first candidate
       if (candidate === candidateTransactions[0]) {
-        console.log(
-          `🔍 FIRST CANDIDATE: score=${confidenceScore}, debugThreshold=${debugThreshold}, meets=${confidenceScore >= debugThreshold}`,
+        logger.debug(
+          {
+            confidenceScore,
+            debugThreshold,
+            meetsCriteria: confidenceScore >= debugThreshold,
+          },
+          "First candidate scoring debug",
         );
       }
 
@@ -1539,8 +1556,15 @@ export async function findMatches(
 
   // Log comprehensive scoring analysis to debug wrong suggestions
   logger.info("🔍 SCORING ANALYSIS - Why this suggestion?");
-  console.log(
-    `🎯 THRESHOLD DEBUG: bestMatch=${bestMatch?.confidenceScore}, threshold=${teamWeights.suggestedMatchThreshold}, meets=${bestMatch && bestMatch.confidenceScore >= teamWeights.suggestedMatchThreshold}`,
+  logger.debug(
+    {
+      bestMatchScore: bestMatch?.confidenceScore,
+      threshold: teamWeights.suggestedMatchThreshold,
+      meetsThreshold:
+        bestMatch &&
+        bestMatch.confidenceScore >= teamWeights.suggestedMatchThreshold,
+    },
+    "Threshold scoring debug",
   );
 
   // Log the final match result

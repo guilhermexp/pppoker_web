@@ -316,19 +316,18 @@ export function ClubMetasSection({
   // Club percents start at 0 -- only filled when user manually sets a value
   const effectivePercents = clubPercents;
 
-  const handlePercentChange = useCallback(
-    (key: string, value: number) => {
-      setClubPercents((prev) => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
+  const handlePercentChange = useCallback((key: string, value: number) => {
+    setClubPercents((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
   const handleClubSelection = useCallback((key: string, checked: boolean) => {
     setSelectedClubs((prev) => ({ ...prev, [key]: checked }));
   }, []);
 
   // Collapse state per group -- SA starts collapsed
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >(() => {
     const init: Record<string, boolean> = {};
     if (metaGroups) {
       for (const g of metaGroups) {
@@ -437,7 +436,9 @@ export function ClubMetasSection({
       hourEnd: meta.hour_end ?? null,
       targetType: meta.target_type,
       targetValue: Number(meta.target_value),
-      referenceBuyin: meta.reference_buyin ? Number(meta.reference_buyin) : null,
+      referenceBuyin: meta.reference_buyin
+        ? Number(meta.reference_buyin)
+        : null,
       note: meta.note ?? undefined,
     });
   };
@@ -528,25 +529,30 @@ export function ClubMetasSection({
         usingFallback && (
           <>
             {(() => {
-              const groupSummaries = clubsByGroup.groups.map(({ group, clubs }) => {
-                const groupOverlay = (group.metaPercent / 100) * overlayTotal;
-                const groupClubCharges = clubs.reduce((sum, c) => {
-                  const key = `${c.ligaId}-${c.clubeId}`;
-                  if (!selectedClubs[key]) return sum;
-                  return (
-                    sum +
-                    (overlayChargeSummary.clubChargesByKey.get(key) ?? 0)
+              const groupSummaries = clubsByGroup.groups.map(
+                ({ group, clubs }) => {
+                  const groupOverlay = (group.metaPercent / 100) * overlayTotal;
+                  const groupClubCharges = clubs.reduce((sum, c) => {
+                    const key = `${c.ligaId}-${c.clubeId}`;
+                    if (!selectedClubs[key]) return sum;
+                    return (
+                      sum +
+                      (overlayChargeSummary.clubChargesByKey.get(key) ?? 0)
+                    );
+                  }, 0);
+                  const leaguePays = Math.max(
+                    groupOverlay - groupClubCharges,
+                    0,
                   );
-                }, 0);
-                const leaguePays = Math.max(groupOverlay - groupClubCharges, 0);
-                return {
-                  group,
-                  clubs,
-                  groupOverlay,
-                  groupClubCharges,
-                  leaguePays,
-                };
-              });
+                  return {
+                    group,
+                    clubs,
+                    groupOverlay,
+                    groupClubCharges,
+                    leaguePays,
+                  };
+                },
+              );
 
               const leagueGroup =
                 groupSummaries.find(
@@ -554,8 +560,7 @@ export function ClubMetasSection({
                 ) ?? groupSummaries[0];
               const leagueTotal = leagueGroup?.leaguePays ?? 0;
               const leaguePercent =
-                overlayTotal > 0 ? (leagueTotal / overlayTotal) * 100
-                  : 0;
+                overlayTotal > 0 ? (leagueTotal / overlayTotal) * 100 : 0;
 
               const brDays = new Set<string>();
               const brHours = new Set<number>();
@@ -652,7 +657,10 @@ export function ClubMetasSection({
                               {group.name.toUpperCase() === "BR" && (
                                 <div className="px-2 text-[10px] text-muted-foreground">
                                   BR ficou responsavel por{" "}
-                                  {overlayChargeSummary.selectedTournaments.length}{" "}
+                                  {
+                                    overlayChargeSummary.selectedTournaments
+                                      .length
+                                  }{" "}
                                   torneios
                                   {brDaysLabel ? `, dias: ${brDaysLabel}` : ""}
                                   {brHoursLabel
@@ -665,12 +673,11 @@ export function ClubMetasSection({
                                 const key = `${c.ligaId}-${c.clubeId}`;
                                 const pct = effectivePercents[key] ?? 0;
                                 const isSelected = selectedClubs[key] ?? true;
-                                const clubOverlay =
-                                  isSelected
-                                    ? overlayChargeSummary.clubChargesByKey.get(
-                                        key,
-                                      ) ?? 0
-                                    : 0;
+                                const clubOverlay = isSelected
+                                  ? (overlayChargeSummary.clubChargesByKey.get(
+                                      key,
+                                    ) ?? 0)
+                                  : 0;
                                 return (
                                   <div
                                     key={key}
@@ -722,14 +729,16 @@ export function ClubMetasSection({
                               {overlayTotal > 0 && (
                                 <div className="flex items-center justify-end gap-2 px-2 pt-1 text-[10px] text-muted-foreground">
                                   <span>
-                                    Soma clubes: {formatNumber(groupClubCharges)}
+                                    Soma clubes:{" "}
+                                    {formatNumber(groupClubCharges)}
                                   </span>
                                 </div>
                               )}
                             </div>
                           ) : !isCollapsed ? (
                             <p className="text-xs text-muted-foreground">
-                              Nenhum clube nesta importacao pertence a este grupo.
+                              Nenhum clube nesta importacao pertence a este
+                              grupo.
                             </p>
                           ) : null}
                         </div>
@@ -844,9 +853,7 @@ export function ClubMetasSection({
                           Deal
                         </Badge>
                         <Badge variant="outline" className="text-[9px]">
-                          {d.target_type === "players"
-                            ? "Jogadores"
-                            : "Buyins"}
+                          {d.target_type === "players" ? "Jogadores" : "Buyins"}
                         </Badge>
                         <span className="font-mono">
                           {d.target_type === "players"
@@ -880,9 +887,7 @@ export function ClubMetasSection({
                         variant="ghost"
                         size="sm"
                         className="h-5 w-5 p-0 hover:text-red-500"
-                        onClick={() =>
-                          deleteDealMutation.mutate({ id: d.id })
-                        }
+                        onClick={() => deleteDealMutation.mutate({ id: d.id })}
                         disabled={deleteDealMutation.isPending}
                       >
                         <Icons.Trash className="w-3 h-3" />
@@ -904,9 +909,7 @@ export function ClubMetasSection({
                           Semana {weekNumber}
                         </Badge>
                         <Badge variant="outline" className="text-[9px]">
-                          {m.target_type === "players"
-                            ? "Jogadores"
-                            : "Buyins"}
+                          {m.target_type === "players" ? "Jogadores" : "Buyins"}
                         </Badge>
                         <span className="font-mono">
                           {m.target_type === "players"
@@ -1030,9 +1033,7 @@ export function ClubMetasSection({
               variant="ghost"
               onClick={() => setSaveAsDefaultDialog(null)}
             >
-              <span className="text-sm">
-                Manter apenas esta semana
-              </span>
+              <span className="text-sm">Manter apenas esta semana</span>
             </Button>
           </div>
         </DialogContent>

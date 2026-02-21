@@ -5,6 +5,7 @@ import {
 } from "@api/schemas/notifications";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 
 export const notificationsRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues
@@ -47,7 +48,10 @@ export const notificationsRouter = createTRPCRouter({
       const { data: activities, error } = await query;
 
       if (error) {
-        console.log("[notifications.list] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "notifications.list Supabase REST error",
+        );
         return [];
       }
 
@@ -79,9 +83,9 @@ export const notificationsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[notifications.updateStatus] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "notifications.updateStatus Supabase REST error",
         );
         throw new Error(`Failed to update notification: ${error.message}`);
       }
@@ -105,9 +109,9 @@ export const notificationsRouter = createTRPCRouter({
         .eq("user_id", session.user.id);
 
       if (error) {
-        console.log(
-          "[notifications.updateAllStatus] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "notifications.updateAllStatus Supabase REST error",
         );
         throw new Error(`Failed to update notifications: ${error.message}`);
       }

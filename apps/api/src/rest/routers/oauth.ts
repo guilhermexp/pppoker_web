@@ -27,6 +27,7 @@ import {
 } from "@midpoker/db/queries";
 import { AppInstalledEmail } from "@midpoker/email/emails/app-installed";
 import { render } from "@midpoker/email/render";
+import { logger } from "@midpoker/logger";
 import { rateLimiter } from "hono-rate-limiter";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
@@ -299,7 +300,7 @@ app.openapi(
       }
     } catch (error) {
       // Log error but don't fail the OAuth flow
-      console.error("Failed to send app installation email:", error);
+      logger.error({ error }, "Failed to send app installation email");
     }
 
     // Build success redirect URL

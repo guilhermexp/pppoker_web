@@ -1,56 +1,21 @@
+import {
+  createImportInput,
+  deleteImportInput,
+  getImportByIdInput,
+  listImportsInput,
+  processImportInput,
+} from "@api/schemas/su/imports";
 import { createAdminClient } from "@api/services/supabase";
-import { z } from "@hono/zod-openapi";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-const createImportSchema = z.object({
-  fileName: z.string(),
-  fileSize: z.number().optional(),
-  fileType: z.string().optional(),
-  periodStart: z.string(),
-  periodEnd: z.string(),
-  timezone: z.string().optional(),
-  rawData: z.any(),
-  validationPassed: z.boolean().optional(),
-  validationErrors: z.any().optional(),
-  validationWarnings: z.any().optional(),
-  qualityScore: z.number().optional(),
-});
-
-const processImportSchema = z.object({
-  importId: z.string().uuid(),
-  data: z.object({
-    geralPPST: z.array(z.any()).optional(),
-    jogosPPST: z.array(z.any()).optional(),
-    geralPPSR: z.array(z.any()).optional(),
-    jogosPPSR: z.array(z.any()).optional(),
-  }),
-});
 
 export const suImportsRouter = createTRPCRouter({
   /**
    * List all imports for the team
    */
   list: protectedProcedure
-    .input(
-      z
-        .object({
-          status: z
-            .enum([
-              "pending",
-              "validating",
-              "validated",
-              "processing",
-              "completed",
-              "failed",
-              "cancelled",
-            ])
-            .optional(),
-          limit: z.number().min(1).max(100).optional(),
-          offset: z.number().min(0).optional(),
-        })
-        .optional(),
-    )
+    .input(listImportsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -80,7 +45,7 @@ export const suImportsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch imports",
+          message: "Erro ao buscar importacoes",
         });
       }
 
@@ -91,7 +56,7 @@ export const suImportsRouter = createTRPCRouter({
    * Get a specific import by ID
    */
   getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(getImportByIdInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -105,7 +70,7 @@ export const suImportsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Import not found",
+          message: "Importacao nao encontrada",
         });
       }
 
@@ -116,7 +81,7 @@ export const suImportsRouter = createTRPCRouter({
    * Create a new import record
    */
   create: protectedProcedure
-    .input(createImportSchema)
+    .input(createImportInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -146,7 +111,7 @@ export const suImportsRouter = createTRPCRouter({
         if (periodError) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create week period",
+            message: "Erro ao criar periodo semanal",
           });
         }
 
@@ -178,7 +143,7 @@ export const suImportsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create import",
+          message: "Erro ao criar importacao",
         });
       }
 
@@ -189,7 +154,7 @@ export const suImportsRouter = createTRPCRouter({
    * Process an import - insert data into database
    */
   process: protectedProcedure
-    .input(processImportSchema)
+    .input(processImportInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const userId = session?.user?.id;
       const supabase = await createAdminClient();
@@ -205,14 +170,14 @@ export const suImportsRouter = createTRPCRouter({
       if (importError || !importRecord) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Import not found",
+          message: "Importacao nao encontrada",
         });
       }
 
       if (importRecord.status === "completed") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Import already processed",
+          message: "Importacao ja foi processada",
         });
       }
 
@@ -384,7 +349,7 @@ export const suImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "team_id,game_type,game_id" });
 
             if (error) {
-              console.error("Failed to insert PPST games batch:", error);
+              logger.error({ error }, "Failed to insert PPST games batch");
             }
           }
 
@@ -413,8 +378,9 @@ export const suImportsRouter = createTRPCRouter({
           for (const [externalGameId, data] of gameMetadataMap) {
             const dbGameId = gameIdMap.get(externalGameId);
             if (!dbGameId) {
-              console.error(
-                `Game ID not found for external ID: ${externalGameId}`,
+              logger.error(
+                { externalGameId },
+                "Game ID not found for external ID",
               );
               continue;
             }
@@ -452,7 +418,10 @@ export const suImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "game_id,jogador_id" });
 
             if (error) {
-              console.error("Failed to insert PPST game players batch:", error);
+              logger.error(
+                { error },
+                "Failed to insert PPST game players batch",
+              );
             }
           }
         }
@@ -600,7 +569,7 @@ export const suImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "team_id,game_type,game_id" });
 
             if (error) {
-              console.error("Failed to insert PPSR games batch:", error);
+              logger.error({ error }, "Failed to insert PPSR games batch");
             }
           }
 
@@ -629,8 +598,9 @@ export const suImportsRouter = createTRPCRouter({
           for (const [externalGameId, data] of gamePPSRMetadataMap) {
             const dbGameId = gamePPSRIdMap.get(externalGameId);
             if (!dbGameId) {
-              console.error(
-                `PPSR Game ID not found for external ID: ${externalGameId}`,
+              logger.error(
+                { externalGameId },
+                "PPSR Game ID not found for external ID",
               );
               continue;
             }
@@ -664,7 +634,10 @@ export const suImportsRouter = createTRPCRouter({
               .upsert(batch, { onConflict: "game_id,jogador_id" });
 
             if (error) {
-              console.error("Failed to insert PPSR game players batch:", error);
+              logger.error(
+                { error },
+                "Failed to insert PPSR game players batch",
+              );
             }
           }
         }
@@ -709,7 +682,7 @@ export const suImportsRouter = createTRPCRouter({
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to process import: ${error}`,
+          message: `Erro ao processar importacao: ${error}`,
         });
       }
     }),
@@ -718,7 +691,7 @@ export const suImportsRouter = createTRPCRouter({
    * Delete an import and its associated data
    */
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(deleteImportInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -733,7 +706,7 @@ export const suImportsRouter = createTRPCRouter({
       if (importError || !importRecord) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Import not found",
+          message: "Importacao nao encontrada",
         });
       }
 
@@ -772,7 +745,7 @@ export const suImportsRouter = createTRPCRouter({
       if (deleteError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete import",
+          message: "Erro ao excluir importacao",
         });
       }
 

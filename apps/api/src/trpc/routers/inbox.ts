@@ -30,6 +30,7 @@ import {
   updateInbox,
 } from "@midpoker/db/queries";
 import type { ProcessAttachmentPayload } from "@midpoker/jobs/schema";
+import { logger } from "@midpoker/logger";
 import { tasks } from "@trigger.dev/sdk";
 
 export const inboxRouter = createTRPCRouter({
@@ -86,7 +87,7 @@ export const inboxRouter = createTRPCRouter({
       const { data: inboxItems, error } = await query;
 
       if (error) {
-        console.log("[inbox.get] Supabase REST error:", error.message);
+        logger.error({ error: error.message }, "inbox.get Supabase REST error");
         return {
           data: [],
           meta: {
@@ -159,7 +160,10 @@ export const inboxRouter = createTRPCRouter({
         .single();
 
       if (error || !item) {
-        console.log("[inbox.getById] Supabase REST error:", error?.message);
+        logger.error(
+          { error: error?.message },
+          "inbox.getById Supabase REST error",
+        );
         return null;
       }
 
@@ -299,7 +303,10 @@ export const inboxRouter = createTRPCRouter({
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.log("[inbox.getByStatus] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "inbox.getByStatus Supabase REST error",
+        );
         return [];
       }
 

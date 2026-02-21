@@ -1,7 +1,8 @@
-import type { Session } from "@api/utils/auth";
 import { createAdminClient } from "@api/services/supabase";
+import type { Session } from "@api/utils/auth";
 import { teamCache } from "@midpoker/cache/team-cache";
 import type { Database } from "@midpoker/db/client";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 
 // Helper to get user team data via Supabase REST API (fallback when Drizzle fails)
@@ -16,7 +17,10 @@ async function getUserTeamDataViaSupabase(userId: string) {
     .single();
 
   if (userError || !user) {
-    console.log("[getUserTeamDataViaSupabase] User error:", userError?.message);
+    logger.error(
+      { error: userError?.message },
+      "getUserTeamDataViaSupabase user error",
+    );
     return null;
   }
 
@@ -27,9 +31,9 @@ async function getUserTeamDataViaSupabase(userId: string) {
     .eq("user_id", userId);
 
   if (memberError) {
-    console.log(
-      "[getUserTeamDataViaSupabase] Memberships error:",
-      memberError?.message,
+    logger.error(
+      { error: memberError?.message },
+      "getUserTeamDataViaSupabase memberships error",
     );
   }
 
@@ -75,8 +79,9 @@ export const withTeamPermission = async <TReturn>(opts: {
   const result = await getUserTeamDataViaSupabase(userId);
 
   if (!result) {
-    console.log(
-      "[withTeamPermission] No result from fallback - user not found",
+    logger.warn(
+      { userId },
+      "withTeamPermission no result from fallback - user not found",
     );
     throw new TRPCError({
       code: "NOT_FOUND",

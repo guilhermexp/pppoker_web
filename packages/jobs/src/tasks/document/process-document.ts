@@ -3,6 +3,7 @@ import { processDocumentSchema } from "@jobs/schema";
 import { updateDocumentByPath } from "@midpoker/db/queries";
 import { loadDocument } from "@midpoker/documents/loader";
 import { getContentSample } from "@midpoker/documents/utils";
+import { logger } from "@midpoker/logger";
 import { createClient } from "@midpoker/supabase/job";
 import { schemaTask, tasks } from "@trigger.dev/sdk";
 import { classifyDocument } from "./classify-document";
@@ -83,7 +84,7 @@ export const processDocument = schemaTask({
         sampleLength: sample.length,
       });
     } catch (error) {
-      console.error(error);
+      logger.error({ error }, "Failed to process document");
 
       await updateDocumentByPath(getDb(), {
         pathTokens: filePath,

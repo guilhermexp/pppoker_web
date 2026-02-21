@@ -7,6 +7,7 @@ import {
 } from "@api/schemas/transaction-categories";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 
 export const transactionCategoriesRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues
@@ -38,9 +39,9 @@ export const transactionCategoriesRouter = createTRPCRouter({
       const { data: categories, error } = await query;
 
       if (error) {
-        console.log(
-          "[transactionCategories.get] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactionCategories.get Supabase REST error",
         );
         return [];
       }
@@ -83,9 +84,9 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[transactionCategories.getById] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactionCategories.getById Supabase REST error",
         );
         return null;
       }
@@ -130,9 +131,9 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[transactionCategories.create] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactionCategories.create Supabase REST error",
         );
         throw new Error(`Failed to create category: ${error.message}`);
       }
@@ -178,9 +179,9 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[transactionCategories.update] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactionCategories.update Supabase REST error",
         );
         throw new Error(`Failed to update category: ${error.message}`);
       }
@@ -208,9 +209,9 @@ export const transactionCategoriesRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log(
-          "[transactionCategories.delete] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactionCategories.delete Supabase REST error",
         );
         throw new Error(`Failed to delete category: ${error.message}`);
       }

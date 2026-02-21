@@ -1,9 +1,9 @@
 "use client";
 
-import { Icons } from "@midpoker/ui/icons";
-import { cn } from "@midpoker/ui/cn";
-import { MidPokerLogoSquare, AvatarCircle } from "@/lib/sidebar-svg-paths";
+import { AvatarCircle, MidPokerLogoSquare } from "@/lib/sidebar-svg-paths";
 import type { NavigationSection } from "@/lib/sidebar-types";
+import { cn } from "@midpoker/ui/cn";
+import { Icons } from "@midpoker/ui/icons";
 import Link from "next/link";
 
 interface IconNavButtonProps {

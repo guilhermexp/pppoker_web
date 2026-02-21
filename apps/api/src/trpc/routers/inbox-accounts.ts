@@ -8,6 +8,7 @@ import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
 import { deleteInboxAccount } from "@midpoker/db/queries";
 import { InboxConnector } from "@midpoker/inbox/connector";
+import { logger } from "@midpoker/logger";
 import { schedules, tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 
@@ -30,7 +31,10 @@ export const inboxAccountsRouter = createTRPCRouter({
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.log("[inboxAccounts.get] Supabase REST error:", error.message);
+      logger.error(
+        { error: error.message },
+        "inboxAccounts.get Supabase REST error",
+      );
       return [];
     }
 
@@ -52,7 +56,7 @@ export const inboxAccountsRouter = createTRPCRouter({
 
         return connector.connect();
       } catch (error) {
-        console.error(error);
+        logger.error({ error }, "Failed to connect to inbox account");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to connect to inbox account",
@@ -73,7 +77,7 @@ export const inboxAccountsRouter = createTRPCRouter({
 
         return account;
       } catch (error) {
-        console.error(error);
+        logger.error({ error }, "Failed to exchange code for account");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to exchange code for account",

@@ -1,9 +1,9 @@
-import type { Database } from "../client";
-import { bankAccounts, teams } from "../schema";
 import { chatCache } from "@midpoker/cache/chat-cache";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import type { Database } from "../client";
+import { bankAccounts, teams } from "../schema";
 
 export type CreateBankAccountParams = {
   name: string;

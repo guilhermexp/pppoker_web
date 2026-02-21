@@ -1,6 +1,7 @@
 import type { Database } from "@midpoker/db/client";
 import { updateInboxAccount } from "@midpoker/db/queries";
 import { encrypt } from "@midpoker/encryption";
+import { logger } from "@midpoker/logger";
 import { ensureFileExtension } from "@midpoker/utils";
 import type { Credentials } from "google-auth-library";
 import { type Auth, type gmail_v1, google } from "googleapis";
@@ -68,7 +69,7 @@ export class GmailProvider implements OAuthProviderInterface {
             });
           }
         } catch (error) {
-          console.error("Failed to update tokens in database:", error);
+          logger.error({ error }, "Failed to update tokens in database");
         }
       },
     );
@@ -105,7 +106,7 @@ export class GmailProvider implements OAuthProviderInterface {
       this.setTokens(validTokens);
       return validTokens;
     } catch (error: unknown) {
-      console.error("Error exchanging code for tokens:", error);
+      logger.error({ error }, "Error exchanging code for tokens");
       const message = error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to exchange code for tokens: ${message}`);
     }
@@ -172,7 +173,7 @@ export class GmailProvider implements OAuthProviderInterface {
         name: userInfo.name ?? undefined,
       };
     } catch (error: unknown) {
-      console.error("Error fetching user info:", error);
+      logger.error({ error }, "Error fetching user info");
     }
   }
 
@@ -235,8 +236,8 @@ export class GmailProvider implements OAuthProviderInterface {
       const messages = allMessages.slice(0, maxResults);
 
       if (!messages || messages.length === 0) {
-        console.log(
-          "No emails found with PDF attachments matching the criteria.",
+        logger.info(
+          "No emails found with PDF attachments matching the criteria",
         );
         return [];
       }
@@ -252,9 +253,12 @@ export class GmailProvider implements OAuthProviderInterface {
           })
             .then((res) => res.data)
             .catch((err: unknown) => {
-              console.error(
-                `Failed to fetch message ${id}:`,
-                err instanceof Error ? err.message : err,
+              logger.error(
+                {
+                  messageId: id,
+                  error: err instanceof Error ? err.message : err,
+                },
+                "Failed to fetch message",
               );
               return null;
             }),
@@ -265,7 +269,7 @@ export class GmailProvider implements OAuthProviderInterface {
       ).filter((msg): msg is gmail_v1.Schema$Message => msg !== null);
 
       if (fetchedMessages.length === 0) {
-        console.log("All filtered messages failed to fetch details.");
+        logger.info("All filtered messages failed to fetch details");
         return [];
       }
 
@@ -281,11 +285,10 @@ export class GmailProvider implements OAuthProviderInterface {
       const message = error instanceof Error ? error.message : "Unknown error";
 
       // Log the full error for debugging
-      console.error("Gmail API error:", {
-        error: message,
-        accountId: this.#accountId,
-        timestamp: new Date().toISOString(),
-      });
+      logger.error(
+        { error: message, accountId: this.#accountId },
+        "Gmail API error",
+      );
 
       // Check if it's a specific Gmail API error and provide more context
       if (message.includes("invalid_request")) {
@@ -317,8 +320,9 @@ export class GmailProvider implements OAuthProviderInterface {
     message: gmail_v1.Schema$Message,
   ): Promise<Attachment[]> {
     if (!message.id || !message.payload?.parts) {
-      console.warn(
-        `Skipping message ${message.id} due to missing ID or parts.`,
+      logger.warn(
+        { messageId: message.id },
+        "Skipping message due to missing ID or parts",
       );
       return [];
     }
@@ -374,8 +378,9 @@ export class GmailProvider implements OAuthProviderInterface {
     } catch (error: unknown) {
       const messageText =
         error instanceof Error ? error.message : "Unknown error";
-      console.error(
-        `Failed to process attachments for message ${message.id}: ${messageText}`,
+      logger.error(
+        { messageId: message.id, error: messageText },
+        "Failed to process attachments for message",
       );
       return [];
     }
@@ -393,8 +398,9 @@ export class GmailProvider implements OAuthProviderInterface {
 
     for (const part of parts) {
       if (attachmentsCount >= maxAttachments) {
-        console.log(
-          `Reached maximum attachment limit (${maxAttachments}) for message ${messageId}. Skipping further attachments.`,
+        logger.info(
+          { maxAttachments, messageId },
+          "Reached maximum attachment limit for message, skipping further attachments",
         );
         break;
       }
@@ -430,9 +436,9 @@ export class GmailProvider implements OAuthProviderInterface {
             part.filename || `attachment with ID ${part.body.attachmentId}`;
           const message =
             error instanceof Error ? error.message : "Unknown error";
-          console.error(
-            `Failed to fetch ${attachmentIdentifier} for message ${messageId}: ${message}`,
-            error,
+          logger.error(
+            { attachment: attachmentIdentifier, messageId, error: message },
+            "Failed to fetch attachment for message",
           );
         }
       }
@@ -445,8 +451,9 @@ export class GmailProvider implements OAuthProviderInterface {
         attachments.push(...nestedAttachments);
         attachmentsCount = attachments.length;
         if (attachmentsCount >= maxAttachments) {
-          console.log(
-            `Reached maximum attachment limit (${maxAttachments}) after processing nested parts for message ${messageId}.`,
+          logger.info(
+            { maxAttachments, messageId },
+            "Reached maximum attachment limit after processing nested parts for message",
           );
           break;
         }

@@ -5,8 +5,8 @@ import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
-import { Input } from "@midpoker/ui/input";
 import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
 import {
   Select,
   SelectContent,

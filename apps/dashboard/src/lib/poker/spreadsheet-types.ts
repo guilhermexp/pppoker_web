@@ -110,7 +110,8 @@ function isValidDate(dateStr: string): boolean {
   const month = Number.parseInt(dateStr.slice(4, 6), 10);
   const day = Number.parseInt(dateStr.slice(6, 8), 10);
 
-  if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day))
+    return false;
   if (year < 2000 || year > 2100) return false;
   if (month < 1 || month > 12) return false;
   if (day < 1 || day > 31) return false;

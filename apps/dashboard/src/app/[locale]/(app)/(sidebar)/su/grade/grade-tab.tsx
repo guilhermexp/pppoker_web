@@ -16,6 +16,7 @@ import {
   groupEventsByDay,
   parseTournamentSchedule,
 } from "@/lib/league/tournament-schedule";
+import { getWeekFromShortDateString } from "@/lib/poker/date-utils";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import {
@@ -35,8 +36,7 @@ import {
   TableRow,
 } from "@midpoker/ui/table";
 import { useToast } from "@midpoker/ui/use-toast";
-import { getWeek, parse } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { getWeek } from "date-fns";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Chave do localStorage para dados da grade
@@ -68,23 +68,7 @@ export interface StoredScheduleData {
   tournaments?: StoredTournament[];
 }
 
-// Helper para obter número da semana de uma data string (DD/MM)
-// Usa mesmas opções do modal de validação para consistência
-function getWeekFromDateString(dateStr: string, year?: number): number | null {
-  try {
-    const currentYear = year || new Date().getFullYear();
-    // Formato DD/MM
-    const date = parse(`${dateStr}/${currentYear}`, "dd/MM/yyyy", new Date(), {
-      locale: ptBR,
-    });
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-    return getWeek(date, { weekStartsOn: 0, firstWeekContainsDate: 1 });
-  } catch {
-    return null;
-  }
-}
+// getWeekFromShortDateString imported from @/lib/poker/date-utils
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("pt-BR").format(value);
@@ -301,7 +285,7 @@ export function GradeTab({
       return { currentWeek, scheduleWeek: null, isSameWeek: false };
     }
 
-    const scheduleWeek = getWeekFromDateString(data.weekInfo.startDate);
+    const scheduleWeek = getWeekFromShortDateString(data.weekInfo.startDate);
 
     return {
       currentWeek,
@@ -511,20 +495,32 @@ export function GradeTab({
                 <div className="p-4 rounded-lg dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]">
                   <div className="flex items-center gap-2 mb-2">
                     <Icons.PlayOutline className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground font-medium">Torneios</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Torneios
+                    </span>
                   </div>
-                  <p className="text-xl font-mono font-bold">{formatNumber(totals.totalTournaments)}</p>
+                  <p className="text-xl font-mono font-bold">
+                    {formatNumber(totals.totalTournaments)}
+                  </p>
                   {weekInfo.scheduleWeek && (
-                    <p className="text-xs text-muted-foreground mt-0.5">Semana {weekInfo.scheduleWeek}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Semana {weekInfo.scheduleWeek}
+                    </p>
                   )}
                 </div>
                 <div className="p-4 rounded-lg dark:bg-[#00C969]/5 border border-[#00C969]/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Icons.TrendingUp className="w-4 h-4 text-[#00C969]" />
-                    <span className="text-xs text-muted-foreground font-medium">GTD Total</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      GTD Total
+                    </span>
                   </div>
-                  <p className="text-xl font-mono font-bold text-[#00C969]">{formatNumber(totals.totalGTD)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 font-mono">R$ {formatNumber(totals.totalGTD * 5)}</p>
+                  <p className="text-xl font-mono font-bold text-[#00C969]">
+                    {formatNumber(totals.totalGTD)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                    R$ {formatNumber(totals.totalGTD * 5)}
+                  </p>
                 </div>
               </div>
             ) : (
@@ -580,18 +576,34 @@ export function GradeTab({
                 <div className="p-4 rounded-lg dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]">
                   <div className="flex items-center gap-2 mb-2">
                     <Icons.PlayOutline className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground font-medium">Torneios</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Torneios
+                    </span>
                   </div>
-                  <p className="text-xl font-mono font-bold">{realizedStats.count}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{realizedStats.withGtd} com GTD</p>
+                  <p className="text-xl font-mono font-bold">
+                    {realizedStats.count}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {realizedStats.withGtd} com GTD
+                  </p>
                 </div>
-                <div className={`p-4 rounded-lg ${realizedStats.overlayCount > 0 ? "dark:bg-red-500/5 border border-red-500/20" : "dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]"}`}>
+                <div
+                  className={`p-4 rounded-lg ${realizedStats.overlayCount > 0 ? "dark:bg-red-500/5 border border-red-500/20" : "dark:bg-[#0c0c0c] border dark:border-[#1d1d1d]"}`}
+                >
                   <div className="flex items-center gap-2 mb-2">
-                    <Icons.TrendingDown className={`w-4 h-4 ${realizedStats.overlayCount > 0 ? "text-red-500" : "text-muted-foreground"}`} />
-                    <span className="text-xs text-muted-foreground font-medium">Overlay</span>
+                    <Icons.TrendingDown
+                      className={`w-4 h-4 ${realizedStats.overlayCount > 0 ? "text-red-500" : "text-muted-foreground"}`}
+                    />
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Overlay
+                    </span>
                   </div>
-                  <p className={`text-xl font-mono font-bold ${realizedStats.overlayCount > 0 ? "text-red-500" : ""}`}>
-                    {realizedStats.overlayCount > 0 ? formatNumber(realizedStats.totalOverlay) : "0"}
+                  <p
+                    className={`text-xl font-mono font-bold ${realizedStats.overlayCount > 0 ? "text-red-500" : ""}`}
+                  >
+                    {realizedStats.overlayCount > 0
+                      ? formatNumber(realizedStats.totalOverlay)
+                      : "0"}
                   </p>
                   {realizedStats.overlayCount > 0 && (
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono">
@@ -605,7 +617,10 @@ export function GradeTab({
                 <Icons.AlertCircle className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
                   Importe e aprove dados PPST na tela de{" "}
-                  <span className="font-medium text-foreground">Importação</span>.
+                  <span className="font-medium text-foreground">
+                    Importação
+                  </span>
+                  .
                 </p>
               </div>
             )}
@@ -686,7 +701,8 @@ export function GradeTab({
                     >
                       {filteredMatchResult?.matched.length ?? 0} matched
                     </Badge>
-                    {(filteredMatchResult?.missingFromImport.length ?? 0) > 0 && (
+                    {(filteredMatchResult?.missingFromImport.length ?? 0) >
+                      0 && (
                       <Badge
                         variant="outline"
                         className="bg-red-500/10 text-red-500 border-red-500/20 text-sm px-3 py-1"
@@ -809,7 +825,9 @@ export function GradeTab({
                             <TableCell className="text-right font-mono text-sm whitespace-nowrap">
                               USD {formatNumber(pair.schedule.gtd)}
                             </TableCell>
-                            <TableCell className="w-[20px] p-0"><div className="w-[2px] h-full mx-auto bg-border/50" /></TableCell>
+                            <TableCell className="w-[20px] p-0">
+                              <div className="w-[2px] h-full mx-auto bg-border/50" />
+                            </TableCell>
                             <TableCell
                               className="font-medium text-sm max-w-[180px] truncate"
                               title={pair.realized.name}
@@ -862,7 +880,9 @@ export function GradeTab({
                             <TableCell className="text-right font-mono text-sm whitespace-nowrap">
                               USD {formatNumber(t.gtd)}
                             </TableCell>
-                            <TableCell className="w-[20px] p-0"><div className="w-[2px] h-full mx-auto bg-border/50" /></TableCell>
+                            <TableCell className="w-[20px] p-0">
+                              <div className="w-[2px] h-full mx-auto bg-border/50" />
+                            </TableCell>
                             <TableCell className="text-muted-foreground italic text-sm">
                               -
                             </TableCell>
@@ -904,7 +924,9 @@ export function GradeTab({
                             <TableCell className="text-right text-muted-foreground">
                               -
                             </TableCell>
-                            <TableCell className="w-[20px] p-0"><div className="w-[2px] h-full mx-auto bg-border/50" /></TableCell>
+                            <TableCell className="w-[20px] p-0">
+                              <div className="w-[2px] h-full mx-auto bg-border/50" />
+                            </TableCell>
                             <TableCell
                               className="font-medium text-sm max-w-[180px] truncate"
                               title={t.name}

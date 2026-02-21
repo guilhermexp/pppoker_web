@@ -1,5 +1,4 @@
 import { UTCDate } from "@date-fns/utc";
-import type { Database } from "../client";
 import {
   eachMonthOfInterval,
   endOfMonth,
@@ -23,6 +22,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
+import type { Database } from "../client";
 import {
   bankAccounts,
   inbox,

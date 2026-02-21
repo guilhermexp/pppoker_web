@@ -1,36 +1,21 @@
+import {
+  getSettlementByIdInput,
+  getSettlementStatsInput,
+  getSettlementsByPeriodInput,
+  listSettlementsInput,
+  markSettlementCompletedInput,
+  updateSettlementInput,
+} from "@api/schemas/su/settlements";
 import { createAdminClient } from "@api/services/supabase";
-import { z } from "@hono/zod-openapi";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-const updateSettlementSchema = z.object({
-  id: z.string().uuid(),
-  adjustmentAmount: z.number().optional(),
-  paidAmount: z.number().optional(),
-  status: z
-    .enum(["pending", "partial", "completed", "disputed", "cancelled"])
-    .optional(),
-  note: z.string().optional(),
-});
 
 export const suSettlementsRouter = createTRPCRouter({
   /**
    * List all settlements for the team
    */
   list: protectedProcedure
-    .input(
-      z
-        .object({
-          status: z
-            .enum(["pending", "partial", "completed", "disputed", "cancelled"])
-            .optional(),
-          weekPeriodId: z.string().uuid().optional(),
-          ligaId: z.number().optional(),
-          limit: z.number().min(1).max(100).optional(),
-          offset: z.number().min(0).optional(),
-        })
-        .optional(),
-    )
+    .input(listSettlementsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -68,7 +53,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch settlements",
+          message: "Erro ao buscar acertos",
         });
       }
 
@@ -79,7 +64,7 @@ export const suSettlementsRouter = createTRPCRouter({
    * Get a specific settlement by ID
    */
   getById: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(getSettlementByIdInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -93,7 +78,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Settlement not found",
+          message: "Acerto nao encontrado",
         });
       }
 
@@ -104,7 +89,7 @@ export const suSettlementsRouter = createTRPCRouter({
    * Get settlements by week period
    */
   getByPeriod: protectedProcedure
-    .input(z.object({ weekPeriodId: z.string().uuid() }))
+    .input(getSettlementsByPeriodInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -118,7 +103,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch settlements",
+          message: "Erro ao buscar acertos",
         });
       }
 
@@ -140,7 +125,7 @@ export const suSettlementsRouter = createTRPCRouter({
     if (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch pending settlements",
+        message: "Erro ao buscar acertos pendentes",
       });
     }
 
@@ -163,7 +148,7 @@ export const suSettlementsRouter = createTRPCRouter({
    * Update a settlement
    */
   update: protectedProcedure
-    .input(updateSettlementSchema)
+    .input(updateSettlementInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -178,7 +163,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (currentError || !current) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Settlement not found",
+          message: "Acerto nao encontrado",
         });
       }
 
@@ -219,7 +204,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update settlement",
+          message: "Erro ao atualizar acerto",
         });
       }
 
@@ -230,7 +215,7 @@ export const suSettlementsRouter = createTRPCRouter({
    * Mark a settlement as completed (fully paid)
    */
   markAsCompleted: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(markSettlementCompletedInput)
     .mutation(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -244,7 +229,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (currentError || !current) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Settlement not found",
+          message: "Acerto nao encontrado",
         });
       }
 
@@ -262,7 +247,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to mark settlement as completed",
+          message: "Erro ao marcar acerto como concluido",
         });
       }
 
@@ -273,14 +258,7 @@ export const suSettlementsRouter = createTRPCRouter({
    * Get settlement statistics for dashboard
    */
   getStats: protectedProcedure
-    .input(
-      z
-        .object({
-          from: z.string().optional(),
-          to: z.string().optional(),
-        })
-        .optional(),
-    )
+    .input(getSettlementStatsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -301,7 +279,7 @@ export const suSettlementsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch settlement stats",
+          message: "Erro ao buscar estatisticas de acertos",
         });
       }
 

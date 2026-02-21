@@ -6,6 +6,11 @@ import type {
   ParsedLeagueImportData,
   ParsedLeagueSummary,
 } from "@/lib/poker/league-types";
+import {
+  calculateFormula,
+  parseSheetByPosition,
+  toNumber,
+} from "@/lib/poker/parsers";
 import type {
   ParsedDemonstrativo,
   ParsedDetailed,
@@ -24,329 +29,8 @@ import * as XLSX from "xlsx";
 import { ImportsList } from "./imports-list";
 import { LeagueImportValidationModal } from "./league-import-validation-modal";
 
-// Helper to convert values to numbers
-function toNumber(value: string | number | null | undefined): number {
-  if (value === null || value === undefined) return 0;
-  if (typeof value === "number") return value;
-  const cleaned = value.toString().replace(",", ".").trim();
-  const parsed = Number.parseFloat(cleaned);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-// Convert column letter to index (A=0, B=1, ..., Z=25, AA=26, etc)
-function columnLetterToIndex(letter: string): number {
-  let index = 0;
-  for (let i = 0; i < letter.length; i++) {
-    index = index * 26 + (letter.charCodeAt(i) - 64);
-  }
-  return index - 1;
-}
-
-// Get cell value with formula calculation support
-function getCellValue(
-  sheet: XLSX.Sheet,
-  address: string,
-  visited: Set<string> = new Set(),
-): number {
-  if (visited.has(address)) return 0;
-  visited.add(address);
-
-  const cell = sheet[address];
-  if (!cell) return 0;
-
-  if (cell.v !== undefined && cell.v !== null) {
-    if (typeof cell.v === "number") return cell.v;
-    const parsed = Number.parseFloat(cell.v.replace(/,/g, "."));
-    if (!isNaN(parsed)) return parsed;
-  }
-
-  if (cell.w !== undefined && cell.w !== null) {
-    const parsed = Number.parseFloat(String(cell.w).replace(/,/g, "."));
-    if (!isNaN(parsed)) return parsed;
-  }
-
-  if (cell.f) {
-    return calculateFormula(sheet, cell.f, visited);
-  }
-
-  return 0;
-}
-
-// Calculate Excel formulas recursively
-function calculateFormula(
-  sheet: XLSX.Sheet,
-  formula: string,
-  visited: Set<string> = new Set(),
-): number {
-  const cleanFormula = formula.trim().replace(/^=/, "");
-
-  // SUM(range) - e.g., SUM(I5:Q5)
-  const sumMatch = cleanFormula.match(/^SUM\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$/i);
-  if (sumMatch) {
-    const [, startCol, startRowStr, endCol, endRowStr] = sumMatch;
-    const startColIdx = columnLetterToIndex(startCol);
-    const endColIdx = columnLetterToIndex(endCol);
-    const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
-    const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
-
-    let sum = 0;
-    for (let row = startRowIdx; row <= endRowIdx; row++) {
-      for (let col = startColIdx; col <= endColIdx; col++) {
-        const addr = XLSX.utils.encode_cell({ r: row, c: col });
-        sum += getCellValue(sheet, addr, new Set(visited));
-      }
-    }
-    return sum;
-  }
-
-  // SUBTOTAL(9,range) - same as SUM
-  const subtotalMatch = cleanFormula.match(
-    /^SUBTOTAL\s*\(\s*\d+\s*,\s*([A-Z]+)(\d+):([A-Z]+)(\d+)\s*\)$/i,
-  );
-  if (subtotalMatch) {
-    const [, startCol, startRowStr, endCol, endRowStr] = subtotalMatch;
-    const startColIdx = columnLetterToIndex(startCol);
-    const endColIdx = columnLetterToIndex(endCol);
-    const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
-    const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
-
-    let sum = 0;
-    for (let row = startRowIdx; row <= endRowIdx; row++) {
-      for (let col = startColIdx; col <= endColIdx; col++) {
-        const addr = XLSX.utils.encode_cell({ r: row, c: col });
-        sum += getCellValue(sheet, addr, new Set(visited));
-      }
-    }
-    return sum;
-  }
-
-  // Simple SUM with single column range like SUM(G:G) or SUM(G5:G999)
-  const colSumMatch = cleanFormula.match(
-    /^SUM\(([A-Z]+)(?:(\d+))?:([A-Z]+)(?:(\d+))?\)$/i,
-  );
-  if (colSumMatch) {
-    const [, startCol, startRowStr, endCol, endRowStr] = colSumMatch;
-    if (startCol === endCol) {
-      const colIdx = columnLetterToIndex(startCol);
-      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
-      const startRow = startRowStr ? Number.parseInt(startRowStr, 10) - 1 : 0;
-      const endRow = endRowStr ? Number.parseInt(endRowStr, 10) - 1 : range.e.r;
-
-      let sum = 0;
-      for (let row = startRow; row <= endRow; row++) {
-        const addr = XLSX.utils.encode_cell({ r: row, c: colIdx });
-        sum += getCellValue(sheet, addr, new Set(visited));
-      }
-      return sum;
-    }
-  }
-
-  // SUMIF/SUMIFS - just return 0 as we can't evaluate these properly
-  if (cleanFormula.match(/^SUMIFS?\(/i)) {
-    return 0;
-  }
-
-  // IF statement: IF(condition, true_val, false_val) - try to evaluate simple ones
-  const ifMatch = cleanFormula.match(/^IF\(([^,]+),\s*([^,]+),\s*([^)]+)\)$/i);
-  if (ifMatch) {
-    // For now, just try to get the true value if it's a cell reference
-    const trueVal = ifMatch[2].trim();
-    const cellRef = trueVal.match(/^([A-Z]+)(\d+)$/i);
-    if (cellRef) {
-      const addr = XLSX.utils.encode_cell({
-        r: Number.parseInt(cellRef[2], 10) - 1,
-        c: columnLetterToIndex(cellRef[1]),
-      });
-      return getCellValue(sheet, addr, new Set(visited));
-    }
-    // Try as number
-    const num = Number.parseFloat(trueVal);
-    if (!isNaN(num)) return num;
-    return 0;
-  }
-
-  // Cell reference like =A1 or A1
-  const cellRefMatch = cleanFormula.match(/^([A-Z]+)(\d+)$/i);
-  if (cellRefMatch) {
-    const [, col, rowStr] = cellRefMatch;
-    const colIdx = columnLetterToIndex(col);
-    const rowIdx = Number.parseInt(rowStr, 10) - 1;
-    const addr = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
-    return getCellValue(sheet, addr, visited);
-  }
-
-  // Multiple cell arithmetic: A1+B1+C1 or A1-B1-C1 or A1+B1-C1 etc
-  const multiArithMatch = cleanFormula.match(
-    /^([A-Z]+\d+(?:\s*[+\-]\s*[A-Z]+\d+)+)$/i,
-  );
-  if (multiArithMatch) {
-    const parts = cleanFormula.split(/([+\-])/);
-    let result = 0;
-    let currentOp = "+";
-
-    for (const part of parts) {
-      const trimmed = part.trim();
-      if (trimmed === "+" || trimmed === "-") {
-        currentOp = trimmed;
-      } else {
-        const ref = trimmed.match(/^([A-Z]+)(\d+)$/i);
-        if (ref) {
-          const addr = XLSX.utils.encode_cell({
-            r: Number.parseInt(ref[2], 10) - 1,
-            c: columnLetterToIndex(ref[1]),
-          });
-          const val = getCellValue(sheet, addr, new Set(visited));
-          result = currentOp === "+" ? result + val : result - val;
-        }
-      }
-    }
-    return result;
-  }
-
-  // Simple arithmetic: A1+B1 or A1-B1
-  const arithmeticMatch = cleanFormula.match(
-    /^([A-Z]+)(\d+)\s*([+\-])\s*([A-Z]+)(\d+)$/i,
-  );
-  if (arithmeticMatch) {
-    const [, col1, row1, op, col2, row2] = arithmeticMatch;
-    const addr1 = XLSX.utils.encode_cell({
-      r: Number.parseInt(row1, 10) - 1,
-      c: columnLetterToIndex(col1),
-    });
-    const addr2 = XLSX.utils.encode_cell({
-      r: Number.parseInt(row2, 10) - 1,
-      c: columnLetterToIndex(col2),
-    });
-    const val1 = getCellValue(sheet, addr1, new Set(visited));
-    const val2 = getCellValue(sheet, addr2, new Set(visited));
-    return op === "+" ? val1 + val2 : val1 - val2;
-  }
-
-  // Multiplication/Division: A1*B1 or A1/B1
-  const multDivMatch = cleanFormula.match(
-    /^([A-Z]+)(\d+)\s*([*\/])\s*([A-Z]+)(\d+)$/i,
-  );
-  if (multDivMatch) {
-    const [, col1, row1, op, col2, row2] = multDivMatch;
-    const addr1 = XLSX.utils.encode_cell({
-      r: Number.parseInt(row1, 10) - 1,
-      c: columnLetterToIndex(col1),
-    });
-    const addr2 = XLSX.utils.encode_cell({
-      r: Number.parseInt(row2, 10) - 1,
-      c: columnLetterToIndex(col2),
-    });
-    const val1 = getCellValue(sheet, addr1, new Set(visited));
-    const val2 = getCellValue(sheet, addr2, new Set(visited));
-    if (op === "*") return val1 * val2;
-    if (op === "/" && val2 !== 0) return val1 / val2;
-    return 0;
-  }
-
-  // Number with cell: A1*100 or 100*A1 or A1/100
-  const numCellMatch = cleanFormula.match(
-    /^(?:([A-Z]+)(\d+)\s*([*\/])\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*([*\/])\s*([A-Z]+)(\d+))$/i,
-  );
-  if (numCellMatch) {
-    if (numCellMatch[1]) {
-      // Cell first: A1*100
-      const addr = XLSX.utils.encode_cell({
-        r: Number.parseInt(numCellMatch[2], 10) - 1,
-        c: columnLetterToIndex(numCellMatch[1]),
-      });
-      const cellVal = getCellValue(sheet, addr, new Set(visited));
-      const num = Number.parseFloat(numCellMatch[4]);
-      const op = numCellMatch[3];
-      if (op === "*") return cellVal * num;
-      if (op === "/" && num !== 0) return cellVal / num;
-    } else {
-      // Number first: 100*A1
-      const addr = XLSX.utils.encode_cell({
-        r: Number.parseInt(numCellMatch[8], 10) - 1,
-        c: columnLetterToIndex(numCellMatch[7]),
-      });
-      const cellVal = getCellValue(sheet, addr, new Set(visited));
-      const num = Number.parseFloat(numCellMatch[5]);
-      const op = numCellMatch[6];
-      if (op === "*") return num * cellVal;
-      if (op === "/" && cellVal !== 0) return num / cellVal;
-    }
-    return 0;
-  }
-
-  // Plain number
-  const plainNum = Number.parseFloat(cleanFormula);
-  if (!isNaN(plainNum)) return plainNum;
-
-  return 0;
-}
-
-// Parse sheet by position
-function parseSheetByPosition(
-  sheet: XLSX.Sheet,
-  columnMap: Record<string, number>,
-  headerRows = 4,
-  rowFilter?: (rowData: Record<string, any>) => boolean,
-): any[] {
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
-  const result: any[] = [];
-
-  for (let row = headerRows; row <= range.e.r; row++) {
-    const rowData: Record<string, any> = {};
-    let hasValidId = false;
-
-    for (const [field, colIdx] of Object.entries(columnMap)) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
-      const cell = sheet[cellAddress];
-
-      let value = null;
-      if (cell) {
-        // Priority 1: Get the raw value if it exists
-        if (cell.v !== undefined && cell.v !== null) {
-          value = cell.v;
-        }
-        // Priority 2: If cell has formula but no cached value, try to calculate
-        else if (cell.f) {
-          value = calculateFormula(sheet, cell.f, new Set());
-        }
-        // Priority 3: Try formatted text value
-        else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
-          const trimmed = String(cell.w).trim().replace(/,/g, ".");
-          const parsed = Number.parseFloat(trimmed);
-          value = !isNaN(parsed) ? parsed : cell.w;
-        }
-
-        // Additional check: if we have a formula and the value seems wrong (0 for a formula that should have a value)
-        // This handles cases where Excel didn't cache the formula result
-        if (cell.f && (value === 0 || value === null || value === undefined)) {
-          const calculated = calculateFormula(sheet, cell.f, new Set());
-          if (calculated !== 0) {
-            value = calculated;
-          }
-        }
-      }
-
-      if (value === "None" || value === "none") value = null;
-      if (typeof value === "string") value = value.trim();
-
-      rowData[field] = value;
-
-      if (field === "ppPokerId" && value && !isNaN(Number(value))) {
-        hasValidId = true;
-      }
-    }
-
-    if (rowFilter) {
-      if (rowFilter(rowData)) {
-        result.push(rowData);
-      }
-    } else if (hasValidId) {
-      result.push(rowData);
-    }
-  }
-
-  return result;
-}
+// columnLetterToIndex, getCellValue, calculateFormula, parseSheetByPosition, toNumber
+// imported from @/lib/poker/parsers
 
 // Column mappings for "Geral de Clube" sheet (49 columns: A-AW)
 // Based on debug output:
@@ -660,7 +344,7 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
         } else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
           const trimmed = String(cell.w).trim().replace(/,/g, ".");
           const parsed = Number.parseFloat(trimmed);
-          value = !isNaN(parsed) ? parsed : cell.w;
+          value = !Number.isNaN(parsed) ? parsed : cell.w;
         }
 
         // Recalculate formulas that returned 0
@@ -677,7 +361,7 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
 
       rowData[field] = value;
 
-      if (field === "ppPokerId" && value && !isNaN(Number(value))) {
+      if (field === "ppPokerId" && value && !Number.isNaN(Number(value))) {
         hasValidId = true;
       }
     }
@@ -842,7 +526,7 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
   // Try to find period in first few cells of column A
   for (let r = 0; r <= Math.min(range.e.r, 20); r++) {
     const cell = sheet[XLSX.utils.encode_cell({ r, c: 0 })];
-    if (cell && cell.v) {
+    if (cell?.v) {
       const match = String(cell.v).match(
         /(\d{4}\/\d{2}\/\d{2})\s*UTC\s*(-?\d+)/i,
       );
@@ -880,7 +564,7 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
         else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
           const trimmed = String(cell.w).trim().replace(/,/g, ".");
           const parsed = Number.parseFloat(trimmed);
-          value = !isNaN(parsed) ? parsed : cell.w;
+          value = !Number.isNaN(parsed) ? parsed : cell.w;
         }
 
         // Additional check: if we have a formula and the value seems wrong (0 for a formula that should have a value)
@@ -1508,7 +1192,7 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
             .replace(/,/g, ".")
             .replace(/[^\d.-]/g, "");
           const parsed = Number.parseFloat(trimmed);
-          if (!isNaN(parsed)) {
+          if (!Number.isNaN(parsed)) {
             value = parsed;
           } else if (value === null || value === undefined) {
             value = cell.w;
@@ -1521,7 +1205,7 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
 
       rowData[field] = value;
 
-      if (field === "ppPokerId" && value && !isNaN(Number(value))) {
+      if (field === "ppPokerId" && value && !Number.isNaN(Number(value))) {
         hasValidId = true;
       }
     }
@@ -1767,7 +1451,7 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
     result.push(detailed);
   }
 
-  console.log(`\n========== PARSED DETALHES DE CLUBE ==========`);
+  console.log("\n========== PARSED DETALHES DE CLUBE ==========");
   console.log(`Total records: ${result.length}`);
   console.log(`Total clubs found: ${clubRanges.length}`);
 
@@ -1777,15 +1461,15 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
     const key = record.clubName || "Unknown";
     recordsByClub[key] = (recordsByClub[key] || 0) + 1;
   }
-  console.log(`Records by club:`);
+  console.log("Records by club:");
   Object.entries(recordsByClub).forEach(([club, count]) => {
     console.log(`  - ${club}: ${count} records`);
   });
 
   if (result.length > 0) {
-    console.log(`First record:`, JSON.stringify(result[0], null, 2));
+    console.log("First record:", JSON.stringify(result[0], null, 2));
   }
-  console.log(`========== END PARSED ==========\n`);
+  console.log("========== END PARSED ==========\n");
 
   return result;
 }
@@ -1927,32 +1611,32 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
 
   const printGameTypeInfo = (info: GameTypeDebugInfo, index: number) => {
     console.log(
-      `\n┌─────────────────────────────────────────────────────────────────┐`,
+      "\n┌─────────────────────────────────────────────────────────────────┐",
     );
     console.log(
       `│ ${index}. ${info.gameType.padEnd(20)} │ ${info.category}/${info.subType.padEnd(10)} │ ${info.count} jogos`,
     );
     console.log(
-      `├─────────────────────────────────────────────────────────────────┤`,
+      "├─────────────────────────────────────────────────────────────────┤",
     );
     console.log(`│ Game Info: ${info.gameInfoString.substring(0, 55)}`);
     console.log(`│ IDs: ${info.sampleGameIds.join(", ")}`);
     console.log(
-      `├─────────────────────────────────────────────────────────────────┤`,
+      "├─────────────────────────────────────────────────────────────────┤",
     );
     console.log(`│ HEADER ROW (Row ${info.headerRow}):`);
     console.log(
       `│   ${info.headerColumns.map((c) => `[${c.col}]=${c.value}`).join(" | ")}`,
     );
     console.log(
-      `├─────────────────────────────────────────────────────────────────┤`,
+      "├─────────────────────────────────────────────────────────────────┤",
     );
     console.log(`│ FIRST DATA ROW (Row ${info.firstDataRow}):`);
     console.log(
       `│   ${info.firstDataColumns.map((c) => `[${c.col}]=${c.value}`).join(" | ")}`,
     );
     console.log(
-      `└─────────────────────────────────────────────────────────────────┘`,
+      "└─────────────────────────────────────────────────────────────────┘",
     );
   };
 
@@ -2402,23 +2086,23 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     result.push(currentSession);
   }
 
-  console.log(`\n========== PARSED PARTIDAS ==========`);
+  console.log("\n========== PARSED PARTIDAS ==========");
   console.log(`Total sessions: ${result.length}`);
-  console.log(`\n📊 Sessions by category:`);
+  console.log("\n📊 Sessions by category:");
   console.log(`  PPST_MTT (Standard MTT): ${categoryCounts.PPST_MTT}`);
   console.log(`  PPST_SPINUP (Spin & Go): ${categoryCounts.PPST_SPINUP}`);
   console.log(`  PPST_PKO (Bounty): ${categoryCounts.PPST_PKO}`);
   console.log(`  PPSR (Cash Game): ${categoryCounts.PPSR}`);
   console.log(`  MTT_OTHER (MTT/6+ etc): ${categoryCounts.MTT_OTHER}`);
   if (result.length > 0) {
-    console.log(`\nFirst session:`, JSON.stringify(result[0], null, 2));
+    console.log("\nFirst session:", JSON.stringify(result[0], null, 2));
     const totalPlayers = result.reduce(
       (sum, s) => sum + (s.playerCount || 0),
       0,
     );
     console.log(`Total players across all sessions: ${totalPlayers}`);
   }
-  console.log(`========== END PARSED PARTIDAS ==========\n`);
+  console.log("========== END PARSED PARTIDAS ==========\n");
 
   return result;
 }
@@ -2450,12 +2134,12 @@ function parseDemonstrativoSheet(sheet: XLSX.Sheet): ParsedDemonstrativo[] {
     amount: toNumber(row.amount),
   }));
 
-  console.log(`\n========== PARSED DEMONSTRATIVO ==========`);
+  console.log("\n========== PARSED DEMONSTRATIVO ==========");
   console.log(`Total records: ${result.length}`);
   if (result.length > 0) {
-    console.log(`First record:`, JSON.stringify(result[0], null, 2));
+    console.log("First record:", JSON.stringify(result[0], null, 2));
   }
-  console.log(`========== END PARSED DEMONSTRATIVO ==========\n`);
+  console.log("========== END PARSED DEMONSTRATIVO ==========\n");
 
   return result;
 }
@@ -2480,7 +2164,9 @@ function parseRakebackSheet(sheet: XLSX.Sheet): ParsedRakeback[] {
   );
 
   const result = rawData
-    .filter((row) => row.agentPpPokerId && !isNaN(Number(row.agentPpPokerId)))
+    .filter(
+      (row) => row.agentPpPokerId && !Number.isNaN(Number(row.agentPpPokerId)),
+    )
     .map((row) => ({
       agentPpPokerId: String(row.agentPpPokerId || ""),
       agentNickname: row.agentNickname || "",
@@ -2493,12 +2179,12 @@ function parseRakebackSheet(sheet: XLSX.Sheet): ParsedRakeback[] {
       totalRt: toNumber(row.totalRt),
     }));
 
-  console.log(`\n========== PARSED RETORNO DE TAXA ==========`);
+  console.log("\n========== PARSED RETORNO DE TAXA ==========");
   console.log(`Total records: ${result.length}`);
   if (result.length > 0) {
-    console.log(`First record:`, JSON.stringify(result[0], null, 2));
+    console.log("First record:", JSON.stringify(result[0], null, 2));
   }
-  console.log(`========== END PARSED RETORNO DE TAXA ==========\n`);
+  console.log("========== END PARSED RETORNO DE TAXA ==========\n");
 
   return result;
 }
@@ -2901,7 +2587,7 @@ export function LeagueImportUploader() {
 
     setIsImporting(true);
     try {
-      // TODO: Implement backend processing for league imports
+      // TODO(#2): Implement backend processing for league imports
       toast({
         title: t("poker.leagueImport.uploadSuccess"),
         variant: "success",
@@ -2959,12 +2645,12 @@ export function LeagueImportUploader() {
         update(id, { title: "Extraindo período...", progress: 40 });
         // Extract period from Geral sheet header
         const geralSheet =
-          workbook.Sheets["Geral"] ||
-          workbook.Sheets["General"] ||
+          workbook.Sheets.Geral ||
+          workbook.Sheets.General ||
           workbook.Sheets["Geral de clube"];
         if (geralSheet) {
-          const periodCell = geralSheet["A3"];
-          if (periodCell && periodCell.v) {
+          const periodCell = geralSheet.A3;
+          if (periodCell?.v) {
             const periodMatch = periodCell.v.match(
               /(\d{4}\/\d{2}\/\d{2})\s*-\s*(\d{4}\/\d{2}\/\d{2})/,
             );

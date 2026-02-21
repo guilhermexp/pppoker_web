@@ -92,7 +92,7 @@ export const importTransactions = schemaTask({
             async (batch) => {
               const { data } = await supabase
                 .from("transactions")
-                // @ts-expect-error - TODO: Fix transaction type mapping
+                // @ts-expect-error - TODO(#6): Fix transaction type mapping
                 .upsert(batch, {
                   onConflict: "internal_id",
                   ignoreDuplicates: true,

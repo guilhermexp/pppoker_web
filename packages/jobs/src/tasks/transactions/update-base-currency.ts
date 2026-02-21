@@ -34,7 +34,7 @@ export const updateBaseCurrency = schemaTask({
 
     if (formattedAccounts.length > 0) {
       await triggerSequenceAndWait(
-        // @ts-expect-error - TODO: Fix types with drizzle
+        // @ts-expect-error - TODO(#5): Fix types with drizzle
         formattedAccounts,
         updateAccountBaseCurrency,
         {

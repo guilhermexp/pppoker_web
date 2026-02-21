@@ -1,10 +1,10 @@
-import { useQueryStates } from "nuqs";
 import {
   createLoader,
   parseAsBoolean,
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs/server";
+import { createNestedParamsHook } from "./create-params-hook";
 
 export const inboxParamsSchema = {
   inboxId: parseAsString,
@@ -14,13 +14,6 @@ export const inboxParamsSchema = {
   connected: parseAsBoolean,
 };
 
-export function useInboxParams() {
-  const [params, setParams] = useQueryStates(inboxParamsSchema);
-
-  return {
-    params,
-    setParams,
-  };
-}
+export const useInboxParams = createNestedParamsHook(inboxParamsSchema);
 
 export const loadInboxParams = createLoader(inboxParamsSchema);

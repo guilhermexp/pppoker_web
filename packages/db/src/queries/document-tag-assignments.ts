@@ -1,6 +1,6 @@
+import { and, eq } from "drizzle-orm";
 import type { Database } from "../client";
 import { documentTagAssignments } from "../schema";
-import { and, eq } from "drizzle-orm";
 
 export type CreateDocumentTagAssignmentParams = {
   documentId: string;

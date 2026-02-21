@@ -1,15 +1,9 @@
-import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsString } from "nuqs";
+import { createParamsHook } from "./create-params-hook";
 
-export function useCustomerParams() {
-  const [params, setParams] = useQueryStates({
-    customerId: parseAsString,
-    createCustomer: parseAsBoolean,
-    name: parseAsString,
-    q: parseAsString,
-  });
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useCustomerParams = createParamsHook({
+  customerId: parseAsString,
+  createCustomer: parseAsBoolean,
+  name: parseAsString,
+  q: parseAsString,
+});

@@ -1,4 +1,9 @@
 import {
+  addLinkedClubSchema,
+  removeLinkedClubSchema,
+  updatePokerSettingsSchema,
+} from "@api/schemas/poker";
+import {
   acceptTeamInviteSchema,
   createTeamSchema,
   declineTeamInviteSchema,
@@ -11,11 +16,6 @@ import {
   updateTeamByIdSchema,
   updateTeamMemberSchema,
 } from "@api/schemas/team";
-import {
-  updatePokerSettingsSchema,
-  addLinkedClubSchema,
-  removeLinkedClubSchema,
-} from "@api/schemas/poker";
 import { createAdminClient } from "@api/services/supabase";
 import {
   authProcedure,
@@ -45,6 +45,7 @@ import type {
   InviteTeamMembersPayload,
   UpdateBaseCurrencyPayload,
 } from "@midpoker/jobs/schema";
+import { logger } from "@midpoker/logger";
 import { tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 
@@ -61,7 +62,7 @@ async function getTeamViaSupabase(teamId: string) {
     .single();
 
   if (teamError || !team) {
-    console.log("[getTeamViaSupabase] Error:", teamError?.message);
+    logger.error({ error: teamError?.message }, "getTeamViaSupabase error");
     return null;
   }
 
@@ -115,7 +116,10 @@ export const teamRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[team.update] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "team.update Supabase REST error",
+        );
         throw new Error(`Failed to update team: ${error.message}`);
       }
 
@@ -150,7 +154,10 @@ export const teamRouter = createTRPCRouter({
       .eq("team_id", teamId);
 
     if (error) {
-      console.log("[team.members] Supabase REST error:", error.message);
+      logger.error(
+        { error: error.message },
+        "team.members Supabase REST error",
+      );
       return [];
     }
 
@@ -190,7 +197,10 @@ export const teamRouter = createTRPCRouter({
       .eq("user_id", session.user.id);
 
     if (memberError || !memberships) {
-      console.log("[team.list] Supabase REST error:", memberError?.message);
+      logger.error(
+        { error: memberError?.message },
+        "team.list Supabase REST error",
+      );
       return [];
     }
 
@@ -213,15 +223,18 @@ export const teamRouter = createTRPCRouter({
     .mutation(async ({ ctx: { session }, input }) => {
       const requestId = `trpc_team_create_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      console.log(`[${requestId}] TRPC team creation request`, {
-        userId: session.user.id,
-        userEmail: session.user.email,
-        teamName: input.name,
-        baseCurrency: input.baseCurrency,
-        countryCode: input.countryCode,
-        switchTeam: input.switchTeam,
-        timestamp: new Date().toISOString(),
-      });
+      logger.info(
+        {
+          requestId,
+          userId: session.user.id,
+          userEmail: session.user.email,
+          teamName: input.name,
+          baseCurrency: input.baseCurrency,
+          countryCode: input.countryCode,
+          switchTeam: input.switchTeam,
+        },
+        "TRPC team creation request",
+      );
 
       const supabase = await createAdminClient();
 
@@ -237,9 +250,9 @@ export const teamRouter = createTRPCRouter({
         .single();
 
       if (teamError || !team) {
-        console.error(
-          `[${requestId}] Failed to create team:`,
-          teamError?.message,
+        logger.error(
+          { requestId, error: teamError?.message },
+          "Failed to create team",
         );
         throw new Error(`Failed to create team: ${teamError?.message}`);
       }
@@ -254,9 +267,9 @@ export const teamRouter = createTRPCRouter({
         });
 
       if (memberError) {
-        console.error(
-          `[${requestId}] Failed to add user to team:`,
-          memberError.message,
+        logger.error(
+          { requestId, error: memberError.message },
+          "Failed to add user to team",
         );
         throw new Error(`Failed to add user to team: ${memberError.message}`);
       }
@@ -269,10 +282,10 @@ export const teamRouter = createTRPCRouter({
           .eq("id", session.user.id);
       }
 
-      console.log(`[${requestId}] TRPC team creation successful`, {
-        teamId: team.id,
-        userId: session.user.id,
-      });
+      logger.info(
+        { requestId, teamId: team.id, userId: session.user.id },
+        "TRPC team creation successful",
+      );
 
       return team.id;
     }),
@@ -383,9 +396,9 @@ export const teamRouter = createTRPCRouter({
       .eq("email", session.user.email!);
 
     if (invitesError || !invites) {
-      console.log(
-        "[team.invitesByEmail] Supabase REST error:",
-        invitesError?.message,
+      logger.error(
+        { error: invitesError?.message },
+        "team.invitesByEmail Supabase REST error",
       );
       return [];
     }

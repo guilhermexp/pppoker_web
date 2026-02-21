@@ -1,10 +1,10 @@
 "use client";
 
-import { type ReactNode, createContext, useContext, useRef } from "react";
-import { useStore } from "zustand";
-import { devtools } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
-import { createStore } from "zustand/vanilla";
+import {
+  type WidgetStoreState,
+  createWidgetStoreFactory,
+} from "@/store/create-widget-store";
+import { type ReactNode, useRef } from "react";
 
 // SU Widget Types
 export type SUWidgetType =
@@ -22,162 +22,20 @@ export interface SUWidgetPreferences {
   availableWidgets: SUWidgetType[];
 }
 
-interface SUWidgetState {
-  // UI State
-  isCustomizing: boolean;
+// Create the SU widget store using the generic factory
+const suWidgetFactory = createWidgetStoreFactory<SUWidgetType>({
+  storeName: "su-widget-store",
+  maxPrimaryWidgets: 8,
+});
 
-  // Widget State
-  primaryWidgets: SUWidgetType[];
-  availableWidgets: SUWidgetType[];
+// Re-export the store creator for external usage
+export const createSUWidgetStore = suWidgetFactory.createStore;
 
-  // Loading States
-  isSaving: boolean;
-
-  // Actions
-  setIsCustomizing: (isCustomizing: boolean) => void;
-  setWidgetPreferences: (preferences: SUWidgetPreferences) => void;
-
-  // Widget Management
-  reorderPrimaryWidgets: (newOrder: SUWidgetType[]) => void;
-  moveToAvailable: (widgetId: SUWidgetType) => void;
-  moveToPrimary: (
-    widgetId: SUWidgetType,
-    newPrimaryOrder: SUWidgetType[],
-  ) => void;
-  swapWithLastPrimary: (widgetId: SUWidgetType, insertAtIndex: number) => void;
-
-  // Data Actions
-  setSaving: (isSaving: boolean) => void;
-}
-
-const NUMBER_OF_WIDGETS = 8;
-
-// Store factory that accepts initial preferences
-export const createSUWidgetStore = (
-  initialPreferences?: SUWidgetPreferences,
-) => {
-  const initialState = {
-    isCustomizing: false,
-    primaryWidgets:
-      initialPreferences?.primaryWidgets || ([] as SUWidgetType[]),
-    availableWidgets:
-      initialPreferences?.availableWidgets || ([] as SUWidgetType[]),
-    isSaving: false,
-  };
-
-  return createStore<SUWidgetState>()(
-    devtools(
-      (set, get) => ({
-        ...initialState,
-
-        setIsCustomizing: (isCustomizing) =>
-          set({ isCustomizing }, false, "setIsCustomizing"),
-
-        setWidgetPreferences: (preferences) =>
-          set(
-            {
-              primaryWidgets: preferences.primaryWidgets,
-              availableWidgets: preferences.availableWidgets,
-            },
-            false,
-            "setWidgetPreferences",
-          ),
-
-        reorderPrimaryWidgets: (newOrder) => {
-          if (newOrder.length > NUMBER_OF_WIDGETS) {
-            console.warn("Cannot have more than 8 primary widgets");
-            return;
-          }
-          set({ primaryWidgets: newOrder }, false, "reorderPrimaryWidgets");
-        },
-
-        moveToAvailable: (widgetId) => {
-          const state = get();
-          const newPrimaryWidgets = state.primaryWidgets.filter(
-            (w) => w !== widgetId,
-          );
-          const newAvailableWidgets = [...state.availableWidgets, widgetId];
-
-          set(
-            {
-              primaryWidgets: newPrimaryWidgets,
-              availableWidgets: newAvailableWidgets,
-            },
-            false,
-            "moveToAvailable",
-          );
-        },
-
-        moveToPrimary: (
-          widgetId: SUWidgetType,
-          newPrimaryOrder: SUWidgetType[],
-        ) => {
-          const state = get();
-          const newAvailableWidgets = state.availableWidgets.filter(
-            (w) => w !== widgetId,
-          );
-
-          set(
-            {
-              primaryWidgets: newPrimaryOrder,
-              availableWidgets: newAvailableWidgets,
-            },
-            false,
-            "moveToPrimary",
-          );
-        },
-
-        swapWithLastPrimary: (
-          widgetId: SUWidgetType,
-          insertAtIndex: number,
-        ) => {
-          const state = get();
-          if (state.primaryWidgets.length < NUMBER_OF_WIDGETS) {
-            console.warn("Swap only needed when primary is full");
-            return;
-          }
-
-          const lastPrimaryWidget =
-            state.primaryWidgets[state.primaryWidgets.length - 1];
-          if (!lastPrimaryWidget) {
-            console.warn("No last primary widget found");
-            return;
-          }
-
-          const newPrimaryWidgets = [...state.primaryWidgets.slice(0, -1)];
-          const newAvailableWidgets = [
-            ...state.availableWidgets.filter((w) => w !== widgetId),
-            lastPrimaryWidget,
-          ];
-
-          newPrimaryWidgets.splice(insertAtIndex, 0, widgetId);
-
-          set(
-            {
-              primaryWidgets: newPrimaryWidgets,
-              availableWidgets: newAvailableWidgets,
-            },
-            false,
-            "swapWithLastPrimary",
-          );
-        },
-
-        setSaving: (isSaving) => set({ isSaving }, false, "setSaving"),
-      }),
-      {
-        name: "su-widget-store",
-        skipHydration: true,
-      },
-    ),
-  );
-};
-
-// Context for the store
+// Type for the store API
 export type SUWidgetStoreApi = ReturnType<typeof createSUWidgetStore>;
 
-export const SUWidgetStoreContext = createContext<SUWidgetStoreApi | undefined>(
-  undefined,
-);
+// Use the factory's context
+export const SUWidgetStoreContext = suWidgetFactory.StoreContext;
 
 // Provider component
 export interface SUWidgetProviderProps {
@@ -203,37 +61,13 @@ export const SUWidgetProvider = ({
 };
 
 // Hook to use the store
-export const useSUWidgetStore = <T,>(
-  selector: (store: SUWidgetState) => T,
-): T => {
-  const storeContext = useContext(SUWidgetStoreContext);
-
-  if (!storeContext) {
-    throw new Error("useSUWidgetStore must be used within SUWidgetProvider");
-  }
-
-  return useStore(storeContext, selector);
-};
+export const useSUWidgetStore = suWidgetFactory.useStore;
 
 // Selector hooks
-export const useSUIsCustomizing = () =>
-  useSUWidgetStore((state) => state.isCustomizing);
+export const useSUIsCustomizing = suWidgetFactory.useIsCustomizing;
+export const useSUPrimaryWidgets = suWidgetFactory.usePrimaryWidgets;
+export const useSUAvailableWidgets = suWidgetFactory.useAvailableWidgets;
+export const useSUWidgetActions = suWidgetFactory.useWidgetActions;
 
-export const useSUPrimaryWidgets = () =>
-  useSUWidgetStore((state) => state.primaryWidgets);
-
-export const useSUAvailableWidgets = () =>
-  useSUWidgetStore((state) => state.availableWidgets);
-
-export const useSUWidgetActions = () =>
-  useSUWidgetStore(
-    useShallow((state) => ({
-      setIsCustomizing: state.setIsCustomizing,
-      setWidgetPreferences: state.setWidgetPreferences,
-      reorderPrimaryWidgets: state.reorderPrimaryWidgets,
-      moveToAvailable: state.moveToAvailable,
-      moveToPrimary: state.moveToPrimary,
-      swapWithLastPrimary: state.swapWithLastPrimary,
-      setSaving: state.setSaving,
-    })),
-  );
+// Re-export state type for consumers
+export type SUWidgetState = WidgetStoreState<SUWidgetType>;

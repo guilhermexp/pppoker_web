@@ -4,6 +4,7 @@ import {
 } from "@midpoker/app-store/slack-client";
 import { DocumentClient } from "@midpoker/documents";
 import { inboxSlackUploadSchema } from "@midpoker/jobs/schema";
+import { logger } from "@midpoker/logger";
 import { createClient } from "@midpoker/supabase/job";
 import { getExtensionFromMimeType } from "@midpoker/utils";
 import { getAppUrl } from "@midpoker/utils/envs";
@@ -157,7 +158,7 @@ export const inboxSlackUpload = schemaTask({
             });
           }
         } catch (err) {
-          console.error(err);
+          logger.error({ error: err }, "Failed to process Slack upload");
         }
 
         // Send notification for Slack upload

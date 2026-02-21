@@ -1,14 +1,8 @@
-import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsString } from "nuqs";
+import { createParamsHook } from "./create-params-hook";
 
-export function useOAuthApplicationParams() {
-  const [params, setParams] = useQueryStates({
-    applicationId: parseAsString,
-    createApplication: parseAsBoolean,
-    editApplication: parseAsBoolean,
-  });
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useOAuthApplicationParams = createParamsHook({
+  applicationId: parseAsString,
+  createApplication: parseAsBoolean,
+  editApplication: parseAsBoolean,
+});

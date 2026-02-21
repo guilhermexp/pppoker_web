@@ -1,5 +1,6 @@
 import {
   cancelScheduledInvoiceSchema,
+  createFromTrackerSchema,
   createInvoiceSchema,
   deleteInvoiceSchema,
   draftInvoiceSchema,
@@ -43,11 +44,11 @@ import type {
   GenerateInvoicePayload,
   SendInvoiceReminderPayload,
 } from "@midpoker/jobs/schema";
+import { logger } from "@midpoker/logger";
 import { runs, tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
 import { addMonths, format, parseISO } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
 
 // Invoice template labels by locale
 const invoiceTemplateLabels: Record<
@@ -238,7 +239,10 @@ export const invoiceRouter = createTRPCRouter({
       const { data: invoices, error } = await query;
 
       if (error) {
-        console.log("[invoice.get] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "invoice.get Supabase REST error",
+        );
         return {
           data: [],
           meta: {
@@ -408,9 +412,9 @@ export const invoiceRouter = createTRPCRouter({
       const { data: invoices, error } = await query;
 
       if (error) {
-        console.log(
-          "[invoice.invoiceSummary] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoice.invoiceSummary Supabase REST error",
         );
         return { totalAmount: 0, currency: "USD", invoiceCount: 0 };
       }
@@ -437,13 +441,7 @@ export const invoiceRouter = createTRPCRouter({
     }),
 
   createFromTracker: protectedProcedure
-    .input(
-      z.object({
-        projectId: z.string().uuid(),
-        dateFrom: z.string(),
-        dateTo: z.string(),
-      }),
-    )
+    .input(createFromTrackerSchema)
     .mutation(async ({ ctx: { db, teamId, session }, input }) => {
       const { projectId, dateFrom, dateTo } = input;
 

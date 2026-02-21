@@ -158,9 +158,15 @@ export function UnifiedAppComponent({ app }: UnifiedAppProps) {
             app.type === "official" && typeof app.logo !== "string" ? (
               <app.logo />
             ) : (
-              <img src={app.logo as string} alt={app.name} className="w-8 h-8" />
+              <img
+                src={app.logo as string}
+                alt={app.name}
+                className="w-8 h-8"
+              />
             )
-          ) : <div />}
+          ) : (
+            <div />
+          )}
 
           <div className="flex items-center gap-2">
             {app.installed && (

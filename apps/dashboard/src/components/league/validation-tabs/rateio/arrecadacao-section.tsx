@@ -5,7 +5,11 @@ import { Card, CardContent } from "@midpoker/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { AvailableClub, MetaGroupData, OverlaySelectionMap } from "./rateio-utils";
+import type {
+  AvailableClub,
+  MetaGroupData,
+  OverlaySelectionMap,
+} from "./rateio-utils";
 import { formatNumber } from "./rateio-utils";
 
 interface ClubData {
@@ -236,7 +240,8 @@ export function ArrecadacaoSection({
               Arrecadacao Real
             </span>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              Baseado nos torneios selecionados e metas definidas na aba Overlay Clubes.
+              Baseado nos torneios selecionados e metas definidas na aba Overlay
+              Clubes.
             </p>
           </div>
 
@@ -278,9 +283,7 @@ export function ArrecadacaoSection({
                   <p className="text-[10px] text-muted-foreground">
                     Clubes Participantes
                   </p>
-                  <p className="text-base font-bold">
-                    {brSummary.totalClubs}
-                  </p>
+                  <p className="text-base font-bold">{brSummary.totalClubs}</p>
                 </CardContent>
               </Card>
               {totalMulta > 0 && (
@@ -304,24 +307,22 @@ export function ArrecadacaoSection({
               <thead>
                 <tr className="bg-muted/50 text-left">
                   <th className="px-2 py-2 font-medium">Clube</th>
-                  <th className="px-2 py-2 font-medium hidden lg:table-cell">Liga</th>
-                  <th className="px-2 py-2 font-medium text-right">Buyin</th>
-                  <th className="px-2 py-2 font-medium text-right hidden lg:table-cell">Taxa</th>
-                  <th className="px-2 py-2 font-medium text-right">
-                    Liquido
+                  <th className="px-2 py-2 font-medium hidden lg:table-cell">
+                    Liga
                   </th>
+                  <th className="px-2 py-2 font-medium text-right">Buyin</th>
+                  <th className="px-2 py-2 font-medium text-right hidden lg:table-cell">
+                    Taxa
+                  </th>
+                  <th className="px-2 py-2 font-medium text-right">Liquido</th>
                   <th className="px-2 py-2 font-medium text-right hidden lg:table-cell">
                     Entradas
                   </th>
                   <th className="px-2 py-2 font-medium text-right hidden lg:table-cell">
                     Torneios
                   </th>
-                  <th className="px-2 py-2 font-medium text-right">
-                    %
-                  </th>
-                  <th className="px-2 py-2 font-medium text-right">
-                    Multa
-                  </th>
+                  <th className="px-2 py-2 font-medium text-right">%</th>
+                  <th className="px-2 py-2 font-medium text-right">Multa</th>
                 </tr>
               </thead>
               <tbody>
@@ -340,7 +341,9 @@ export function ArrecadacaoSection({
                       key={`br-with-${club.ligaId}-${club.clubeId}`}
                       club={club}
                       totalLiquido={brSummary.totalLiquido}
-                      multa={multaByClub.get(`${club.ligaId}-${club.clubeId}`) ?? 0}
+                      multa={
+                        multaByClub.get(`${club.ligaId}-${club.clubeId}`) ?? 0
+                      }
                       className="border-t border-white/[0.04]"
                       isExpanded={expandedClubs.has(
                         `${club.ligaId}-${club.clubeId}`,
@@ -368,7 +371,9 @@ export function ArrecadacaoSection({
                       key={`br-without-${club.ligaId}-${club.clubeId}`}
                       club={club}
                       totalLiquido={brSummary.totalLiquido}
-                      multa={multaByClub.get(`${club.ligaId}-${club.clubeId}`) ?? 0}
+                      multa={
+                        multaByClub.get(`${club.ligaId}-${club.clubeId}`) ?? 0
+                      }
                       className="border-t border-white/[0.04]"
                       isExpanded={expandedClubs.has(
                         `${club.ligaId}-${club.clubeId}`,
@@ -384,9 +389,7 @@ export function ArrecadacaoSection({
               </tbody>
               <tfoot>
                 <tr className="bg-muted/30 font-medium">
-                  <td className="px-2 py-2">
-                    Total ({brSummary.totalClubs})
-                  </td>
+                  <td className="px-2 py-2">Total ({brSummary.totalClubs})</td>
                   <td className="px-2 py-2 hidden lg:table-cell" />
                   <td className="px-2 py-2 text-right font-mono">
                     {formatNumber(brSummary.totalBuyin)}
@@ -470,7 +473,9 @@ function ClubRow({
             </span>
           </button>
         </td>
-        <td className="px-2 py-1.5 text-muted-foreground hidden lg:table-cell">{club.ligaId}</td>
+        <td className="px-2 py-1.5 text-muted-foreground hidden lg:table-cell">
+          {club.ligaId}
+        </td>
         <td className="px-2 py-1.5 text-right font-mono">
           <span className="text-blue-500">{formatNumber(club.totalBuyin)}</span>
         </td>
@@ -491,7 +496,9 @@ function ClubRow({
         </td>
         <td className="px-2 py-1.5 text-right font-mono">
           {multa > 0 ? (
-            <span className="text-red-500">{formatNumber(Math.round(multa * 100) / 100)}</span>
+            <span className="text-red-500">
+              {formatNumber(Math.round(multa * 100) / 100)}
+            </span>
           ) : (
             <span className="text-muted-foreground">-</span>
           )}
@@ -521,7 +528,9 @@ function ClubRow({
                     <tr key={`${club.ligaId}-${club.clubeId}-${d.gameId}`}>
                       <td className="px-2 py-1">{d.gameName}</td>
                       <td className="px-2 py-1 text-muted-foreground">
-                        {d.startedAt ? new Date(d.startedAt).toLocaleString("pt-BR") : "-"}
+                        {d.startedAt
+                          ? new Date(d.startedAt).toLocaleString("pt-BR")
+                          : "-"}
                       </td>
                       <td className="px-2 py-1 text-right font-mono">
                         {d.entries}
@@ -573,8 +582,7 @@ function GroupHeader({
   multaByClub: Map<string, number>;
 }) {
   const groupLiquido = clubs.reduce((s, c) => s + c.liquido, 0);
-  const groupPct =
-    totalLiquido > 0 ? (groupLiquido / totalLiquido) * 100 : 0;
+  const groupPct = totalLiquido > 0 ? (groupLiquido / totalLiquido) * 100 : 0;
   const groupMulta = clubs.reduce(
     (s, c) => s + (multaByClub.get(`${c.ligaId}-${c.clubeId}`) ?? 0),
     0,
@@ -594,9 +602,7 @@ function GroupHeader({
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             )}
             <span className="text-foreground">{title}</span>
-            <span className="text-muted-foreground font-normal">
-              ({count})
-            </span>
+            <span className="text-muted-foreground font-normal">({count})</span>
           </span>
         </td>
         <td className="px-2 py-2 hidden lg:table-cell" />
@@ -610,7 +616,9 @@ function GroupHeader({
         </td>
         <td className="px-2 py-2 text-right font-mono font-medium">
           {groupMulta > 0 ? (
-            <span className="text-red-500">{formatNumber(Math.round(groupMulta * 100) / 100)}</span>
+            <span className="text-red-500">
+              {formatNumber(Math.round(groupMulta * 100) / 100)}
+            </span>
           ) : (
             <span className="text-muted-foreground">-</span>
           )}

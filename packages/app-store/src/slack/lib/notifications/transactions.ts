@@ -1,5 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@midpoker/logger";
 import { getAppUrl } from "@midpoker/utils/envs";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { createSlackWebClient } from "../client";
 
@@ -84,6 +85,6 @@ export async function sendSlackTransactionNotifications({
       ],
     });
   } catch (error) {
-    console.error(error);
+    logger.error({ error }, "Failed to post Slack transaction notification");
   }
 }

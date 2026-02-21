@@ -1,3 +1,4 @@
+import { logger } from "@midpoker/logger";
 import type { Database } from "@midpoker/supabase/types";
 import { createClient } from "@supabase/supabase-js";
 
@@ -36,7 +37,7 @@ export async function verifyAccessToken(
     } = await supabase.auth.getUser(accessToken);
 
     if (error || !user) {
-      console.log("[verifyAccessToken] Failed:", error?.message || "No user");
+      logger.warn({ error: error?.message }, "verifyAccessToken failed");
       return null;
     }
 
@@ -48,7 +49,7 @@ export async function verifyAccessToken(
       },
     };
   } catch (error) {
-    console.log("[verifyAccessToken] Exception:", error);
+    logger.error({ error }, "verifyAccessToken exception");
     return null;
   }
 }

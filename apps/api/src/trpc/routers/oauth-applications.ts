@@ -29,11 +29,12 @@ import {
 import { AppInstalledEmail } from "@midpoker/email/emails/app-installed";
 import { AppReviewRequestEmail } from "@midpoker/email/emails/app-review-request";
 import { render } from "@midpoker/email/render";
+import { logger } from "@midpoker/logger";
 
 export const oauthApplicationsRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues (v2)
   list: protectedProcedure.query(async ({ ctx }) => {
-    console.log("[oauthApplications.list] Using Supabase REST");
+    logger.info("oauthApplications.list using Supabase REST");
     const { teamId } = ctx;
     const supabase = await createAdminClient();
 
@@ -70,9 +71,9 @@ export const oauthApplicationsRouter = createTRPCRouter({
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.log(
-        "[oauth-applications.list] Supabase REST error:",
-        error.message,
+      logger.error(
+        { error: error.message },
+        "oauth-applications.list Supabase REST error",
       );
       return { data: [] };
     }
@@ -265,7 +266,7 @@ export const oauthApplicationsRouter = createTRPCRouter({
         }
       } catch (error) {
         // Log error but don't fail the OAuth flow
-        console.error("Failed to send app installation email:", error);
+        logger.error({ error }, "Failed to send app installation email");
       }
 
       // Build success redirect URL
@@ -388,9 +389,9 @@ export const oauthApplicationsRouter = createTRPCRouter({
       .order("last_used_at", { ascending: false });
 
     if (error) {
-      console.log(
-        "[oauthApplications.authorized] Supabase REST error:",
-        error.message,
+      logger.error(
+        { error: error.message },
+        "oauthApplications.authorized Supabase REST error",
       );
       return { data: [] };
     }
@@ -484,7 +485,7 @@ export const oauthApplicationsRouter = createTRPCRouter({
           }
         } catch (error) {
           // Log error but don't fail the mutation
-          console.error("Failed to send application review request:", error);
+          logger.error({ error }, "Failed to send application review request");
         }
       }
 

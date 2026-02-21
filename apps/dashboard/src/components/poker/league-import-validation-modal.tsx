@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeekFromDateString } from "@/lib/poker/date-utils";
 import type { LeagueImportValidationModalProps } from "@/lib/poker/league-types";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
@@ -28,22 +29,6 @@ import {
   LeagueRetornoDeTaxaTab,
   LeagueTransacoesTab,
 } from "./league-validation-tabs";
-
-// Helper to get week number from date string
-function getWeekFromDateString(dateStr: string): number | null {
-  try {
-    let date = parse(dateStr, "dd/MM/yyyy", new Date(), { locale: ptBR });
-    if (Number.isNaN(date.getTime())) {
-      date = parse(dateStr, "yyyy-MM-dd", new Date());
-    }
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-    return getWeek(date, { weekStartsOn: 0, firstWeekContainsDate: 1 });
-  } catch {
-    return null;
-  }
-}
 
 // Column counts per tab
 const TAB_COLUMNS: Record<string, { name: string; cols: number }> = {

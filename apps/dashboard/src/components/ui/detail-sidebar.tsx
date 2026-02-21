@@ -1,11 +1,11 @@
 "use client";
 
+import { BrandBadge, softSpringEasing } from "@/lib/sidebar-svg-paths";
+import type { SidebarContent } from "@/lib/sidebar-types";
 import { ChevronDown } from "@carbon/icons-react";
 import { cn } from "@midpoker/ui/cn";
-import { BrandBadge, softSpringEasing } from "@/lib/sidebar-svg-paths";
-import { SearchContainer } from "./search-container";
 import { MenuSection } from "./menu-items";
-import type { SidebarContent } from "@/lib/sidebar-types";
+import { SearchContainer } from "./search-container";
 
 interface SectionTitleProps {
   title: string;

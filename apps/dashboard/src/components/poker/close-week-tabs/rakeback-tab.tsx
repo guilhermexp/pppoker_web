@@ -276,242 +276,239 @@ export function RakebackTab({
           />
         </button>
 
-        {!isSpreadsheetCollapsed && (
-          <>
-            {rakebacks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground bg-muted/10">
-                <Icons.Inbox className="h-8 w-8 mb-2 opacity-20" />
-                <p className="text-sm">
-                  Nenhum dado de retorno de taxa na planilha
-                </p>
+        {!isSpreadsheetCollapsed &&
+          (rakebacks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground bg-muted/10">
+              <Icons.Inbox className="h-8 w-8 mb-2 opacity-20" />
+              <p className="text-sm">
+                Nenhum dado de retorno de taxa na planilha
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 p-3">
+              {/* Row 1: Counters */}
+              <div className="flex items-center gap-4 text-xs py-2">
+                <span className="text-muted-foreground">
+                  Registros{" "}
+                  <span className="text-foreground font-medium">
+                    {totalRegistros}
+                  </span>
+                </span>
+                <span className="text-border/60">·</span>
+                <button
+                  type="button"
+                  onClick={() => setShowByAgent(!showByAgent)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Agentes{" "}
+                  <span className="text-foreground font-medium">
+                    {uniqueAgents.size}
+                  </span>
+                  <Icons.ChevronDown
+                    className={cn(
+                      "w-3 h-3 inline ml-1 transition-transform",
+                      showByAgent && "rotate-180",
+                    )}
+                  />
+                </button>
+                <span className="text-border/60">·</span>
+                <span className="text-muted-foreground">
+                  Superagentes{" "}
+                  <span className="text-foreground font-medium">
+                    {uniqueSuperAgents.size}
+                  </span>
+                </span>
               </div>
-            ) : (
-              <div className="space-y-3 p-3">
-                {/* Row 1: Counters */}
-                <div className="flex items-center gap-4 text-xs py-2">
-                  <span className="text-muted-foreground">
-                    Registros{" "}
-                    <span className="text-foreground font-medium">
-                      {totalRegistros}
-                    </span>
-                  </span>
-                  <span className="text-border/60">·</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowByAgent(!showByAgent)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Agentes{" "}
-                    <span className="text-foreground font-medium">
-                      {uniqueAgents.size}
-                    </span>
-                    <Icons.ChevronDown
-                      className={cn(
-                        "w-3 h-3 inline ml-1 transition-transform",
-                        showByAgent && "rotate-180",
-                      )}
-                    />
-                  </button>
-                  <span className="text-border/60">·</span>
-                  <span className="text-muted-foreground">
-                    Superagentes{" "}
-                    <span className="text-foreground font-medium">
-                      {uniqueSuperAgents.size}
-                    </span>
-                  </span>
-                </div>
 
-                {/* Expanded agents list */}
-                {showByAgent && agentsList.length > 0 && (
-                  <div className="border-t border-[#1d1d1d]/20 py-2">
-                    <div className="flex items-center gap-4 flex-wrap text-xs">
-                      <span className="text-muted-foreground text-[10px] font-medium">
-                        Top agentes:
+              {/* Expanded agents list */}
+              {showByAgent && agentsList.length > 0 && (
+                <div className="border-t border-[#1d1d1d]/20 py-2">
+                  <div className="flex items-center gap-4 flex-wrap text-xs">
+                    <span className="text-muted-foreground text-[10px] font-medium">
+                      Top agentes:
+                    </span>
+                    {agentsList.slice(0, 6).map((agent) => (
+                      <span key={agent.id} className="text-muted-foreground">
+                        {agent.nickname}{" "}
+                        <span
+                          className={cn(
+                            "font-mono",
+                            agent.totalRt >= 0
+                              ? "text-[#00C969]"
+                              : "text-[#FF3638]",
+                          )}
+                        >
+                          {formatCurrency(agent.totalRt)}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground ml-1">
+                          ({formatPercent(agent.avgPercent)})
+                        </span>
                       </span>
-                      {agentsList.slice(0, 6).map((agent) => (
-                        <span key={agent.id} className="text-muted-foreground">
-                          {agent.nickname}{" "}
-                          <span
-                            className={cn(
-                              "font-mono",
-                              agent.totalRt >= 0
-                                ? "text-[#00C969]"
-                                : "text-[#FF3638]",
-                            )}
+                    ))}
+                    {agentsList.length > 6 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        +{agentsList.length - 6} mais
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Row 2: Totals */}
+              <div className="border-t border-[#1d1d1d]/20 flex items-center gap-4 text-xs py-2">
+                <span className="text-muted-foreground">
+                  Total RT{" "}
+                  <span
+                    className={cn(
+                      "font-mono font-medium",
+                      totalRt >= 0 ? "text-[#00C969]" : "text-[#FF3638]",
+                    )}
+                  >
+                    {formatCurrency(totalRt)}
+                  </span>
+                </span>
+                <span className="text-border/60">·</span>
+                <span className="text-muted-foreground">
+                  Média RT{" "}
+                  <span className="font-mono font-medium text-foreground">
+                    {formatPercent(avgRakeback)}
+                  </span>
+                </span>
+              </div>
+
+              {/* Search */}
+              <div className="border-t border-[#1d1d1d]/20 flex items-center justify-between py-2">
+                <span className="text-xs text-muted-foreground">
+                  {filteredData.length} registros
+                </span>
+                <div className="relative w-48">
+                  <Icons.Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar agente..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-7 h-7 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Data table */}
+              <div className="border-t border-[#1d1d1d]/20 pt-2">
+                <div className="overflow-x-auto max-h-[400px]">
+                  <table className="w-full text-xs min-w-[700px]">
+                    <thead className="sticky top-0 bg-background">
+                      <tr className="text-muted-foreground border-b border-[#1d1d1d]/20">
+                        <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                          ID Superagente
+                        </th>
+                        <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                          ID Agente
+                        </th>
+                        <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                          País
+                        </th>
+                        <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                          Apelido
+                        </th>
+                        <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
+                          Memorando
+                        </th>
+                        <th className="py-1.5 px-2 font-medium text-right whitespace-nowrap">
+                          Retorno %
+                        </th>
+                        <th className="py-1.5 px-2 font-medium text-right whitespace-nowrap">
+                          Total RT
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#1d1d1d]/40">
+                      {filteredData.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={7}
+                            className="py-8 text-center text-muted-foreground"
                           >
-                            {formatCurrency(agent.totalRt)}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground ml-1">
-                            ({formatPercent(agent.avgPercent)})
-                          </span>
-                        </span>
-                      ))}
-                      {agentsList.length > 6 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          +{agentsList.length - 6} mais
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Row 2: Totals */}
-                <div className="border-t border-[#1d1d1d]/20 flex items-center gap-4 text-xs py-2">
-                  <span className="text-muted-foreground">
-                    Total RT{" "}
-                    <span
-                      className={cn(
-                        "font-mono font-medium",
-                        totalRt >= 0 ? "text-[#00C969]" : "text-[#FF3638]",
-                      )}
-                    >
-                      {formatCurrency(totalRt)}
-                    </span>
-                  </span>
-                  <span className="text-border/60">·</span>
-                  <span className="text-muted-foreground">
-                    Média RT{" "}
-                    <span className="font-mono font-medium text-foreground">
-                      {formatPercent(avgRakeback)}
-                    </span>
-                  </span>
-                </div>
-
-                {/* Search */}
-                <div className="border-t border-[#1d1d1d]/20 flex items-center justify-between py-2">
-                  <span className="text-xs text-muted-foreground">
-                    {filteredData.length} registros
-                  </span>
-                  <div className="relative w-48">
-                    <Icons.Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar agente..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-7 h-7 text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Data table */}
-                <div className="border-t border-[#1d1d1d]/20 pt-2">
-                  <div className="overflow-x-auto max-h-[400px]">
-                    <table className="w-full text-xs min-w-[700px]">
-                      <thead className="sticky top-0 bg-background">
-                        <tr className="text-muted-foreground border-b border-[#1d1d1d]/20">
-                          <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
-                            ID Superagente
-                          </th>
-                          <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
-                            ID Agente
-                          </th>
-                          <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
-                            País
-                          </th>
-                          <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
-                            Apelido
-                          </th>
-                          <th className="py-1.5 px-2 font-medium text-left whitespace-nowrap">
-                            Memorando
-                          </th>
-                          <th className="py-1.5 px-2 font-medium text-right whitespace-nowrap">
-                            Retorno %
-                          </th>
-                          <th className="py-1.5 px-2 font-medium text-right whitespace-nowrap">
-                            Total RT
-                          </th>
+                            Nenhum dado encontrado
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#1d1d1d]/40">
-                        {filteredData.length === 0 ? (
-                          <tr>
-                            <td
-                              colSpan={7}
-                              className="py-8 text-center text-muted-foreground"
-                            >
-                              Nenhum dado encontrado
+                      ) : (
+                        filteredData.map((row, index) => (
+                          <tr
+                            key={`${row.agentPpPokerId}-${index}`}
+                            className="hover:bg-muted/30"
+                          >
+                            <td className="py-1.5 px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
+                              {row.superAgentPpPokerId || "-"}
                             </td>
-                          </tr>
-                        ) : (
-                          filteredData.map((row, index) => (
-                            <tr
-                              key={`${row.agentPpPokerId}-${index}`}
-                              className="hover:bg-muted/30"
-                            >
-                              <td className="py-1.5 px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
-                                {row.superAgentPpPokerId || "-"}
-                              </td>
-                              <td className="py-1.5 px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
-                                {row.agentPpPokerId}
-                              </td>
-                              <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
-                                {row.country || "-"}
-                              </td>
-                              <td className="py-1.5 px-2 whitespace-nowrap">
-                                {row.agentNickname}
-                              </td>
-                              <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
-                                {row.memoName || "-"}
-                              </td>
-                              <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap">
-                                {formatPercent(row.averageRakebackPercent)}
-                              </td>
-                              <td
-                                className={cn(
-                                  "py-1.5 px-2 text-right font-mono whitespace-nowrap",
-                                  row.totalRt >= 0
-                                    ? "text-[#00C969]"
-                                    : "text-[#FF3638]",
-                                )}
-                              >
-                                {formatCurrency(row.totalRt)}
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                      {filteredData.length > 0 && (
-                        <tfoot>
-                          <tr className="border-t border-[#1d1d1d] font-medium bg-[#1d1d1d]/20">
-                            <td colSpan={5} className="py-1.5 px-2">
-                              TOTAL
+                            <td className="py-1.5 px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
+                              {row.agentPpPokerId}
                             </td>
-                            <td className="py-1.5 px-2 text-right font-mono">
-                              {formatPercent(
-                                filteredData.reduce(
-                                  (sum, r) => sum + r.averageRakebackPercent,
-                                  0,
-                                ) / filteredData.length,
-                              )}
+                            <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
+                              {row.country || "-"}
+                            </td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              {row.agentNickname}
+                            </td>
+                            <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
+                              {row.memoName || "-"}
+                            </td>
+                            <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap">
+                              {formatPercent(row.averageRakebackPercent)}
                             </td>
                             <td
                               className={cn(
-                                "py-1.5 px-2 text-right font-mono",
-                                filteredData.reduce(
-                                  (sum, r) => sum + r.totalRt,
-                                  0,
-                                ) >= 0
+                                "py-1.5 px-2 text-right font-mono whitespace-nowrap",
+                                row.totalRt >= 0
                                   ? "text-[#00C969]"
                                   : "text-[#FF3638]",
                               )}
                             >
-                              {formatCurrency(
-                                filteredData.reduce(
-                                  (sum, r) => sum + r.totalRt,
-                                  0,
-                                ),
-                              )}
+                              {formatCurrency(row.totalRt)}
                             </td>
                           </tr>
-                        </tfoot>
+                        ))
                       )}
-                    </table>
-                  </div>
+                    </tbody>
+                    {filteredData.length > 0 && (
+                      <tfoot>
+                        <tr className="border-t border-[#1d1d1d] font-medium bg-[#1d1d1d]/20">
+                          <td colSpan={5} className="py-1.5 px-2">
+                            TOTAL
+                          </td>
+                          <td className="py-1.5 px-2 text-right font-mono">
+                            {formatPercent(
+                              filteredData.reduce(
+                                (sum, r) => sum + r.averageRakebackPercent,
+                                0,
+                              ) / filteredData.length,
+                            )}
+                          </td>
+                          <td
+                            className={cn(
+                              "py-1.5 px-2 text-right font-mono",
+                              filteredData.reduce(
+                                (sum, r) => sum + r.totalRt,
+                                0,
+                              ) >= 0
+                                ? "text-[#00C969]"
+                                : "text-[#FF3638]",
+                            )}
+                          >
+                            {formatCurrency(
+                              filteredData.reduce(
+                                (sum, r) => sum + r.totalRt,
+                                0,
+                              ),
+                            )}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
                 </div>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          ))}
       </section>
 
       {/* SEÇÃO 2: Cadastro do App */}

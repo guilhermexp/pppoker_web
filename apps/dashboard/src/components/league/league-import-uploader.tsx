@@ -19,6 +19,7 @@ import type {
   ParsedLeagueTotalLigaPPSR,
 } from "@/lib/league/types";
 import { validateLeagueImportData } from "@/lib/league/validation";
+import { parseSlashValue, toNumber } from "@/lib/poker/parsers";
 import { useTRPC } from "@/trpc/client";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useToast } from "@midpoker/ui/use-toast";
@@ -26,41 +27,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
-import { LeagueImportValidationModal } from "./league-import-validation-modal";
 import { SUImportsList } from "../su/su-imports-list";
+import { LeagueImportValidationModal } from "./league-import-validation-modal";
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
-function toNumber(value: string | number | null | undefined): number {
-  if (value === null || value === undefined) return 0;
-  // If already a number, return directly (XLSX often returns numbers)
-  if (typeof value === "number") return value;
-  // Handle Brazilian format (comma as decimal separator)
-  // Only remove dots if there's also a comma (Brazilian thousand separator)
-  const str = value.toString().trim();
-  if (str.includes(",")) {
-    // Brazilian format: dots are thousand separators, comma is decimal
-    const cleaned = str.replace(/\./g, "").replace(",", ".");
-    const parsed = Number.parseFloat(cleaned);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  // Standard format or just dots
-  const parsed = Number.parseFloat(str);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function parseSlashValue(
-  value: string | number | null | undefined,
-): number | null {
-  if (value === null || value === undefined) return null;
-  // If already a number, return directly
-  if (typeof value === "number") return value;
-  const str = String(value).trim();
-  if (str === "/" || str === "-" || str === "") return null;
-  return toNumber(str);
-}
+// toNumber and parseSlashValue imported from @/lib/poker/parsers
 
 function normalizeSheetName(name: string): string {
   return name.toLowerCase().trim();
@@ -1756,7 +1730,6 @@ export function LeagueImportUploader() {
           isProcessing={isProcessing}
         />
       )}
-
     </>
   );
 }

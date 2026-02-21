@@ -119,11 +119,7 @@ function dateToEnglishDay(dateStr: string): string {
   if (!dateStr) return "";
   const parts = dateStr.split("/");
   if (parts.length !== 3) return "";
-  const d = new Date(
-    Number(parts[0]),
-    Number(parts[1]) - 1,
-    Number(parts[2]),
-  );
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
   const days = [
     "SUNDAY",
     "MONDAY",
@@ -201,7 +197,9 @@ export function OverlaysTab({
       [processSAFile],
     ),
     accept: {
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+        ".xlsx",
+      ],
       "application/vnd.ms-excel": [".xls"],
     },
     maxFiles: 1,
@@ -249,9 +247,7 @@ export function OverlaysTab({
   const matchResult: MatchResult | null = useMemo(() => {
     if (!scheduleData || !realizedData) return null;
     const scheduleTournaments: StoredTournament[] = scheduleData.events
-      .filter(
-        (e) => (Number.parseFloat(e.gtd.replace(/[^\d.]/g, "")) || 0) > 0,
-      )
+      .filter((e) => (Number.parseFloat(e.gtd.replace(/[^\d.]/g, "")) || 0) > 0)
       .map((e) => ({
         name: e.name.trim().toUpperCase(),
         day: e.day,
@@ -467,20 +463,20 @@ export function OverlaysTab({
                 <StatCard
                   label="GTD Total"
                   value={`R$ ${formatNumber(internalOverlayStats.totalGTD)}`}
-                  subValue={`USD ${formatNumber(Math.round(internalOverlayStats.totalGTD / 5 * 100) / 100)}`}
+                  subValue={`USD ${formatNumber(Math.round((internalOverlayStats.totalGTD / 5) * 100) / 100)}`}
                   icon={Icons.PieChart}
                 />
                 <StatCard
                   label="Arrecadado"
                   value={`R$ ${formatNumber(internalOverlayStats.totalArrecadado)}`}
-                  subValue={`USD ${formatNumber(Math.round(internalOverlayStats.totalArrecadado / 5 * 100) / 100)}`}
+                  subValue={`USD ${formatNumber(Math.round((internalOverlayStats.totalArrecadado / 5) * 100) / 100)}`}
                   icon={Icons.TrendingDown}
                   variant="warning"
                 />
                 <StatCard
                   label="Overlay Total"
                   value={`R$ ${formatNumber(internalOverlayStats.totalOverlay)}`}
-                  subValue={`USD ${formatNumber(Math.round(internalOverlayStats.totalOverlay / 5 * 100) / 100)}`}
+                  subValue={`USD ${formatNumber(Math.round((internalOverlayStats.totalOverlay / 5) * 100) / 100)}`}
                   icon={Icons.TrendingDown}
                   variant="danger"
                 />
@@ -507,7 +503,11 @@ export function OverlaysTab({
                 </div>
               </div>
               {saData && onSaDataChange && (
-                <Button variant="ghost" size="sm" onClick={() => onSaDataChange(null)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSaDataChange(null)}
+                >
                   <Icons.Close className="w-4 h-4 mr-1" />
                   Limpar
                 </Button>
@@ -531,18 +531,24 @@ export function OverlaysTab({
                   {isProcessingSA ? (
                     <>
                       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
-                      <p className="text-sm text-muted-foreground">Processando...</p>
+                      <p className="text-sm text-muted-foreground">
+                        Processando...
+                      </p>
                     </>
                   ) : isDragActive ? (
                     <>
                       <Upload className="h-10 w-10 text-primary" />
-                      <p className="text-sm text-primary font-medium">Solte o arquivo aqui</p>
+                      <p className="text-sm text-primary font-medium">
+                        Solte o arquivo aqui
+                      </p>
                     </>
                   ) : (
                     <>
                       <FileSpreadsheet className="h-10 w-10 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">Arraste a planilha SA aqui</p>
+                        <p className="text-sm font-medium">
+                          Arraste a planilha SA aqui
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           ou clique para selecionar (.xlsx)
                         </p>
@@ -560,27 +566,21 @@ export function OverlaysTab({
                 />
                 <StatCard
                   label="PPST Overlay"
-                  value={formatNumber(
-                    Math.round(saTotals.ppst * 100) / 100,
-                  )}
+                  value={formatNumber(Math.round(saTotals.ppst * 100) / 100)}
                   subValue={`R$ ${formatNumber(Math.round(saTotals.ppst * 5 * 100) / 100)}`}
                   icon={Icons.TrendingDown}
                   variant={saTotals.ppst < 0 ? "danger" : "default"}
                 />
                 <StatCard
                   label="SAT Total"
-                  value={formatNumber(
-                    Math.round(saTotals.sat * 100) / 100,
-                  )}
+                  value={formatNumber(Math.round(saTotals.sat * 100) / 100)}
                   subValue={`R$ ${formatNumber(Math.round(saTotals.sat * 5 * 100) / 100)}`}
                   icon={Icons.TrendingDown}
                   variant={saTotals.sat < 0 ? "danger" : "default"}
                 />
                 <StatCard
                   label="Total Geral"
-                  value={formatNumber(
-                    Math.round(saTotals.total * 100) / 100,
-                  )}
+                  value={formatNumber(Math.round(saTotals.total * 100) / 100)}
                   subValue={`R$ ${formatNumber(Math.round(saTotals.total * 5 * 100) / 100)}`}
                   icon={Icons.PieChart}
                   variant={saTotals.total < 0 ? "danger" : "success"}
@@ -678,7 +678,9 @@ export function OverlaysTab({
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="w-[20px] p-0"><div className="w-[2px] h-full mx-auto bg-border/50" /></TableCell>
+                      <TableCell className="w-[20px] p-0">
+                        <div className="w-[2px] h-full mx-auto bg-border/50" />
+                      </TableCell>
                       <TableCell
                         className={`text-sm max-w-[180px] truncate ${
                           row.saName
@@ -719,9 +721,17 @@ export function OverlaysTab({
                       Totais:
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm font-bold text-red-500">
-                      R$ {formatNumber(overlayTournaments.reduce((s, p) => s + p.realized.overlay, 0))}
+                      R${" "}
+                      {formatNumber(
+                        overlayTournaments.reduce(
+                          (s, p) => s + p.realized.overlay,
+                          0,
+                        ),
+                      )}
                     </TableCell>
-                    <TableCell className="w-[20px] p-0"><div className="w-[2px] h-full mx-auto bg-border/50" /></TableCell>
+                    <TableCell className="w-[20px] p-0">
+                      <div className="w-[2px] h-full mx-auto bg-border/50" />
+                    </TableCell>
                     <TableCell />
                     <TableCell className="text-right font-mono text-sm font-bold text-red-500">
                       {formatNumber(

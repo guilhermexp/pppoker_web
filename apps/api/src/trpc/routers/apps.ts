@@ -4,6 +4,7 @@ import {
 } from "@api/schemas/apps";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 
 export const appsRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues
@@ -16,7 +17,7 @@ export const appsRouter = createTRPCRouter({
       .eq("team_id", teamId);
 
     if (error) {
-      console.log("[apps.get] Supabase REST error:", error.message);
+      logger.error({ error: error.message }, "apps.get Supabase REST error");
       return [];
     }
 
@@ -41,7 +42,10 @@ export const appsRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log("[apps.disconnect] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "apps.disconnect Supabase REST error",
+        );
         throw new Error(`Failed to disconnect app: ${error.message}`);
       }
 
@@ -74,7 +78,10 @@ export const appsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[apps.update] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "apps.update Supabase REST error",
+        );
         throw new Error(`Failed to update app settings: ${error.message}`);
       }
 

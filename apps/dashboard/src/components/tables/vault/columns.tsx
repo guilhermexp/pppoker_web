@@ -107,7 +107,6 @@ export const columns: ColumnDef<Document>[] = [
     id: "size",
     accessorKey: "size",
     cell: ({ row }) => {
-      // @ts-expect-error - size is not typed (JSONB)
       return <span>{formatSize(row.original.metadata?.size)}</span>;
     },
   },

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@api/services/supabase";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 import {
   deletePokerSessionSchema,
@@ -122,7 +123,10 @@ export const pokerSessionsRouter = createTRPCRouter({
       const { data, error, count } = await query;
 
       if (error) {
-        console.log("[pokerSessions.get] Supabase error:", error.message);
+        logger.error(
+          { error: error.message },
+          "pokerSessions.get Supabase error",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -206,7 +210,7 @@ export const pokerSessionsRouter = createTRPCRouter({
         if (error.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Session not found",
+            message: "Sessao nao encontrada",
           });
         }
         throw new TRPCError({
@@ -321,7 +325,7 @@ export const pokerSessionsRouter = createTRPCRouter({
         if (error.code === "23505") {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "A session with this external ID already exists",
+            message: "Ja existe uma sessao com este ID externo",
           });
         }
         throw new TRPCError({
@@ -551,7 +555,7 @@ export const pokerSessionsRouter = createTRPCRouter({
       const { cursor, pageSize = 50, playerId, dateFrom, dateTo } = input;
 
       // First get session_players for this player to get session IDs and player-specific data
-      let sessionPlayersQuery = supabase
+      const sessionPlayersQuery = supabase
         .from("poker_session_players")
         .select(
           `

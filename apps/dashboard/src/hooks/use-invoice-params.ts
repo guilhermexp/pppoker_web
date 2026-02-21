@@ -1,5 +1,5 @@
-import { useQueryStates } from "nuqs";
 import { createLoader, parseAsString, parseAsStringEnum } from "nuqs/server";
+import { createParamsHook } from "./create-params-hook";
 
 const invoiceParamsSchema = {
   selectedCustomerId: parseAsString,
@@ -7,13 +7,6 @@ const invoiceParamsSchema = {
   invoiceId: parseAsString,
 };
 
-export function useInvoiceParams() {
-  const [params, setParams] = useQueryStates(invoiceParamsSchema);
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useInvoiceParams = createParamsHook(invoiceParamsSchema);
 
 export const loadInvoiceParams = createLoader(invoiceParamsSchema);

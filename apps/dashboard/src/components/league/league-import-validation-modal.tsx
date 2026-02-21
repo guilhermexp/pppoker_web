@@ -337,11 +337,18 @@ export function LeagueImportValidationModal({
                   data={parsedData.jogosPPST}
                   inicioCount={parsedData.jogosPPSTInicioCount}
                   unknownFormatsCount={parsedData.unknownGameFormats?.length}
-                  geralTotals={parsedData.geralPPST?.[0]?.total ? {
-                    ganhosJogador: parsedData.geralPPST[0].total.ganhosJogador,
-                    ganhosLigaTaxa: parsedData.geralPPST[0].total.ganhosLigaTaxa,
-                    gapGarantido: parsedData.geralPPST[0].total.gapGarantido,
-                  } : undefined}
+                  geralTotals={
+                    parsedData.geralPPST?.[0]?.total
+                      ? {
+                          ganhosJogador:
+                            parsedData.geralPPST[0].total.ganhosJogador,
+                          ganhosLigaTaxa:
+                            parsedData.geralPPST[0].total.ganhosLigaTaxa,
+                          gapGarantido:
+                            parsedData.geralPPST[0].total.gapGarantido,
+                        }
+                      : undefined
+                  }
                 />
               )}
             </TabsContent>
@@ -398,38 +405,35 @@ export function LeagueImportValidationModal({
                   </div>
 
                   {/* IDs */}
-                  {metadata.parsed && (
-                    <>
-                      {metadata.type === "super-union" ||
-                      metadata.type === "super-union-ppst" ||
-                      metadata.type === "super-union-ppsr" ||
-                      metadata.type === "league" ? (
-                        <>
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Liga:</span>
-                            <span className="font-mono font-medium">
-                              {metadata.primaryId}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">
-                              Clube Master:
-                            </span>
-                            <span className="font-mono font-medium">
-                              {metadata.secondaryId}
-                            </span>
-                          </div>
-                        </>
-                      ) : (
+                  {metadata.parsed &&
+                    (metadata.type === "super-union" ||
+                    metadata.type === "super-union-ppst" ||
+                    metadata.type === "super-union-ppsr" ||
+                    metadata.type === "league" ? (
+                      <>
                         <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Clube:</span>
+                          <span className="text-muted-foreground">Liga:</span>
                           <span className="font-mono font-medium">
                             {metadata.primaryId}
                           </span>
                         </div>
-                      )}
-                    </>
-                  )}
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">
+                            Clube Master:
+                          </span>
+                          <span className="font-mono font-medium">
+                            {metadata.secondaryId}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">Clube:</span>
+                        <span className="font-mono font-medium">
+                          {metadata.primaryId}
+                        </span>
+                      </div>
+                    ))}
 
                   {/* Description */}
                   <div className="flex-1 text-muted-foreground/70 text-[10px] italic">

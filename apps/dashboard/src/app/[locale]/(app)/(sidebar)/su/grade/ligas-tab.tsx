@@ -5,8 +5,8 @@ import { ClubMetasSection } from "@/components/league/validation-tabs/rateio/clu
 import { MetaGroupsSection } from "@/components/league/validation-tabs/rateio/meta-groups-section";
 import { OverlayDistributionSection } from "@/components/league/validation-tabs/rateio/overlay-distribution-section";
 import {
-  type MetaGroupData,
   FALLBACK_GROUPS,
+  type MetaGroupData,
 } from "@/components/league/validation-tabs/rateio/rateio-utils";
 import type { StoredRealizedData } from "@/lib/league/tournament-matching";
 import { useTRPC } from "@/trpc/client";

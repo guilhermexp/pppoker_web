@@ -659,8 +659,8 @@ export function LeagueDetalhesDeClubeTab({
         {/* Header row with column legends */}
         <div className="flex items-center justify-end px-4 py-1 text-[10px] text-muted-foreground/70">
           <div className="flex items-center gap-4">
-            <span className="w-[90px]"></span>
-            <span className="w-[70px]"></span>
+            <span className="w-[90px]" />
+            <span className="w-[70px]" />
             <span className="w-[130px] text-right">Ganhos (Col. AV)</span>
             <span className="w-[130px] text-right">Taxa (Col. CJ)</span>
             <span className="w-[100px] text-right">Mãos (Col. EG)</span>

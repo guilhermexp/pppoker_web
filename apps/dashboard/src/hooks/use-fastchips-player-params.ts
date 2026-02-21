@@ -1,13 +1,6 @@
-import { useQueryStates } from "nuqs";
 import { parseAsString } from "nuqs/server";
+import { createParamsHook } from "./create-params-hook";
 
-export function useFastchipsPlayerParams() {
-  const [params, setParams] = useQueryStates({
-    fastchipsPlayerId: parseAsString,
-  });
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useFastchipsPlayerParams = createParamsHook({
+  fastchipsPlayerId: parseAsString,
+});

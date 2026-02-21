@@ -672,13 +672,6 @@ export default {
     currency_description: "Account currency",
     create_button: "Create",
   },
-  chat: {
-    create_account_title: "Create bank account",
-    create_account_description:
-      "To answer financial questions, I need access to your bank transactions and balances. Create an account to continue.",
-    create_account_button: "Create account",
-    maybe_later: "Maybe later",
-  },
   transactions: {
     no_results: "No results",
     no_results_description: "Try another search, or adjusting the filters",
@@ -789,25 +782,6 @@ export default {
   },
   search: {
     find_anything: "Find anything...",
-  },
-
-  // Table column headers
-  table: {
-    columns: {
-      name: "Name",
-      contact_person: "Contact person",
-      email: "Email",
-      invoices: "Invoices",
-      projects: "Projects",
-      tags: "Tags",
-      actions: "Actions",
-      date: "Date",
-      description: "Description",
-      amount: "Amount",
-      category: "Category",
-      account: "Account",
-      status: "Status",
-    },
   },
 
   // Common actions

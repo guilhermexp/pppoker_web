@@ -9,6 +9,7 @@ import {
 } from "@api/schemas/tracker-entries";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 
 export const trackerEntriesRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues
@@ -38,9 +39,9 @@ export const trackerEntriesRouter = createTRPCRouter({
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.log(
-          "[trackerEntries.byDate] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerEntries.byDate Supabase REST error",
         );
         return [];
       }
@@ -95,9 +96,9 @@ export const trackerEntriesRouter = createTRPCRouter({
       const { data: entries, error } = await query;
 
       if (error) {
-        console.log(
-          "[trackerEntries.byRange] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerEntries.byRange Supabase REST error",
         );
         return [];
       }
@@ -144,9 +145,9 @@ export const trackerEntriesRouter = createTRPCRouter({
         .select();
 
       if (error) {
-        console.log(
-          "[trackerEntries.upsert] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerEntries.upsert Supabase REST error",
         );
         throw new Error(`Failed to upsert tracker entries: ${error.message}`);
       }
@@ -167,9 +168,9 @@ export const trackerEntriesRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log(
-          "[trackerEntries.delete] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerEntries.delete Supabase REST error",
         );
         throw new Error(`Failed to delete tracker entry: ${error.message}`);
       }
@@ -198,9 +199,9 @@ export const trackerEntriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[trackerEntries.startTimer] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerEntries.startTimer Supabase REST error",
         );
         throw new Error(`Failed to start timer: ${error.message}`);
       }
@@ -249,9 +250,9 @@ export const trackerEntriesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[trackerEntries.stopTimer] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerEntries.stopTimer Supabase REST error",
         );
         throw new Error(`Failed to stop timer: ${error.message}`);
       }
@@ -318,9 +319,9 @@ export const trackerEntriesRouter = createTRPCRouter({
         .maybeSingle();
 
       if (error) {
-        console.log(
-          "[trackerEntries.getTimerStatus] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerEntries.getTimerStatus Supabase REST error",
         );
         return { isRunning: false, timer: null };
       }

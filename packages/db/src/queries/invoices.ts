@@ -1,15 +1,4 @@
 import { UTCDate } from "@date-fns/utc";
-import type { Database } from "../client";
-import {
-  type activityTypeEnum,
-  customers,
-  exchangeRates,
-  invoiceStatusEnum,
-  invoices,
-  teams,
-  trackerEntries,
-  trackerProjects,
-} from "../schema";
 import { buildSearchQuery } from "@midpoker/db/utils/search-query";
 import { generateToken } from "@midpoker/invoice/token";
 import type { EditorDoc, LineItem } from "@midpoker/invoice/types";
@@ -38,6 +27,17 @@ import {
 } from "drizzle-orm";
 import type { SQL } from "drizzle-orm/sql/sql";
 import { v4 as uuidv4 } from "uuid";
+import type { Database } from "../client";
+import {
+  type activityTypeEnum,
+  customers,
+  exchangeRates,
+  invoiceStatusEnum,
+  invoices,
+  teams,
+  trackerEntries,
+  trackerProjects,
+} from "../schema";
 import { logActivity } from "../utils/log-activity";
 
 export type Template = {
@@ -874,19 +874,12 @@ export async function duplicateInvoice(
     subtotal: invoice.subtotal,
     amount: invoice.amount,
 
-    // @ts-expect-error - JSONB
     paymentDetails: invoice.paymentDetails,
-    // @ts-expect-error - JSONB
     noteDetails: invoice.noteDetails,
-    // @ts-expect-error - JSONB
     topBlock: invoice.topBlock,
-    // @ts-expect-error - JSONB
     bottomBlock: invoice.bottomBlock,
-    // @ts-expect-error - JSONB
     fromDetails: invoice.fromDetails,
-    // @ts-expect-error - JSONB
     customerDetails: invoice.customerDetails,
-    // @ts-expect-error - JSONB
     lineItems: invoice.lineItems,
   });
 

@@ -12,6 +12,7 @@ import {
   getUserInvites,
   updateUser,
 } from "@midpoker/db/queries";
+import { logger } from "@midpoker/logger";
 
 // Helper to get user via Supabase REST API (fallback when Drizzle connection fails)
 // Uses admin client to bypass RLS
@@ -29,7 +30,7 @@ async function getUserViaSupabase(userId: string) {
     .single();
 
   if (error || !user) {
-    console.log("[getUserViaSupabase] Error:", error?.message);
+    logger.error({ error: error?.message }, "getUserViaSupabase error");
     return null;
   }
 
@@ -43,7 +44,10 @@ async function getUserViaSupabase(userId: string) {
       .single();
 
     if (teamError) {
-      console.log("[getUserViaSupabase] Team fetch error:", teamError.message);
+      logger.error(
+        { error: teamError.message },
+        "getUserViaSupabase team fetch error",
+      );
     }
 
     if (teamData) {
@@ -116,7 +120,10 @@ export const userRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[user.update] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "user.update Supabase REST error",
+        );
         throw new Error(`Failed to update user: ${error.message}`);
       }
 
@@ -167,7 +174,10 @@ export const userRouter = createTRPCRouter({
       .eq("email", session.user.email);
 
     if (invitesError || !invites) {
-      console.log("[user.invites] Supabase REST error:", invitesError?.message);
+      logger.error(
+        { error: invitesError?.message },
+        "user.invites Supabase REST error",
+      );
       return [];
     }
 

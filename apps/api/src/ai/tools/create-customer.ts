@@ -105,9 +105,9 @@ Optional: billing email, phone, address, VAT number, notes.`,
       }
 
       // Build response with customer details
-      let response = `Successfully created customer:\n\n`;
-      response += `| Field | Value |\n`;
-      response += `|-------|-------|\n`;
+      let response = "Successfully created customer:\n\n";
+      response += "| Field | Value |\n";
+      response += "|-------|-------|\n";
       response += `| **Name** | ${customer.name} |\n`;
       response += `| **Email** | ${customer.email} |\n`;
       if (customer.billingEmail)

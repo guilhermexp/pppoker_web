@@ -5,6 +5,7 @@ import {
   getTeamMembers,
   shouldSendNotification,
 } from "@midpoker/db/queries";
+import { logger } from "@midpoker/logger";
 import type {
   EmailInput,
   NotificationOptions,
@@ -261,11 +262,14 @@ export class Notifications {
             type as string,
           );
 
-          console.log("📨 Email result for customer:", {
-            sent: emails.sent,
-            skipped: emails.skipped,
-            failed: emails.failed || 0,
-          });
+          logger.info(
+            {
+              sent: emails.sent,
+              skipped: emails.skipped,
+              failed: emails.failed || 0,
+            },
+            "Email result for customer",
+          );
         } else if (sampleEmail.emailType === "owners") {
           // Owners-only email: send to team owners only
           const ownerUsers = validatedData.users.filter(
@@ -282,18 +286,21 @@ export class Notifications {
             ),
           );
 
-          console.log("📨 Email inputs for owners:", emailInputs.length);
+          logger.info({ count: emailInputs.length }, "Email inputs for owners");
 
           emails = await this.#emailService.sendBulk(
             emailInputs,
             type as string,
           );
 
-          console.log("📨 Email result for owners:", {
-            sent: emails.sent,
-            skipped: emails.skipped,
-            failed: emails.failed || 0,
-          });
+          logger.info(
+            {
+              sent: emails.sent,
+              skipped: emails.skipped,
+              failed: emails.failed || 0,
+            },
+            "Email result for owners",
+          );
         } else {
           // Team-facing email: send to all team members
           const emailInputs = validatedData.users.map((user: UserData) =>
@@ -306,18 +313,21 @@ export class Notifications {
             ),
           );
 
-          console.log("📨 Email inputs for team:", emailInputs.length);
+          logger.info({ count: emailInputs.length }, "Email inputs for team");
 
           emails = await this.#emailService.sendBulk(
             emailInputs,
             type as string,
           );
 
-          console.log("📨 Email result for team:", {
-            sent: emails.sent,
-            skipped: emails.skipped,
-            failed: emails.failed || 0,
-          });
+          logger.info(
+            {
+              sent: emails.sent,
+              skipped: emails.skipped,
+              failed: emails.failed || 0,
+            },
+            "Email result for team",
+          );
         }
       }
 
@@ -327,7 +337,7 @@ export class Notifications {
         emails,
       };
     } catch (error) {
-      console.error(`Failed to send notification ${type}:`, error);
+      logger.error({ type, error }, "Failed to send notification");
       throw error;
     }
   }

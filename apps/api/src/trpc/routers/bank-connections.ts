@@ -5,6 +5,7 @@ import {
 } from "@api/schemas/bank-connections";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 
 export const bankConnectionsRouter = createTRPCRouter({
@@ -46,9 +47,9 @@ export const bankConnectionsRouter = createTRPCRouter({
       const { data: connections, error } = await query;
 
       if (error) {
-        console.log(
-          "[bankConnections.get] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "bankConnections.get Supabase REST error",
         );
         return [];
       }
@@ -96,9 +97,9 @@ export const bankConnectionsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[bankConnections.create] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "bankConnections.create Supabase REST error",
         );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -131,9 +132,9 @@ export const bankConnectionsRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log(
-          "[bankConnections.delete] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "bankConnections.delete Supabase REST error",
         );
         throw new Error(`Failed to delete bank connection: ${error.message}`);
       }

@@ -1,6 +1,6 @@
+import { and, eq } from "drizzle-orm";
 import type { Database } from "../client";
 import { inbox, transactionAttachments, transactions } from "../schema";
-import { and, eq } from "drizzle-orm";
 import { createActivity } from "./activities";
 
 export type Attachment = {

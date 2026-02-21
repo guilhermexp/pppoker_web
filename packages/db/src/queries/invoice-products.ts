@@ -1,7 +1,8 @@
+import type { LineItem } from "@midpoker/invoice/types";
+import { logger } from "@midpoker/logger";
+import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import type { Database } from "../client";
 import { invoiceProducts } from "../schema";
-import type { LineItem } from "@midpoker/invoice/types";
-import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 
 export type InvoiceProduct = {
   id: string;
@@ -359,9 +360,9 @@ export async function saveLineItemAsProduct(
 
     return { product, shouldClearProductId: false };
   } catch (error) {
-    console.error(
-      `Failed to save line item as product "${trimmedName}":`,
-      error,
+    logger.error(
+      { productName: trimmedName, error },
+      "Failed to save line item as product",
     );
     return {
       product: null,

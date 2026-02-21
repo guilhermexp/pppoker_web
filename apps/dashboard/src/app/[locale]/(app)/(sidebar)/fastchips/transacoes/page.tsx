@@ -1,6 +1,6 @@
-import { getI18n } from "@/locales/server";
 import { FastChipsTransactionDetailSheet } from "@/components/fastchips/transaction-detail-sheet";
 import { FastChipsTransactionsTable } from "@/components/fastchips/transactions-table";
+import { getI18n } from "@/locales/server";
 import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import type { Metadata } from "next";

@@ -1,5 +1,5 @@
-import { useQueryStates } from "nuqs";
 import { createLoader, parseAsString } from "nuqs/server";
+import { createParamsHook } from "./create-params-hook";
 
 export const oauthParamsSchema = {
   response_type: parseAsString,
@@ -10,13 +10,6 @@ export const oauthParamsSchema = {
   code_challenge: parseAsString,
 };
 
-export function useOAuthParams() {
-  const [params, setParams] = useQueryStates(oauthParamsSchema);
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useOAuthParams = createParamsHook(oauthParamsSchema);
 
 export const loadOAuthParams = createLoader(oauthParamsSchema);

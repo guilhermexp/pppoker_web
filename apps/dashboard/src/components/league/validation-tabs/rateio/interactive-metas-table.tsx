@@ -74,7 +74,10 @@ export function InteractiveMetasTable({
 
       for (const jogador of jogo.jogadores ?? []) {
         const ligaId = jogador.ligaId;
-        const liquido = (jogador.buyinFichas ?? 0) + (jogador.buyinTicket ?? 0) - (jogador.taxa ?? 0);
+        const liquido =
+          (jogador.buyinFichas ?? 0) +
+          (jogador.buyinTicket ?? 0) -
+          (jogador.taxa ?? 0);
         acc[ligaId] = (acc[ligaId] ?? 0) + liquido;
       }
     }

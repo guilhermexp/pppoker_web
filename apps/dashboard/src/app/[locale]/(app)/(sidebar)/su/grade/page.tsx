@@ -260,9 +260,7 @@ export default function TournamentManagementPage() {
 
         // SA overlay data goes through lifted state (also persists to localStorage)
         handleSaDataChange(
-          data.sa_overlay_data
-            ? (data.sa_overlay_data as SAOverlayData)
-            : null,
+          data.sa_overlay_data ? (data.sa_overlay_data as SAOverlayData) : null,
         );
 
         // Realized data from saved week goes through state (not localStorage)
@@ -322,9 +320,7 @@ export default function TournamentManagementPage() {
             <Icons.GridView className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-medium">
-              Gerenciamento de Torneios
-            </h1>
+            <h1 className="text-2xl font-medium">Gerenciamento de Torneios</h1>
             <p className="text-sm text-muted-foreground">
               Grade semanal, confrontação e análise de overlays
             </p>
@@ -354,8 +350,7 @@ export default function TournamentManagementPage() {
                   Sem {w.week_number}
                   {w.week_start && w.week_end
                     ? ` (${w.week_start} - ${w.week_end})`
-                    : ""}
-                  {" "}
+                    : ""}{" "}
                   - {w.week_year}
                 </SelectItem>
               ))}
@@ -402,13 +397,19 @@ export default function TournamentManagementPage() {
             {selectedSavedWeek.schedule_tournament_count} torneios
           </Badge>
           {Number(selectedSavedWeek.overlay_count) > 0 && (
-            <Badge variant="outline" className="font-normal text-red-500 border-red-500/30">
+            <Badge
+              variant="outline"
+              className="font-normal text-red-500 border-red-500/30"
+            >
               {selectedSavedWeek.overlay_count} overlays
             </Badge>
           )}
           {Number(selectedSavedWeek.schedule_total_gtd_usd) > 0 && (
             <Badge variant="outline" className="font-normal">
-              GTD: ${Number(selectedSavedWeek.schedule_total_gtd_usd).toLocaleString("en-US")}
+              GTD: $
+              {Number(selectedSavedWeek.schedule_total_gtd_usd).toLocaleString(
+                "en-US",
+              )}
             </Badge>
           )}
           <span className="ml-auto">
@@ -438,16 +439,41 @@ export default function TournamentManagementPage() {
             Ligas
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="grade" forceMount className={cn("mt-4", activeTab !== "grade" && "hidden")}>
+        <TabsContent
+          value="grade"
+          forceMount
+          className={cn("mt-4", activeTab !== "grade" && "hidden")}
+        >
           <GradeTab key={`grade-${tabsKey}`} realizedData={realizedData} />
         </TabsContent>
-        <TabsContent value="overlays" forceMount className={cn("mt-4", activeTab !== "overlays" && "hidden")}>
-          <OverlaysTab key={`overlays-${tabsKey}`} realizedData={realizedData} saData={saData} onSaDataChange={handleSaDataChange} />
+        <TabsContent
+          value="overlays"
+          forceMount
+          className={cn("mt-4", activeTab !== "overlays" && "hidden")}
+        >
+          <OverlaysTab
+            key={`overlays-${tabsKey}`}
+            realizedData={realizedData}
+            saData={saData}
+            onSaDataChange={handleSaDataChange}
+          />
         </TabsContent>
-        <TabsContent value="analise" forceMount className={cn("mt-4", activeTab !== "analise" && "hidden")}>
-          <AnaliseTab key={`analise-${tabsKey}`} realizedData={realizedData} saData={saData} />
+        <TabsContent
+          value="analise"
+          forceMount
+          className={cn("mt-4", activeTab !== "analise" && "hidden")}
+        >
+          <AnaliseTab
+            key={`analise-${tabsKey}`}
+            realizedData={realizedData}
+            saData={saData}
+          />
         </TabsContent>
-        <TabsContent value="ligas" forceMount className={cn("mt-4", activeTab !== "ligas" && "hidden")}>
+        <TabsContent
+          value="ligas"
+          forceMount
+          className={cn("mt-4", activeTab !== "ligas" && "hidden")}
+        >
           <LigasTab key={`ligas-${tabsKey}`} realizedData={realizedData} />
         </TabsContent>
       </Tabs>

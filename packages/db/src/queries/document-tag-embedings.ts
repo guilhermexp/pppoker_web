@@ -1,6 +1,6 @@
+import { inArray, sql } from "drizzle-orm";
 import type { Database } from "../client";
 import { documentTagEmbeddings } from "../schema";
-import { inArray, sql } from "drizzle-orm";
 
 type CreateDocumentTagEmbeddingParams = {
   slug: string;

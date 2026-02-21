@@ -1,6 +1,6 @@
+import { and, eq } from "drizzle-orm";
 import type { Database } from "../client";
 import { tags } from "../schema";
-import { and, eq } from "drizzle-orm";
 
 type CreateTagParams = {
   teamId: string;

@@ -18,6 +18,7 @@ import {
 } from "@midpoker/db/queries";
 import { isMimeTypeSupportedForProcessing } from "@midpoker/documents/utils";
 import type { ProcessDocumentPayload } from "@midpoker/jobs/schema";
+import { logger } from "@midpoker/logger";
 import { remove, signedUrl } from "@midpoker/supabase/storage";
 import { tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
@@ -78,7 +79,10 @@ export const documentsRouter = createTRPCRouter({
       const { data: documents, error } = await query;
 
       if (error) {
-        console.log("[documents.get] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "documents.get Supabase REST error",
+        );
         return {
           data: [],
           meta: {

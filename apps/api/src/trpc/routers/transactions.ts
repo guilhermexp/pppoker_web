@@ -15,6 +15,7 @@ import {
   searchTransactionMatch,
 } from "@midpoker/db/queries";
 import type { EmbedTransactionPayload } from "@midpoker/jobs/schema";
+import { logger } from "@midpoker/logger";
 import { tasks } from "@trigger.dev/sdk";
 
 export const transactionsRouter = createTRPCRouter({
@@ -91,7 +92,10 @@ export const transactionsRouter = createTRPCRouter({
       const { data: transactions, error, count } = await query;
 
       if (error) {
-        console.log("[transactions.get] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "transactions.get Supabase REST error",
+        );
         return {
           data: [],
           meta: {
@@ -173,9 +177,9 @@ export const transactionsRouter = createTRPCRouter({
         .single();
 
       if (error || !transaction) {
-        console.log(
-          "[transactions.getById] Supabase REST error:",
-          error?.message,
+        logger.error(
+          { error: error?.message },
+          "transactions.getById Supabase REST error",
         );
         return null;
       }
@@ -215,9 +219,9 @@ export const transactionsRouter = createTRPCRouter({
         .select("id");
 
       if (error) {
-        console.log(
-          "[transactions.deleteMany] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactions.deleteMany Supabase REST error",
         );
         throw new Error(`Failed to delete transactions: ${error.message}`);
       }
@@ -290,9 +294,9 @@ export const transactionsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[transactions.update] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactions.update Supabase REST error",
         );
         throw new Error(`Failed to update transaction: ${error.message}`);
       }
@@ -337,9 +341,9 @@ export const transactionsRouter = createTRPCRouter({
         .select("id");
 
       if (error) {
-        console.log(
-          "[transactions.updateMany] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactions.updateMany Supabase REST error",
         );
         throw new Error(`Failed to update transactions: ${error.message}`);
       }
@@ -406,9 +410,9 @@ export const transactionsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[transactions.create] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "transactions.create Supabase REST error",
         );
         throw new Error(`Failed to create transaction: ${error.message}`);
       }

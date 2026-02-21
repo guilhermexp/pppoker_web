@@ -11,6 +11,7 @@ import {
   getTrackerProjectById,
   upsertTrackerProject,
 } from "@midpoker/db/queries";
+import { logger } from "@midpoker/logger";
 
 export const trackerProjectsRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues
@@ -49,7 +50,7 @@ export const trackerProjectsRouter = createTRPCRouter({
 
       // Apply sorting
       if (input?.sort) {
-        const sortOrder = input.sort.startsWith("-") ? false : true;
+        const sortOrder = !input.sort.startsWith("-");
         const sortField = input.sort.replace(/^-/, "");
         query = query.order(sortField === "name" ? "name" : "created_at", {
           ascending: sortOrder,
@@ -66,9 +67,9 @@ export const trackerProjectsRouter = createTRPCRouter({
       const { data: projects, error } = await query;
 
       if (error) {
-        console.log(
-          "[trackerProjects.get] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "trackerProjects.get Supabase REST error",
         );
         return {
           data: [],

@@ -127,8 +127,12 @@ export function OverlayDistributionSection({
   );
 
   // 4b. Group selector state — default to first group (BR)
-  const defaultGroupId = metaGroups?.[0] ? (metaGroups[0].id ?? metaGroups[0].name) : null;
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(defaultGroupId);
+  const defaultGroupId = metaGroups?.[0]
+    ? (metaGroups[0].id ?? metaGroups[0].name)
+    : null;
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(
+    defaultGroupId,
+  );
 
   // Keep in sync if metaGroups loads after initial render
   useEffect(() => {
@@ -227,18 +231,18 @@ export function OverlayDistributionSection({
       0,
     );
 
-    const selectedCount = Object.values(selections).filter((s) => s?.isSelected).length;
+    const selectedCount = Object.values(selections).filter(
+      (s) => s?.isSelected,
+    ).length;
 
-    const totalOverlayGroup =
-      data.summary.totalOverlayAmount * groupPercent;
+    const totalOverlayGroup = data.summary.totalOverlayAmount * groupPercent;
 
     return {
       selectedCount,
       totalOverlayAll: Math.round(totalOverlayGroup * 100) / 100,
       totalClubCharges: Math.round(totalClubCharges * 100) / 100,
-      leagueRemainder: Math.round(
-        (totalOverlayGroup - totalClubCharges) * 100,
-      ) / 100,
+      leagueRemainder:
+        Math.round((totalOverlayGroup - totalClubCharges) * 100) / 100,
       clubSummary,
     };
   }, [data, selections, groupPercent, groupMemberSuIds]);
@@ -426,9 +430,7 @@ export function OverlayDistributionSection({
                     key={gKey}
                     type="button"
                     onClick={() =>
-                      setSelectedGroupId(
-                        selectedGroupId === gKey ? null : gKey,
-                      )
+                      setSelectedGroupId(selectedGroupId === gKey ? null : gKey)
                     }
                     className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
                       selectedGroupId === gKey
@@ -467,7 +469,10 @@ export function OverlayDistributionSection({
         <Card>
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground">
-              Total Overlay{selectedGroup ? ` (${selectedGroup.name} ${selectedGroup.metaPercent}%)` : ""}
+              Total Overlay
+              {selectedGroup
+                ? ` (${selectedGroup.name} ${selectedGroup.metaPercent}%)`
+                : ""}
             </p>
             <p className="text-lg font-bold text-red-500">
               {formatNumber(computed?.totalOverlayAll ?? 0)}
@@ -476,9 +481,7 @@ export function OverlayDistributionSection({
         </Card>
         <Card>
           <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground">
-              Cobrado Clubes
-            </p>
+            <p className="text-[10px] text-muted-foreground">Cobrado Clubes</p>
             <p className="text-lg font-bold text-amber-500">
               {formatNumber(computed?.totalClubCharges ?? 0)}
             </p>
@@ -694,12 +697,8 @@ export function OverlayDistributionSection({
                   <th className="px-3 py-2 font-medium text-right">
                     Total Cobrado
                   </th>
-                  <th className="px-3 py-2 font-medium text-right">
-                    Cobrados
-                  </th>
-                  <th className="px-3 py-2 font-medium text-right">
-                    Isentos
-                  </th>
+                  <th className="px-3 py-2 font-medium text-right">Cobrados</th>
+                  <th className="px-3 py-2 font-medium text-right">Isentos</th>
                 </tr>
               </thead>
               <tbody>
@@ -890,14 +889,12 @@ function TournamentRow({
         </div>
       )}
 
-      {expanded &&
-        isSelected &&
-        filteredClubs.length === 0 && (
-          <div className="px-3 pb-2 text-[11px] text-muted-foreground">
-            Nenhuma meta definida para este horario. Liga paga{" "}
-            {formatNumber(scaledOverlay)}.
-          </div>
-        )}
+      {expanded && isSelected && filteredClubs.length === 0 && (
+        <div className="px-3 pb-2 text-[11px] text-muted-foreground">
+          Nenhuma meta definida para este horario. Liga paga{" "}
+          {formatNumber(scaledOverlay)}.
+        </div>
+      )}
     </div>
   );
 }

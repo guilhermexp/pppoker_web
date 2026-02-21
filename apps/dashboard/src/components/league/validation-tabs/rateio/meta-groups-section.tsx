@@ -8,10 +8,10 @@ import { Spinner } from "@midpoker/ui/spinner";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import type { AvailableLeague, MetaGroupData } from "./rateio-utils";
-import { formatNumber, formatPercent } from "./rateio-utils";
 import { MetaGroupForm } from "./meta-group-form";
 import { MetaGroupMembers } from "./meta-group-members";
+import type { AvailableLeague, MetaGroupData } from "./rateio-utils";
+import { formatNumber, formatPercent } from "./rateio-utils";
 import { TimeSlotsSection } from "./time-slots-section";
 
 interface MetaGroupsSectionProps {
@@ -194,58 +194,54 @@ export function MetaGroupsSection({
       </div>
 
       {/* Fallback Group Cards (read-only) */}
-      {!hasDbGroups && fallbackGroups && fallbackGroups.length > 0 && (
-        <>
-          {fallbackGroups.map((group) => (
-            <div
-              key={group.id}
-              className="border border-dashed rounded-lg"
-            >
-              <div className="flex items-center justify-between p-3">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{group.name}</span>
-                  <Badge variant="outline" className="text-[10px]">
-                    {formatPercent(group.metaPercent)}
-                  </Badge>
-                  {overlayTotal != null && overlayTotal > 0 && (
-                    <span className="text-xs font-mono text-red-500">
-                      {formatNumber((group.metaPercent / 100) * overlayTotal)}
-                    </span>
-                  )}
-                  <Badge
-                    variant="outline"
-                    className="text-[9px] border-amber-500/30 text-amber-500"
-                  >
-                    Fallback
-                  </Badge>
-                </div>
-              </div>
-              {/* Members always visible */}
-              <div className="border-t border-dashed px-3 pb-3 pt-2">
-                <div className="flex flex-wrap gap-1.5">
-                  {group.members.map((m) => (
-                    <Badge
-                      key={m.superUnionId}
-                      variant="secondary"
-                      className="text-[10px] font-normal"
-                    >
-                      {m.displayName ?? `SU ${m.superUnionId}`}
-                      <span className="ml-1 text-muted-foreground">
-                        ({m.superUnionId})
-                      </span>
-                    </Badge>
-                  ))}
-                  {group.members.length === 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      Nenhum membro
-                    </span>
-                  )}
-                </div>
+      {!hasDbGroups &&
+        fallbackGroups &&
+        fallbackGroups.length > 0 &&
+        fallbackGroups.map((group) => (
+          <div key={group.id} className="border border-dashed rounded-lg">
+            <div className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-sm">{group.name}</span>
+                <Badge variant="outline" className="text-[10px]">
+                  {formatPercent(group.metaPercent)}
+                </Badge>
+                {overlayTotal != null && overlayTotal > 0 && (
+                  <span className="text-xs font-mono text-red-500">
+                    {formatNumber((group.metaPercent / 100) * overlayTotal)}
+                  </span>
+                )}
+                <Badge
+                  variant="outline"
+                  className="text-[9px] border-amber-500/30 text-amber-500"
+                >
+                  Fallback
+                </Badge>
               </div>
             </div>
-          ))}
-        </>
-      )}
+            {/* Members always visible */}
+            <div className="border-t border-dashed px-3 pb-3 pt-2">
+              <div className="flex flex-wrap gap-1.5">
+                {group.members.map((m) => (
+                  <Badge
+                    key={m.superUnionId}
+                    variant="secondary"
+                    className="text-[10px] font-normal"
+                  >
+                    {m.displayName ?? `SU ${m.superUnionId}`}
+                    <span className="ml-1 text-muted-foreground">
+                      ({m.superUnionId})
+                    </span>
+                  </Badge>
+                ))}
+                {group.members.length === 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    Nenhum membro
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
 
       {/* Empty state (no DB groups, no fallback) */}
       {!hasDbGroups && (!fallbackGroups || fallbackGroups.length === 0) && (
@@ -281,7 +277,9 @@ export function MetaGroupsSection({
                 </Badge>
                 {overlayTotal != null && overlayTotal > 0 && (
                   <span className="text-xs font-mono text-red-500">
-                    {formatNumber((Number(group.meta_percent) / 100) * overlayTotal)}
+                    {formatNumber(
+                      (Number(group.meta_percent) / 100) * overlayTotal,
+                    )}
                   </span>
                 )}
                 {!group.is_active && (

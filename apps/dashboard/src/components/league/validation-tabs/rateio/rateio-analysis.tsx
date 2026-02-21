@@ -153,7 +153,10 @@ export function RateioAnalysis({
 
           for (const jogador of jogo.jogadores ?? []) {
             const ligaId = jogador.ligaId;
-            const liquido = (jogador.buyinFichas ?? 0) + (jogador.buyinTicket ?? 0) - (jogador.taxa ?? 0);
+            const liquido =
+              (jogador.buyinFichas ?? 0) +
+              (jogador.buyinTicket ?? 0) -
+              (jogador.taxa ?? 0);
 
             // Find which group this liga belongs to
             for (const g of metaGroups) {
@@ -273,10 +276,7 @@ export function RateioAnalysis({
       {stats.groupAnalyses.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 rounded-lg border border-border divide-x divide-border">
           {stats.groupAnalyses.map((ga) => (
-            <div
-              key={ga.group.id}
-              className="p-3 space-y-2"
-            >
+            <div key={ga.group.id} className="p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{ga.group.name}</span>

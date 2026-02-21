@@ -1,10 +1,10 @@
 "use client";
 
+import { softSpringEasing } from "@/lib/sidebar-svg-paths";
+import type { MenuItem as MenuItemType } from "@/lib/sidebar-types";
 import { ChevronDown } from "@carbon/icons-react";
 import { cn } from "@midpoker/ui/cn";
 import Link from "next/link";
-import { softSpringEasing } from "@/lib/sidebar-svg-paths";
-import type { MenuItem as MenuItemType } from "@/lib/sidebar-types";
 
 interface SubMenuItemProps {
   item: MenuItemType;

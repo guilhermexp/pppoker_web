@@ -1,5 +1,10 @@
+import {
+  closeWeekPeriodInput,
+  getCloseWeekDataInput,
+  listWeekPeriodsInput,
+} from "@api/schemas/su/week-periods";
 import { createAdminClient } from "@api/services/supabase";
-import { z } from "@hono/zod-openapi";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
 
@@ -20,7 +25,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
     if (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch open periods",
+        message: "Erro ao buscar periodos abertos",
       });
     }
 
@@ -53,7 +58,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
     if (error && error.code !== "PGRST116") {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch current period",
+        message: "Erro ao buscar periodo atual",
       });
     }
 
@@ -72,7 +77,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
    * Get all data needed for close week preview modal
    */
   getCloseWeekData: protectedProcedure
-    .input(z.object({ weekPeriodId: z.string().uuid().optional() }))
+    .input(getCloseWeekDataInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -97,7 +102,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       if (weekPeriodError || !weekPeriod) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Week period not found",
+          message: "Periodo semanal nao encontrado",
         });
       }
 
@@ -124,7 +129,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       if (summariesError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch league summaries",
+          message: "Erro ao buscar resumos das ligas",
         });
       }
 
@@ -142,7 +147,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
         if (gamesError) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to fetch games",
+            message: "Erro ao buscar jogos",
           });
         }
         games = gamesData ?? [];
@@ -160,7 +165,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       if (settlementsError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch settlements",
+          message: "Erro ao buscar acertos",
         });
       }
 
@@ -358,11 +363,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
    * Close week period and create settlements
    */
   close: protectedProcedure
-    .input(
-      z.object({
-        weekPeriodId: z.string().uuid().optional(),
-      }),
-    )
+    .input(closeWeekPeriodInput)
     .mutation(async ({ input, ctx: { teamId, session } }) => {
       const userId = session?.user?.id;
       const supabase = await createAdminClient();
@@ -388,14 +389,14 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       if (weekPeriodError || !weekPeriod) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Week period not found",
+          message: "Periodo semanal nao encontrado",
         });
       }
 
       if (weekPeriod.status === "closed") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Week period already closed",
+          message: "Periodo semanal ja foi fechado",
         });
       }
 
@@ -410,7 +411,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       if (summariesError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch league summaries",
+          message: "Erro ao buscar resumos das ligas",
         });
       }
 
@@ -479,7 +480,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
               ppst_gap_guaranteed: ppstGapGuaranteed,
               ppst_games_count: uniqueGameIds.size, // approximate
               ppsr_league_fee: ppsrLeagueFee,
-              ppsr_games_count: 0, // TODO: count properly
+              ppsr_games_count: 0, // TODO(#3): count properly
               gross_amount: grossAmount,
               net_amount: netAmount,
               created_by_id: userId,
@@ -549,7 +550,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       if (closeError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to close week period",
+          message: "Erro ao fechar periodo semanal",
         });
       }
 
@@ -570,9 +571,9 @@ export const suWeekPeriodsRouter = createTRPCRouter({
 
       if (commitError) {
         // Log but don't fail - imports can be committed manually if needed
-        console.error(
-          "[suWeekPeriods.close] Failed to commit imports:",
-          commitError.message,
+        logger.error(
+          { error: commitError.message },
+          "suWeekPeriods.close failed to commit imports",
         );
       }
 
@@ -589,15 +590,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
    * List all week periods (for history view)
    */
   list: protectedProcedure
-    .input(
-      z
-        .object({
-          status: z.enum(["open", "closed"]).optional(),
-          limit: z.number().min(1).max(100).optional(),
-          offset: z.number().min(0).optional(),
-        })
-        .optional(),
-    )
+    .input(listWeekPeriodsInput)
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
@@ -627,7 +620,7 @@ export const suWeekPeriodsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch week periods",
+          message: "Erro ao buscar periodos semanais",
         });
       }
 

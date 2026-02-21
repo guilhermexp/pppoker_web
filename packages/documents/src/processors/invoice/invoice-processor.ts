@@ -1,4 +1,5 @@
 import { mistral } from "@ai-sdk/mistral";
+import { logger } from "@midpoker/logger";
 import { generateObject } from "ai";
 import { extractText, getDocumentProxy } from "unpdf";
 import type { z } from "zod/v4";
@@ -63,7 +64,7 @@ export class InvoiceProcessor {
 
       // Check data quality and merge with fallback if poor
       if (this.#isDataQualityPoor(result.object)) {
-        console.log(
+        logger.info(
           "Primary processing completed but data quality is poor, running OCR + LLM fallback",
         );
 
@@ -107,16 +108,19 @@ export class InvoiceProcessor {
 
           return mergedResult;
         } catch (fallbackError) {
-          console.log("OCR + LLM fallback also failed:", fallbackError);
+          logger.error(
+            { error: fallbackError },
+            "OCR + LLM fallback also failed",
+          );
           return result.object; // Return original result if fallback fails
         }
       }
 
       return result.object;
     } catch (error) {
-      console.log(
-        "Primary processing failed, falling back to OCR + LLM:",
-        error,
+      logger.info(
+        { error },
+        "Primary processing failed, falling back to OCR + LLM",
       );
       // Fallback to OCR + LLM
       return this.#fallbackExtract(documentUrl);

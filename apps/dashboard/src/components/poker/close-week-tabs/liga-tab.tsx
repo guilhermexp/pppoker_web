@@ -158,19 +158,17 @@ export function LigaTab({
             </div>
 
             {leagueSettings && leagueSettings.leagueFeePercent > 0 && (
-              <>
-                <div className="flex justify-between pt-2">
-                  <span className="text-muted-foreground">
-                    Taxa da Liga
-                    <span className="text-[10px] ml-1 opacity-50">
-                      ({formatPercent(leagueSettings.leagueFeePercent)} do rake)
-                    </span>
+              <div className="flex justify-between pt-2">
+                <span className="text-muted-foreground">
+                  Taxa da Liga
+                  <span className="text-[10px] ml-1 opacity-50">
+                    ({formatPercent(leagueSettings.leagueFeePercent)} do rake)
                   </span>
-                  <span className="font-mono text-purple-500">
-                    {formatCurrency(leagueFee)}
-                  </span>
-                </div>
-              </>
+                </span>
+                <span className="font-mono text-purple-500">
+                  {formatCurrency(leagueFee)}
+                </span>
+              </div>
             )}
           </div>
 

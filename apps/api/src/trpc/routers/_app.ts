@@ -9,6 +9,7 @@ import { customersRouter } from "./customers";
 import { documentTagAssignmentsRouter } from "./document-tag-assignments";
 import { documentTagsRouter } from "./document-tags";
 import { documentsRouter } from "./documents";
+import { fastchipsRouter } from "./fastchips";
 import { chatFeedbackRouter } from "./feedback";
 import { inboxRouter } from "./inbox";
 import { inboxAccountsRouter } from "./inbox-accounts";
@@ -18,9 +19,11 @@ import { invoiceTemplateRouter } from "./invoice-template";
 import { notificationSettingsRouter } from "./notification-settings";
 import { notificationsRouter } from "./notifications";
 import { oauthApplicationsRouter } from "./oauth-applications";
+import { pokerRouter } from "./poker";
 import { reportsRouter } from "./reports";
 import { searchRouter } from "./search";
 import { shortLinksRouter } from "./short-links";
+import { suRouter } from "./su";
 import { suggestedActionsRouter } from "./suggested-actions";
 import { tagsRouter } from "./tags";
 import { teamRouter } from "./team";
@@ -32,9 +35,6 @@ import { transactionTagsRouter } from "./transaction-tags";
 import { transactionsRouter } from "./transactions";
 import { userRouter } from "./user";
 import { widgetsRouter } from "./widgets";
-import { fastchipsRouter } from "./fastchips";
-import { pokerRouter } from "./poker";
-import { suRouter } from "./su";
 
 export const appRouter = createTRPCRouter({
   notifications: notificationsRouter,

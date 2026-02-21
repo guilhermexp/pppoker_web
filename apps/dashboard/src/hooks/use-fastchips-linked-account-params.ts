@@ -1,13 +1,6 @@
-import { useQueryStates } from "nuqs";
 import { parseAsString } from "nuqs/server";
+import { createParamsHook } from "./create-params-hook";
 
-export function useFastchipsLinkedAccountParams() {
-  const [params, setParams] = useQueryStates({
-    fastchipsLinkedAccountId: parseAsString,
-  });
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useFastchipsLinkedAccountParams = createParamsHook({
+  fastchipsLinkedAccountId: parseAsString,
+});

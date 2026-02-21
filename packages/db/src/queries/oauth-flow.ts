@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import { hash } from "@midpoker/encryption";
+import { logger } from "@midpoker/logger";
+import { and, desc, eq, gt, gte, lte } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import type { Database } from "../client";
 import {
   oauthAccessTokens,
@@ -6,9 +10,6 @@ import {
   oauthAuthorizationCodes,
   users,
 } from "../schema";
-import { hash } from "@midpoker/encryption";
-import { and, desc, eq, gt, gte, lte } from "drizzle-orm";
-import { nanoid } from "nanoid";
 
 export type CreateAuthorizationCodeParams = {
   applicationId: string;
@@ -116,9 +117,12 @@ export async function exchangeAuthorizationCode(
       createdAt: authCode.createdAt,
     });
 
-    console.warn(
-      `[SECURITY] Authorization code reuse detected for application ${authCode.applicationId}. ` +
-        `Revoked ${revokedTokens.length} potentially related tokens.`,
+    logger.warn(
+      {
+        applicationId: authCode.applicationId,
+        revokedTokenCount: revokedTokens.length,
+      },
+      "Authorization code reuse detected, revoked potentially related tokens",
     );
 
     throw new Error(

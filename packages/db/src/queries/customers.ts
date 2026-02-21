@@ -1,3 +1,8 @@
+import { buildJsonAggField } from "@midpoker/db/utils/json-agg";
+import { buildSearchQuery } from "@midpoker/db/utils/search-query";
+import { generateToken } from "@midpoker/invoice/token";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm/sql/sql";
 import type { Database } from "../client";
 import {
   customerTags,
@@ -6,10 +11,6 @@ import {
   tags,
   trackerProjects,
 } from "../schema";
-import { buildSearchQuery } from "@midpoker/db/utils/search-query";
-import { generateToken } from "@midpoker/invoice/token";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
-import type { SQL } from "drizzle-orm/sql/sql";
 import { createActivity } from "./activities";
 
 type GetCustomerByIdParams = {
@@ -44,17 +45,11 @@ export const getCustomerById = async (
       contact: customers.contact,
       invoiceCount: sql<number>`cast(count(${invoices.id}) as int)`,
       projectCount: sql<number>`cast(count(${trackerProjects.id}) as int)`,
-      tags: sql<CustomerTag[]>`
-        coalesce(
-          json_agg(
-            distinct jsonb_build_object(
-              'id', ${tags.id},
-              'name', ${tags.name}
-            )
-          ) filter (where ${tags.id} is not null),
-          '[]'
-        )
-      `.as("tags"),
+      tags: sql<
+        CustomerTag[]
+      >`${buildJsonAggField({ id: tags.id, name: tags.name }, tags.id)}`.as(
+        "tags",
+      ),
     })
     .from(customers)
     .where(
@@ -130,17 +125,11 @@ export const getCustomers = async (
       contact: customers.contact,
       invoiceCount: sql<number>`cast(count(${invoices.id}) as int)`,
       projectCount: sql<number>`cast(count(${trackerProjects.id}) as int)`,
-      tags: sql<CustomerTag[]>`
-        coalesce(
-          json_agg(
-            distinct jsonb_build_object(
-              'id', ${tags.id},
-              'name', ${tags.name}
-            )
-          ) filter (where ${tags.id} is not null),
-          '[]'
-        )
-      `.as("tags"),
+      tags: sql<
+        CustomerTag[]
+      >`${buildJsonAggField({ id: tags.id, name: tags.name }, tags.id)}`.as(
+        "tags",
+      ),
     })
     .from(customers)
     .leftJoin(invoices, eq(invoices.customerId, customers.id))
@@ -377,17 +366,11 @@ export const upsertCustomer = async (
       contact: customers.contact,
       invoiceCount: sql<number>`cast(count(${invoices.id}) as int)`,
       projectCount: sql<number>`cast(count(${trackerProjects.id}) as int)`,
-      tags: sql<CustomerTag[]>`
-          coalesce(
-            json_agg(
-              distinct jsonb_build_object(
-                'id', ${tags.id},
-                'name', ${tags.name}
-              )
-            ) filter (where ${tags.id} is not null),
-            '[]'
-          )
-        `.as("tags"),
+      tags: sql<
+        CustomerTag[]
+      >`${buildJsonAggField({ id: tags.id, name: tags.name }, tags.id)}`.as(
+        "tags",
+      ),
     })
     .from(customers)
     .where(and(eq(customers.id, customerId), eq(customers.teamId, teamId)))

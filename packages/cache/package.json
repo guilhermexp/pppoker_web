@@ -19,7 +19,7 @@
     "./rate-limit-cache": "./src/rate-limit-cache.ts"
   },
   "dependencies": {
-    "redis": "^5.9.0",
+    "redis": "^5.10.0",
     "@types/redis": "^4.0.11"
   },
   "devDependencies": {

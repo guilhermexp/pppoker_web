@@ -84,7 +84,9 @@ export function LeagueRateioTab({
 
   // Build dynamic fallback groups: BR has fixed members, SA gets all remaining leagues
   const dynamicFallbackGroups: MetaGroupData[] = useMemo(() => {
-    const brMemberIds = new Set(FALLBACK_GROUPS[0].members.map((m) => m.superUnionId));
+    const brMemberIds = new Set(
+      FALLBACK_GROUPS[0].members.map((m) => m.superUnionId),
+    );
 
     const saMembers = availableLeagues
       .filter((l) => !brMemberIds.has(l.ligaId))
@@ -145,9 +147,12 @@ export function LeagueRateioTab({
 
       if (gtd > 0) {
         gtdCount++;
-        const jogoBuyinFichas = jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) ?? 0;
-        const jogoBuyinTicket = jogo.jogadores?.reduce((s, j) => s + (j.buyinTicket ?? 0), 0) ?? 0;
-        const jogoTaxa = jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) ?? 0;
+        const jogoBuyinFichas =
+          jogo.jogadores?.reduce((s, j) => s + (j.buyinFichas ?? 0), 0) ?? 0;
+        const jogoBuyinTicket =
+          jogo.jogadores?.reduce((s, j) => s + (j.buyinTicket ?? 0), 0) ?? 0;
+        const jogoTaxa =
+          jogo.jogadores?.reduce((s, j) => s + (j.taxa ?? 0), 0) ?? 0;
         const buyinLiquido = jogoBuyinFichas + jogoBuyinTicket - jogoTaxa;
         const resultado = buyinLiquido - gtd;
         if (resultado < 0) {
@@ -159,7 +164,6 @@ export function LeagueRateioTab({
 
     return { overlayCount, overlayTotal, gtdCount };
   }, [jogosPPST]);
-
 
   // Extract available clubs from jogosPPST import data
   const availableClubs: AvailableClub[] = useMemo(() => {

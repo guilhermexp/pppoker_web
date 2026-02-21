@@ -18,6 +18,7 @@
   "dependencies": {
     "@midpoker/db": "workspace:*",
     "@midpoker/encryption": "workspace:*",
+    "@midpoker/logger": "workspace:*",
     "@midpoker/supabase": "workspace:*",
     "@midpoker/utils": "workspace:*",
     "googleapis": "^166.0.0",

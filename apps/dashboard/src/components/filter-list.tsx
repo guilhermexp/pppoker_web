@@ -2,8 +2,7 @@ import { formatAccountName } from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
-import { format } from "date-fns";
-import { formatDateRange } from "little-date";
+import { format, isSameYear } from "date-fns";
 
 type FilterKey =
   | "start"
@@ -79,9 +78,12 @@ export function FilterList({
       case "start": {
         const startValue = value as FilterValue["start"];
         if (startValue && filters.end) {
-          return formatDateRange(new Date(startValue), new Date(filters.end), {
-            includeTime: false,
-          });
+          const start = new Date(startValue);
+          const end = new Date(filters.end);
+          if (isSameYear(start, end)) {
+            return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
+          }
+          return `${format(start, "MMM d, yyyy")} - ${format(end, "MMM d, yyyy")}`;
         }
 
         return startValue && format(new Date(startValue), "MMM d, yyyy");

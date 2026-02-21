@@ -1,6 +1,6 @@
+import { and, eq, sql } from "drizzle-orm";
 import type { Database } from "../client";
 import { documentTags } from "../schema";
-import { and, eq, sql } from "drizzle-orm";
 
 export const getDocumentTags = async (db: Database, teamId: string) => {
   return db.query.documentTags.findMany({

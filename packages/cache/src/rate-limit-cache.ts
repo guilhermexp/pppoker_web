@@ -1,3 +1,4 @@
+import { logger } from "@midpoker/logger";
 import type { RedisClientType } from "redis";
 import { getSharedRedisClient } from "./shared-redis";
 
@@ -23,9 +24,9 @@ export class RateLimitCache {
    * @param limit - Maximum requests per window (default: 1000)
    */
   constructor(
-    prefix: string = "rate-limit",
+    prefix = "rate-limit",
     windowMs: number = 10 * 60 * 1000,
-    limit: number = 1000,
+    limit = 1000,
   ) {
     this.prefix = prefix;
     this.windowMs = windowMs;
@@ -81,10 +82,7 @@ export class RateLimitCache {
         remaining: this.limit - count,
       };
     } catch (error) {
-      console.error(
-        `Redis rate limit error for identifier "${identifier}":`,
-        error,
-      );
+      logger.error({ identifier, error }, "Redis rate limit error");
       // On Redis failure, allow request (fail open for availability)
       return {
         allowed: true,
@@ -123,10 +121,7 @@ export class RateLimitCache {
         remaining,
       };
     } catch (error) {
-      console.error(
-        `Redis rate limit status error for identifier "${identifier}":`,
-        error,
-      );
+      logger.error({ identifier, error }, "Redis rate limit status error");
       return {
         count: 0,
         resetAt: Date.now() + this.windowMs,
@@ -144,10 +139,7 @@ export class RateLimitCache {
       const redis = this.getRedisClient();
       await redis.del(this.getKey(identifier));
     } catch (error) {
-      console.error(
-        `Redis rate limit reset error for identifier "${identifier}":`,
-        error,
-      );
+      logger.error({ identifier, error }, "Redis rate limit reset error");
     }
   }
 

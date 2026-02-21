@@ -34,8 +34,8 @@ export const checkInvoiceStatus = schemaTask({
       return;
     }
 
-    // @ts-expect-error JSONB
-    const timezone = invoice.template?.timezone || "UTC";
+    const timezone =
+      (invoice.template as Record<string, unknown>)?.timezone || "UTC";
 
     // Find recent transactions matching invoice amount, currency, and team_id
     const { data: transactions } = await supabase

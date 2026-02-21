@@ -1,5 +1,5 @@
-import { useQueryStates } from "nuqs";
 import { createLoader, parseAsArrayOf, parseAsString } from "nuqs/server";
+import { createFilterParamsHook } from "./create-params-hook";
 
 export const documentFilterParamsSchema = {
   q: parseAsString,
@@ -8,15 +8,9 @@ export const documentFilterParamsSchema = {
   end: parseAsString,
 };
 
-export function useDocumentFilterParams() {
-  const [filter, setFilter] = useQueryStates(documentFilterParamsSchema);
-
-  return {
-    filter,
-    setFilter,
-    hasFilters: Object.values(filter).some((value) => value !== null),
-  };
-}
+export const useDocumentFilterParams = createFilterParamsHook(
+  documentFilterParamsSchema,
+);
 
 export const loadDocumentFilterParams = createLoader(
   documentFilterParamsSchema,

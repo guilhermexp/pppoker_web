@@ -1,5 +1,6 @@
 "use client";
 
+import type { WidgetStoreState } from "@/store/create-widget-store";
 import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
 import type { WidgetConfig } from "@midpoker/cache/widget-preferences-cache";
 import type { inferRouterOutputs } from "@trpc/server";
@@ -13,30 +14,11 @@ type RouterOutputs = inferRouterOutputs<AppRouter>;
 type WidgetPreferences = RouterOutputs["widgets"]["getWidgetPreferences"];
 type WidgetType = WidgetPreferences["primaryWidgets"][number];
 
-interface WidgetState {
-  // UI State
-  isCustomizing: boolean;
+// The general widget store has an extra `widgetConfigs` field on top of the base pattern.
+// We use the factory for the core logic and extend it with the extra field.
 
-  // Widget State
-  primaryWidgets: WidgetType[];
-  availableWidgets: WidgetType[];
+interface WidgetState extends WidgetStoreState<WidgetType> {
   widgetConfigs: Record<string, WidgetConfig>;
-
-  // Loading States
-  isSaving: boolean;
-
-  // Actions
-  setIsCustomizing: (isCustomizing: boolean) => void;
-  setWidgetPreferences: (preferences: WidgetPreferences) => void;
-
-  // Widget Management
-  reorderPrimaryWidgets: (newOrder: WidgetType[]) => void;
-  moveToAvailable: (widgetId: WidgetType) => void;
-  moveToPrimary: (widgetId: WidgetType, newPrimaryOrder: WidgetType[]) => void;
-  swapWithLastPrimary: (widgetId: WidgetType, insertAtIndex: number) => void;
-
-  // Data Actions
-  setSaving: (isSaving: boolean) => void;
 }
 
 // Store factory that accepts initial preferences
@@ -63,7 +45,12 @@ export const createWidgetStore = (initialPreferences?: WidgetPreferences) => {
             {
               primaryWidgets: preferences.primaryWidgets,
               availableWidgets: preferences.availableWidgets,
-              widgetConfigs: preferences.widgetConfigs || {},
+              // Preserve widgetConfigs if the preferences include them
+              ...(("widgetConfigs" in preferences &&
+                preferences.widgetConfigs && {
+                  widgetConfigs: preferences.widgetConfigs,
+                }) ||
+                {}),
             },
             false,
             "setWidgetPreferences",

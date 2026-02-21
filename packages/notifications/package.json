@@ -16,6 +16,7 @@
   "dependencies": {
     "@midpoker/db": "workspace:*",
     "@midpoker/email": "workspace:*",
+    "@midpoker/logger": "workspace:*",
     "@midpoker/encryption": "workspace:*",
     "@midpoker/inbox": "workspace:*",
     "@midpoker/utils": "workspace:*",

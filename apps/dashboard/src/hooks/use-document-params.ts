@@ -1,15 +1,8 @@
-import { useQueryStates } from "nuqs";
 import { parseAsString, parseAsStringLiteral } from "nuqs/server";
+import { createNestedParamsHook } from "./create-params-hook";
 
-export function useDocumentParams() {
-  const [params, setParams] = useQueryStates({
-    documentId: parseAsString,
-    filePath: parseAsString,
-    view: parseAsStringLiteral(["grid", "list"]).withDefault("grid"),
-  });
-
-  return {
-    params,
-    setParams,
-  };
-}
+export const useDocumentParams = createNestedParamsHook({
+  documentId: parseAsString,
+  filePath: parseAsString,
+  view: parseAsStringLiteral(["grid", "list"]).withDefault("grid"),
+});

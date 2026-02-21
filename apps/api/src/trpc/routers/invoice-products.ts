@@ -9,6 +9,7 @@ import {
 } from "@api/schemas/invoice";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 
 export const invoiceProductsRouter = createTRPCRouter({
@@ -66,9 +67,9 @@ export const invoiceProductsRouter = createTRPCRouter({
       const { data: products, error } = await query;
 
       if (error) {
-        console.log(
-          "[invoiceProducts.get] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoiceProducts.get Supabase REST error",
         );
         return [];
       }
@@ -114,9 +115,9 @@ export const invoiceProductsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[invoiceProducts.getById] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoiceProducts.getById Supabase REST error",
         );
         return null;
       }
@@ -163,9 +164,9 @@ export const invoiceProductsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[invoiceProducts.create] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoiceProducts.create Supabase REST error",
         );
         throw new TRPCError({
           code: error.code === "23505" ? "CONFLICT" : "INTERNAL_SERVER_ERROR",
@@ -214,9 +215,9 @@ export const invoiceProductsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[invoiceProducts.upsert] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoiceProducts.upsert Supabase REST error",
         );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -263,9 +264,9 @@ export const invoiceProductsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[invoiceProducts.updateProduct] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoiceProducts.updateProduct Supabase REST error",
         );
         throw new TRPCError({
           code: error.code === "23505" ? "CONFLICT" : "INTERNAL_SERVER_ERROR",
@@ -301,9 +302,9 @@ export const invoiceProductsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[invoiceProducts.delete] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoiceProducts.delete Supabase REST error",
         );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -340,9 +341,9 @@ export const invoiceProductsRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log(
-          "[invoiceProducts.incrementUsage] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "invoiceProducts.incrementUsage Supabase REST error",
         );
       }
 
@@ -395,9 +396,9 @@ export const invoiceProductsRouter = createTRPCRouter({
               .single();
 
             if (updateError) {
-              console.log(
-                "[invoiceProducts.saveLineItemAsProduct] Update error:",
-                updateError.message,
+              logger.error(
+                { error: updateError.message },
+                "invoiceProducts.saveLineItemAsProduct update error",
               );
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
@@ -447,9 +448,9 @@ export const invoiceProductsRouter = createTRPCRouter({
           .single();
 
         if (insertError) {
-          console.log(
-            "[invoiceProducts.saveLineItemAsProduct] Insert error:",
-            insertError.message,
+          logger.error(
+            { error: insertError.message },
+            "invoiceProducts.saveLineItemAsProduct insert error",
           );
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
@@ -474,9 +475,9 @@ export const invoiceProductsRouter = createTRPCRouter({
           shouldClearProductId: false,
         };
       } catch (error) {
-        console.error(
-          `[invoiceProducts.saveLineItemAsProduct] Failed to save "${trimmedName}":`,
-          error,
+        logger.error(
+          { error, productName: trimmedName },
+          "invoiceProducts.saveLineItemAsProduct failed to save",
         );
         throw error;
       }

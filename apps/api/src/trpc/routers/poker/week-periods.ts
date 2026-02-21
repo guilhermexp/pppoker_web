@@ -3,6 +3,7 @@ import {
   formatDateForDb,
   getCurrentWeekBoundaries,
 } from "@api/utils/week-utils";
+import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
 import {
   closeWeekSchema,
@@ -191,7 +192,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
         if (error.code === "PGRST116") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Week period not found",
+            message: "Periodo semanal nao encontrado",
           });
         }
         throw new TRPCError({
@@ -227,7 +228,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
         if (error) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Week period not found",
+            message: "Periodo semanal nao encontrado",
           });
         }
         weekPeriod = data;
@@ -283,11 +284,10 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
 
       const importIds = imports?.map((i) => i.id) ?? [];
 
-      console.log("[getCloseWeekData] Period:", { periodStart, periodEnd });
-      console.log(
-        "[getCloseWeekData] Found imports:",
-        importIds.length,
-        importIds,
+      logger.info({ periodStart, periodEnd }, "getCloseWeekData period");
+      logger.info(
+        { importCount: importIds.length, importIds },
+        "getCloseWeekData found imports",
       );
 
       // 1. Get sessions with players
@@ -339,14 +339,14 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           .order("started_at", { ascending: false });
 
         if (sessionsError) {
-          console.error(
-            "[getCloseWeekData] Error fetching sessions:",
-            sessionsError,
+          logger.error(
+            { error: sessionsError },
+            "getCloseWeekData error fetching sessions",
           );
         }
-        console.log(
-          "[getCloseWeekData] Sessions found:",
-          sessionsData?.length ?? 0,
+        logger.info(
+          { sessionsCount: sessionsData?.length ?? 0 },
+          "getCloseWeekData sessions found",
         );
 
         sessions = (sessionsData ?? []).map((s) => ({
@@ -416,14 +416,14 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           .in("import_id", importIds);
 
         if (summariesError) {
-          console.error(
-            "[getCloseWeekData] Error fetching player summaries:",
-            summariesError,
+          logger.error(
+            { error: summariesError },
+            "getCloseWeekData error fetching player summaries",
           );
         }
-        console.log(
-          "[getCloseWeekData] Summaries found:",
-          summariesData?.length ?? 0,
+        logger.info(
+          { summariesCount: summariesData?.length ?? 0 },
+          "getCloseWeekData summaries found",
         );
 
         // Get agent/super_agent info separately if needed
@@ -493,14 +493,14 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           .in("import_id", importIds);
 
         if (rakebacksError) {
-          console.error(
-            "[getCloseWeekData] Error fetching rakebacks:",
-            rakebacksError,
+          logger.error(
+            { error: rakebacksError },
+            "getCloseWeekData error fetching rakebacks",
           );
         }
-        console.log(
-          "[getCloseWeekData] Rakebacks found:",
-          rakebacksData?.length ?? 0,
+        logger.info(
+          { rakebacksCount: rakebacksData?.length ?? 0 },
+          "getCloseWeekData rakebacks found",
         );
 
         rakebacks = (rakebacksData ?? []).map((r) => ({
@@ -528,9 +528,9 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           .in("import_id", importIds);
 
         if (detailedError) {
-          console.error(
-            "[getCloseWeekData] Error fetching detailed for rake by agent:",
-            detailedError,
+          logger.error(
+            { error: detailedError },
+            "getCloseWeekData error fetching detailed for rake by agent",
           );
         }
 
@@ -566,9 +566,9 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           }
         }
 
-        console.log(
-          "[getCloseWeekData] Rake by agent/super_agent from spreadsheet:",
-          Object.keys(rakeByAgentFromSpreadsheet).length,
+        logger.info(
+          { rakeByAgentCount: Object.keys(rakeByAgentFromSpreadsheet).length },
+          "getCloseWeekData rake by agent/super_agent from spreadsheet",
           "entries",
         );
       }
@@ -623,25 +623,21 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           .in("type", ["agent", "super_agent"]);
 
         if (agentsError) {
-          console.error(
-            "[getCloseWeekData] Error fetching agents from app:",
-            agentsError,
+          logger.error(
+            { error: agentsError },
+            "getCloseWeekData error fetching agents from app",
           );
         }
-        console.log(
-          "[getCloseWeekData] Agents from app found:",
-          agentsData?.length ?? 0,
-          "from unique IDs:",
-          uniqueAgentPppokerIds.length,
-          "(agents from rakebacks:",
-          agentIdsFromRakebacks.length,
-          ", super_agents from rakebacks:",
-          superAgentIdsFromRakebacks.length,
-          ", agents from summaries:",
-          agentIdsFromSummaries.length,
-          ", super_agents from summaries:",
-          superAgentIdsFromSummaries.length,
-          ")",
+        logger.info(
+          {
+            agentsFromAppCount: agentsData?.length ?? 0,
+            uniqueIdsCount: uniqueAgentPppokerIds.length,
+            agentsFromRakebacksCount: agentIdsFromRakebacks.length,
+            superAgentsFromRakebacksCount: superAgentIdsFromRakebacks.length,
+            agentsFromSummariesCount: agentIdsFromSummaries.length,
+            superAgentsFromSummariesCount: superAgentIdsFromSummaries.length,
+          },
+          "getCloseWeekData agents from app found",
         );
 
         // Map agents with their spreadsheet percent and rake for comparison
@@ -801,7 +797,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
         if (error) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Week period not found",
+            message: "Periodo semanal nao encontrado",
           });
         }
         weekPeriod = data;
@@ -972,7 +968,7 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
           if (existingPeriod.status === "closed") {
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: "This week is already closed",
+              message: "Esta semana ja foi fechada",
             });
           }
           weekPeriodId = existingPeriod.id;
@@ -990,14 +986,14 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
       if (periodError || !weekPeriod) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Week period not found",
+          message: "Periodo semanal nao encontrado",
         });
       }
 
       if (weekPeriod.status === "closed") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "This week is already closed",
+          message: "Esta semana ja foi fechada",
         });
       }
 
@@ -1154,7 +1150,10 @@ export const pokerWeekPeriodsRouter = createTRPCRouter({
 
       if (commitError) {
         // Log but don't fail - imports can be committed manually if needed
-        console.error("Failed to commit imports:", commitError.message);
+        logger.error(
+          { error: commitError.message },
+          "Failed to commit imports",
+        );
       }
 
       return {

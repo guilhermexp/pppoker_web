@@ -53,7 +53,6 @@ export function DocumentDetails() {
             {data?.title ?? data?.name?.split("/").at(-1)}
           </h2>
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {/* @ts-expect-error - size is not typed (JSONB) */}
             {data?.metadata?.size && formatSize(data?.metadata?.size)}
           </span>
         </div>
@@ -65,7 +64,6 @@ export function DocumentDetails() {
         <div className="flex flex-col flex-grow min-h-0 relative h-full w-full items-center justify-center">
           <FileViewer
             url={`/api/proxy?filePath=vault/${data?.pathTokens?.join("/")}`}
-            // @ts-expect-error - mimetype is not typed (JSONB)
             mimeType={data?.metadata?.mimetype}
             maxWidth={565}
           />

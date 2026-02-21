@@ -1,5 +1,6 @@
 "use client";
 
+import { getWeekFromDateString } from "@/lib/poker/date-utils";
 import { parseSpreadsheetFileName } from "@/lib/poker/spreadsheet-types";
 import type { ImportValidationModalProps } from "@/lib/poker/types";
 import { Badge } from "@midpoker/ui/badge";
@@ -30,24 +31,6 @@ import {
   UserDetailsTab,
   ValidationTab,
 } from "./validation-tabs";
-
-// Helper to get week number from date string (dd/MM/yyyy format)
-function getWeekFromDateString(dateStr: string): number | null {
-  try {
-    // Try dd/MM/yyyy format first
-    let date = parse(dateStr, "dd/MM/yyyy", new Date(), { locale: ptBR });
-    if (Number.isNaN(date.getTime())) {
-      // Try yyyy-MM-dd format
-      date = parse(dateStr, "yyyy-MM-dd", new Date());
-    }
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-    return getWeek(date, { weekStartsOn: 0, firstWeekContainsDate: 1 });
-  } catch {
-    return null;
-  }
-}
 
 // Column counts per tab (from spreadsheet mapping)
 const TAB_COLUMNS: Record<string, { name: string; cols: number }> = {

@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@midpoker/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { format, subDays, subMonths, startOfMonth } from "date-fns";
+import { format, startOfMonth, subDays, subMonths } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 
 export function FastChipsMovementsTable() {
@@ -50,7 +50,6 @@ export function FastChipsMovementsTable() {
         return { startDate: subDays(now, 7).toISOString() };
       case "this_month":
         return { startDate: startOfMonth(now).toISOString() };
-      case "last_month":
       default:
         return { startDate: subMonths(now, 1).toISOString() };
     }

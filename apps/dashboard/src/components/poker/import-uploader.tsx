@@ -1,5 +1,7 @@
 "use client";
 
+import { normalizeDateTime } from "@/lib/poker/date-utils";
+import { parseSheetByPosition, toNumber } from "@/lib/poker/parsers";
 import type { ParsedImportData, ValidationResult } from "@/lib/poker/types";
 import { validateImportData } from "@/lib/poker/validation";
 import { useI18n } from "@/locales/client";
@@ -17,58 +19,53 @@ import { ImportsList } from "./imports-list";
 // Parser for PPPoker Club Member export
 function parseClubMemberSheet(data: any[]): any[] {
   return data
-    .filter((row) => row["PPPoker ID"] || row["pppoker_id"] || row["ID"])
+    .filter((row) => row["PPPoker ID"] || row.pppoker_id || row.ID)
     .map((row) => ({
-      ppPokerId: String(
-        row["PPPoker ID"] || row["pppoker_id"] || row["ID"] || "",
-      ),
-      nickname: row["Nickname"] || row["nickname"] || row["Name"] || "",
-      memoName: row["Memo Name"] || row["memo_name"] || row["Memo"] || null,
-      country: row["Country"] || row["country"] || null,
+      ppPokerId: String(row["PPPoker ID"] || row.pppoker_id || row.ID || ""),
+      nickname: row.Nickname || row.nickname || row.Name || "",
+      memoName: row["Memo Name"] || row.memo_name || row.Memo || null,
+      country: row.Country || row.country || null,
       agentNickname:
-        row["Agent Nickname"] || row["agent_nickname"] || row["Agent"] || null,
-      agentPpPokerId: row["Agent ID"] || row["agent_pppoker_id"] || null,
+        row["Agent Nickname"] || row.agent_nickname || row.Agent || null,
+      agentPpPokerId: row["Agent ID"] || row.agent_pppoker_id || null,
       superAgentNickname:
-        row["Super Agent Nickname"] || row["super_agent_nickname"] || null,
+        row["Super Agent Nickname"] || row.super_agent_nickname || null,
       superAgentPpPokerId:
-        row["Super Agent ID"] || row["super_agent_pppoker_id"] || null,
+        row["Super Agent ID"] || row.super_agent_pppoker_id || null,
       chipBalance: Number.parseFloat(
-        row["Chip Balance"] || row["chips"] || row["balance"] || 0,
+        row["Chip Balance"] || row.chips || row.balance || 0,
       ),
       agentCreditBalance: Number.parseFloat(
-        row["Agent Credit"] || row["agent_credit"] || 0,
+        row["Agent Credit"] || row.agent_credit || 0,
       ),
-      lastActiveAt: row["Last Active"] || row["last_active_at"] || null,
+      lastActiveAt: row["Last Active"] || row.last_active_at || null,
     }));
 }
 
 // Parser for Credit/Chip transaction export
 function parseTransactionSheet(data: any[]): any[] {
   return data
-    .filter((row) => row["Date"] || row["occurred_at"] || row["Timestamp"])
+    .filter((row) => row.Date || row.occurred_at || row.Timestamp)
     .map((row) => ({
-      occurredAt: row["Date"] || row["occurred_at"] || row["Timestamp"] || "",
-      clubId: row["Sender Club ID"] || row["sender_club_id"] || null,
-      senderClubId: row["Sender Club ID"] || row["sender_club_id"] || null,
-      playerId: row["Player ID"] || row["player_id"] || null,
-      senderPlayerId: row["Sender ID"] || row["sender_player_id"] || null,
-      senderNickname: row["Sender Nickname"] || row["sender_nickname"] || null,
-      senderMemoName: row["Sender Memo"] || row["sender_memo"] || null,
+      occurredAt: row.Date || row.occurred_at || row.Timestamp || "",
+      clubId: row["Sender Club ID"] || row.sender_club_id || null,
+      senderClubId: row["Sender Club ID"] || row.sender_club_id || null,
+      playerId: row["Player ID"] || row.player_id || null,
+      senderPlayerId: row["Sender ID"] || row.sender_player_id || null,
+      senderNickname: row["Sender Nickname"] || row.sender_nickname || null,
+      senderMemoName: row["Sender Memo"] || row.sender_memo || null,
       recipientNickname:
-        row["Recipient Nickname"] || row["recipient_nickname"] || null,
-      recipientMemoName: row["Recipient Memo"] || row["recipient_memo"] || null,
-      recipientPlayerId:
-        row["Recipient ID"] || row["recipient_player_id"] || null,
-      creditSent: Number.parseFloat(
-        row["Credit Sent"] || row["credit_sent"] || 0,
-      ),
+        row["Recipient Nickname"] || row.recipient_nickname || null,
+      recipientMemoName: row["Recipient Memo"] || row.recipient_memo || null,
+      recipientPlayerId: row["Recipient ID"] || row.recipient_player_id || null,
+      creditSent: Number.parseFloat(row["Credit Sent"] || row.credit_sent || 0),
       creditRedeemed: Number.parseFloat(
-        row["Credit Redeemed"] || row["credit_redeemed"] || 0,
+        row["Credit Redeemed"] || row.credit_redeemed || 0,
       ),
       creditLeftClub: Number.parseFloat(
-        row["Credit Left Club"] || row["credit_left_club"] || 0,
+        row["Credit Left Club"] || row.credit_left_club || 0,
       ),
-      chipsSent: Number.parseFloat(row["Chips Sent"] || row["chips_sent"] || 0),
+      chipsSent: Number.parseFloat(row["Chips Sent"] || row.chips_sent || 0),
       classificationPpsr: Number.parseFloat(row["Classificação PPSR"] || 0),
       classificationRing: Number.parseFloat(
         row["Classificação Ring Game"] || 0,
@@ -78,19 +75,17 @@ function parseTransactionSheet(data: any[]): any[] {
       ),
       classificationMtt: Number.parseFloat(row["Classificação MTT"] || 0),
       chipsRedeemed: Number.parseFloat(
-        row["Chips Redeemed"] || row["chips_redeemed"] || 0,
+        row["Chips Redeemed"] || row.chips_redeemed || 0,
       ),
       chipsLeftClub: Number.parseFloat(
-        row["Chips Left Club"] || row["chips_left_club"] || 0,
+        row["Chips Left Club"] || row.chips_left_club || 0,
       ),
-      ticketSent: Number.parseFloat(
-        row["Ticket Sent"] || row["ticket_sent"] || 0,
-      ),
+      ticketSent: Number.parseFloat(row["Ticket Sent"] || row.ticket_sent || 0),
       ticketRedeemed: Number.parseFloat(
-        row["Ticket Redeemed"] || row["ticket_redeemed"] || 0,
+        row["Ticket Redeemed"] || row.ticket_redeemed || 0,
       ),
       ticketExpired: Number.parseFloat(
-        row["Ticket Expired"] || row["ticket_expired"] || 0,
+        row["Ticket Expired"] || row.ticket_expired || 0,
       ),
     }));
 }
@@ -98,46 +93,44 @@ function parseTransactionSheet(data: any[]): any[] {
 // Parser for Session/Game Result export
 function parseSessionSheet(data: any[]): any[] {
   return data
-    .filter((row) => row["Session ID"] || row["Game ID"] || row["external_id"])
+    .filter((row) => row["Session ID"] || row["Game ID"] || row.external_id)
     .map((row) => ({
-      externalId:
-        row["Session ID"] || row["Game ID"] || row["external_id"] || "",
-      tableName: row["Table Name"] || row["table_name"] || null,
-      sessionType: row["Game Type"] || row["session_type"] || "ring",
-      gameVariant: row["Variant"] || row["game_variant"] || "nlh",
-      startedAt: row["Start Time"] || row["started_at"] || null,
-      endedAt: row["End Time"] || row["ended_at"] || null,
-      blinds: row["Blinds"] || row["blinds"] || null,
+      externalId: row["Session ID"] || row["Game ID"] || row.external_id || "",
+      tableName: row["Table Name"] || row.table_name || null,
+      sessionType: row["Game Type"] || row.session_type || "ring",
+      gameVariant: row.Variant || row.game_variant || "nlh",
+      startedAt: row["Start Time"] || row.started_at || null,
+      endedAt: row["End Time"] || row.ended_at || null,
+      blinds: row.Blinds || row.blinds || null,
       buyInAmount:
-        Number.parseFloat(row["Buy-In"] || row["buy_in_amount"] || 0) || null,
+        Number.parseFloat(row["Buy-In"] || row.buy_in_amount || 0) || null,
       guaranteedPrize:
-        Number.parseFloat(row["GTD"] || row["guaranteed_prize"] || 0) || null,
-      createdByNickname:
-        row["Created By"] || row["created_by_nickname"] || null,
+        Number.parseFloat(row.GTD || row.guaranteed_prize || 0) || null,
+      createdByNickname: row["Created By"] || row.created_by_nickname || null,
       createdByPpPokerId:
-        row["Created By ID"] || row["created_by_pppoker_id"] || null,
+        row["Created By ID"] || row.created_by_pppoker_id || null,
     }));
 }
 
 // Parser for Summary/Results export
 function parseSummarySheet(data: any[]): any[] {
   return data
-    .filter((row) => row["PPPoker ID"] || row["pppoker_id"] || row["Player ID"])
+    .filter((row) => row["PPPoker ID"] || row.pppoker_id || row["Player ID"])
     .map((row) => ({
       ppPokerId: String(
-        row["PPPoker ID"] || row["pppoker_id"] || row["Player ID"] || "",
+        row["PPPoker ID"] || row.pppoker_id || row["Player ID"] || "",
       ),
-      country: row["Country"] || row["country"] || null,
-      nickname: row["Nickname"] || row["nickname"] || row["Player"] || "",
-      memoName: row["Memo Name"] || row["memo_name"] || null,
-      agentNickname: row["Agent"] || row["agent_nickname"] || null,
-      agentPpPokerId: row["Agent ID"] || row["agent_pppoker_id"] || null,
+      country: row.Country || row.country || null,
+      nickname: row.Nickname || row.nickname || row.Player || "",
+      memoName: row["Memo Name"] || row.memo_name || null,
+      agentNickname: row.Agent || row.agent_nickname || null,
+      agentPpPokerId: row["Agent ID"] || row.agent_pppoker_id || null,
       superAgentNickname:
-        row["Super Agent"] || row["super_agent_nickname"] || null,
+        row["Super Agent"] || row.super_agent_nickname || null,
       superAgentPpPokerId:
-        row["Super Agent ID"] || row["super_agent_pppoker_id"] || null,
+        row["Super Agent ID"] || row.super_agent_pppoker_id || null,
       playerWinningsTotal: toNumber(
-        row["Total Winnings"] || row["winnings_total"] || 0,
+        row["Total Winnings"] || row.winnings_total || 0,
       ),
       classificationPpsr: toNumber(row["Classificação PPSR"] || 0),
       classificationRing: toNumber(row["Classificação Ring Game"] || 0),
@@ -145,24 +138,11 @@ function parseSummarySheet(data: any[]): any[] {
         row["Classificação de RG Personalizado"] || 0,
       ),
       classificationMtt: toNumber(row["Classificação MTT"] || 0),
-      generalTotal: toNumber(row["Total"] || row["Geral"] || 0),
+      generalTotal: toNumber(row.Total || row.Geral || 0),
     }));
 }
 
-function normalizeDateTime(value: string | null): string | null {
-  if (!value || typeof value !== "string") return value;
-  const match = value.match(/(\d{4})[/-](\d{2})[/-](\d{2})\s+(\d{2}:\d{2})/);
-  if (!match) return value.trim();
-  return `${match[1]}-${match[2]}-${match[3]}T${match[4]}:00`;
-}
-
-function toNumber(value: string | number | null | undefined): number {
-  if (value === null || value === undefined) return 0;
-  if (typeof value === "number") return value;
-  const cleaned = value.toString().replace(",", ".").trim();
-  const parsed = Number.parseFloat(cleaned);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
+// toNumber, normalizeDateTime imported from @/lib/poker/parsers and @/lib/poker/date-utils
 
 function parseBuyInValue(value: string | number | null): number | null {
   if (value === null || value === undefined) return null;
@@ -683,7 +663,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): {
   );
 
   // Log what raw types became "other" so we can add proper mappings
-  if (variantCounts["OTHER"] > 0) {
+  if (variantCounts.OTHER > 0) {
     // Re-scan to find raw types - look at first 5 unique "other" examples
     const otherExamples: string[] = [];
     for (const session of sessions) {
@@ -770,191 +750,8 @@ const GERAL_COLUMNS = {
   ticketDeliveredBuyIn: 47, // AV - Buy-in de ticket
 };
 
-// Converte letra de coluna (A, B, AA, AB) para índice (0, 1, 26, 27)
-function columnLetterToIndex(col: string): number {
-  let index = 0;
-  const upper = col.toUpperCase();
-  for (let i = 0; i < upper.length; i++) {
-    index = index * 26 + (upper.charCodeAt(i) - 64);
-  }
-  return index - 1; // 0-indexed
-}
-
-// Obtém o valor de uma célula, calculando fórmulas recursivamente se necessário
-function getCellValue(
-  sheet: XLSX.Sheet,
-  cellAddress: string,
-  visited: Set<string> = new Set(),
-): number {
-  // Evitar loops infinitos
-  if (visited.has(cellAddress)) return 0;
-  visited.add(cellAddress);
-
-  const cell = sheet[cellAddress];
-  if (!cell) return 0;
-
-  // Se tem valor calculado, usar
-  if (cell.v !== undefined && cell.v !== null && typeof cell.v === "number") {
-    return cell.v;
-  }
-
-  // Se tem valor string que parece número
-  if (cell.v !== undefined && cell.v !== null && typeof cell.v === "string") {
-    const parsed = Number.parseFloat(cell.v.replace(/,/g, "."));
-    if (!isNaN(parsed)) return parsed;
-  }
-
-  // Se tem texto formatado que parece número
-  if (cell.w !== undefined && cell.w !== null) {
-    const parsed = Number.parseFloat(String(cell.w).replace(/,/g, "."));
-    if (!isNaN(parsed)) return parsed;
-  }
-
-  // Se tem fórmula, tentar calcular
-  if (cell.f) {
-    return calculateFormula(sheet, cell.f, visited);
-  }
-
-  return 0;
-}
-
-// Calcula fórmulas Excel (SUM, etc) recursivamente
-function calculateFormula(
-  sheet: XLSX.Sheet,
-  formula: string,
-  visited: Set<string> = new Set(),
-): number {
-  // Remove espaços
-  const cleanFormula = formula.trim();
-
-  // SUM(range) - ex: SUM(K5:O5), SUM(A1:Z100)
-  const sumMatch = cleanFormula.match(/^SUM\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$/i);
-  if (sumMatch) {
-    const [, startCol, startRowStr, endCol, endRowStr] = sumMatch;
-    const startColIdx = columnLetterToIndex(startCol);
-    const endColIdx = columnLetterToIndex(endCol);
-    const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
-    const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
-
-    let sum = 0;
-    for (let row = startRowIdx; row <= endRowIdx; row++) {
-      for (let col = startColIdx; col <= endColIdx; col++) {
-        const addr = XLSX.utils.encode_cell({ r: row, c: col });
-        sum += getCellValue(sheet, addr, new Set(visited));
-      }
-    }
-    return sum;
-  }
-
-  // SUM com múltiplos ranges - ex: SUM(A1:B2,C3:D4)
-  const multiSumMatch = cleanFormula.match(/^SUM\((.+)\)$/i);
-  if (multiSumMatch) {
-    const ranges = multiSumMatch[1].split(",");
-    let sum = 0;
-    for (const range of ranges) {
-      const trimmedRange = range.trim();
-      // Range simples (A1:B2)
-      const rangeMatch = trimmedRange.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/i);
-      if (rangeMatch) {
-        const [, startCol, startRowStr, endCol, endRowStr] = rangeMatch;
-        const startColIdx = columnLetterToIndex(startCol);
-        const endColIdx = columnLetterToIndex(endCol);
-        const startRowIdx = Number.parseInt(startRowStr, 10) - 1;
-        const endRowIdx = Number.parseInt(endRowStr, 10) - 1;
-
-        for (let row = startRowIdx; row <= endRowIdx; row++) {
-          for (let col = startColIdx; col <= endColIdx; col++) {
-            const addr = XLSX.utils.encode_cell({ r: row, c: col });
-            sum += getCellValue(sheet, addr, new Set(visited));
-          }
-        }
-      }
-      // Célula única (A1)
-      const cellMatch = trimmedRange.match(/^([A-Z]+)(\d+)$/i);
-      if (cellMatch) {
-        const [, col, rowStr] = cellMatch;
-        const colIdx = columnLetterToIndex(col);
-        const rowIdx = Number.parseInt(rowStr, 10) - 1;
-        const addr = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
-        sum += getCellValue(sheet, addr, new Set(visited));
-      }
-    }
-    return sum;
-  }
-
-  // Referência a célula única - ex: =A1
-  const cellRefMatch = cleanFormula.match(/^=?([A-Z]+)(\d+)$/i);
-  if (cellRefMatch) {
-    const [, col, rowStr] = cellRefMatch;
-    const colIdx = columnLetterToIndex(col);
-    const rowIdx = Number.parseInt(rowStr, 10) - 1;
-    const addr = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
-    return getCellValue(sheet, addr, visited);
-  }
-
-  return 0;
-}
-
-// Parse PPPoker Excel sheet by column position (for sheets with merged header rows)
-function parseSheetByPosition(
-  sheet: XLSX.Sheet,
-  columnMap: Record<string, number>,
-  headerRows = 4,
-  rowFilter?: (rowData: Record<string, any>) => boolean,
-): any[] {
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
-  const result: any[] = [];
-
-  // Start from row after headers (headerRows is 0-indexed start, so +1)
-  for (let row = headerRows; row <= range.e.r; row++) {
-    const rowData: Record<string, any> = {};
-    let hasValidId = false;
-
-    for (const [field, colIdx] of Object.entries(columnMap)) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
-      const cell = sheet[cellAddress];
-
-      // Para células com fórmulas, cell.v pode estar vazio
-      // Usar getCellValue que calcula fórmulas recursivamente
-      let value = null;
-      if (cell) {
-        // Se tem valor calculado direto, usar
-        if (cell.v !== undefined && cell.v !== null) {
-          value = cell.v;
-        } else if (cell.w !== undefined && cell.w !== null && cell.w !== "") {
-          // cell.w é string formatada, tentar converter para número
-          const trimmed = String(cell.w).trim().replace(/,/g, ".");
-          const parsed = Number.parseFloat(trimmed);
-          value = !isNaN(parsed) ? parsed : cell.w;
-        } else if (cell.f) {
-          // Célula tem fórmula mas sem valor - calcular recursivamente
-          value = calculateFormula(sheet, cell.f, new Set());
-        }
-      }
-
-      // Clean up value
-      if (value === "None" || value === "none") value = null;
-      if (typeof value === "string") value = value.trim();
-
-      rowData[field] = value;
-
-      // Check if this row has a valid ID
-      if (field === "ppPokerId" && value && !isNaN(Number(value))) {
-        hasValidId = true;
-      }
-    }
-
-    if (rowFilter) {
-      if (rowFilter(rowData)) {
-        result.push(rowData);
-      }
-    } else if (hasValidId) {
-      result.push(rowData);
-    }
-  }
-
-  return result;
-}
+// columnLetterToIndex, getCellValue, calculateFormula, parseSheetByPosition
+// imported from @/lib/poker/parsers
 
 // Parser for PPPoker "Geral" (General) sheet - Player summary (48 colunas A-AV)
 function parseGeralSheet(data: any[], sheet?: XLSX.Sheet): any[] {
@@ -1032,20 +829,20 @@ function parseGeralSheet(data: any[], sheet?: XLSX.Sheet): any[] {
   // Fallback to header-based parsing for CSV or simple Excel
   return data
     .filter((row) => {
-      const id = row["ID do jogador"] || row["Player ID"] || row["ID"];
-      return id && !isNaN(Number(id));
+      const id = row["ID do jogador"] || row["Player ID"] || row.ID;
+      return id && !Number.isNaN(Number(id));
     })
     .map((row) => ({
       // Identificação do Jogador (A-I)
       ppPokerId: String(
-        row["ID do jogador"] || row["Player ID"] || row["ID"] || "",
+        row["ID do jogador"] || row["Player ID"] || row.ID || "",
       ),
-      country: row["País/região"] || row["Country"] || null,
-      nickname: row["Apelido"] || row["Nickname"] || "",
+      country: row["País/região"] || row.Country || null,
+      nickname: row.Apelido || row.Nickname || "",
       memoName: row["Nome de memorando"] || row["Memo Name"] || null,
-      agentNickname: row["Agente"] || row["Agent"] || null,
+      agentNickname: row.Agente || row.Agent || null,
       agentPpPokerId: row["ID do agente"] || row["Agent ID"] || null,
-      superAgentNickname: row["Superagente"] || row["Super Agent"] || null,
+      superAgentNickname: row.Superagente || row["Super Agent"] || null,
       superAgentPpPokerId:
         row["ID do superagente"] || row["Super Agent ID"] || null,
 
@@ -1063,15 +860,15 @@ function parseGeralSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       classificationMtt: toNumber(row["Classificação MTT"] || 0),
 
       // Ganhos do Jogador (O-X)
-      generalTotal: toNumber(row["Geral (Total)"] || row["Geral"] || 0),
+      generalTotal: toNumber(row["Geral (Total)"] || row.Geral || 0),
       ringGamesTotal: toNumber(row["Ring Games"] || 0),
       mttSitNGoTotal: toNumber(row["MTT, SitNGo"] || 0),
-      spinUpTotal: toNumber(row["SPINUP"] || 0),
+      spinUpTotal: toNumber(row.SPINUP || 0),
       caribbeanTotal: toNumber(row["Caribbean+ Poker"] || 0),
       colorGameTotal: toNumber(row["COLOR GAME"] || 0),
-      crashTotal: toNumber(row["CRASH"] || 0),
+      crashTotal: toNumber(row.CRASH || 0),
       luckyDrawTotal: toNumber(row["LUCKY DRAW"] || 0),
-      jackpotTotal: toNumber(row["Jackpot"] || 0),
+      jackpotTotal: toNumber(row.Jackpot || 0),
       evSplitTotal: toNumber(row["Dividir EV"] || 0),
 
       // Tickets (Y-AA)
@@ -1080,8 +877,8 @@ function parseGeralSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       customPrizeValue: toNumber(row["Valor do prêmio personalizado"] || 0),
 
       // Taxas (AB-AG)
-      feeGeneral: toNumber(row["Geral"] || 0),
-      fee: toNumber(row["Taxa"] || 0),
+      feeGeneral: toNumber(row.Geral || 0),
+      fee: toNumber(row.Taxa || 0),
       feePpst: toNumber(row["Taxa (jogos PPST)"] || 0),
       feeNonPpst: toNumber(row["Taxa (jogos não PPST)"] || 0),
       feePpsr: toNumber(row["Taxa (jogos PPSR)"] || 0),
@@ -1515,17 +1312,17 @@ function parseUserDetailsSheet(data: any[], sheet?: XLSX.Sheet): any[] {
   // Fallback to header-based parsing
   return data
     .filter((row) => {
-      const id = row["ID do jogador"] || row["Player ID"] || row["ID"];
-      return id && !isNaN(Number(id));
+      const id = row["ID do jogador"] || row["Player ID"] || row.ID;
+      return id && !Number.isNaN(Number(id));
     })
     .map((row) => ({
       ppPokerId: String(
-        row["ID do jogador"] || row["Player ID"] || row["ID"] || "",
+        row["ID do jogador"] || row["Player ID"] || row.ID || "",
       ),
-      nickname: row["Apelido"] || row["Nickname"] || "",
+      nickname: row.Apelido || row.Nickname || "",
       memoName: row["Nome de memorando"] || row["Memo Name"] || null,
-      country: row["País/região"] || row["Country"] || null,
-      agentNickname: row["Agente"] || row["Agent"] || null,
+      country: row["País/região"] || row.Country || null,
+      agentNickname: row.Agente || row.Agent || null,
       agentPpPokerId: row["ID do agente"] || row["Agent ID"] || null,
       chipBalance: Number.parseFloat(
         row["Saldo de fichas"] || row["Chip Balance"] || 0,
@@ -1601,13 +1398,13 @@ function parseTransacoesSheet(data: any[], sheet?: XLSX.Sheet): any[] {
   }
 
   return data
-    .filter((row) => row["Tempo"] || row["Data"] || row["Date"])
+    .filter((row) => row.Tempo || row.Data || row.Date)
     .map((row) => ({
-      occurredAt: row["Tempo"] || row["Data"] || row["Date"] || "",
+      occurredAt: row.Tempo || row.Data || row.Date || "",
       clubId: row["ID de clube"] || row["Club ID"] || null,
       senderClubId: row["ID de clube"] || row["Club ID"] || null,
       playerId: row["ID do jogador"] || row["Player ID"] || null,
-      senderNickname: row["Apelido"] || row["Sender Nickname"] || null,
+      senderNickname: row.Apelido || row["Sender Nickname"] || null,
       senderMemoName: row["Nome de memorando"] || row["Sender Memo"] || null,
       senderPlayerId:
         row["ID do jogador (remetente)"] || row["Sender ID"] || null,
@@ -1618,8 +1415,8 @@ function parseTransacoesSheet(data: any[], sheet?: XLSX.Sheet): any[] {
         row["Recipient Memo"] ||
         null,
       recipientPlayerId: row["ID do jogador"] || row["Player ID"] || null,
-      creditSent: toNumber(row["Enviado"] || row["Credit Sent"]),
-      creditRedeemed: toNumber(row["Resgatado"] || row["Credit Redeemed"]),
+      creditSent: toNumber(row.Enviado || row["Credit Sent"]),
+      creditRedeemed: toNumber(row.Resgatado || row["Credit Redeemed"]),
       creditLeftClub: toNumber(row["Saiu do clube"] || row["Left Club"]),
       chipsSent: toNumber(row["Fichas enviadas"] || row["Chips Sent"]),
       classificationPpsr: toNumber(row["Classificação PPSR"] || 0),
@@ -1683,7 +1480,10 @@ function parseRakebackSheet(data: any[], sheet?: XLSX.Sheet): any[] {
       Boolean(row.agentPpPokerId),
     );
     return rawData
-      .filter((row) => row.agentPpPokerId && !isNaN(Number(row.agentPpPokerId)))
+      .filter(
+        (row) =>
+          row.agentPpPokerId && !Number.isNaN(Number(row.agentPpPokerId)),
+      )
       .map((row) => ({
         agentPpPokerId: String(row.agentPpPokerId || ""),
         agentNickname: row.agentNickname || "",
@@ -1700,12 +1500,12 @@ function parseRakebackSheet(data: any[], sheet?: XLSX.Sheet): any[] {
   return data
     .filter((row) => {
       const id = row["ID do agente"] || row["Agent ID"];
-      return id && !isNaN(Number(id));
+      return id && !Number.isNaN(Number(id));
     })
     .map((row) => ({
       agentPpPokerId: String(row["ID do agente"] || row["Agent ID"] || ""),
-      agentNickname: row["Apelido"] || row["Agent Nickname"] || "",
-      country: row["País/região"] || row["Country"] || null,
+      agentNickname: row.Apelido || row["Agent Nickname"] || "",
+      country: row["País/região"] || row.Country || null,
       memoName: row["Nome de memorando"] || row["Memo Name"] || null,
       superAgentPpPokerId:
         row["ID do superagente"] || row["Super Agent ID"] || null,
@@ -2092,11 +1892,10 @@ export function ImportUploader() {
 
           update(id, { title: "Extraindo período...", progress: 40 });
           // Extract period from Geral sheet header if available
-          const geralSheet =
-            workbook.Sheets["Geral"] || workbook.Sheets["General"];
+          const geralSheet = workbook.Sheets.Geral || workbook.Sheets.General;
           if (geralSheet) {
-            const periodCell = geralSheet["A3"];
-            if (periodCell && periodCell.v) {
+            const periodCell = geralSheet.A3;
+            if (periodCell?.v) {
               const periodMatch = periodCell.v.match(
                 /(\d{4}\/\d{2}\/\d{2})\s*-\s*(\d{4}\/\d{2}\/\d{2})/,
               );

@@ -6,6 +6,7 @@ import {
 } from "@api/schemas/bank-accounts";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 import { nanoid } from "nanoid";
 
 export const bankAccountsRouter = createTRPCRouter({
@@ -49,7 +50,10 @@ export const bankAccountsRouter = createTRPCRouter({
       const { data: accounts, error } = await query;
 
       if (error) {
-        console.log("[bankAccounts.get] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "bankAccounts.get Supabase REST error",
+        );
         return [];
       }
 
@@ -86,9 +90,9 @@ export const bankAccountsRouter = createTRPCRouter({
       .eq("enabled", true);
 
     if (error) {
-      console.log(
-        "[bankAccounts.currencies] Supabase REST error:",
-        error.message,
+      logger.error(
+        { error: error.message },
+        "bankAccounts.currencies Supabase REST error",
       );
       return [];
     }
@@ -111,9 +115,9 @@ export const bankAccountsRouter = createTRPCRouter({
       .eq("enabled", true);
 
     if (error) {
-      console.log(
-        "[bankAccounts.balances] Supabase REST error:",
-        error.message,
+      logger.error(
+        { error: error.message },
+        "bankAccounts.balances Supabase REST error",
       );
       return [];
     }
@@ -141,9 +145,9 @@ export const bankAccountsRouter = createTRPCRouter({
         .eq("team_id", teamId);
 
       if (error) {
-        console.log(
-          "[bankAccounts.delete] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "bankAccounts.delete Supabase REST error",
         );
         throw new Error(`Failed to delete bank account: ${error.message}`);
       }
@@ -172,9 +176,9 @@ export const bankAccountsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[bankAccounts.update] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "bankAccounts.update Supabase REST error",
         );
         throw new Error(`Failed to update bank account: ${error.message}`);
       }
@@ -210,9 +214,9 @@ export const bankAccountsRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log(
-          "[bankAccounts.create] Supabase REST error:",
-          error.message,
+        logger.error(
+          { error: error.message },
+          "bankAccounts.create Supabase REST error",
         );
         throw new Error(`Failed to create bank account: ${error.message}`);
       }

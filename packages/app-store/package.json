@@ -13,6 +13,7 @@
     "@slack/bolt": "^4.6.0",
     "@slack/oauth": "^3.0.4",
     "@slack/web-api": "^7.12.0",
+    "@midpoker/logger": "workspace:*",
     "@midpoker/supabase": "workspace:*",
     "zod": "^4.1.12"
   },

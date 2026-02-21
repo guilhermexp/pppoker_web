@@ -1,3 +1,5 @@
+import { logger } from "@midpoker/logger";
+
 /**
  * Retry wrapper for calls with exponential backoff
  * Only retries on timeout/network errors, not on other errors
@@ -31,9 +33,14 @@ export async function retryCall<T>(
 
       // Exponential backoff with jitter
       const delay = baseDelay * 2 ** attempt + Math.random() * 1000;
-      console.log(
-        `AI call failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delay)}ms:`,
-        errorMessage,
+      logger.info(
+        {
+          attempt: attempt + 1,
+          maxAttempts: maxRetries + 1,
+          delayMs: Math.round(delay),
+          error: errorMessage,
+        },
+        "AI call failed, retrying",
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     }

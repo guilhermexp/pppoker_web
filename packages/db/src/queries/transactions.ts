@@ -1,18 +1,4 @@
-import type { Database } from "../client";
-import {
-  bankAccounts,
-  bankConnections,
-  inbox,
-  tags,
-  transactionAttachments,
-  transactionCategories,
-  transactionEmbeddings,
-  type transactionFrequencyEnum,
-  transactionMatchSuggestions,
-  transactionTags,
-  transactions,
-  users,
-} from "../schema";
+import { buildJsonAggField } from "@midpoker/db/utils/json-agg";
 import { buildSearchQuery } from "@midpoker/db/utils/search-query";
 import { logger } from "@midpoker/logger";
 import { resolveTaxValues } from "@midpoker/utils/tax";
@@ -34,6 +20,21 @@ import {
 } from "drizzle-orm";
 import type { SQL } from "drizzle-orm/sql/sql";
 import { nanoid } from "nanoid";
+import type { Database } from "../client";
+import {
+  bankAccounts,
+  bankConnections,
+  inbox,
+  tags,
+  transactionAttachments,
+  transactionCategories,
+  transactionEmbeddings,
+  type transactionFrequencyEnum,
+  transactionMatchSuggestions,
+  transactionTags,
+  transactions,
+  users,
+} from "../schema";
 import { createActivity } from "./activities";
 import { type Attachment, createAttachments } from "./transaction-attachments";
 
@@ -291,7 +292,7 @@ export async function getTransactions(
           type: string;
           size: number;
         }>
-      >`COALESCE(json_agg(DISTINCT jsonb_build_object('id', ${transactionAttachments.id}, 'filename', ${transactionAttachments.name}, 'path', ${transactionAttachments.path}, 'type', ${transactionAttachments.type}, 'size', ${transactionAttachments.size})) FILTER (WHERE ${transactionAttachments.id} IS NOT NULL), '[]'::json)`.as(
+      >`${buildJsonAggField({ id: transactionAttachments.id, filename: transactionAttachments.name, path: transactionAttachments.path, type: transactionAttachments.type, size: transactionAttachments.size }, transactionAttachments.id)}`.as(
         "attachments",
       ),
       assigned: {
@@ -319,7 +320,7 @@ export async function getTransactions(
       },
       tags: sql<
         Array<{ id: string; name: string | null }>
-      >`COALESCE(json_agg(DISTINCT jsonb_build_object('id', ${tags.id}, 'name', ${tags.name})) FILTER (WHERE ${tags.id} IS NOT NULL), '[]'::json)`.as(
+      >`${buildJsonAggField({ id: tags.id, name: tags.name }, tags.id)}`.as(
         "tags",
       ),
     })
@@ -570,7 +571,7 @@ export async function getTransactionById(
       },
       tags: sql<
         Array<{ id: string; name: string | null }>
-      >`COALESCE(json_agg(DISTINCT jsonb_build_object('id', ${tags.id}, 'name', ${tags.name})) FILTER (WHERE ${tags.id} IS NOT NULL), '[]'::json)`.as(
+      >`${buildJsonAggField({ id: tags.id, name: tags.name }, tags.id)}`.as(
         "tags",
       ),
       attachments: sql<
@@ -581,7 +582,7 @@ export async function getTransactionById(
           type: string;
           size: number;
         }>
-      >`COALESCE(json_agg(DISTINCT jsonb_build_object('id', ${transactionAttachments.id}, 'filename', ${transactionAttachments.name}, 'path', ${transactionAttachments.path}, 'type', ${transactionAttachments.type}, 'size', ${transactionAttachments.size})) FILTER (WHERE ${transactionAttachments.id} IS NOT NULL), '[]'::json)`.as(
+      >`${buildJsonAggField({ id: transactionAttachments.id, filename: transactionAttachments.name, path: transactionAttachments.path, type: transactionAttachments.type, size: transactionAttachments.size }, transactionAttachments.id)}`.as(
         "attachments",
       ),
     })

@@ -1,3 +1,7 @@
+import { buildSearchQuery } from "@midpoker/db/utils/search-query";
+import { logger } from "@midpoker/logger";
+import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm/sql/sql";
 import type { Database } from "../client";
 import {
   inbox,
@@ -8,10 +12,6 @@ import {
   transactionMatchSuggestions,
   transactions,
 } from "../schema";
-import { buildSearchQuery } from "@midpoker/db/utils/search-query";
-import { logger } from "@midpoker/logger";
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
-import type { SQL } from "drizzle-orm/sql/sql";
 
 // Scoring functions for suggestion ranking
 function calculateAmountScore(

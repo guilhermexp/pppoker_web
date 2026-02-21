@@ -1,3 +1,4 @@
+import { logger } from "@midpoker/logger";
 import { type RedisClientType, createClient } from "redis";
 
 let sharedRedisClient: RedisClientType | null = null;
@@ -32,13 +33,13 @@ export function getSharedRedisClient(): RedisClientType {
 
   // Event listeners
   sharedRedisClient.on("error", (err) => {
-    console.error("[Shared Redis] Error:", err);
+    logger.error({ error: err }, "Shared Redis error");
   });
 
   // Start connection in background (don't await)
   // The client will auto-connect when methods are called
   sharedRedisClient.connect().catch((err) => {
-    console.error("[Shared Redis] Connection error:", err);
+    logger.error({ error: err }, "Shared Redis connection error");
   });
 
   return sharedRedisClient;

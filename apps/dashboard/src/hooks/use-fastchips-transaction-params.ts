@@ -1,13 +1,6 @@
-import { useQueryStates } from "nuqs";
 import { parseAsString } from "nuqs/server";
+import { createParamsHook } from "./create-params-hook";
 
-export function useFastchipsTransactionParams() {
-  const [params, setParams] = useQueryStates({
-    fastchipsTransactionId: parseAsString,
-  });
-
-  return {
-    ...params,
-    setParams,
-  };
-}
+export const useFastchipsTransactionParams = createParamsHook({
+  fastchipsTransactionId: parseAsString,
+});

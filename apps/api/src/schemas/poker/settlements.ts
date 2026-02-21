@@ -63,6 +63,14 @@ export const deletePokerSettlementSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const closeWeekSettlementSchema = z
+  .object({
+    periodStart: z.string().optional(),
+    periodEnd: z.string().optional(),
+    note: z.string().optional(),
+  })
+  .optional();
+
 // =============================================================================
 // TYPE EXPORTS
 // =============================================================================

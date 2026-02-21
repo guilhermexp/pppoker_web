@@ -6,6 +6,7 @@ import {
 } from "@api/schemas/customers";
 import { createAdminClient } from "@api/services/supabase";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { logger } from "@midpoker/logger";
 
 export const customersRouter = createTRPCRouter({
   // Use Supabase REST directly to avoid Drizzle connection pool issues
@@ -54,7 +55,10 @@ export const customersRouter = createTRPCRouter({
       const { data: customers, error } = await query;
 
       if (error) {
-        console.log("[customers.get] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "customers.get Supabase REST error",
+        );
         return {
           data: [],
           meta: {
@@ -130,7 +134,10 @@ export const customersRouter = createTRPCRouter({
         .single();
 
       if (error || !customer) {
-        console.log("[customers.getById] Supabase REST error:", error?.message);
+        logger.error(
+          { error: error?.message },
+          "customers.getById Supabase REST error",
+        );
         return null;
       }
 
@@ -169,7 +176,10 @@ export const customersRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[customers.delete] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "customers.delete Supabase REST error",
+        );
         throw new Error(`Failed to delete customer: ${error.message}`);
       }
 
@@ -216,7 +226,10 @@ export const customersRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.log("[customers.upsert] Supabase REST error:", error.message);
+        logger.error(
+          { error: error.message },
+          "customers.upsert Supabase REST error",
+        );
         throw new Error(`Failed to upsert customer: ${error.message}`);
       }
 

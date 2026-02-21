@@ -678,6 +678,12 @@ export const duplicateInvoiceSchema = z.object({
     }),
 });
 
+export const createFromTrackerSchema = z.object({
+  projectId: z.string().uuid(),
+  dateFrom: z.string(),
+  dateTo: z.string(),
+});
+
 export const getInvoiceByTokenSchema = z.object({
   token: z.string(),
 });

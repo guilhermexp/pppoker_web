@@ -33,10 +33,7 @@ function parseFastchipsOperationsSheet(
     .filter(
       (row) =>
         // Must have at least operation ID or date
-        row["Id da operação"] ||
-        row["operationId"] ||
-        row["Data"] ||
-        row["occurredAt"],
+        row["Id da operação"] || row.operationId || row.Data || row.occurredAt,
     )
     .map((row) => {
       // Handle "-" as null for numeric values
@@ -69,73 +66,64 @@ function parseFastchipsOperationsSheet(
 
       return {
         // Column A: Data
-        occurredAt: String(
-          row["Data"] || row["occurredAt"] || row["data"] || "",
-        ),
+        occurredAt: String(row.Data || row.occurredAt || row.data || ""),
         // Column B: Tipo
         operationType: String(
-          row["Tipo"] || row["operationType"] || row["tipo"] || "Entrada",
+          row.Tipo || row.operationType || row.tipo || "Entrada",
         ) as "Entrada" | "Saída",
         // Column C: Finalidade
         purpose: String(
-          row["Finalidade"] ||
-            row["purpose"] ||
-            row["finalidade"] ||
-            "Recebimento",
+          row.Finalidade || row.purpose || row.finalidade || "Recebimento",
         ) as "Recebimento" | "Pagamento" | "Saque" | "Serviço",
         // Column D: Entrada bruta
         grossEntry: parseNumeric(
-          row["Entrada bruta"] || row["grossEntry"] || row["entrada_bruta"],
+          row["Entrada bruta"] || row.grossEntry || row.entrada_bruta,
         ),
         // Column E: Saída bruta
         grossExit: parseNumeric(
           row["Saída bruta"] ||
             row["Saida bruta"] ||
-            row["grossExit"] ||
-            row["saida_bruta"],
+            row.grossExit ||
+            row.saida_bruta,
         ),
         // Column F: Entrada líquida
         netEntry: parseNumeric(
           row["Entrada líquida"] ||
             row["Entrada liquida"] ||
-            row["netEntry"] ||
-            row["entrada_liquida"],
+            row.netEntry ||
+            row.entrada_liquida,
         ),
         // Column G: Saída líquida
         netExit: parseNumeric(
           row["Saída líquida"] ||
             row["Saida liquida"] ||
-            row["netExit"] ||
-            row["saida_liquida"],
+            row.netExit ||
+            row.saida_liquida,
         ),
         // Column H: Integrante
         memberName: String(
-          row["Integrante"] || row["memberName"] || row["integrante"] || "",
+          row.Integrante || row.memberName || row.integrante || "",
         ),
         // Column I: Taxa da operação
         feeRate: parseFeeRate(
           row["Taxa da operação"] ||
             row["Taxa da operacao"] ||
-            row["feeRate"] ||
-            row["taxa"],
+            row.feeRate ||
+            row.taxa,
         ),
         // Column J: Id Jogador
-        ppPokerId:
-          row["Id Jogador"] || row["ppPokerId"] || row["id_jogador"] || null,
+        ppPokerId: row["Id Jogador"] || row.ppPokerId || row.id_jogador || null,
         // Column K: Id da operação
         operationId: String(
           row["Id da operação"] ||
             row["Id da operacao"] ||
-            row["operationId"] ||
-            row["id_operacao"] ||
+            row.operationId ||
+            row.id_operacao ||
             "",
         ),
         // Column L: Id do pagamento
         paymentId: String(
-          row["Id do pagamento"] ||
-            row["paymentId"] ||
-            row["id_pagamento"] ||
-            "",
+          row["Id do pagamento"] || row.paymentId || row.id_pagamento || "",
         ),
       };
     });

@@ -1,33 +1,7 @@
 /// <reference lib="webworker" />
 
+import { parseSlashValue, toNumber } from "@/lib/poker/parsers";
 import * as XLSX from "xlsx";
-
-// ============================================================================
-// HELPER FUNCTIONS (copied from league-import-uploader to keep worker self-contained)
-// ============================================================================
-
-function toNumber(value: string | number | null | undefined): number {
-  if (value === null || value === undefined) return 0;
-  if (typeof value === "number") return value;
-  const str = value.toString().trim();
-  if (str.includes(",")) {
-    const cleaned = str.replace(/\./g, "").replace(",", ".");
-    const parsed = Number.parseFloat(cleaned);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  const parsed = Number.parseFloat(str);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function parseSlashValue(
-  value: string | number | null | undefined,
-): number | null {
-  if (value === null || value === undefined) return null;
-  if (typeof value === "number") return value;
-  const str = String(value).trim();
-  if (str === "/" || str === "-" || str === "") return null;
-  return toNumber(str);
-}
 
 // ============================================================================
 // Message types for type-safety
@@ -824,7 +798,7 @@ function parseJogosPPSTSheet(
 
   // Limpa flags temporárias e calcula fallback para totalGeral se valores estão zerados
   for (const jogo of jogos) {
-    delete jogo._totalFromSpreadsheet;
+    jogo._totalFromSpreadsheet = undefined;
 
     // Fallback: se totalGeral não existe ou tem valores zerados, calcular a partir dos jogadores
     if (jogo.jogadores && jogo.jogadores.length > 0) {

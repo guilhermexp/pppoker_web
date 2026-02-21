@@ -2,7 +2,7 @@
  * Mapeamento da navegação atual para o formato do 21st.dev sidebar
  */
 
-import { Icons } from "@midpoker/ui/icons";
+import type { Icons } from "@midpoker/ui/icons";
 import type { SidebarContent } from "./sidebar-types";
 
 /**

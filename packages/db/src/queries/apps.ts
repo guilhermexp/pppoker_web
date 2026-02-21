@@ -1,6 +1,6 @@
+import { and, eq } from "drizzle-orm";
 import type { Database } from "../client";
 import { apps } from "../schema";
-import { and, eq } from "drizzle-orm";
 
 type AppSetting = {
   id: string;
