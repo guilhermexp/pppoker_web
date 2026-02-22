@@ -6,6 +6,7 @@ import { SuggestedPrompts } from "@/components/chat/suggested-prompts";
 import { SuggestedActionsButton } from "@/components/suggested-actions-button";
 import { WebSearchButton } from "@/components/web-search-button";
 import { useChatInterface } from "@/hooks/use-chat-interface";
+import type { CommandSuggestion } from "@/lib/chat-commands";
 import { useI18n } from "@/locales/client";
 import { useChatStore } from "@/store/chat";
 import { useArtifacts } from "@ai-sdk-tools/artifacts/client";
@@ -45,7 +46,7 @@ export function ChatInput() {
   const status = useChatStatus();
   const { sendMessage, stop } = useChatActions();
   const chatId = useChatId();
-  const { setChatId } = useChatInterface();
+  const { setChatId, startNewSession } = useChatInterface();
 
   const [, clearSuggestions] = useDataPart<{ prompts: string[] }>(
     "suggestions",
@@ -69,6 +70,41 @@ export function ChatInput() {
     handleKeyDown,
     resetCommandState,
   } = useChatStore();
+
+  const executeCommandSuggestion = (selectedCommand: CommandSuggestion) => {
+    if (selectedCommand.executionType === "ui") {
+      if (selectedCommand.uiAction === "new_session") {
+        startNewSession();
+      }
+      setInput("");
+      resetCommandState();
+      return;
+    }
+
+    if (selectedCommand.executionType === "insert") {
+      useChatStore.getState().handleCommandSelect(selectedCommand);
+      return;
+    }
+
+    if (!chatId || !selectedCommand.toolName) return;
+
+    clearSuggestions();
+    setChatId(chatId);
+
+    sendMessage({
+      role: "user",
+      parts: [{ type: "text", text: selectedCommand.title }],
+      metadata: {
+        toolCall: {
+          toolName: selectedCommand.toolName,
+          toolParams: selectedCommand.toolParams ?? {},
+        },
+      },
+    });
+
+    setInput("");
+    resetCommandState();
+  };
 
   const handleSubmit = (message: ChatInputMessage) => {
     const hasText = Boolean(message.text);
@@ -143,27 +179,7 @@ export function ChatInput() {
                     const selectedCommand =
                       filteredCommands[selectedCommandIndex];
                     if (selectedCommand) {
-                      // Execute command through the store
-                      if (!chatId) return;
-
-                      // Clear old suggestions before sending new message
-                      clearSuggestions();
-
-                      setChatId(chatId);
-
-                      sendMessage({
-                        role: "user",
-                        parts: [{ type: "text", text: selectedCommand.title }],
-                        metadata: {
-                          toolCall: {
-                            toolName: selectedCommand.toolName,
-                            toolParams: selectedCommand.toolParams,
-                          },
-                        },
-                      });
-
-                      setInput("");
-                      resetCommandState();
+                      executeCommandSuggestion(selectedCommand);
                     }
                     return;
                   }

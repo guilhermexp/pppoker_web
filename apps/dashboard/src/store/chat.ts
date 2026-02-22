@@ -1,6 +1,7 @@
 import {
   COMMAND_SUGGESTIONS,
   type CommandSuggestion,
+  mergeCommandSuggestions,
 } from "@/lib/chat-commands";
 import { create } from "zustand";
 
@@ -38,6 +39,8 @@ interface ChatState {
 
   // Filtered commands (computed)
   filteredCommands: CommandSuggestion[];
+  dynamicCommands: CommandSuggestion[];
+  setDynamicCommands: (commands: CommandSuggestion[]) => void;
 
   // Actions
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -61,6 +64,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   commandQuery: "",
   cursorPosition: 0,
   filteredCommands: COMMAND_SUGGESTIONS,
+  dynamicCommands: [],
 
   // Basic setters
   setInput: (input) => set({ input }),
@@ -74,6 +78,27 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({ selectedCommandIndex }),
   setCommandQuery: (commandQuery) => set({ commandQuery }),
   setCursorPosition: (cursorPosition) => set({ cursorPosition }),
+  setDynamicCommands: (dynamicCommands) => {
+    const { commandQuery } = get();
+    const allCommands = mergeCommandSuggestions(
+      COMMAND_SUGGESTIONS,
+      dynamicCommands,
+    );
+    const query = commandQuery.toLowerCase().trim();
+
+    const filteredCommands = query
+      ? allCommands.filter((command) => {
+          const matchesCommand = command.command.toLowerCase().includes(query);
+          const matchesTitle = command.title.toLowerCase().includes(query);
+          const matchesKeywords = command.keywords.some((keyword) =>
+            keyword.toLowerCase().includes(query),
+          );
+          return matchesCommand || matchesTitle || matchesKeywords;
+        })
+      : allCommands;
+
+    set({ dynamicCommands, filteredCommands });
+  },
 
   // Input change handler
   handleInputChange: (e) => {
@@ -88,10 +113,15 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
     if (lastSlashIndex !== -1) {
       const textAfterSlash = textBeforeCursor.substring(lastSlashIndex + 1);
+      const { dynamicCommands } = get();
+      const allCommands = mergeCommandSuggestions(
+        COMMAND_SUGGESTIONS,
+        dynamicCommands,
+      );
 
       // Filter commands based on the query
       const query = textAfterSlash.toLowerCase().trim();
-      const filtered = COMMAND_SUGGESTIONS.filter((command) => {
+      const filtered = allCommands.filter((command) => {
         const matchesCommand = command.command.toLowerCase().includes(query);
         const matchesTitle = command.title.toLowerCase().includes(query);
         const matchesKeywords = command.keywords.some((keyword) =>
@@ -113,7 +143,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({
       showCommands: false,
       commandQuery: "",
-      filteredCommands: COMMAND_SUGGESTIONS,
+      filteredCommands: mergeCommandSuggestions(
+        COMMAND_SUGGESTIONS,
+        get().dynamicCommands,
+      ),
     });
   },
 
@@ -125,7 +158,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const textAfterCursor = input.substring(cursorPosition);
 
     // Replace the command with the full suggestion
-    const newText = `${textBeforeCursor.substring(0, lastSlashIndex)}${command.title} ${textAfterCursor}`;
+    const replacementText = command.insertText ?? `${command.title} `;
+    const newText = `${textBeforeCursor.substring(0, lastSlashIndex)}${replacementText}${textAfterCursor}`;
 
     set({
       input: newText,

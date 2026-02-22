@@ -18,9 +18,6 @@ import { PokerSessionDetailSheet } from "@/components/sheets/poker-session-detai
 import { PokerSuperAgentDetailSheet } from "@/components/sheets/poker-super-agent-detail-sheet";
 import { ProductCreateSheet } from "@/components/sheets/product-create-sheet";
 import { ProductEditSheet } from "@/components/sheets/product-edit-sheet";
-import { TrackerCreateSheet } from "@/components/sheets/tracker-create-sheet";
-import { TrackerScheduleSheet } from "@/components/sheets/tracker-schedule-sheet";
-import { TrackerUpdateSheet } from "@/components/sheets/tracker-update-sheet";
 import { TransactionCreateSheet } from "@/components/sheets/transaction-create-sheet";
 import { TransactionEditSheet } from "@/components/sheets/transaction-edit-sheet";
 import { TransactionSheet } from "@/components/sheets/transaction-sheet";
@@ -28,10 +25,6 @@ import { TransactionSheet } from "@/components/sheets/transaction-sheet";
 export function GlobalSheets() {
   return (
     <>
-      <TrackerUpdateSheet />
-      <TrackerCreateSheet />
-      <TrackerScheduleSheet />
-
       <CategoryCreateSheet />
       <CategoryEditSheet />
 

@@ -1,11 +1,22 @@
 "use client";
 
 import { useChatInterface } from "@/hooks/use-chat-interface";
+import {
+  type CommandSuggestion,
+  type NanobotCommandPayload,
+  type NanobotSkillPayload,
+  createNanobotCommandSuggestions,
+  createNanobotSessionCommands,
+  normalizeNanobotCommands,
+  normalizeNanobotSkills,
+} from "@/lib/chat-commands";
 import { useChatStore } from "@/store/chat";
-import { useChatActions, useChatId } from "@ai-sdk-tools/store";
+import { useTRPC } from "@/trpc/client";
+import { useChatActions, useChatId, useDataPart } from "@ai-sdk-tools/store";
 import { AnimatedSizeContainer } from "@midpoker/ui/animated-size-container";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
+import { useQuery } from "@tanstack/react-query";
 import { type RefObject, useEffect, useRef } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 
@@ -17,13 +28,24 @@ export function CommandMenu() {
     showCommands,
     handleCommandSelect,
     resetCommandState,
+    setDynamicCommands,
     setInput,
     setShowCommands,
   } = useChatStore();
 
   const { sendMessage } = useChatActions();
   const chatId = useChatId();
-  const { setChatId } = useChatInterface();
+  const { setChatId, startNewSession } = useChatInterface();
+  const trpc = useTRPC();
+  const { data: toolsManifest } = useQuery(
+    trpc.nanobot.toolsManifest.queryOptions(),
+  );
+  const [nanobotCommandsData] = useDataPart<{
+    commands?: NanobotCommandPayload[];
+  }>("nanobot-commands");
+  const [nanobotSkillsData] = useDataPart<{
+    skills?: NanobotSkillPayload[];
+  }>("nanobot-skills");
 
   // Close command menu when clicking outside (but not on the toggle button)
   useOnClickOutside(commandListRef as RefObject<HTMLElement>, (event) => {
@@ -39,8 +61,20 @@ export function CommandMenu() {
     }
   });
 
-  const handleCommandExecution = (command: any) => {
-    if (!chatId) return;
+  const handleCommandExecution = (command: CommandSuggestion) => {
+    if (command.executionType === "ui" && command.uiAction === "new_session") {
+      startNewSession();
+      setInput("");
+      resetCommandState();
+      return;
+    }
+
+    if (command.executionType === "insert") {
+      handleCommandSelect(command);
+      return;
+    }
+
+    if (!chatId || !command.toolName) return;
 
     setChatId(chatId);
 
@@ -50,7 +84,7 @@ export function CommandMenu() {
       metadata: {
         toolCall: {
           toolName: command.toolName,
-          toolParams: command.toolParams,
+          toolParams: command.toolParams ?? {},
         },
       },
     });
@@ -70,6 +104,28 @@ export function CommandMenu() {
       }
     }
   }, [selectedCommandIndex, showCommands]);
+
+  useEffect(() => {
+    const sessionCommands = createNanobotSessionCommands();
+    const manifestCommands = createNanobotCommandSuggestions(
+      toolsManifest?.tools ?? [],
+    );
+    const streamCommands = normalizeNanobotCommands(
+      nanobotCommandsData?.commands,
+    );
+    const skillCommands = normalizeNanobotSkills(nanobotSkillsData?.skills);
+    setDynamicCommands([
+      ...sessionCommands,
+      ...manifestCommands,
+      ...streamCommands,
+      ...skillCommands,
+    ]);
+  }, [
+    nanobotCommandsData?.commands,
+    nanobotSkillsData?.skills,
+    setDynamicCommands,
+    toolsManifest?.tools,
+  ]);
 
   if (!showCommands || filteredCommands.length === 0) return null;
 

@@ -16,6 +16,8 @@ import {
 } from "@midpoker/ui/dialog";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -83,21 +85,13 @@ function MemberRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+        "flex items-center gap-3 rounded-xl border p-3 transition-colors cursor-pointer",
         isSelected
-          ? "border-primary/50 bg-primary/5"
-          : "border-border hover:bg-muted/50",
+          ? "border-primary/50 bg-primary/10"
+          : "border-border/60 bg-muted/30 hover:bg-muted/50",
       )}
       onClick={onToggle}
     >
-      {/* Checkbox */}
-      <Checkbox
-        checked={isSelected}
-        onCheckedChange={() => onToggle()}
-        onClick={(e) => e.stopPropagation()}
-        className="flex-shrink-0"
-      />
-
       {/* Avatar + online indicator */}
       <div className="relative flex-shrink-0">
         <Avatar className="h-9 w-9">
@@ -116,6 +110,11 @@ function MemberRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm truncate">{member.nome}</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-mono">ID: {member.uid}</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
           <span
             className={cn(
               "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium",
@@ -124,29 +123,19 @@ function MemberRow({
           >
             {member.papel}
           </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-mono">ID: {member.uid}</span>
-          {member.titulo && member.titulo !== member.nome && (
-            <>
-              <span className="text-border">|</span>
-              <span>{member.titulo}</span>
-            </>
-          )}
-          {member.agente_nome && (
-            <>
-              <span className="text-border">|</span>
-              <span>Ag: {member.agente_nome}</span>
-            </>
-          )}
+          {member.agente_nome ? (
+            <span className="truncate">Agente: {member.agente_nome}</span>
+          ) : member.titulo && member.titulo !== member.nome ? (
+            <span className="truncate">Apelido: {member.titulo}</span>
+          ) : null}
         </div>
       </div>
 
-      {/* Balance */}
-      <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+      {/* Balance + actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
         <span
           className={cn(
-            "font-mono text-sm font-medium",
+            "min-w-[84px] rounded-full px-3 py-1 text-center font-mono text-sm font-medium bg-background/60",
             cashbox > 0
               ? "text-green-600"
               : cashbox < 0
@@ -156,11 +145,15 @@ function MemberRow({
         >
           {formatBalance(cashbox)}
         </span>
-        {member.credito_linha > 0 && (
-          <span className="font-mono text-[10px] text-muted-foreground">
-            Cred: {formatBalance(member.credito_linha)}
-          </span>
-        )}
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary">
+          <Icons.Currency className="h-3.5 w-3.5" />
+        </span>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={() => onToggle()}
+          onClick={(e) => e.stopPropagation()}
+          className="flex-shrink-0 rounded-md border-primary/40"
+        />
       </div>
     </div>
   );
@@ -231,15 +224,16 @@ function ContadorStats({
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-2">
       {stats.map((s) => (
         <div
           key={s.label}
-          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border"
+          className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-2"
         >
-          <s.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">{s.label}</p>
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
+            <s.icon className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0 leading-none">
             <p
               className={cn(
                 "font-mono text-sm font-medium truncate",
@@ -248,9 +242,7 @@ function ContadorStats({
             >
               {s.value}
             </p>
-            <p className="text-[10px] text-muted-foreground truncate">
-              {s.sublabel}
-            </p>
+            <p className="text-[10px] text-muted-foreground truncate">{s.label}</p>
           </div>
         </div>
       ))}
@@ -546,24 +538,7 @@ function TrocarTab() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Header with refresh */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          {allMembers.length} membros carregados
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-2"
-          onClick={handleRefresh}
-          disabled={isFetching}
-        >
-          <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
-          Atualizar
-        </Button>
-      </div>
-
+    <div className="flex flex-col gap-3">
       {/* Stats */}
       <ContadorStats members={allMembers} clubInfo={clubInfo} loggedInUid={loggedInUid} />
 
@@ -574,12 +549,53 @@ function TrocarTab() {
           placeholder="Pesquisar por nome, apelido ou ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-11 rounded-lg"
         />
       </div>
 
-      {/* Filter pills */}
-      <div className="flex items-center gap-2 overflow-x-auto">
+      {/* Meta / controls row */}
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <span className="font-medium text-foreground">Membro: {allMembers.length}</span>
+          <span className="inline-flex items-center gap-2">
+            <Checkbox
+              checked={
+                selectedIds.size === members.length && members.length > 0
+              }
+              onCheckedChange={toggleAll}
+            />
+            <span className="text-xs">
+              Selecionados: {selectedIds.size}
+            </span>
+          </span>
+          {isFetching && (
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setSortBy(sortBy === "nome" ? "saldo" : "nome")}
+          >
+            {sortBy === "nome" ? "Nome" : "Saldo"}
+            <Icons.ChevronDown className="ml-1 h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleRefresh}
+            disabled={isFetching}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
           { key: "todos", label: "Todos", count: sorted.length },
           {
@@ -616,10 +632,10 @@ function TrocarTab() {
               setSelectedIds(new Set());
             }}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap",
               filter === f.key
                 ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80",
+                : "bg-muted/60 text-muted-foreground hover:bg-muted/80",
             )}
           >
             {f.label}
@@ -628,39 +644,14 @@ function TrocarTab() {
         ))}
       </div>
 
-      {/* Info bar */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <div className="flex items-center gap-3">
-          {members.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={
-                  selectedIds.size === members.length && members.length > 0
-                }
-                onCheckedChange={toggleAll}
-              />
-              <span className="text-xs">Selecionar todos</span>
-            </div>
-          )}
-          {selectedIds.size > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {selectedIds.size} selecionado{selectedIds.size > 1 ? "s" : ""}
-            </Badge>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => setSortBy(sortBy === "nome" ? "saldo" : "nome")}
-        >
-          {sortBy === "nome" ? "Nome" : "Saldo"}
-          <Icons.ChevronDown className="ml-1 h-3 w-3" />
-        </Button>
-      </div>
+      {selectedIds.size > 0 && (
+        <Badge variant="secondary" className="w-fit text-xs">
+          {selectedIds.size} selecionado{selectedIds.size > 1 ? "s" : ""}
+        </Badge>
+      )}
 
       {/* Member list */}
-      <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto">
+      <div className="flex flex-col gap-2 max-h-[480px] overflow-y-auto rounded-lg">
         {members.length === 0 ? (
           <div className="flex flex-col items-center py-16">
             <Icons.Customers className="h-8 w-8 text-muted-foreground mb-3" />
@@ -683,9 +674,9 @@ function TrocarTab() {
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-3 pt-2 border-t">
+      <div className="grid grid-cols-2 gap-3 pt-3 border-t mt-1">
         <Button
-          className="flex-1"
+          className="h-12 text-base"
           variant="outline"
           disabled={selectedIds.size === 0}
           onClick={() => openDialog("send")}
@@ -693,7 +684,7 @@ function TrocarTab() {
           Enviar fichas
         </Button>
         <Button
-          className="flex-1"
+          className="h-12 text-base"
           disabled={selectedIds.size === 0}
           onClick={() => openDialog("withdraw")}
         >
@@ -968,30 +959,90 @@ function TicketTab() {
 // ---------------------------------------------------------------------------
 
 export function ContadorPage() {
+  const [isContadorOpen, setIsContadorOpen] = useState(false);
+
   return (
-    <Tabs defaultValue="trocar" className="w-full">
-      <TabsList>
-        <TabsTrigger value="trocar">Trocar</TabsTrigger>
-        <TabsTrigger value="transacoes">Transações</TabsTrigger>
-        <TabsTrigger value="enviar">Enviar itens</TabsTrigger>
-        <TabsTrigger value="ticket">Ticket</TabsTrigger>
-      </TabsList>
+    <>
+      {!isContadorOpen && (
+        <Button
+          type="button"
+          onClick={() => setIsContadorOpen(true)}
+          className="fixed right-0 top-1/2 z-40 h-11 -translate-y-1/2 rounded-r-none rounded-l-lg px-4 shadow-lg"
+        >
+          Contador
+        </Button>
+      )}
 
-      <TabsContent value="trocar" className="mt-4">
-        <TrocarTab />
-      </TabsContent>
+      <div className="min-h-[680px]">
+        <section className="hidden xl:flex min-h-[680px] rounded-xl border bg-background">
+          <div className="flex w-full flex-col p-6">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">Transações</h2>
+              <p className="text-sm text-muted-foreground">
+                Lista lateral de transações do contador
+              </p>
+            </div>
+            <TransacoesTab />
+          </div>
+        </section>
+      </div>
 
-      <TabsContent value="transacoes" className="mt-4">
-        <TransacoesTab />
-      </TabsContent>
+      <Sheet open={isContadorOpen} onOpenChange={setIsContadorOpen}>
+        <SheetContent className="w-full sm:max-w-lg p-0" title="Contador">
+          <SheetHeader className="px-6 py-4 border-b">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Contador</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Fechar painel"
+                onClick={() => setIsContadorOpen(false)}
+              >
+                <Icons.Close className="h-4 w-4" />
+              </Button>
+            </div>
+          </SheetHeader>
 
-      <TabsContent value="enviar" className="mt-4">
-        <EnviarItensTab />
-      </TabsContent>
+          <Tabs defaultValue="trocar" className="w-full">
+            <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
+              <TabsTrigger
+                value="trocar"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+              >
+                Trocar
+              </TabsTrigger>
+              <TabsTrigger
+                value="enviar"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+              >
+                Enviar itens
+              </TabsTrigger>
+              <TabsTrigger
+                value="ticket"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+              >
+                Ticket
+              </TabsTrigger>
+            </TabsList>
 
-      <TabsContent value="ticket" className="mt-4">
-        <TicketTab />
-      </TabsContent>
-    </Tabs>
+            <ScrollArea className="h-[calc(100vh-160px)]">
+              <div className="p-6">
+                <TabsContent value="trocar" className="mt-0">
+                  <TrocarTab />
+                </TabsContent>
+
+                <TabsContent value="enviar" className="mt-0">
+                  <EnviarItensTab />
+                </TabsContent>
+
+                <TabsContent value="ticket" className="mt-0">
+                  <TicketTab />
+                </TabsContent>
+              </div>
+            </ScrollArea>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

@@ -28,6 +28,10 @@ export default async function Layout({
             path: "/settings/developer",
             label: t("navigation.settings.developer"),
           },
+          {
+            path: "/settings/nanobot",
+            label: "Nanobot",
+          },
         ]}
       />
 

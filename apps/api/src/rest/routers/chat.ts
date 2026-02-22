@@ -1,5 +1,6 @@
 import { buildAppContext } from "@api/ai/agents/config/shared";
-import { mainAgent } from "@api/ai/agents/main";
+import { runChatAgent } from "@api/ai/runtime/chat-engine";
+import { getNanobotSettingsForTeam } from "@api/ai/runtime/nanobot-team-settings";
 import { getUserContext } from "@api/ai/utils/get-user-context";
 import type { Context } from "@api/rest/types";
 import { chatRequestSchema } from "@api/schemas/chat";
@@ -35,10 +36,13 @@ app.post("/", withRequiredScope("chat.write"), async (c) => {
   });
 
   const appContext = buildAppContext(userContext, id);
+  const nanobotConfig = await getNanobotSettingsForTeam(teamId);
+  if (nanobotConfig) {
+    appContext.nanobotConfig = nanobotConfig;
+  }
 
-  // Pass user preferences to main agent as context
-  // The main agent will use this information to make better routing decisions
-  return mainAgent.toUIMessageStream({
+  // Preserve the existing UI contract while allowing engine swaps behind the endpoint.
+  return runChatAgent({
     message,
     strategy: "auto",
     maxRounds: 5,

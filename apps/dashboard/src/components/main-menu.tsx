@@ -1,5 +1,6 @@
 "use client";
 
+import { useUserQuery } from "@/hooks/use-user";
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useI18n } from "@/locales/client";
 import { cn } from "@midpoker/ui/cn";
@@ -12,12 +13,10 @@ const icons = {
   "/": () => <Icons.Overview size={20} />,
   "/transactions": () => <Icons.Transactions size={20} />,
   "/invoices": () => <Icons.Invoice size={20} />,
-  "/tracker": () => <Icons.Tracker size={20} />,
   "/customers": () => <Icons.Customers size={20} />,
   "/vault": () => <Icons.Vault size={20} />,
   "/settings": () => <Icons.Settings size={20} />,
   "/apps": () => <Icons.Apps size={20} />,
-  "/inbox": () => <Icons.Inbox2 size={20} />,
   "/poker": () => <Icons.PieChart size={20} />,
   "/poker/league-import": () => <Icons.Globle size={20} />,
   "/poker/leagues": () => <Icons.Link size={20} />,
@@ -25,10 +24,48 @@ const icons = {
   "/fastchips": () => <Icons.Accounts size={20} />,
 } as const;
 
-const getItems = (t: ReturnType<typeof useI18n>) => [
+const getItems = (
+  t: ReturnType<typeof useI18n>,
+  pokerSectionName?: string,
+) => [
   {
     path: "/",
     name: t("sidebar.overview"),
+  },
+  {
+    path: "/poker",
+    name: pokerSectionName || t("sidebar.poker"),
+    children: [
+      { path: "/poker/players", name: t("sidebar.poker_players") },
+      { path: "/poker/agents", name: t("sidebar.poker_agents") },
+      { path: "/poker/membros", name: t("sidebar.poker_members") },
+      { path: "/poker/contador", name: t("sidebar.poker_contador") },
+      { path: "/poker/lobby", name: t("sidebar.poker_lobby") },
+      { path: "/poker/sessions", name: t("sidebar.poker_sessions") },
+      { path: "/poker/transactions", name: t("sidebar.poker_transactions") },
+      { path: "/poker/settlements", name: t("sidebar.poker_settlements") },
+      { path: "/poker/import", name: t("sidebar.poker_import") },
+    ],
+  },
+  {
+    path: "/fastchips",
+    name: t("sidebar.fastchips"),
+    children: [
+      {
+        path: "/fastchips/transacoes",
+        name: t("sidebar.fastchips_transacoes"),
+      },
+      {
+        path: "/fastchips/contas-vinculadas",
+        name: t("sidebar.fastchips_contas_vinculadas"),
+      },
+      { path: "/fastchips/jogadores", name: t("sidebar.fastchips_jogadores") },
+      {
+        path: "/fastchips/movimentacao",
+        name: t("sidebar.fastchips_movimentacao"),
+      },
+      { path: "/fastchips/controle", name: t("sidebar.fastchips_controle") },
+    ],
   },
   {
     path: "/transactions",
@@ -53,22 +90,12 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
     ],
   },
   {
-    path: "/inbox",
-    name: t("sidebar.inbox"),
-    children: [{ path: "/inbox/settings", name: t("sidebar.settings") }],
-  },
-  {
     path: "/invoices",
     name: t("sidebar.invoices"),
     children: [
       { path: "/invoices/products", name: t("sidebar.products") },
       { path: "/invoices?type=create", name: t("sidebar.create_new") },
     ],
-  },
-  {
-    path: "/tracker",
-    name: t("sidebar.tracker"),
-    children: [{ path: "/tracker?create=true", name: t("sidebar.create_new") }],
   },
   {
     path: "/customers",
@@ -82,45 +109,10 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
     name: t("sidebar.vault"),
   },
   {
-    path: "/poker",
-    name: t("sidebar.poker"),
-    children: [
-      { path: "/poker/players", name: t("sidebar.poker_players") },
-      { path: "/poker/agents", name: t("sidebar.poker_agents") },
-      { path: "/poker/membros", name: t("sidebar.poker_members") },
-      { path: "/poker/contador", name: t("sidebar.poker_contador") },
-      { path: "/poker/lobby", name: t("sidebar.poker_lobby") },
-      { path: "/poker/sessions", name: t("sidebar.poker_sessions") },
-      { path: "/poker/transactions", name: t("sidebar.poker_transactions") },
-      { path: "/poker/settlements", name: t("sidebar.poker_settlements") },
-      { path: "/poker/import", name: t("sidebar.poker_import") },
-    ],
-  },
-  {
     path: "/poker/leagues",
     name: t("sidebar.ligas"),
     children: [
       { path: "/poker/leagues/import", name: t("sidebar.ligas_import") },
-    ],
-  },
-  {
-    path: "/fastchips",
-    name: t("sidebar.fastchips"),
-    children: [
-      {
-        path: "/fastchips/transacoes",
-        name: t("sidebar.fastchips_transacoes"),
-      },
-      {
-        path: "/fastchips/contas-vinculadas",
-        name: t("sidebar.fastchips_contas_vinculadas"),
-      },
-      { path: "/fastchips/jogadores", name: t("sidebar.fastchips_jogadores") },
-      {
-        path: "/fastchips/movimentacao",
-        name: t("sidebar.fastchips_movimentacao"),
-      },
-      { path: "/fastchips/controle", name: t("sidebar.fastchips_controle") },
     ],
   },
   {
@@ -158,9 +150,7 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
 // Known menu base paths that should not be treated as chat IDs
 const KNOWN_MENU_PATHS = [
   "/transactions",
-  "/inbox",
   "/invoices",
-  "/tracker",
   "/customers",
   "/vault",
   "/poker",
@@ -363,8 +353,9 @@ type Props = {
 export function MainMenu({ onSelect, isExpanded = false }: Props) {
   const pathname = usePathname();
   const { isChatPage } = useChatInterface();
+  const { data: user } = useUserQuery();
   const t = useI18n();
-  const items = getItems(t);
+  const items = getItems(t, user?.team?.name || undefined);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   // Check if current pathname is a known menu path (including sub-paths)

@@ -16,6 +16,7 @@ import { inboxAccountsRouter } from "./inbox-accounts";
 import { invoiceRouter } from "./invoice";
 import { invoiceProductsRouter } from "./invoice-products";
 import { invoiceTemplateRouter } from "./invoice-template";
+import { nanobotRouter } from "./nanobot";
 import { notificationSettingsRouter } from "./notification-settings";
 import { notificationsRouter } from "./notifications";
 import { oauthApplicationsRouter } from "./oauth-applications";
@@ -40,6 +41,7 @@ import { widgetsRouter } from "./widgets";
 export const appRouter = createTRPCRouter({
   notifications: notificationsRouter,
   notificationSettings: notificationSettingsRouter,
+  nanobot: nanobotRouter,
   apps: appsRouter,
   bankAccounts: bankAccountsRouter,
   bankConnections: bankConnectionsRouter,

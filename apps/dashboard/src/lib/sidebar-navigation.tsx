@@ -82,30 +82,6 @@ export function getSidebarContent(
         ],
       };
 
-    case "inbox":
-      return {
-        title: t("sidebar.inbox"),
-        sections: [
-          {
-            title: t("sidebar.management"),
-            items: [
-              {
-                icon: <Icons.Inbox2 size={16} />,
-                label: t("sidebar.inbox"),
-                path: "/inbox",
-                isActive: isActive("/inbox") && !pathname.includes("settings"),
-              },
-              {
-                icon: <Icons.Settings size={16} />,
-                label: t("sidebar.settings"),
-                path: "/inbox/settings",
-                isActive: isActive("/inbox/settings"),
-              },
-            ],
-          },
-        ],
-      };
-
     case "invoices":
       return {
         title: t("sidebar.invoices"),
@@ -135,32 +111,6 @@ export function getSidebarContent(
                 label: t("sidebar.products"),
                 path: "/invoices/products",
                 isActive: isActive("/invoices/products"),
-              },
-            ],
-          },
-        ],
-      };
-
-    case "tracker":
-      return {
-        title: t("sidebar.tracker"),
-        sections: [
-          {
-            title: t("sidebar.management"),
-            items: [
-              {
-                icon: <Icons.Tracker size={16} />,
-                label: t("sidebar.tracker"),
-                path: "/tracker",
-                isActive: isActive("/tracker"),
-                hasDropdown: true,
-                children: [
-                  {
-                    label: t("sidebar.create_new"),
-                    path: "/tracker?create=true",
-                    isActive: pathname.includes("create=true"),
-                  },
-                ],
               },
             ],
           },
@@ -501,9 +451,7 @@ export function detectActiveSection(pathname: string): string {
   // Exact matches primeiro
   if (cleanPath === "/") return "overview";
   if (cleanPath.startsWith("/transactions")) return "transactions";
-  if (cleanPath.startsWith("/inbox")) return "inbox";
   if (cleanPath.startsWith("/invoices")) return "invoices";
-  if (cleanPath.startsWith("/tracker")) return "tracker";
   if (cleanPath.startsWith("/customers")) return "customers";
   if (cleanPath.startsWith("/vault")) return "vault";
   if (cleanPath.startsWith("/poker/leagues")) return "leagues";

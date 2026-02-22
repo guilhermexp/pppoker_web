@@ -56,28 +56,22 @@ export function IconNavigation({
       path: "/",
     },
     {
+      id: "poker",
+      label: "Poker",
+      icon: <Icons.PieChart size={20} />,
+      path: "/poker",
+    },
+    {
       id: "transactions",
       label: "Transactions",
       icon: <Icons.Transactions size={20} />,
       path: "/transactions",
     },
     {
-      id: "inbox",
-      label: "Inbox",
-      icon: <Icons.Inbox2 size={20} />,
-      path: "/inbox",
-    },
-    {
       id: "invoices",
       label: "Invoices",
       icon: <Icons.Invoice size={20} />,
       path: "/invoices",
-    },
-    {
-      id: "tracker",
-      label: "Tracker",
-      icon: <Icons.Tracker size={20} />,
-      path: "/tracker",
     },
     {
       id: "customers",
@@ -90,12 +84,6 @@ export function IconNavigation({
       label: "Vault",
       icon: <Icons.Vault size={20} />,
       path: "/vault",
-    },
-    {
-      id: "poker",
-      label: "Poker",
-      icon: <Icons.PieChart size={20} />,
-      path: "/poker",
     },
     {
       id: "leagues",

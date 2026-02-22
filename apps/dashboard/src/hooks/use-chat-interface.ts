@@ -73,10 +73,23 @@ export function useChatInterface() {
     setChatIdState(id);
   };
 
+  const startNewSession = () => {
+    const currentSearch = window.location.search;
+    const segments = pathname.split("/").filter(Boolean);
+    const locale = segments[0];
+    const newPath = locale ? `/${locale}${currentSearch}` : `/${currentSearch}`;
+
+    window.history.pushState({}, "", newPath);
+    setChatIdState(null);
+    setSelectedType(null);
+    document.title = "Overview | Midday";
+  };
+
   return {
     isHome,
     isChatPage,
     chatId,
     setChatId,
+    startNewSession,
   };
 }

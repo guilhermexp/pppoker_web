@@ -9,9 +9,170 @@ import {
 export interface CommandSuggestion {
   command: string;
   title: string;
-  toolName: string;
-  toolParams: Record<string, any>;
+  toolName?: string;
+  toolParams?: Record<string, any>;
   keywords: string[];
+  executionType?: "tool" | "ui" | "insert";
+  uiAction?: "new_session";
+  insertText?: string;
+}
+
+export interface NanobotToolManifestItem {
+  name: string;
+  description?: string;
+  inputSchema?: unknown;
+}
+
+export interface NanobotCommandPayload {
+  command?: string;
+  title: string;
+  toolName: string;
+  toolParams?: Record<string, any>;
+  keywords?: string[];
+}
+
+function splitToolNameToKeywords(name: string): string[] {
+  return name
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]/g, " ")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function prettifyToolName(name: string): string {
+  return name
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]/g, " ")
+    .replace(/^get\s+/i, "mostrar ")
+    .replace(/^create\s+/i, "criar ")
+    .replace(/^update\s+/i, "atualizar ")
+    .replace(/^delete\s+/i, "remover ")
+    .replace(/^stop\s+/i, "parar ");
+}
+
+function defaultSlashForTool(toolName: string): string {
+  if (/^get/i.test(toolName)) return "/mostrar";
+  if (/^(create|update|delete|stop)/i.test(toolName)) return "/executar";
+  return "/nano";
+}
+
+export function createNanobotCommandSuggestions(
+  tools: NanobotToolManifestItem[],
+): CommandSuggestion[] {
+  return tools.map((tool) => {
+    const baseKeywords = splitToolNameToKeywords(tool.name);
+    const descriptionKeywords = (tool.description ?? "")
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .split(/\s+/)
+      .filter((word) => word.length > 2)
+      .slice(0, 10);
+
+    return {
+      command: defaultSlashForTool(tool.name),
+      title: prettifyToolName(tool.name),
+      toolName: tool.name,
+      toolParams: {},
+      executionType: "tool",
+      keywords: [...new Set([...baseKeywords, ...descriptionKeywords])],
+    };
+  });
+}
+
+export function normalizeNanobotCommands(
+  commands: NanobotCommandPayload[] | undefined,
+): CommandSuggestion[] {
+  if (!commands?.length) return [];
+
+  return commands
+    .filter((command) => command?.title && command.toolName)
+    .map((command) => ({
+      command: command.command || defaultSlashForTool(command.toolName),
+      title: command.title,
+      toolName: command.toolName,
+      toolParams: command.toolParams ?? {},
+      executionType: "tool",
+      keywords: command.keywords ?? splitToolNameToKeywords(command.toolName),
+    }));
+}
+
+export interface NanobotSkillPayload {
+  name: string;
+  description?: string;
+  aliases?: string[];
+}
+
+export function createNanobotSessionCommands(): CommandSuggestion[] {
+  return [
+    {
+      command: "/nano",
+      title: "Nova sessão Nanobot",
+      executionType: "ui",
+      uiAction: "new_session",
+      keywords: ["nova", "sessao", "new", "session", "chat", "nanobot"],
+    },
+  ];
+}
+
+export function normalizeNanobotSkills(
+  skills: NanobotSkillPayload[] | undefined,
+): CommandSuggestion[] {
+  if (!skills?.length) return [];
+
+  return skills
+    .filter((skill) => skill?.name)
+    .map((skill) => ({
+      command: "/skill",
+      title: `Usar skill ${skill.name}`,
+      executionType: "insert",
+      insertText: `Use a skill '${skill.name}' para resolver isso. `,
+      keywords: [
+        "skill",
+        "nanobot",
+        skill.name.toLowerCase(),
+        ...(skill.aliases ?? []).map((alias) => alias.toLowerCase()),
+        ...(skill.description ?? "")
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}\s]/gu, " ")
+          .split(/\s+/)
+          .filter((word) => word.length > 2)
+          .slice(0, 8),
+      ],
+    }));
+}
+
+export function mergeCommandSuggestions(
+  baseCommands: CommandSuggestion[],
+  dynamicCommands: CommandSuggestion[],
+): CommandSuggestion[] {
+  if (!dynamicCommands.length) return baseCommands;
+
+  // Prefer curated local commands for tools already covered by the product UX.
+  const coveredToolNames = new Set(
+    baseCommands.map((command) => command.toolName).filter(Boolean),
+  );
+
+  const result = [...baseCommands];
+  const seen = new Set(
+    baseCommands.map((command) => `${command.toolName}::${command.title}`),
+  );
+
+  for (const command of dynamicCommands) {
+    if (command.toolName && coveredToolNames.has(command.toolName)) {
+      continue;
+    }
+
+    const key = `${command.toolName}::${command.title}`;
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(command);
+  }
+
+  return result;
 }
 
 // Command system with / prefix - natural language suggestions

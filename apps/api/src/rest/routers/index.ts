@@ -6,6 +6,7 @@ import { customersRouter } from "./customers";
 import { documentsRouter } from "./documents";
 import { inboxRouter } from "./inbox";
 import { invoicesRouter } from "./invoices";
+import { nanobotRouter } from "./nanobot";
 import { notificationsRouter } from "./notifications";
 import oauthRouter from "./oauth";
 import { reportsRouter } from "./reports";
@@ -42,6 +43,7 @@ routers.route("/reports", reportsRouter);
 routers.route("/tracker-projects", trackerProjectsRouter);
 routers.route("/tracker-entries", trackerEntriesRouter);
 routers.route("/chat", chatRouter);
+routers.route("/nanobot", nanobotRouter);
 routers.route("/transcription", transcriptionRouter);
 
 export { routers };
