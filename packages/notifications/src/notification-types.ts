@@ -1,122 +1,18 @@
-import type { NotificationChannel } from "@midpoker/db/queries";
+import {
+  type NotificationChannel,
+  type NotificationType,
+  getAllNotificationTypes,
+  getUserSettingsNotificationTypes,
+} from "@midpoker/db/queries";
 
-export interface NotificationType {
-  type: string;
-  channels: NotificationChannel[];
-  showInSettings: boolean;
-  category?: string;
-  order?: number;
-}
-
-export const allNotificationTypes: NotificationType[] = [
-  {
-    type: "transactions_created",
-    channels: ["in_app", "email"],
-    showInSettings: true,
-    category: "transactions",
-    order: 2,
-  },
-  {
-    type: "transactions_exported",
-    channels: ["in_app", "email"],
-    showInSettings: false,
-    category: "transactions",
-    order: 3,
-  },
-  {
-    type: "invoice_paid",
-    channels: ["in_app", "email"],
-    showInSettings: true,
-    category: "invoices",
-    order: 1,
-  },
-  {
-    type: "invoice_overdue",
-    channels: ["in_app", "email"],
-    showInSettings: true,
-    category: "invoices",
-    order: 1,
-  },
-  {
-    type: "inbox_new",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "inbox",
-    order: 3,
-  },
-  {
-    type: "inbox_auto_matched",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "inbox",
-    order: 1,
-  },
-  {
-    type: "inbox_needs_review",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "inbox",
-    order: 2,
-  },
-  {
-    type: "inbox_cross_currency_matched",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "inbox",
-    order: 3,
-  },
-  {
-    type: "invoice_scheduled",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "invoices",
-    order: 1,
-  },
-  {
-    type: "invoice_sent",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "invoices",
-    order: 1,
-  },
-  {
-    type: "invoice_reminder_sent",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "invoices",
-    order: 1,
-  },
-  {
-    type: "invoice_cancelled",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "invoices",
-    order: 1,
-  },
-  {
-    type: "invoice_created",
-    channels: ["in_app"],
-    showInSettings: true,
-    category: "invoices",
-    order: 1,
-  },
-];
-
-// Get all notification types (including hidden ones)
-export function getAllNotificationTypes(): NotificationType[] {
-  return allNotificationTypes;
-}
-
-// Get only notification types that should appear in user settings
-export function getUserSettingsNotificationTypes(): NotificationType[] {
-  return allNotificationTypes.filter((type) => type.showInSettings);
-}
+export type { NotificationType, NotificationChannel };
+export { getAllNotificationTypes, getUserSettingsNotificationTypes };
 
 // Get a specific notification type by its type string
 export function getNotificationTypeByType(
   typeString: string,
 ): NotificationType | undefined {
-  return allNotificationTypes.find((type) => type.type === typeString);
+  return getAllNotificationTypes().find((type) => type.type === typeString);
 }
 
 // Check if a notification type should appear in settings

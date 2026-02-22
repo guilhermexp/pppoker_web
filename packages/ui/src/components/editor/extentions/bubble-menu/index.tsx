@@ -1,4 +1,5 @@
-import { type Editor, BubbleMenu as TiptapBubbleMenu } from "@tiptap/react";
+import type { Editor } from "@tiptap/react";
+import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 import { useState } from "react";
 import {
   MdOutlineFormatBold,
