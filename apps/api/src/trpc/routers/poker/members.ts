@@ -57,10 +57,23 @@ const liveMemberSchema = z
   })
   .passthrough();
 
+const clubInfoSchema = z.object({
+  club_id: z.number().nullable().optional(),
+  club_name: z.string().optional().default(""),
+  fichas_disponiveis: z.number().optional().default(0),
+  owner_uid: z.number().nullable().optional(),
+  owner_name: z.string().optional().default(""),
+  user_role: z.number().optional().default(0),
+  total_members: z.number().optional().default(0),
+  avatar_url: z.string().optional().default(""),
+}).optional();
+
 const getLiveMembersResponse = z.object({
   success: z.boolean(),
   total: z.number(),
   members: z.array(liveMemberSchema),
+  club_info: clubInfoSchema,
+  logged_in_uid: z.number().optional(),
 });
 
 export const pokerMembersRouter = createTRPCRouter({
@@ -116,6 +129,15 @@ export const pokerMembersRouter = createTRPCRouter({
       return {
         total: members.length,
         members,
+        clubInfo: parsed.club_info
+          ? {
+              fichasDisponiveis: parsed.club_info.fichas_disponiveis ?? 0,
+              clubName: parsed.club_info.club_name ?? "",
+              ownerName: parsed.club_info.owner_name ?? "",
+              totalMembers: parsed.club_info.total_members ?? 0,
+            }
+          : undefined,
+        loggedInUid: parsed.logged_in_uid ?? undefined,
       };
     }),
 

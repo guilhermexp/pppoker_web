@@ -19,7 +19,7 @@ import { Input } from "@midpoker/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Loader2, Search, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
@@ -167,49 +167,71 @@ function MemberRow({
 }
 
 // ---------------------------------------------------------------------------
+// Types for club info
+// ---------------------------------------------------------------------------
+
+type ClubInfo = {
+  fichasDisponiveis?: number;
+  clubName?: string;
+  ownerName?: string;
+  totalMembers?: number;
+};
+
+// ---------------------------------------------------------------------------
 // Stats Bar
 // ---------------------------------------------------------------------------
 
-function ContadorStats({ members }: { members: LiveMember[] }) {
-  const totalCashbox = members.reduce(
+function ContadorStats({
+  members,
+  clubInfo,
+  loggedInUid,
+}: {
+  members: LiveMember[];
+  clubInfo?: ClubInfo;
+  loggedInUid?: number;
+}) {
+  const loggedInMember = loggedInUid
+    ? members.find((m) => m.uid === loggedInUid)
+    : undefined;
+  const meuSaldo = loggedInMember?.saldo_caixa ?? 0;
+
+  const fichasDisponiveis = clubInfo?.fichasDisponiveis ?? 0;
+  const totalFichasPP = members.reduce(
     (sum, m) => sum + (m.saldo_caixa ?? 0),
     0,
   );
-  const onlineCount = members.filter((m) => m.online).length;
-  const positiveCount = members.filter(
-    (m) => (m.saldo_caixa ?? 0) > 0,
-  ).length;
-  const negativeCount = members.filter(
-    (m) => (m.saldo_caixa ?? 0) < 0,
-  ).length;
 
   const stats = [
     {
-      label: "Total",
-      value: members.length.toString(),
-      icon: Icons.Customers,
-    },
-    {
-      label: "Online",
-      value: onlineCount.toString(),
-      icon: Icons.Visibility,
-      color: "text-green-600",
-    },
-    {
-      label: "Caixa total",
-      value: formatBalance(totalCashbox),
+      label: "Fichas disponíveis",
+      sublabel: "Caixa do clube",
+      value: formatBalance(fichasDisponiveis),
       icon: Icons.Currency,
-      color: totalCashbox >= 0 ? "text-green-600" : "text-red-600",
+      color: fichasDisponiveis > 0 ? "text-green-600" : "text-muted-foreground",
     },
     {
-      label: "Positivo / Negativo",
-      value: `${positiveCount} / ${negativeCount}`,
+      label: "Meu saldo",
+      sublabel: loggedInMember?.nome ?? "Usuário logado",
+      value: formatBalance(meuSaldo),
+      icon: Icons.Customers,
+      color:
+        meuSaldo > 0
+          ? "text-green-600"
+          : meuSaldo < 0
+            ? "text-red-600"
+            : "text-muted-foreground",
+    },
+    {
+      label: "Saldo agentes",
+      sublabel: `Caixa dos agentes/gestores`,
+      value: formatBalance(totalFichasPP),
       icon: Icons.TrendingUp,
+      color: totalFichasPP >= 0 ? "text-blue-600" : "text-red-600",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-3 gap-3">
       {stats.map((s) => (
         <div
           key={s.label}
@@ -225,6 +247,9 @@ function ContadorStats({ members }: { members: LiveMember[] }) {
               )}
             >
               {s.value}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              {s.sublabel}
             </p>
           </div>
         </div>
@@ -428,14 +453,17 @@ function TrocarTab() {
 
   const deferredSearch = useDeferredValue(search);
 
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isFetching } = useQuery(
     trpc.poker.members.getLive.queryOptions(
       { q: deferredSearch || undefined },
-      { refetchInterval: 15_000 },
+      // TODO: reativar auto-refresh quando dashboard estiver pronto
+      // { refetchInterval: 15_000 },
     ),
   );
 
   const allMembers = (data?.members ?? []) as LiveMember[];
+  const clubInfo = (data as any)?.clubInfo as ClubInfo | undefined;
+  const loggedInUid = (data as any)?.loggedInUid as number | undefined;
 
   // Sort
   const sorted = useMemo(() => {
@@ -498,11 +526,15 @@ function TrocarTab() {
     setDialogOpen(true);
   };
 
-  const handleTransferSuccess = () => {
-    setSelectedIds(new Set());
+  const handleRefresh = () => {
     queryClient.invalidateQueries({
       queryKey: trpc.poker.members.getLive.queryKey(),
     });
+  };
+
+  const handleTransferSuccess = () => {
+    setSelectedIds(new Set());
+    handleRefresh();
   };
 
   if (isLoading) {
@@ -515,8 +547,25 @@ function TrocarTab() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Header with refresh */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">
+          {allMembers.length} membros carregados
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-2"
+          onClick={handleRefresh}
+          disabled={isFetching}
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
+          Atualizar
+        </Button>
+      </div>
+
       {/* Stats */}
-      <ContadorStats members={allMembers} />
+      <ContadorStats members={allMembers} clubInfo={clubInfo} loggedInUid={loggedInUid} />
 
       {/* Search */}
       <div className="relative">

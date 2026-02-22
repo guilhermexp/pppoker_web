@@ -281,7 +281,8 @@ export function LobbyPage() {
   const { data, isLoading } = useQuery(
     trpc.poker.rooms.getLive.queryOptions(
       {},
-      { refetchInterval: 30_000 },
+      // TODO: reativar auto-refresh quando dashboard estiver pronto
+      // { refetchInterval: 30_000 },
     ),
   );
 
