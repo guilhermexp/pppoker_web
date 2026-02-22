@@ -1,5 +1,6 @@
 import { getSharedRedisClient } from "@midpoker/cache/shared-redis";
 import { runs, schedules, tasks } from "@trigger.dev/sdk";
+import { getNanobotSettingsForTeam } from "./nanobot-team-settings";
 
 type NanobotCronScheduleInput =
   | {
@@ -125,16 +126,35 @@ function buildInternalAuthHeaders() {
   } as HeadersInit;
 }
 
-function buildNanobotRuntimeHeaders() {
+function buildNanobotRuntimeHeaders(apiKey?: string) {
   const headers: HeadersInit = {
     "content-type": "application/json",
     accept: "text/event-stream, application/json, text/plain",
   };
-  const apiKey = process.env.NANOBOT_API_KEY?.trim();
-  if (apiKey) {
-    (headers as Record<string, string>).authorization = `Bearer ${apiKey}`;
+  const resolvedApiKey = apiKey?.trim() || process.env.NANOBOT_API_KEY?.trim();
+  if (resolvedApiKey) {
+    (headers as Record<string, string>).authorization =
+      `Bearer ${resolvedApiKey}`;
   }
   return headers;
+}
+
+async function getNanobotRuntimeConfigForTeam(teamId: string) {
+  const teamConfig = await getNanobotSettingsForTeam(teamId);
+  const baseUrl = (teamConfig?.baseUrl || process.env.NANOBOT_BASE_URL || "")
+    .trim()
+    .replace(/\/$/, "");
+  const chatPath = (
+    teamConfig?.chatPath ||
+    process.env.NANOBOT_CHAT_PATH ||
+    "/api/chat"
+  ).trim();
+  const apiKey = (
+    teamConfig?.apiKey ||
+    process.env.NANOBOT_API_KEY ||
+    ""
+  ).trim();
+  return { baseUrl, chatPath, apiKey, teamConfig };
 }
 
 function getOrchestrationCallbackBaseUrl() {
@@ -480,10 +500,9 @@ export async function dispatchNanobotCronJob(params: {
 
   buildCronDispatchCallbackUrl();
 
-  const baseUrl = (process.env.NANOBOT_BASE_URL ?? "")
-    .trim()
-    .replace(/\/$/, "");
-  const chatPath = (process.env.NANOBOT_CHAT_PATH ?? "/api/chat").trim();
+  const { baseUrl, chatPath, apiKey } = await getNanobotRuntimeConfigForTeam(
+    record.teamId,
+  );
   if (!baseUrl) {
     throw new Error(
       "NANOBOT_BASE_URL is required to dispatch Nanobot cron jobs",
@@ -494,7 +513,7 @@ export async function dispatchNanobotCronJob(params: {
     `${baseUrl}${chatPath.startsWith("/") ? chatPath : `/${chatPath}`}`,
     {
       method: "POST",
-      headers: buildNanobotRuntimeHeaders(),
+      headers: buildNanobotRuntimeHeaders(apiKey),
       body: JSON.stringify({
         chatId: record.chatId,
         text: record.message,
@@ -542,10 +561,9 @@ export async function dispatchNanobotSubagentTask(params: {
     status: "running",
   });
 
-  const baseUrl = (process.env.NANOBOT_BASE_URL ?? "")
-    .trim()
-    .replace(/\/$/, "");
-  const chatPath = (process.env.NANOBOT_CHAT_PATH ?? "/api/chat").trim();
+  const { baseUrl, chatPath, apiKey } = await getNanobotRuntimeConfigForTeam(
+    record.teamId,
+  );
   if (!baseUrl) {
     throw new Error(
       "NANOBOT_BASE_URL is required to dispatch Nanobot subagent tasks",
@@ -556,7 +574,7 @@ export async function dispatchNanobotSubagentTask(params: {
     `${baseUrl}${chatPath.startsWith("/") ? chatPath : `/${chatPath}`}`,
     {
       method: "POST",
-      headers: buildNanobotRuntimeHeaders(),
+      headers: buildNanobotRuntimeHeaders(apiKey),
       body: JSON.stringify({
         chatId: record.chatId,
         text: record.task,
