@@ -78,6 +78,17 @@ type NanobotSettingsForm = {
     telegram: GatewayConfig;
     slack: GatewayConfig;
   };
+  mcpConfig: {
+    pppoker: {
+      enabled: boolean;
+      serverName: string;
+      command: string;
+      scriptPath: string;
+      extraArgsText: string;
+      cwd: string;
+      envJson: string;
+    };
+  };
 };
 
 type GatewayConfig = {
@@ -361,6 +372,24 @@ export function NanobotSettingsPanel() {
 
       return { ...next, channels: { ...next.channels } };
     });
+
+  const setPppokerMcp = <
+    K extends keyof NanobotSettingsForm["mcpConfig"]["pppoker"],
+  >(
+    key: K,
+    value: NanobotSettingsForm["mcpConfig"]["pppoker"][K],
+  ) =>
+    setForm((prev) =>
+      prev
+        ? {
+            ...prev,
+            mcpConfig: {
+              ...prev.mcpConfig,
+              pppoker: { ...prev.mcpConfig.pppoker, [key]: value },
+            },
+          }
+        : prev,
+    );
 
   const save = () => {
     setSaveMessage("");
@@ -852,6 +881,85 @@ export function NanobotSettingsPanel() {
             value={form.gatewayConfig.slack}
             onChange={(next) => setGateway("slack", next)}
           />
+        </div>
+      </Section>
+
+      <Section
+        title="MCPs (PPPoker Club Manager)"
+        description="Integração do MCP local `Ppfichas/pppoker_mcp.py` para o Nanobot acessar operações do clube (fichas, membros, mesas, solicitações)."
+      >
+        <div className="space-y-4">
+          <ToggleRow
+            label="Habilitar MCP PPPoker"
+            description="Envia configuração `mcpServers.pppoker` para o runtime do Nanobot."
+            checked={form.mcpConfig.pppoker.enabled}
+            onCheckedChange={(checked) => setPppokerMcp("enabled", checked)}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Nome do servidor MCP</Label>
+              <Input
+                value={form.mcpConfig.pppoker.serverName}
+                onChange={(e) => setPppokerMcp("serverName", e.target.value)}
+                placeholder="pppoker"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Comando</Label>
+              <Input
+                value={form.mcpConfig.pppoker.command}
+                onChange={(e) => setPppokerMcp("command", e.target.value)}
+                placeholder="python3"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Caminho do script MCP</Label>
+              <Input
+                value={form.mcpConfig.pppoker.scriptPath}
+                onChange={(e) => setPppokerMcp("scriptPath", e.target.value)}
+                placeholder="./Ppfichas/pppoker_mcp.py"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Diretório de trabalho (cwd)</Label>
+              <Input
+                value={form.mcpConfig.pppoker.cwd}
+                onChange={(e) => setPppokerMcp("cwd", e.target.value)}
+                placeholder="./Ppfichas"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Args extras (opcional)</Label>
+              <Input
+                value={form.mcpConfig.pppoker.extraArgsText}
+                onChange={(e) => setPppokerMcp("extraArgsText", e.target.value)}
+                placeholder="--algum-arg valor"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>ENV JSON (opcional)</Label>
+              <Textarea
+                value={form.mcpConfig.pppoker.envJson}
+                onChange={(e) => setPppokerMcp("envJson", e.target.value)}
+                className="min-h-24 font-mono text-xs"
+                placeholder={'{"PPP_USERNAME":"...","PPP_PASSWORD":"..."}'}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-3 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground mb-1">
+              Tools PPPoker esperadas no MCP
+            </p>
+            <p>
+              `enviar_fichas`, `sacar_fichas`, `login_status`, `info_membro`,
+              `listar_membros`, `downlines_agente`, `exportar_planilha`,
+              `listar_mesas`, `clubes_da_liga`, `listar_solicitacoes`,
+              `aprovar_solicitacao`, `rejeitar_solicitacao`, `promover_membro`,
+              `remover_membro`.
+            </p>
+          </div>
         </div>
       </Section>
 

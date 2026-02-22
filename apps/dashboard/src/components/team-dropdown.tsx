@@ -14,9 +14,13 @@ import { useOnClickOutside } from "usehooks-ts";
 
 type Props = {
   isExpanded?: boolean;
+  bottomOffsetPx?: number;
 };
 
-export function TeamDropdown({ isExpanded = false }: Props) {
+export function TeamDropdown({
+  isExpanded = false,
+  bottomOffsetPx = 16,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const { data: user } = useUserQuery();
   const trpc = useTRPC();
@@ -78,7 +82,10 @@ export function TeamDropdown({ isExpanded = false }: Props) {
   return (
     <div className="relative h-[32px]" ref={ref}>
       {/* Avatar - fixed position that absolutely never changes */}
-      <div className="fixed left-[12px] bottom-4 w-[32px] h-[32px]">
+      <div
+        className="fixed left-[12px] w-[32px] h-[32px]"
+        style={{ bottom: bottomOffsetPx }}
+      >
         <div className="relative w-[32px] h-[32px]">
           <AnimatePresence>
             {isActive && (
@@ -164,7 +171,10 @@ export function TeamDropdown({ isExpanded = false }: Props) {
 
       {/* Team name - appears to the right of the fixed avatar */}
       {isExpanded && sortedTeams[0] && (
-        <div className="fixed left-[55px] bottom-4 h-[32px] flex items-center">
+        <div
+          className="fixed left-[55px] h-[32px] flex items-center"
+          style={{ bottom: bottomOffsetPx }}
+        >
           <span
             className="text-sm text-primary truncate transition-opacity duration-200 ease-in-out cursor-pointer hover:opacity-80"
             onClick={(e) => {

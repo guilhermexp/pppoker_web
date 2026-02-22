@@ -4,12 +4,13 @@ import { cn } from "@midpoker/ui/cn";
 
 import Link from "next/link";
 import { useState } from "react";
-import { MainMenu } from "./main-menu";
+import { MainMenu, SettingsMenuItem } from "./main-menu";
 import { useSidebarPinned } from "./sidebar-context";
 import { TeamDropdown } from "./team-dropdown";
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
   const { isPinned, setIsPinned } = useSidebarPinned();
 
   const expanded = isPinned || isExpanded;
@@ -166,10 +167,20 @@ export function Sidebar() {
       </div>
 
       <div className="flex flex-col w-full pt-[70px] flex-1">
-        <MainMenu isExpanded={expanded} />
+        <MainMenu isExpanded={expanded} settingsPlacement="hidden" />
       </div>
 
-      <TeamDropdown isExpanded={expanded} />
+      <TeamDropdown
+        isExpanded={expanded}
+        bottomOffsetPx={isSettingsExpanded ? 260 : 72}
+      />
+
+      <div className="absolute bottom-4 left-0 w-full">
+        <SettingsMenuItem
+          isExpanded={expanded}
+          onExpandedChange={setIsSettingsExpanded}
+        />
+      </div>
     </aside>
   );
 }

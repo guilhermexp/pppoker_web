@@ -70,6 +70,15 @@ Arquivos:
 - `packages/jobs/src/tasks/nanobot/cron-once-dispatch.ts`
 - `packages/jobs/src/tasks/nanobot/subagent-run.ts`
 
+### 5. MCP PPPoker (gestão do clube)
+Integração de MCP local para operações do clube PPPoker (fichas, membros, mesas, solicitações).
+
+Arquivos:
+- `Ppfichas/pppoker_mcp.py`
+- `apps/api/src/schemas/nanobot.ts` (config `mcpConfig.pppoker`)
+- `apps/dashboard/src/components/nanobot-settings-panel.tsx` (seção MCP PPPoker)
+- `apps/api/src/ai/runtime/nanobot.ts` (envia `mcpServers` ao runtime)
+
 ## Fluxos Principais
 
 ### Fluxo 1: Chat síncrono (`POST /chat`)
@@ -162,6 +171,7 @@ Tela frontend:
 - Skills do Nanobot
 - Automações / Chrome / Tarefas Agendadas
 - Gateways (WhatsApp, Telegram, Slack)
+- MCPs (PPPoker Club Manager)
 - Tools Legadas (manifesto)
 
 ## Variáveis de Ambiente (Operação)

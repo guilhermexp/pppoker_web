@@ -39,6 +39,43 @@ type NanobotSSEEvent = {
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 
+function parseEnvJsonSafe(input: string | undefined): Record<string, string> {
+  if (!input?.trim()) return {};
+  try {
+    const parsed = JSON.parse(input);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, string] =>
+          typeof entry[0] === "string" && typeof entry[1] === "string",
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function buildTeamMcpServers(teamConfig?: NanobotSettings) {
+  const pppoker = teamConfig?.mcpConfig?.pppoker;
+  if (!pppoker?.enabled) return undefined;
+
+  const args = [
+    pppoker.scriptPath,
+    ...pppoker.extraArgsText.split(/\s+/).filter(Boolean),
+  ];
+
+  return {
+    [pppoker.serverName || "pppoker"]: {
+      command: pppoker.command || "python3",
+      args,
+      cwd: pppoker.cwd || undefined,
+      env: parseEnvJsonSafe(pppoker.envJson),
+    },
+  };
+}
+
 function getTeamNanobotConfig(
   options: LegacyChatStreamOptions,
 ): NanobotSettings | undefined {
@@ -142,6 +179,7 @@ async function fetchNanobot(
   options: LegacyChatStreamOptions,
 ): Promise<Response> {
   const teamConfig = getTeamNanobotConfig(options);
+  const mcpServers = buildTeamMcpServers(teamConfig);
   const baseUrl = (teamConfig?.baseUrl || getNanobotBaseUrl())
     .trim()
     .replace(/\/$/, "");
@@ -212,8 +250,11 @@ async function fetchNanobot(
                 memoryConfig: teamConfig.memoryConfig,
                 skillsConfig: teamConfig.skillsConfig,
                 automationConfig: teamConfig.automationConfig,
+                mcpConfig: teamConfig.mcpConfig,
+                mcpServers,
               }
             : undefined,
+          mcpServers,
         }),
       },
     );

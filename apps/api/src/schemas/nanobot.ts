@@ -73,6 +73,20 @@ export const nanobotGatewayConfigSchema = z.object({
   slack: nanobotGatewayChannelConfigSchema.default({}),
 });
 
+export const nanobotPppokerMcpConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  serverName: z.string().default("pppoker"),
+  command: z.string().default("python3"),
+  scriptPath: z.string().default("./Ppfichas/pppoker_mcp.py"),
+  extraArgsText: z.string().default(""),
+  cwd: z.string().default("./Ppfichas"),
+  envJson: z.string().default("{}"),
+});
+
+export const nanobotMcpConfigSchema = z.object({
+  pppoker: nanobotPppokerMcpConfigSchema.default({}),
+});
+
 export const nanobotSettingsSchema = z.object({
   enabled: z.boolean().default(false),
   fallbackToLegacy: z.boolean().default(true),
@@ -96,6 +110,7 @@ export const nanobotSettingsSchema = z.object({
     slackEnabled: false,
   }),
   gatewayConfig: nanobotGatewayConfigSchema.default({}),
+  mcpConfig: nanobotMcpConfigSchema.default({}),
 });
 
 export type NanobotSettings = z.infer<typeof nanobotSettingsSchema>;
@@ -158,6 +173,18 @@ export function normalizeNanobotSettings(
         raw.channels.telegramEnabled || raw.gatewayConfig.telegram.enabled,
       slackEnabled:
         raw.channels.slackEnabled || raw.gatewayConfig.slack.enabled,
+    },
+    mcpConfig: {
+      ...raw.mcpConfig,
+      pppoker: {
+        ...raw.mcpConfig.pppoker,
+        serverName: raw.mcpConfig.pppoker.serverName || "pppoker",
+        command: raw.mcpConfig.pppoker.command || "python3",
+        scriptPath:
+          raw.mcpConfig.pppoker.scriptPath || "./Ppfichas/pppoker_mcp.py",
+        cwd: raw.mcpConfig.pppoker.cwd || "./Ppfichas",
+        envJson: raw.mcpConfig.pppoker.envJson || "{}",
+      },
     },
   };
 }

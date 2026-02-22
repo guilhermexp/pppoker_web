@@ -1,7 +1,7 @@
 "use client";
 
-import { useUserQuery } from "@/hooks/use-user";
 import { useChatInterface } from "@/hooks/use-chat-interface";
+import { useUserQuery } from "@/hooks/use-user";
 import { useI18n } from "@/locales/client";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
@@ -24,10 +24,7 @@ const icons = {
   "/fastchips": () => <Icons.Accounts size={20} />,
 } as const;
 
-const getItems = (
-  t: ReturnType<typeof useI18n>,
-  pokerSectionName?: string,
-) => [
+const getItems = (t: ReturnType<typeof useI18n>, pokerSectionName?: string) => [
   {
     path: "/",
     name: t("sidebar.overview"),
@@ -173,6 +170,7 @@ interface ItemProps {
   isItemExpanded: boolean;
   onToggle: (path: string) => void;
   onSelect?: () => void;
+  childrenDirection?: "down" | "up";
 }
 
 const ChildItem = ({
@@ -239,6 +237,7 @@ const Item = ({
   isItemExpanded,
   onToggle,
   onSelect,
+  childrenDirection = "down",
 }: ItemProps) => {
   const Icon = icons[item.path as keyof typeof icons];
   const pathname = usePathname();
@@ -253,8 +252,38 @@ const Item = ({
     onToggle(item.path);
   };
 
+  const childrenContent = hasChildren ? (
+    <div
+      className={cn(
+        "transition-all duration-300 ease-out overflow-hidden",
+        shouldShowChildren
+          ? childrenDirection === "up"
+            ? "max-h-96 mb-1"
+            : "max-h-96 mt-1"
+          : "max-h-0",
+      )}
+    >
+      {item.children!.map((child, index) => {
+        const isChildActive = pathname === child.path;
+        return (
+          <ChildItem
+            key={child.path}
+            child={child}
+            isActive={isChildActive}
+            isExpanded={isExpanded}
+            shouldShow={shouldShowChildren}
+            onSelect={onSelect}
+            index={index}
+          />
+        );
+      })}
+    </div>
+  ) : null;
+
   return (
     <div className="group">
+      {childrenDirection === "up" && childrenContent}
+
       <Link
         prefetch
         href={item.path}
@@ -317,30 +346,7 @@ const Item = ({
         </div>
       </Link>
 
-      {/* Children */}
-      {hasChildren && (
-        <div
-          className={cn(
-            "transition-all duration-300 ease-out overflow-hidden",
-            shouldShowChildren ? "max-h-96 mt-1" : "max-h-0",
-          )}
-        >
-          {item.children!.map((child, index) => {
-            const isChildActive = pathname === child.path;
-            return (
-              <ChildItem
-                key={child.path}
-                child={child}
-                isActive={isChildActive}
-                isExpanded={isExpanded}
-                shouldShow={shouldShowChildren}
-                onSelect={onSelect}
-                index={index}
-              />
-            );
-          })}
-        </div>
-      )}
+      {childrenDirection === "down" && childrenContent}
     </div>
   );
 };
@@ -348,14 +354,24 @@ const Item = ({
 type Props = {
   onSelect?: () => void;
   isExpanded?: boolean;
+  settingsPlacement?: "in-menu" | "hidden";
 };
 
-export function MainMenu({ onSelect, isExpanded = false }: Props) {
+export function MainMenu({
+  onSelect,
+  isExpanded = false,
+  settingsPlacement = "in-menu",
+}: Props) {
   const pathname = usePathname();
   const { isChatPage } = useChatInterface();
   const { data: user } = useUserQuery();
   const t = useI18n();
   const items = getItems(t, user?.team?.name || undefined);
+  const primaryItems = items.filter((item) => item.path !== "/settings");
+  const footerItems =
+    settingsPlacement === "in-menu"
+      ? items.filter((item) => item.path === "/settings")
+      : [];
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   // Check if current pathname is a known menu path (including sub-paths)
@@ -391,10 +407,10 @@ export function MainMenu({ onSelect, isExpanded = false }: Props) {
   const bestMatchPath = findBestMatchPath(pathnameWithoutQuery);
 
   return (
-    <div className="mt-6 w-full">
-      <nav className="w-full">
+    <div className="mt-6 w-full h-full flex flex-col">
+      <nav className="w-full flex-1 flex flex-col min-h-0">
         <div className="flex flex-col gap-2">
-          {items.map((item) => {
+          {primaryItems.map((item) => {
             const isActive =
               (pathname === "/" && item.path === "/") ||
               (item.path === "/" && isValidChatPage) ||
@@ -415,7 +431,90 @@ export function MainMenu({ onSelect, isExpanded = false }: Props) {
             );
           })}
         </div>
+
+        {footerItems.length > 0 && (
+          <div className="mt-auto pt-4">
+            <div className="flex flex-col gap-2">
+              {footerItems.map((item) => {
+                const isActive =
+                  (pathname === "/" && item.path === "/") ||
+                  (item.path === "/" && isValidChatPage) ||
+                  item.path === bestMatchPath;
+
+                return (
+                  <Item
+                    key={item.path}
+                    item={item}
+                    isActive={isActive}
+                    isExpanded={isExpanded}
+                    isItemExpanded={expandedItem === item.path}
+                    onToggle={(path) => {
+                      setExpandedItem(expandedItem === path ? null : path);
+                    }}
+                    onSelect={onSelect}
+                    childrenDirection="up"
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
       </nav>
+    </div>
+  );
+}
+
+export function SettingsMenuItem({
+  onSelect,
+  isExpanded = false,
+  onExpandedChange,
+}: {
+  onSelect?: () => void;
+  isExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+}) {
+  const pathname = usePathname();
+  const { isChatPage } = useChatInterface();
+  const { data: user } = useUserQuery();
+  const t = useI18n();
+  const items = getItems(t, user?.team?.name || undefined);
+  const settingsItem = items.find((item) => item.path === "/settings");
+  const [expandedItem, setExpandedItem] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isExpanded && expandedItem !== null) {
+      setExpandedItem(null);
+      onExpandedChange?.(false);
+    }
+  }, [expandedItem, isExpanded, onExpandedChange]);
+
+  if (!settingsItem) return null;
+
+  const pathnameWithoutQuery = pathname?.split("?")[0] || "";
+  const isKnownMenuPath = KNOWN_MENU_PATHS.some((knownPath) =>
+    pathnameWithoutQuery.startsWith(knownPath),
+  );
+  const isValidChatPage = isChatPage && !isKnownMenuPath;
+  const isActive =
+    (pathname === "/" && settingsItem.path === "/") ||
+    (settingsItem.path === "/" && isValidChatPage) ||
+    pathnameWithoutQuery.startsWith("/settings");
+
+  return (
+    <div className="w-full">
+      <Item
+        item={settingsItem}
+        isActive={isActive}
+        isExpanded={isExpanded}
+        isItemExpanded={expandedItem === settingsItem.path}
+        onToggle={(path) => {
+          const nextExpanded = expandedItem === path ? null : path;
+          setExpandedItem(nextExpanded);
+          onExpandedChange?.(nextExpanded === settingsItem.path);
+        }}
+        onSelect={onSelect}
+        childrenDirection="up"
+      />
     </div>
   );
 }
