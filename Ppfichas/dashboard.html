@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPPoker MCP — Documentacao Completa v2.0</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --sidebar: #141620;
+    --border: #2a2d3a;
+    --accent: #6c5ce7;
+    --accent-dim: rgba(108,92,231,.15);
+    --green: #00b894;
+    --green-dim: rgba(0,184,148,.12);
+    --red: #e17055;
+    --red-dim: rgba(225,112,85,.12);
+    --yellow: #fdcb6e;
+    --yellow-dim: rgba(253,203,110,.12);
+    --blue: #74b9ff;
+    --blue-dim: rgba(116,185,255,.12);
+    --text: #dfe6e9;
+    --muted: #636e72;
+    --code-bg: #2d3040;
+    --mono: 'SF Mono',Consolas,'Courier New',monospace;
+    --sans: 'Segoe UI',system-ui,-apple-system,sans-serif;
+    --sidebar-w: 260px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; scroll-padding-top:20px; }
+  body { background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    position:fixed; top:0; left:0; width:var(--sidebar-w); height:100vh;
+    background:var(--sidebar); border-right:1px solid var(--border);
+    overflow-y:auto; z-index:100; padding:20px 0;
+    transition:transform .3s ease;
+  }
+  .sidebar-logo { text-align:center; padding:10px 16px 16px; border-bottom:1px solid var(--border); margin-bottom:12px; }
+  .sidebar-logo h2 { font-size:1.15em; font-weight:700; }
+  .sidebar-logo h2 span { color:var(--accent); }
+  .sidebar-logo p { color:var(--muted); font-size:.72em; margin-top:2px; }
+
+  .sidebar-group { padding:0 12px; margin-bottom:6px; }
+  .sidebar-group-title { color:var(--muted); font-size:.65em; text-transform:uppercase; letter-spacing:1px; padding:8px 8px 4px; font-weight:600; }
+  .sidebar-divider { border:0; border-top:1px solid var(--border); margin:8px 12px; }
+
+  .sidebar a {
+    display:block; padding:6px 12px 6px 16px; color:var(--text); text-decoration:none;
+    font-size:.82em; border-radius:6px; margin:1px 0; transition:background .15s, color .15s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .sidebar a:hover { background:var(--accent-dim); color:#fff; }
+  .sidebar a.active { background:var(--accent); color:#fff; font-weight:600; }
+  .sidebar a .count { float:right; color:var(--muted); font-size:.85em; font-weight:400; }
+  .sidebar a.active .count { color:rgba(255,255,255,.7); }
+
+  /* ===== HAMBURGER ===== */
+  .hamburger {
+    display:none; position:fixed; top:12px; left:12px; z-index:200;
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    width:40px; height:40px; cursor:pointer; align-items:center; justify-content:center;
+  }
+  .hamburger span, .hamburger span::before, .hamburger span::after {
+    display:block; width:20px; height:2px; background:var(--text); border-radius:2px;
+    position:relative; transition:all .3s;
+  }
+  .hamburger span::before, .hamburger span::after { content:''; position:absolute; left:0; }
+  .hamburger span::before { top:-6px; }
+  .hamburger span::after { top:6px; }
+  .hamburger.open span { background:transparent; }
+  .hamburger.open span::before { transform:rotate(45deg); top:0; }
+  .hamburger.open span::after { transform:rotate(-45deg); top:0; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:90; }
+
+  /* ===== MAIN CONTENT ===== */
+  .main { margin-left:var(--sidebar-w); padding:30px 40px 60px; max-width:1100px; }
+
+  /* ===== HEADER ===== */
+  .page-header { margin-bottom:30px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+  .page-header h1 { font-size:1.8em; font-weight:700; }
+  .page-header h1 span { color:var(--accent); }
+  .page-header .subtitle { color:var(--muted); font-size:.9em; margin-top:4px; }
+  .info-box { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 18px; margin-top:16px; font-size:.82em; display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; }
+  .info-box .label { color:var(--muted); }
+  .info-box code { background:var(--code-bg); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:.92em; }
+
+  /* ===== STATS ===== */
+  .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:30px; }
+  .stat { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center; }
+  .stat .num { font-size:1.8em; font-weight:700; }
+  .stat .label { color:var(--muted); font-size:.78em; margin-top:2px; }
+
+  /* ===== SECTION ===== */
+  section { margin-bottom:40px; scroll-margin-top:20px; }
+  section > h2 { font-size:1.2em; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  h2 .badge { display:inline-block; background:var(--accent); color:#fff; font-size:.6em; padding:2px 10px; border-radius:20px; font-weight:600; }
+  h3 { font-size:1em; margin-bottom:8px; }
+
+  /* ===== TOOL CARD ===== */
+  .tool-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .tool-card .tool-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .tool-card .tool-header h3 { margin:0; font-family:var(--mono); font-size:1em; }
+  .tool-card .tool-header .fase { font-size:.7em; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .tool-card .tool-header .testado { font-size:.7em; padding:2px 8px; border-radius:10px; font-weight:600; background:var(--green-dim); color:var(--green); }
+  .tool-card .desc { color:var(--muted); font-size:.88em; margin-bottom:12px; }
+  .tool-card .proto-info { background:var(--bg); border-radius:8px; padding:10px 14px; font-size:.82em; margin-bottom:12px; font-family:var(--mono); }
+  .tool-card .proto-info .arrow { color:var(--muted); margin:0 6px; }
+  .tool-card .payload-fields { font-size:.8em; color:var(--muted); margin-bottom:10px; }
+  .tool-card .payload-fields code { background:var(--code-bg); padding:1px 4px; border-radius:3px; font-family:var(--mono); color:var(--blue); }
+  .tool-card .errors { font-size:.8em; margin-bottom:10px; }
+  .tool-card .errors li { color:var(--muted); margin-left:16px; }
+  .tool-card .test-example { background:var(--bg); border-radius:8px; padding:10px 14px; font-size:.78em; font-family:var(--mono); color:var(--green); overflow-x:auto; }
+
+  /* ===== TABLES ===== */
+  table { width:100%; border-collapse:collapse; font-size:.85em; }
+  th, td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; font-size:.75em; text-transform:uppercase; letter-spacing:.5px; }
+  td code { background:var(--code-bg); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:.92em; }
+  tr:hover td { background:rgba(108,92,231,.04); }
+  .tbl-wrap { overflow-x:auto; }
+
+  /* ===== PARAM TABLE ===== */
+  .param-table { margin-bottom:10px; }
+  .param-table th { font-size:.7em; }
+  .param-table td { font-size:.82em; padding:5px 8px; }
+  .param-table .req { color:var(--green); font-weight:600; font-size:.75em; }
+  .param-table .opt { color:var(--muted); font-size:.75em; }
+
+  /* ===== BADGES ===== */
+  .ok { display:inline-block; background:var(--green-dim); color:var(--green); font-size:.72em; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .pending { display:inline-block; background:var(--yellow-dim); color:var(--yellow); font-size:.72em; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .miss { display:inline-block; background:var(--red-dim); color:var(--red); font-size:.72em; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .fase-badge { font-size:.7em; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .fase1 { background:var(--green-dim); color:var(--green); }
+  .fase2 { background:var(--blue-dim); color:var(--blue); }
+  .fase3 { background:var(--accent-dim); color:var(--accent); }
+
+  /* ===== CARDS GRID ===== */
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; }
+
+  /* ===== HIERARCHY ===== */
+  .hierarchy { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center; padding:20px 0; }
+  .hier-node { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 20px; text-align:center; min-width:100px; }
+  .hier-node .icon { font-size:1.3em; }
+  .hier-node .name { font-weight:700; font-size:.9em; }
+  .hier-node .code { color:var(--muted); font-size:.75em; font-family:var(--mono); }
+  .hier-arrow { color:var(--muted); font-size:1.3em; }
+
+  /* ===== PROTO TABLE ===== */
+  .proto-cat { color:var(--accent); font-size:.9em; font-weight:600; margin:16px 0 6px; }
+
+  /* ===== FLOW DIAGRAM ===== */
+  .flow { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:16px 0; font-size:.85em; }
+  .flow-step { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-family:var(--mono); font-size:.85em; }
+  .flow-arrow { color:var(--muted); }
+
+  /* ===== PRE / CODE ===== */
+  pre { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:14px; font-family:var(--mono); font-size:.82em; overflow-x:auto; line-height:1.5; color:var(--blue); }
+  code { font-family:var(--mono); }
+
+  /* ===== TIMELINE ===== */
+  .timeline { position:relative; padding-left:30px; }
+  .timeline::before { content:''; position:absolute; left:10px; top:5px; bottom:5px; width:2px; background:var(--border); }
+  .tl-item { position:relative; margin-bottom:20px; }
+  .tl-item::before { content:''; position:absolute; left:-24px; top:6px; width:12px; height:12px; border-radius:50%; border:2px solid var(--accent); background:var(--bg); }
+  .tl-item.done::before { background:var(--green); border-color:var(--green); }
+  .tl-item.active::before { background:var(--yellow); border-color:var(--yellow); }
+  .tl-item h4 { font-size:.92em; }
+  .tl-item p { color:var(--muted); font-size:.82em; margin-top:2px; }
+  .tl-item ul { color:var(--muted); font-size:.8em; margin:4px 0 0 16px; }
+
+  /* ===== GAME TYPES ===== */
+  .game-grid { display:flex; gap:8px; flex-wrap:wrap; }
+  .game-chip { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 16px; font-size:.88em; }
+  .game-chip strong { color:var(--accent); font-family:var(--mono); }
+
+  /* ===== PERMISSION TABLE ===== */
+  .perm-table td { text-align:center; font-size:.8em; }
+  .perm-table td:first-child { text-align:left; }
+  .perm-table .yes { color:var(--green); }
+  .perm-table .no { color:var(--red); }
+  .perm-table .maybe { color:var(--yellow); }
+
+  /* ===== FOOTER ===== */
+  footer { text-align:center; color:var(--muted); font-size:.75em; padding:30px 0 20px; border-top:1px solid var(--border); margin-top:40px; }
+
+  /* ===== RESPONSIVE ===== */
+  @media(max-width:900px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); box-shadow:4px 0 20px rgba(0,0,0,.5); }
+    .hamburger { display:flex; }
+    .overlay.show { display:block; }
+    .main { margin-left:0; padding:20px 16px 60px; }
+    .stats { grid-template-columns:repeat(3,1fr); }
+    .info-box { grid-template-columns:1fr; }
+    .hierarchy { flex-direction:column; }
+    .hier-arrow { transform:rotate(90deg); }
+  }
+  @media(max-width:500px) {
+    .stats { grid-template-columns:repeat(2,1fr); }
+    .cards { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HAMBURGER (mobile) -->
+<button class="hamburger" id="hamburger" aria-label="Menu"><span></span></button>
+<div class="overlay" id="overlay"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h2><span>PPPoker</span> MCP</h2>
+    <p>Documentacao v2.0</p>
+  </div>
+
+  <div class="sidebar-group">
+    <a href="#visao-geral">Visao Geral</a>
+  </div>
+  <hr class="sidebar-divider">
+
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Tools &amp; Protocolo</div>
+    <a href="#tools-mcp">Tools MCP <span class="count">14</span></a>
+    <a href="#protobuf-msgs">Mensagens Protobuf <span class="count">18</span></a>
+    <a href="#protocolo-tcp">Protocolo TCP</a>
+  </div>
+  <hr class="sidebar-divider">
+
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Dados &amp; Hierarquia</div>
+    <a href="#hierarquia">Hierarquia &amp; Papeis</a>
+    <a href="#ids-teste">IDs de Teste</a>
+    <a href="#dados-temos-falta">Dados: Temos vs Falta</a>
+    <a href="#tipos-jogo">Tipos de Jogo</a>
+  </div>
+  <hr class="sidebar-divider">
+
+  <div class="sidebar-group">
+    <div class="sidebar-group-title">Projeto</div>
+    <a href="#progresso">Progresso <span class="count">6 fases</span></a>
+    <a href="#msgs-investigadas">Msgs Investigadas</a>
+    <a href="#arquivos">Arquivos do Projeto</a>
+    <a href="#reverse-engineering">Reverse Engineering</a>
+  </div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+<!-- ==================== 1. VISAO GERAL ==================== -->
+<section id="visao-geral">
+  <div class="page-header">
+    <h1><span>PPPoker</span> MCP — Documentacao Completa</h1>
+    <p class="subtitle">Reverse Engineering + Automacao via MCP Tools para Claude Desktop</p>
+    <div class="info-box">
+      <div><span class="label">Repositorio:</span> <code>github.com/guilhermexp/pppoker_mcp</code></div>
+      <div><span class="label">Diretorio:</span> <code>/Users/macosx/Ppfichas/</code></div>
+      <div><span class="label">Conta operadora:</span> <code>FastchipsOnline</code> (UID <code>13352472</code>)</div>
+      <div><span class="label">Owner:</span> <code>8980655</code> (GestorGeral.)</div>
+      <div><span class="label">Email:</span> <code>guilherme-varela@hotmail.com</code></div>
+      <div><span class="label">Atualizado:</span> 22/02/2026</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" style="color:var(--green)">14</div><div class="label">Tools MCP</div></div>
+    <div class="stat"><div class="num" style="color:var(--blue)">18</div><div class="label">Msgs Protobuf</div></div>
+    <div class="stat"><div class="num" style="color:var(--accent)">3</div><div class="label">Fases Completas</div></div>
+    <div class="stat"><div class="num" style="color:var(--yellow)">4</div><div class="label">Dados Pendentes</div></div>
+    <div class="stat"><div class="num" style="color:var(--green)">~150</div><div class="label">Handlers Probados</div></div>
+  </div>
+</section>
+
+<!-- ==================== 2. TOOLS MCP ==================== -->
+<section id="tools-mcp">
+  <h2>Tools MCP <span class="badge">14 tools</span></h2>
+
+  <!-- ===== FASE 1 ===== -->
+  <h3 style="color:var(--green);margin:16px 0 10px;">Fase 1 — Operacoes Basicas (4 tools)</h3>
+
+  <!-- enviar_fichas -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F4B0;</span>
+      <h3>enviar_fichas</h3>
+      <span class="fase-badge fase1">FASE 1</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Envia fichas PPPoker para qualquer nivel da hierarquia do clube (jogador, agente ou super agente). O servidor roteia automaticamente pelo papel do destinatario. Valores internos multiplicados por 100 (centavos).</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>target_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>UID de quem vai RECEBER as fichas. Ex: 11470719</td></tr>
+        <tr><td><code>amount</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>Quantidade de fichas (valor face, positivo). Protocolo multiplica x100</td></tr>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>4191918</td><td>ID numerico do clube</td></tr>
+        <tr><td><code>liga_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>3357</td><td>ID da liga/federacao</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.AddCoinREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.AddCoinRSP</span> + <span style="color:var(--green)">pb.ClubAgentPPCoinRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>Payload fields:</strong>
+      <code>f1</code>=clube_id, <code>f4</code>=liga_id, <code>f5</code>=0 (type), <code>f6</code>=target_id, <code>f7</code>=amount*100, <code>f8</code>=txn_id (string "{clube}_{sender}_{ts}")
+    </div>
+    <div class="errors"><strong>Erros conhecidos:</strong>
+      <ul>
+        <li><code>code=0</code> — Sucesso</li>
+        <li>Saldo insuficiente — retorna erro no AddCoinRSP</li>
+      </ul>
+    </div>
+    <div class="test-example">Teste real: enviar_fichas(target_id=11470719, amount=500, clube_id=4191918, liga_id=3357) → OK</div>
+  </div>
+
+  <!-- sacar_fichas -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F4E4;</span>
+      <h3>sacar_fichas</h3>
+      <span class="fase-badge fase1">FASE 1</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Retira fichas de um jogador. Mesmo protocolo AddCoinREQ com valor negativo (complemento de 2 em 64 bits). O tool aplica a negacao automaticamente.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>target_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>UID do jogador de quem retirar fichas</td></tr>
+        <tr><td><code>amount</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>Quantidade a retirar (positivo; negacao e automatica)</td></tr>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>4191918</td><td>ID do clube</td></tr>
+        <tr><td><code>liga_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>3357</td><td>ID da liga</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.AddCoinREQ</span> (amount negativo)
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.AddCoinRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>Payload fields:</strong> Mesmo que enviar_fichas, mas <code>f7</code> = -(amount*100) como unsigned 64-bit
+    </div>
+    <div class="test-example">Teste real: sacar_fichas(target_id=11470719, amount=500, clube_id=4191918) → OK</div>
+  </div>
+
+  <!-- login_status -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x2705;</span>
+      <h3>login_status</h3>
+      <span class="fase-badge fase1">FASE 1</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Verifica se o login HTTP da conta operadora esta funcionando. Retorna uid, rdkey e servidor. Sem parametros.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td colspan="5" style="color:var(--muted);text-align:center;">Nenhum parametro</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      HTTP POST <span style="color:var(--blue)">api.pppoker.club/poker/api/login.php</span>
+    </div>
+    <div class="payload-fields">
+      <strong>Retorna:</strong> uid, rdkey (32 hex), gserver_ip, gserver_port
+    </div>
+    <div class="test-example">Teste real: login_status() → uid=13352472, server=47.254.71.136:4000</div>
+  </div>
+
+  <!-- exportar_planilha -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F4CA;</span>
+      <h3>exportar_planilha</h3>
+      <span class="fase-badge fase1">FASE 1</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Exporta dados de jogo do clube para planilha Excel (.xlsx) enviada por email. Inclui partidas, ganhos, taxa, transacoes. SEMPRE PERGUNTAR datas ao usuario.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>email</code></td><td>string</td><td><span class="req">SIM</span></td><td>—</td><td>Email destino da planilha. Ex: guilherme-varela@hotmail.com</td></tr>
+        <tr><td><code>date_start</code></td><td>string</td><td><span class="req">SIM</span></td><td>—</td><td>Data inicio YYYYMMDD. SEMPRE PERGUNTAR</td></tr>
+        <tr><td><code>date_end</code></td><td>string</td><td><span class="req">SIM</span></td><td>—</td><td>Data fim YYYYMMDD. Max 7 dias recomendado</td></tr>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>4366162</td><td>ID do clube</td></tr>
+        <tr><td><code>liga_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>1765</td><td>Liga (DEVE corresponder ao clube_id!)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.ExportGameDataREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.ExportGameDataRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>Payload fields (17 campos!):</strong>
+      <code>f1</code>=club_id, <code>f2</code>=timestamps (repeated), <code>f3</code>=end_ts, <code>f4</code>=user_id, <code>f5</code>=email, <code>f6</code>=-3 (uint64), <code>f7</code>="pt", <code>f8</code>=liga_id, <code>f9</code>=transacoes, <code>f10</code>=diamante, <code>f12</code>=date_start, <code>f13</code>=date_end, <code>f15</code>=609 (all games), <code>f16</code>=0 (OBRIGATORIO!), <code>f17</code>=0
+    </div>
+    <div class="errors"><strong>Erros conhecidos:</strong>
+      <ul>
+        <li><code>code=0</code> — Sucesso, planilha enviada</li>
+        <li><code>code=-2</code> — Sem permissao (conta nao e dono)</li>
+        <li><code>code=-3</code> — Periodo muito longo</li>
+        <li><code>code=-4</code> — Liga invalida</li>
+        <li><code>code=-5</code> — Sem dados / f16!=0 / liga errada para o clube</li>
+      </ul>
+    </div>
+    <div class="test-example">Teste real: exportar_planilha(email="guilherme-varela@hotmail.com", date_start="20250901", date_end="20250907", clube_id=4366162, liga_id=1765) → OK</div>
+  </div>
+
+  <!-- ===== FASE 2 ===== -->
+  <h3 style="color:var(--blue);margin:24px 0 10px;">Fase 2 — Membros e Hierarquia (3 tools)</h3>
+
+  <!-- info_membro -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F464;</span>
+      <h3>info_membro</h3>
+      <span class="fase-badge fase2">FASE 2</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Busca informacoes detalhadas de um membro: nome, papel, titulo, online, saldo_caixa, credito, downlines, agente direto.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>uid</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>UID do membro a consultar</td></tr>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>4366162</td><td>ID do clube</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.ClubAgentMemberREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.ClubAgentMemberRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id, <code>f2</code>=uid<br>
+      <strong>RSP (sub-msg f3):</strong> <code>f1</code>=papel, <code>f2</code>=uid, <code>f3</code>=nome, <code>f4</code>=avatar, <code>f6</code>=join_ts, <code>f12</code>=downlines_sub(f2=uids,f3=credit), <code>f13</code>=titulo, <code>f15</code>=last_active_ts, <code>f19</code>=credito_linha(-1=sem,-0+=valor,1023=gestor), <code>f20</code>=agente_nome, <code>f22</code>=online(0/1), <code>f23</code>=saldo_caixa, <code>f24</code>=agente_uid, <code>f25</code>=super_agente_uid, <code>f26</code>=super_agente_nome
+    </div>
+    <div class="test-example">Teste real: info_membro(uid=13357479, clube_id=4366162) → Guilherme, papel=5(Agente), online=1</div>
+  </div>
+
+  <!-- listar_membros -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F465;</span>
+      <h3>listar_membros</h3>
+      <span class="fase-badge fase2">FASE 2</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Lista TODOS os membros do clube com hierarquia completa. Filtravel por papel. Retorna ~16KB com todos os campos por membro.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube. Ex: 4366162</td></tr>
+        <tr><td><code>papel</code></td><td>string</td><td><span class="opt">NAO</span></td><td>"todos"</td><td>Filtro: todos, dono, gestor, super_agente, agente, membro</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.ClubMemberREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.ClubMemberRSP</span> (~16KB)
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id<br>
+      <strong>RSP:</strong> <code>f1</code>=clube_id, <code>f3</code>=repeated member sub-msgs (mesma estrutura do info_membro)
+    </div>
+    <div class="test-example">Teste real: listar_membros(clube_id=4366162) → 88 membros, com hierarquia completa</div>
+  </div>
+
+  <!-- downlines_agente -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F517;</span>
+      <h3>downlines_agente</h3>
+      <span class="fase-badge fase2">FASE 2</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Lista downlines diretos de um agente/super agente. Usa ClubMemberREQ + filtro por agente_uid. O f12 inclui o proprio agente — filtrar self!</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube</td></tr>
+        <tr><td><code>agente_uid</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>UID do agente/super agente. Ex: 2914397</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.ClubMemberREQ</span> + filtro client-side
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.ClubMemberRSP</span>
+    </div>
+    <div class="test-example">Teste real: downlines_agente(clube_id=4366162, agente_uid=2914397) → LordSnow + seus jogadores</div>
+  </div>
+
+  <!-- ===== FASE 3 ===== -->
+  <h3 style="color:var(--accent);margin:24px 0 10px;">Fase 3 — Mesas, Liga, Gestao (7 tools)</h3>
+
+  <!-- listar_mesas -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F3B0;</span>
+      <h3>listar_mesas</h3>
+      <span class="fase-badge fase3">FASE 3</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Lista TODAS as salas/mesas do clube: torneios MTT, SNG, cash games. Retorna ~64KB com 200 rooms! Nome, tipo, jogadores, buy-in, prize pool, horarios.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube. Ex: 4366162</td></tr>
+        <tr><td><code>apenas_ativas</code></td><td>boolean</td><td><span class="opt">NAO</span></td><td>false</td><td>Se true, retorna apenas mesas rodando</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.ClubRoomREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.ClubRoomRSP</span> (~64KB, timeout 10s)
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id<br>
+      <strong>RSP:</strong> <code>f1</code>=liga_id, <code>f2</code>=repeated room sub-msgs<br>
+      <strong>Room fields:</strong> <code>f1</code>=room_id, <code>f2</code>=nome, <code>f5</code>=buy_in, <code>f6</code>=fee, <code>f7</code>=min_buy, <code>f9</code>=max_players, <code>f10</code>=registrados, <code>f11</code>=running, <code>f13</code>=game_type, <code>f14</code>=blind_duration, <code>f15</code>=starting_chips, <code>f16</code>=entries, <code>f18</code>=status(0=idle,1=reg,2=running,3=finished), <code>f25</code>=is_running(cash), <code>f61</code>=garantido, <code>f68</code>=prize_sub(f1=total,f2=collected,f3=remaining,f4=guarantee), <code>f82</code>=creator_uid, <code>f91</code>=-1=torneio/0=cash, <code>f95</code>=rake
+    </div>
+    <div class="test-example">Teste real: listar_mesas(clube_id=4366162) → 200 rooms, MTT+Cash, 64KB</div>
+  </div>
+
+  <!-- clubes_da_liga -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F3E2;</span>
+      <h3>clubes_da_liga</h3>
+      <span class="fase-badge fase3">FASE 3</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Lista todos os clubes de uma liga/federacao. Nome, saldo, max membros, data de ingresso, diamantes, credito.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>liga_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID da liga. Ex: 1765</td></tr>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="opt">NAO</span></td><td>4366162</td><td>Clube para entrar no contexto</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.LeagueMemberREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.LeagueMemberRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=liga_id (NAO clube_id!)<br>
+      <strong>RSP (sub-msg f3):</strong> <code>f1</code>=club_id, <code>f2</code>=club_name, <code>f3</code>=avatar, <code>f4</code>=status, <code>f6</code>=max_members, <code>f10</code>=join_ts, <code>f18</code>=diamantes, <code>f22</code>=saldo(signed), <code>f23</code>=credito
+    </div>
+    <div class="test-example">Teste real: clubes_da_liga(liga_id=1765, clube_id=4366162) → 40 clubes, Evolution 2</div>
+  </div>
+
+  <!-- listar_solicitacoes -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F4E9;</span>
+      <h3>listar_solicitacoes</h3>
+      <span class="fase-badge fase3">FASE 3</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Lista solicitacoes de entrada pendentes no clube. Mostra request_id, uid, nome, mensagem, data.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube. Ex: 4366162</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.ClubJoinListREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.ClubJoinListRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id<br>
+      <strong>RSP (sub-msg f1):</strong> <code>f1</code>=request_id, <code>f2</code>=uid, <code>f3</code>=nome, <code>f4</code>=avatar, <code>f5</code>=timestamp, <code>f6</code>=mensagem
+    </div>
+    <div class="test-example">Teste real: listar_solicitacoes(clube_id=4366162) → lista com request_ids</div>
+  </div>
+
+  <!-- aprovar_solicitacao -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x2705;</span>
+      <h3>aprovar_solicitacao</h3>
+      <span class="fase-badge fase3">FASE 3</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Aprova uma solicitacao de entrada pendente. Obter request_id via listar_solicitacoes primeiro.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube</td></tr>
+        <tr><td><code>request_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID da solicitacao (obtido via listar_solicitacoes)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.HandleJoinMsgREQ</span> (f3=1)
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.HandleJoinMsgRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id, <code>f2</code>=request_id, <code>f3</code>=1 (accept)<br>
+      <strong>RSP:</strong> <code>f1</code>=code, <code>f2</code>=clube_id, <code>f3</code>=uid_approved
+    </div>
+    <div class="test-example">Teste real: aprovar_solicitacao(clube_id=4366162, request_id=xxx) → OK, uid_approved</div>
+  </div>
+
+  <!-- rejeitar_solicitacao -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x274C;</span>
+      <h3>rejeitar_solicitacao</h3>
+      <span class="fase-badge fase3">FASE 3</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Rejeita uma solicitacao de entrada pendente.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube</td></tr>
+        <tr><td><code>request_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID da solicitacao</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.HandleJoinMsgREQ</span> (f3=2)
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.HandleJoinMsgRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id, <code>f2</code>=request_id, <code>f3</code>=2 (reject)
+    </div>
+    <div class="test-example">Teste real: rejeitar_solicitacao(clube_id=4366162, request_id=xxx) → OK</div>
+  </div>
+
+  <!-- promover_membro -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F451;</span>
+      <h3>promover_membro</h3>
+      <span class="fase-badge fase3">FASE 3</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Promove ou rebaixa um membro do clube. SEMPRE PERGUNTAR ao usuario qual papel deseja. Limitacao: Gestor nao pode promover a Super Agente (code=-4).</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube</td></tr>
+        <tr><td><code>target_uid</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>UID do membro</td></tr>
+        <tr><td><code>papel</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>2=Gestor, 4=Super Agente, 5=Agente, 10=Membro</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.ClubSetRoleREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.ClubSetRoleRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id, <code>f2</code>=target_uid, <code>f3</code>=role<br>
+      <strong>RSP:</strong> <code>f1</code>=code, <code>f2</code>=clube_id, <code>f3</code>=new_role, <code>f4</code>=uid
+    </div>
+    <div class="errors"><strong>Erros conhecidos:</strong>
+      <ul>
+        <li><code>code=0</code> — Sucesso</li>
+        <li><code>code=-4</code> — Sem permissao (Gestor nao pode promover a Super Agente)</li>
+      </ul>
+    </div>
+    <div class="test-example">Teste real: promover_membro(clube_id=4366162, target_uid=13357479, papel=5) → OK (Agente)<br>promover_membro(..., papel=4) → code=-4 (sem permissao para SA)</div>
+  </div>
+
+  <!-- remover_membro -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <span style="font-size:1.2em">&#x1F6AB;</span>
+      <h3>remover_membro</h3>
+      <span class="fase-badge fase3">FASE 3</span>
+      <span class="testado">TESTADO</span>
+    </div>
+    <p class="desc">Remove (kick) um membro do clube. ACAO IRREVERSIVEL! O membro precisara solicitar entrada novamente.</p>
+    <div class="tbl-wrap">
+    <table class="param-table">
+      <thead><tr><th>Param</th><th>Tipo</th><th>Obrig?</th><th>Default</th><th>Descricao</th></tr></thead>
+      <tbody>
+        <tr><td><code>clube_id</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>ID do clube</td></tr>
+        <tr><td><code>target_uid</code></td><td>integer</td><td><span class="req">SIM</span></td><td>—</td><td>UID do membro a remover</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="proto-info">
+      <span style="color:var(--blue)">pb.KickClubUserREQ</span>
+      <span class="arrow">&rarr;</span>
+      <span style="color:var(--green)">pb.KickClubUserRSP</span>
+    </div>
+    <div class="payload-fields">
+      <strong>REQ:</strong> <code>f1</code>=clube_id, <code>f2</code>=target_uid<br>
+      <strong>RSP:</strong> <code>f1</code>=code, <code>f2</code>=clube_id, <code>f3</code>=uid_kicked
+    </div>
+    <div class="errors"><strong>Erros conhecidos:</strong>
+      <ul>
+        <li><code>code=0</code> — Sucesso</li>
+        <li><code>code=-1</code> — Membro nao encontrado</li>
+      </ul>
+    </div>
+    <div class="test-example">Teste real: remover_membro(clube_id=4366162, target_uid=13357479) → OK, uid_kicked</div>
+  </div>
+</section>
+
+<!-- ==================== 3. MENSAGENS PROTOBUF ==================== -->
+<section id="protobuf-msgs">
+  <h2>Mensagens Protobuf Mapeadas <span class="badge">18 msgs</span></h2>
+
+  <p class="proto-cat">Login</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>REQ</th><th>RSP</th><th>Payload REQ</th><th>Campos RSP</th><th>Tamanho</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pb.UserLoginREQ</code></td><td><code>pb.UserLoginRSP</code></td>
+        <td>f1=uid, f2=rdkey, f3=version, f4=ip, f6=platform, f8=server, f9=region</td>
+        <td>Token, config, server info</td><td>~200B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.HeartBeatREQ</code></td><td><code>pb.HeartBeatRSP</code></td>
+        <td>(vazio)</td><td>Timestamp</td><td>~30B</td><td><span class="ok">OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="proto-cat">Clube</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>REQ</th><th>RSP</th><th>Payload REQ</th><th>Campos RSP</th><th>Tamanho</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pb.ClubInfoREQ</code></td><td><code>pb.ClubInfoRSP</code></td>
+        <td>f1=clube_id, f2=1 (enter)</td><td>Info do clube, config</td><td>~500B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.ClubMemberREQ</code></td><td><code>pb.ClubMemberRSP</code></td>
+        <td>f1=clube_id</td><td>f1=clube_id, f3=repeated members (22 campos cada)</td><td>~16KB</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.ClubAgentMemberREQ</code></td><td><code>pb.ClubAgentMemberRSP</code></td>
+        <td>f1=clube_id, f2=uid</td><td>f3=member data (sem f23 saldo_caixa!)</td><td>~300B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.ClubRoomREQ</code></td><td><code>pb.ClubRoomRSP</code></td>
+        <td>f1=clube_id</td><td>f1=liga_id, f2=repeated rooms (30+ campos)</td><td><strong>~64KB</strong></td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.ClubConfigREQ</code></td><td><code>pb.ClubConfigRSP</code></td>
+        <td>f1=clube_id</td><td>Blind structures, fee schedules, rake tables</td><td>~1.6KB</td><td><span class="ok">OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="proto-cat">Solicitacoes</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>REQ</th><th>RSP</th><th>Payload REQ</th><th>Campos RSP</th><th>Tamanho</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pb.ClubJoinListREQ</code></td><td><code>pb.ClubJoinListRSP</code></td>
+        <td>f1=clube_id</td><td>f1=repeated requests(f1=req_id,f2=uid,f3=nome,f5=ts,f6=msg), f2=clube_id</td><td>~100-500B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.HandleJoinMsgREQ</code></td><td><code>pb.HandleJoinMsgRSP</code></td>
+        <td>f1=clube_id, f2=request_id, f3=1(accept)/2(reject)</td><td>f1=code, f2=clube_id, f3=uid</td><td>~12B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td colspan="2"><code>pb.ClubJoinMsgRSP</code> (push)</td>
+        <td colspan="2">Notificacao server push de nova solicitacao</td><td>~110B</td><td><span class="ok">OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="proto-cat">Salas / Liga</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>REQ</th><th>RSP</th><th>Payload REQ</th><th>Campos RSP</th><th>Tamanho</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pb.LeagueMemberREQ</code></td><td><code>pb.LeagueMemberRSP</code></td>
+        <td>f1=liga_id (NAO clube!)</td><td>f3=repeated clubs(f1=id,f2=name,f6=max,f10=join_ts,f18=diamonds,f22=saldo,f23=credito)</td><td>~3KB</td><td><span class="ok">OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="proto-cat">Transferencias</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>REQ</th><th>RSP</th><th>Payload REQ</th><th>Campos RSP</th><th>Tamanho</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pb.AddCoinREQ</code></td><td><code>pb.AddCoinRSP</code></td>
+        <td>f1=clube_id, f4=liga_id, f5=0, f6=target_id, f7=amount*100, f8=txn_id</td><td>f1=code</td><td>~50B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.ExportGameDataREQ</code></td><td><code>pb.ExportGameDataRSP</code></td>
+        <td>17 campos (ver tool exportar_planilha)</td><td>f1=code (0=ok,-2,-3,-4,-5)</td><td>~100B</td><td><span class="ok">OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="proto-cat">Gestao</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>REQ</th><th>RSP</th><th>Payload REQ</th><th>Campos RSP</th><th>Tamanho</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pb.ClubSetRoleREQ</code></td><td><code>pb.ClubSetRoleRSP</code></td>
+        <td>f1=clube_id, f2=uid, f3=role</td><td>f1=code, f2=clube_id, f3=new_role, f4=uid</td><td>~14B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.KickClubUserREQ</code></td><td><code>pb.KickClubUserRSP</code></td>
+        <td>f1=clube_id, f2=uid</td><td>f1=code, f2=clube_id, f3=uid_kicked</td><td>~12B</td><td><span class="ok">OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="proto-cat">Saldos (pouco uteis)</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>REQ</th><th>RSP</th><th>Payload REQ</th><th>Campos RSP</th><th>Tamanho</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pb.ClubAgentPPCoinREQ</code></td><td><code>pb.ClubAgentPPCoinRSP</code></td>
+        <td>f1=clube_id</td><td>f1=clube_id, f2=?, f3=0, f4=0</td><td>11B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.PPCoinREQ</code></td><td><code>pb.PPCoinRSP</code></td>
+        <td>f1=clube_id</td><td>Valores basicos</td><td>9B</td><td><span class="ok">OK</span></td>
+      </tr>
+      <tr>
+        <td><code>pb.GameDataREQ</code></td><td><code>pb.GameDataRSP</code></td>
+        <td>f1=clube_id</td><td>f2-f8 zeros, f11=timestamp</td><td>20B</td><td><span class="pending">PARCIAL</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ==================== 4. PROTOCOLO TCP ==================== -->
+<section id="protocolo-tcp">
+  <h2>Protocolo TCP</h2>
+
+  <h3 style="margin:16px 0 10px;">Fluxo de Conexao</h3>
+  <div class="flow">
+    <div class="flow-step" style="border-color:var(--yellow);">HTTP Login<br><small style="color:var(--muted)">POST api.pppoker.club</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">TCP Connect<br><small style="color:var(--muted)">47.254.71.136:4000</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step" style="border-color:var(--green);">UserLoginREQ<br><small style="color:var(--muted)">uid + rdkey</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">HeartBeatREQ<br><small style="color:var(--muted)">keep-alive</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">ClubInfoREQ<br><small style="color:var(--muted)">enter club</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step" style="border-color:var(--accent);">Operacao<br><small style="color:var(--muted)">tool action</small></div>
+  </div>
+
+  <div class="cards" style="margin-top:16px;">
+    <div class="card">
+      <h3>Frame Format TCP</h3>
+      <pre>[4B big-endian: total_length]
+[2B big-endian: name_length]
+[name_length B: message_name (UTF-8)]
+[4B: padding (zeros)]
+[remaining: protobuf payload]</pre>
+      <p style="color:var(--muted);font-size:.82em;margin-top:8px;">Exemplo HeartBeatREQ (vazio):</p>
+      <pre style="margin-top:4px;font-size:.78em;">00000017 0011 70622e486561727442656174524551 00000000
+         len   nlen  "pb.HeartBeatREQ"           padding</pre>
+    </div>
+
+    <div class="card">
+      <h3>HTTP Login — Crypto Chain</h3>
+      <p style="font-size:.85em;margin-bottom:8px;">POST <code>api.pppoker.club/poker/api/login.php</code></p>
+      <pre>1. password → MD5 → hex lowercase
+2. hex → MD5 → hex lowercase  (= CryptoPassword)
+3. CryptoPassword → XXTEA(key) → Base64</pre>
+      <p style="font-size:.82em;color:var(--muted);margin-top:8px;"><strong>Chave XXTEA:</strong> <code>MMDDHHMMSS</code> + <code>d5659066d5</code> (hora Beijing UTC+8)</p>
+      <p style="font-size:.82em;color:var(--muted);">Exemplo: 02/21 09:28:46 → <code>0221092846d5659066d5</code></p>
+    </div>
+
+    <div class="card">
+      <h3>POST Params Completos</h3>
+      <div class="tbl-wrap">
+      <table style="font-size:.78em;">
+        <tr><td><code>type</code></td><td>4</td><td>Email/password login</td></tr>
+        <tr><td><code>region</code></td><td>2</td><td>Brasil</td></tr>
+        <tr><td><code>username</code></td><td>email</td><td>Email da conta</td></tr>
+        <tr><td><code>password</code></td><td>base64</td><td>XXTEA encrypted</td></tr>
+        <tr><td><code>t</code></td><td>unix_ts</td><td>Timestamp (para chave)</td></tr>
+        <tr><td><code>os</code></td><td>mac</td><td>Sistema operacional</td></tr>
+        <tr><td><code>country</code></td><td>BR</td><td>Pais</td></tr>
+        <tr><td><code>appid</code></td><td>globle</td><td>App ID</td></tr>
+        <tr><td><code>clientvar</code></td><td>4.2.75</td><td>Versao do cliente</td></tr>
+        <tr><td><code>platform_type</code></td><td>4</td><td>Mac platform</td></tr>
+        <tr><td><code>app_type</code></td><td>1</td><td>Tipo do app</td></tr>
+        <tr><td><code>app_build_code</code></td><td>221</td><td>Build version</td></tr>
+        <tr><td><code>verifycode</code></td><td>XXXXXX</td><td>Apenas se code=-15</td></tr>
+      </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Servidores</h3>
+      <table style="font-size:.82em;">
+        <tr><td><code>47.254.71.136</code></td><td>Primary</td></tr>
+        <tr><td><code>47.89.212.243</code></td><td>Alternativo 1</td></tr>
+        <tr><td><code>47.254.69.45</code></td><td>Alternativo 2</td></tr>
+      </table>
+      <p style="font-size:.82em;color:var(--muted);margin-top:8px;">Porta: 4000 (TCP). Hostname: <code>usbr-allentry.pppoker.club</code></p>
+      <p style="font-size:.82em;color:var(--muted);">UserLoginREQ usa: <code>usbr-allentry.cozypoker.net:4000</code></p>
+    </div>
+
+    <div class="card" style="grid-column:1/-1;">
+      <h3 style="color:var(--red);">Armadilhas Conhecidas (6)</h3>
+      <div class="tbl-wrap">
+      <table style="font-size:.82em;">
+        <thead><tr><th>#</th><th>Armadilha</th><th>Causa</th><th>Solucao</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>f16=0</code> obrigatorio no ExportGameDataREQ</td><td>f16=1 retorna code=-5</td><td>Sempre enviar f16=0</td></tr>
+          <tr><td>2</td><td>Buffer drain incompleto</td><td>DiamondRSP chega antes da resposta real</td><td>Drenar buffer inteiro + parsear TODOS os frames</td></tr>
+          <tr><td>3</td><td>Broadcasts poluem probing</td><td>HeartBeatRSP, NoticeBRC, CallGameBRC, PushBRC</td><td>Filtrar set de broadcasts conhecidos</td></tr>
+          <tr><td>4</td><td>Downlines f12 inclui self</td><td>Primeiro UID no f12 e o proprio agente</td><td>Filtrar agente_uid == uid do membro</td></tr>
+          <tr><td>5</td><td>ClubMemberREQ > ClubAgentMemberREQ</td><td>AgentMember nao tem f23 (saldo_caixa)</td><td>Usar ClubMemberREQ para dados completos</td></tr>
+          <tr><td>6</td><td>Valores negativos em varint</td><td>Protobuf usa unsigned 64-bit</td><td><code>if val >= 2**63: val -= 2**64</code></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. HIERARQUIA ==================== -->
+<section id="hierarquia">
+  <h2>Hierarquia &amp; Papeis</h2>
+
+  <div class="hierarchy">
+    <div class="hier-node">
+      <div class="icon">&#x1F451;</div>
+      <div class="name">Dono</div>
+      <div class="code">papel = 1</div>
+    </div>
+    <div class="hier-arrow">&#x2192;</div>
+    <div class="hier-node">
+      <div class="icon">&#x1F4BC;</div>
+      <div class="name">Gestor</div>
+      <div class="code">papel = 2</div>
+    </div>
+    <div class="hier-arrow">&#x2192;</div>
+    <div class="hier-node">
+      <div class="icon">&#x2B50;</div>
+      <div class="name">Super Agente</div>
+      <div class="code">papel = 4</div>
+    </div>
+    <div class="hier-arrow">&#x2192;</div>
+    <div class="hier-node">
+      <div class="icon">&#x1F91D;</div>
+      <div class="name">Agente</div>
+      <div class="code">papel = 5</div>
+    </div>
+    <div class="hier-arrow">&#x2192;</div>
+    <div class="hier-node">
+      <div class="icon">&#x1F3AE;</div>
+      <div class="name">Membro</div>
+      <div class="code">papel = 10</div>
+    </div>
+  </div>
+
+  <h3 style="margin:20px 0 10px;">Permissoes por Papel (conta Gestor = FastchipsOnline)</h3>
+  <div class="tbl-wrap">
+  <table class="perm-table">
+    <thead><tr><th>Acao</th><th>Dono (1)</th><th>Gestor (2)</th><th>SA (4)</th><th>Agente (5)</th><th>Membro (10)</th></tr></thead>
+    <tbody>
+      <tr><td>Enviar/Sacar fichas</td><td class="yes">SIM</td><td class="yes">SIM</td><td class="yes">SIM*</td><td class="yes">SIM*</td><td class="no">NAO</td></tr>
+      <tr><td>Listar membros</td><td class="yes">SIM</td><td class="yes">SIM</td><td class="maybe">Parcial</td><td class="maybe">Parcial</td><td class="no">NAO</td></tr>
+      <tr><td>Ver downlines</td><td class="yes">SIM</td><td class="yes">SIM</td><td class="yes">Proprios</td><td class="yes">Proprios</td><td class="no">NAO</td></tr>
+      <tr><td>Promover a Agente</td><td class="yes">SIM</td><td class="yes">SIM</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+      <tr><td>Promover a SA</td><td class="yes">SIM</td><td class="no">NAO (-4)</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+      <tr><td>Promover a Gestor</td><td class="yes">SIM</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+      <tr><td>Kick membro</td><td class="yes">SIM</td><td class="yes">SIM</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+      <tr><td>Aprovar solicitacao</td><td class="yes">SIM</td><td class="yes">SIM</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+      <tr><td>Mover membro (ChangeMember)</td><td class="maybe">?</td><td class="no">NAO (-3)</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+      <tr><td>Atribuir agente (SetAgentUser)</td><td class="maybe">?</td><td class="no">NAO (-2)</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+      <tr><td>Export planilha</td><td class="yes">SIM</td><td class="yes">SIM</td><td class="no">NAO</td><td class="no">NAO</td><td class="no">NAO</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="font-size:.78em;color:var(--muted);margin-top:6px;">* Agentes/SA so podem transferir para seus proprios downlines.</p>
+
+  <h3 style="margin:20px 0 10px;">Valores de f19 (credito_linha)</h3>
+  <table style="font-size:.82em;max-width:500px;">
+    <tr><td><code>-1</code></td><td>Membro regular (sem linha de credito)</td></tr>
+    <tr><td><code>0</code></td><td>Agente com credito zerado</td></tr>
+    <tr><td><code>> 0</code></td><td>Valor de credito concedido</td></tr>
+    <tr><td><code>1023</code></td><td>Gestor com todas permissoes (bitmask 0x3FF)</td></tr>
+  </table>
+</section>
+
+<!-- ==================== 6. IDS DE TESTE ==================== -->
+<section id="ids-teste">
+  <h2>IDs de Teste Confirmados</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Clube 4191918 (Liga 3357)</h3>
+      <p style="color:var(--muted);font-size:.85em;">Usado para testes de transferencia de fichas (enviar/sacar).</p>
+      <table style="font-size:.82em;">
+        <tr><td>Target teste</td><td><code>11470719</code></td><td>Transferencias OK</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Clube 4366162 (Liga 1765 — Evolution 2)</h3>
+      <p style="color:var(--muted);font-size:.85em;">Clube principal para testes completos. 88 membros, 200 mesas, 40 clubes na liga.</p>
+      <table style="font-size:.82em;">
+        <tr><td>Membros</td><td><code>88</code></td></tr>
+        <tr><td>Mesas/Rooms</td><td><code>200</code> (~64KB)</td></tr>
+        <tr><td>Clubes na liga</td><td><code>40</code></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Conta Operadora</h3>
+      <table style="font-size:.82em;">
+        <tr><td>Username</td><td><code>FastchipsOnline</code></td></tr>
+        <tr><td>UID</td><td><code>13352472</code></td></tr>
+        <tr><td>Owner</td><td><code>8980655</code> (GestorGeral.)</td></tr>
+        <tr><td>Email</td><td><code>guilherme-varela@hotmail.com</code></td></tr>
+        <tr><td>Papel</td><td>Gestor (papel=2)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin:20px 0 10px;">UIDs Testados</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>UID</th><th>Nome</th><th>Papel</th><th>Testes Realizados</th><th>Resultado</th></tr></thead>
+    <tbody>
+      <tr><td><code>13357479</code></td><td>Guilherme</td><td>Agente (5)</td><td>info, promote, kick</td><td><span class="ok">OK</span></td></tr>
+      <tr><td><code>13333662</code></td><td>pp13333662</td><td>Membro (10)</td><td>info, transfer</td><td><span class="ok">OK</span></td></tr>
+      <tr><td><code>11470719</code></td><td>CassioConsoli</td><td>Super Agente (4)</td><td>transfer, downlines</td><td><span class="ok">OK</span></td></tr>
+      <tr><td><code>2914397</code></td><td>LordSnow</td><td>Agente (5)</td><td>downlines, info</td><td><span class="ok">OK</span></td></tr>
+      <tr><td><code>11468067</code></td><td>SydneySweeney</td><td>Agente (5)</td><td>info</td><td><span class="ok">OK</span></td></tr>
+      <tr><td><code>8980655</code></td><td>GestorGeral.</td><td>Owner (1)</td><td>login owner</td><td><span class="ok">OK</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="margin:20px 0 10px;">Resultados de Testes Especificos</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Teste</th><th>Tool</th><th>Parametros</th><th>Resultado</th></tr></thead>
+    <tbody>
+      <tr><td>Promote a Agente</td><td>promover_membro</td><td>uid=13357479, papel=5</td><td><span class="ok">OK</span></td></tr>
+      <tr><td>Promote a SA</td><td>promover_membro</td><td>uid=13357479, papel=4</td><td><span class="miss">code=-4</span> (sem permissao)</td></tr>
+      <tr><td>Kick membro</td><td>remover_membro</td><td>uid=13357479</td><td><span class="ok">OK</span></td></tr>
+      <tr><td>Transfer fichas</td><td>enviar_fichas</td><td>target=11470719, amount=500</td><td><span class="ok">OK</span></td></tr>
+      <tr><td>Export planilha</td><td>exportar_planilha</td><td>7 dias, clube 4366162</td><td><span class="ok">OK</span></td></tr>
+      <tr><td>ChangeMember</td><td>(investigado)</td><td>f1=club, f2=uid, f3=agent</td><td><span class="miss">code=-3</span> (sem permissao)</td></tr>
+      <tr><td>SetAgentUser</td><td>(investigado)</td><td>f1=club, f2=uid, f3=agent</td><td><span class="miss">code=-2</span> (sem permissao)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ==================== 7. DADOS TEMOS vs FALTA ==================== -->
+<section id="dados-temos-falta">
+  <h2>Dados: O que Temos vs O que Falta</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h3 style="color:var(--green);">Temos (13 itens)</h3>
+      <table style="font-size:.82em;">
+        <tr><td>Membros do clube (lista completa)</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Hierarquia (agentes/downlines)</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Status online por membro</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Saldo caixa (agentes)</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Credito por membro (f19)</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Enviar/sacar fichas</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Mesas ativas + torneios (200 rooms)</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Jogadores por mesa</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Prize pool (torneios)</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Clubes da liga (40)</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Saldo dos clubes na liga</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Export planilha por email</td><td><span class="ok">OK</span></td></tr>
+        <tr><td>Config do clube (blinds/taxas)</td><td><span class="ok">OK</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--red);">Falta (4 itens)</h3>
+      <table style="font-size:.82em;">
+        <tr><td>Transacoes / log de atividade</td><td><span class="miss">MISS</span></td></tr>
+        <tr><td>Game stats inline (partidas/ganhos/taxa)</td><td><span class="miss">MISS</span></td></tr>
+        <tr><td>Credito: conceder/alterar</td><td><span class="miss">MISS</span></td></tr>
+        <tr><td>Retorno de taxa (rakeback)</td><td><span class="miss">MISS</span></td></tr>
+      </table>
+      <h3 style="color:var(--yellow);margin-top:16px;">Parcial (2 itens)</h3>
+      <table style="font-size:.82em;">
+        <tr><td>Saldo individual de fichas (Contador)</td><td><span class="pending">PARCIAL</span></td></tr>
+        <tr><td>Saldo do clube (caixa geral)</td><td><span class="pending">PARCIAL</span></td></tr>
+      </table>
+      <p style="margin-top:12px;font-size:.78em;color:var(--muted);">~150 nomes testados sem hit. Proxima abordagem: capturar trafego real do app (tcpdump).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 8. TIPOS DE JOGO ==================== -->
+<section id="tipos-jogo">
+  <h2>Tipos de Jogo (game_type no ClubRoomRSP)</h2>
+  <div class="game-grid">
+    <div class="game-chip"><strong>2</strong> = MTT (Multi-Table Tournament)</div>
+    <div class="game-chip"><strong>3</strong> = SNG (Sit & Go)</div>
+    <div class="game-chip"><strong>5</strong> = NLH Cash (No-Limit Hold'em)</div>
+    <div class="game-chip"><strong>6</strong> = PLO4 (Pot-Limit Omaha 4)</div>
+    <div class="game-chip"><strong>7</strong> = PLO5 (Pot-Limit Omaha 5)</div>
+    <div class="game-chip"><strong>8</strong> = PLO6 (Pot-Limit Omaha 6)</div>
+    <div class="game-chip"><strong>10</strong> = SpinUp</div>
+  </div>
+
+  <h3 style="margin:20px 0 10px;">Status de Mesa (f18)</h3>
+  <table style="font-size:.82em;max-width:400px;">
+    <tr><td><code>0</code></td><td>Idle (nao iniciada)</td></tr>
+    <tr><td><code>1</code></td><td>Registering (inscricoes abertas)</td></tr>
+    <tr><td><code>2</code></td><td>Running (em andamento)</td></tr>
+    <tr><td><code>3</code></td><td>Finished (encerrada)</td></tr>
+  </table>
+
+  <h3 style="margin:20px 0 10px;">Distinguir Cash vs Torneio</h3>
+  <table style="font-size:.82em;max-width:500px;">
+    <tr><td><code>f91 = -1</code></td><td>Torneio (MTT/SNG/SpinUp)</td></tr>
+    <tr><td><code>f91 = 0</code></td><td>Cash Game</td></tr>
+    <tr><td><code>f25 = 1</code></td><td>Cash rodando (alternativo)</td></tr>
+  </table>
+</section>
+
+<!-- ==================== 9. PROGRESSO ==================== -->
+<section id="progresso">
+  <h2>Progresso do Projeto <span class="badge">6 fases</span></h2>
+  <div class="timeline">
+    <div class="tl-item done">
+      <h4>Fase 1 — Operacoes Basicas <span class="ok">COMPLETO</span></h4>
+      <p>Login HTTP + TCP, enviar/sacar fichas, export planilha, login_status.</p>
+      <ul>
+        <li>4 tools implementadas e testadas</li>
+        <li>Cadeia XXTEA completa decodificada</li>
+        <li>Frame format TCP descoberto</li>
+      </ul>
+    </div>
+    <div class="tl-item done">
+      <h4>Fase 2 — Membros e Hierarquia <span class="ok">COMPLETO</span></h4>
+      <p>Probing de ~120 nomes. ClubAgentMemberREQ + ClubMemberREQ descobertos.</p>
+      <ul>
+        <li>3 tools: info_membro, listar_membros, downlines_agente</li>
+        <li>Decode completo: papeis, downlines, saldo_caixa, credito, online</li>
+        <li>22 campos por membro mapeados</li>
+      </ul>
+    </div>
+    <div class="tl-item done">
+      <h4>Fase 3 — Mesas, Liga e Gestao <span class="ok">COMPLETO</span></h4>
+      <p>Probing de ~150 nomes em 7 grupos + global-metadata.dat para handlers.</p>
+      <ul>
+        <li>7 tools: listar_mesas, clubes_da_liga, solicitacoes (2), promover, remover, rejeitar</li>
+        <li>ClubRoomREQ = 64KB com 200 rooms!</li>
+        <li>LeagueMemberREQ = 40 clubes da liga</li>
+        <li>Gestao: aprovar/rejeitar/promover/kick membros</li>
+      </ul>
+    </div>
+    <div class="tl-item active">
+      <h4>Fase 4 — API REST <span class="pending">PLANEJADO</span></h4>
+      <p>FastAPI com endpoints para dashboard web consumir. Plano pronto, aguardando implementacao.</p>
+    </div>
+    <div class="tl-item">
+      <h4>Fase 5 — Dados Faltantes <span class="pending">PENDENTE</span></h4>
+      <p>Transacoes, game stats inline, credito, rakeback. Requer captura de trafego real (tcpdump).</p>
+    </div>
+    <div class="tl-item">
+      <h4>Fase 6 — Dashboard Web <span class="pending">PENDENTE</span></h4>
+      <p>Frontend que consome a API REST. Visualizacao em tempo real dos dados do clube.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 10. MSGS INVESTIGADAS ==================== -->
+<section id="msgs-investigadas">
+  <h2>Mensagens Investigadas (sem sucesso)</h2>
+  <p style="color:var(--muted);font-size:.85em;margin-bottom:16px;">Mensagens que responderam com erro de permissao. Podem requerer papel de Dono (1) em vez de Gestor (2).</p>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <h3 style="color:var(--red);">pb.ClubChangeMemberREQ</h3>
+      <span class="miss">code=-3</span>
+    </div>
+    <p class="desc">Mover membro entre agentes. Sempre retorna -3 com conta Gestor.</p>
+    <div class="payload-fields">
+      <strong>Payload tentado:</strong> <code>f1</code>=clube_id, <code>f2</code>=uid_membro, <code>f3</code>=uid_novo_agente
+    </div>
+    <div class="test-example" style="color:var(--red);">Resultado: code=-3 em todas as variantes. Pode requerer Dono.</div>
+  </div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <h3 style="color:var(--red);">pb.ClubSetAgentUserREQ</h3>
+      <span class="miss">code=-2</span>
+    </div>
+    <p class="desc">Atribuir membro a agente. Sempre retorna -2 com conta Gestor.</p>
+    <div class="payload-fields">
+      <strong>Payload tentado:</strong> <code>f1</code>=clube_id, <code>f2</code>=uid_membro, <code>f3</code>=uid_agente
+    </div>
+    <div class="test-example" style="color:var(--red);">Resultado: code=-2 em todas as variantes. Pode requerer Dono.</div>
+  </div>
+
+  <div class="tool-card">
+    <div class="tool-header">
+      <h3 style="color:var(--red);">pb.ClubManagerAuthoritySetREQ</h3>
+      <span class="miss">code=-1</span>
+    </div>
+    <p class="desc">Alterar permissoes de gestor. Retorna -1.</p>
+    <div class="test-example" style="color:var(--red);">Resultado: code=-1. Provavelmente so para Dono.</div>
+  </div>
+
+  <h3 style="margin:20px 0 10px;">Nomes testados sem resposta (~150 total)</h3>
+  <div class="tbl-wrap">
+  <table style="font-size:.78em;">
+    <thead><tr><th>Categoria</th><th>Qtd</th><th>Exemplos</th><th>Hits</th></tr></thead>
+    <tbody>
+      <tr><td>Contador/Saldos</td><td>35</td><td>ClubBalance, MemberCoin, CashBox, ...</td><td>2 (AgentPPCoin, PPCoin)</td></tr>
+      <tr><td>Dados/Partidas</td><td>31</td><td>GameRecord, HandHistory, MatchData, ...</td><td>1 (GameData, retorna zeros)</td></tr>
+      <tr><td>Transacoes/Log</td><td>20</td><td>ClubTransaction, TransferLog, CoinLog, ...</td><td>0</td></tr>
+      <tr><td>Liga/Federation</td><td>14</td><td>LeagueInfo, FederationMember, LeagueClub, ...</td><td>1 (LeagueMember)</td></tr>
+      <tr><td>Credito</td><td>14</td><td>ClubCredit, CreditRequest, CreditApply, ...</td><td>0</td></tr>
+      <tr><td>Mesas/Rooms</td><td>25</td><td>ClubTable, ClubGame, RoomList, ...</td><td>1 (ClubRoom = 64KB!)</td></tr>
+      <tr><td>Misc</td><td>25</td><td>ClubNotice, ClubAnnounce, ClubSetting, ...</td><td>1 (ClubConfig)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ==================== 11. ARQUIVOS ==================== -->
+<section id="arquivos">
+  <h2>Arquivos do Projeto</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Arquivo</th><th>Descricao</th><th>Linhas</th><th>Funcoes-chave</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pppoker_direct_api.py</code></td>
+        <td>Cliente HTTP + TCP + decode protobuf. Core do projeto.</td>
+        <td>~1700</td>
+        <td>http_login, tcp_connect, build_message, parse_response, encode_varint, decode_varint, _parse_proto_fields, transfer_chips, export_data, get_member_info, list_members, list_rooms, list_league_clubs, list_join_requests, handle_join, set_role, kick_user</td>
+      </tr>
+      <tr>
+        <td><code>pppoker_mcp.py</code></td>
+        <td>MCP Server com 14 tools para Claude Desktop</td>
+        <td>~900</td>
+        <td>enviar_fichas, sacar_fichas, login_status, exportar_planilha, info_membro, listar_membros, downlines_agente, listar_mesas, clubes_da_liga, listar_solicitacoes, aprovar_solicitacao, rejeitar_solicitacao, promover_membro, remover_membro</td>
+      </tr>
+      <tr>
+        <td><code>dashboard.html</code></td>
+        <td>Documentacao visual completa (este arquivo)</td>
+        <td>~2900</td>
+        <td>Sidebar, scroll spy, 12 secoes, mobile responsive</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ==================== 12. REVERSE ENGINEERING ==================== -->
+<section id="reverse-engineering">
+  <h2>Reverse Engineering — Guia de Tecnicas</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Tecnica: global-metadata.dat (Unity IL2CPP)</h3>
+      <p style="color:var(--muted);font-size:.85em;">O app PPPoker e Unity IL2CPP. O arquivo <code>global-metadata.dat</code> contem TODOS os handler names.</p>
+      <pre style="font-size:.78em;">Path: /Applications/PPPoker.app/Wrapper/PPPoker.app/Data/Managed/Metadata/global-metadata.dat
+
+strings global-metadata.dat | grep -oE 'On[A-Z][a-zA-Z]+RSP' | sort -u
+strings global-metadata.dat | grep -oE 'pb\.[A-Z][a-zA-Z]+REQ' | sort -u</pre>
+      <p style="color:var(--muted);font-size:.82em;margin-top:6px;">Encontrou ~150 handlers incluindo HandleJoinMsgRSP, HandleJoinLeagueMsgRSP, etc.</p>
+    </div>
+
+    <div class="card">
+      <h3>Padrao de Nomes Protobuf</h3>
+      <p style="color:var(--muted);font-size:.85em;">Convencao: <code>pb.{Entidade}{Acao}REQ</code> → <code>pb.{Entidade}{Acao}RSP</code></p>
+      <table style="font-size:.8em;">
+        <thead><tr><th>Padrao</th><th>Exemplo</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>pb.Club{X}REQ</code></td><td>ClubMemberREQ, ClubRoomREQ</td><td><span class="ok">HIT</span></td></tr>
+          <tr><td><code>pb.ClubAgent{X}REQ</code></td><td>ClubAgentMemberREQ</td><td><span class="ok">HIT</span></td></tr>
+          <tr><td><code>pb.League{X}REQ</code></td><td>LeagueMemberREQ</td><td><span class="ok">HIT</span></td></tr>
+          <tr><td><code>pb.{Action}REQ</code></td><td>AddCoinREQ, ExportGameDataREQ</td><td><span class="ok">HIT</span></td></tr>
+          <tr><td><code>pb.ClubAgent{Info}REQ</code></td><td>ClubAgentInfoREQ</td><td><span class="miss">NAO EXISTE</span></td></tr>
+          <tr><td><code>pb.Club{Table}REQ</code></td><td>ClubTableListREQ</td><td><span class="miss">NAO EXISTE</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Wire Types Protobuf</h3>
+      <table style="font-size:.82em;">
+        <thead><tr><th>Wire</th><th>Tipo</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td><code>0</code></td><td>Varint</td><td>int, uint, sint, bool, enum</td></tr>
+          <tr><td><code>1</code></td><td>64-bit fixed</td><td>double, fixed64 (raro)</td></tr>
+          <tr><td><code>2</code></td><td>Length-delimited</td><td>string, bytes, sub-message</td></tr>
+          <tr><td><code>5</code></td><td>32-bit fixed</td><td>float, fixed32 (raro)</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--muted);font-size:.8em;margin-top:8px;">Tag byte: <code>(field_number &lt;&lt; 3) | wire_type</code></p>
+      <p style="color:var(--muted);font-size:.8em;">Ex: <code>0x08</code> = field 1 varint, <code>0x12</code> = field 2 length-delimited</p>
+    </div>
+
+    <div class="card">
+      <h3>Tag Bytes de Referencia</h3>
+      <table style="font-size:.78em;">
+        <thead><tr><th>Hex</th><th>Field</th><th>Wire</th><th>Hex</th><th>Field</th><th>Wire</th></tr></thead>
+        <tbody>
+          <tr><td><code>0x08</code></td><td>1</td><td>varint</td><td><code>0x12</code></td><td>2</td><td>len</td></tr>
+          <tr><td><code>0x10</code></td><td>2</td><td>varint</td><td><code>0x1a</code></td><td>3</td><td>len</td></tr>
+          <tr><td><code>0x18</code></td><td>3</td><td>varint</td><td><code>0x22</code></td><td>4</td><td>len</td></tr>
+          <tr><td><code>0x20</code></td><td>4</td><td>varint</td><td><code>0x2a</code></td><td>5</td><td>len</td></tr>
+          <tr><td><code>0x28</code></td><td>5</td><td>varint</td><td><code>0x3a</code></td><td>7</td><td>len</td></tr>
+          <tr><td><code>0x30</code></td><td>6</td><td>varint</td><td><code>0x42</code></td><td>8</td><td>len</td></tr>
+          <tr><td><code>0x38</code></td><td>7</td><td>varint</td><td><code>0x52</code></td><td>10</td><td>len</td></tr>
+          <tr><td><code>0x40</code></td><td>8</td><td>varint</td><td colspan="3"><code>0x80 0x01</code> = f16 varint (multibyte)</td></tr>
+          <tr><td><code>0x48</code></td><td>9</td><td>varint</td><td colspan="3"><code>0x88 0x01</code> = f17 varint (multibyte)</td></tr>
+          <tr><td><code>0x50</code></td><td>10</td><td>varint</td><td colspan="3"><code>0x90 0x01</code> = f18 varint (multibyte)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="grid-column:1/-1;">
+      <h3>Probe Pattern — Script de Varredura</h3>
+      <pre style="font-size:.78em;">1. Login (HTTP + TCP) automatico
+2. Entrar no clube alvo (ClubInfoREQ)
+3. Testar dezenas de nomes em loop
+4. Drenar buffer com timeout 3-5s para cada probe
+5. Filtrar broadcasts: {HeartBeatRSP, NoticeBRC, CallGameBRC, PushBRC}
+6. Registrar HITS (mensagens que retornaram resposta relevante)
+
+Timeouts recomendados:
+  Probing (scan):     3-4s
+  info/listar:        5-6s
+  export_data:        8s
+  transfer_chips:     1-2s
+  listar_mesas:       10s (resposta 64KB)</pre>
+    </div>
+
+    <div class="card" style="grid-column:1/-1;">
+      <h3>Proxima Abordagem: Captura de Trafego Real</h3>
+      <pre style="font-size:.78em;">route get default | grep interface    # Descobrir interface ativa (ex: en1)
+sudo tcpdump -i en1 -w /tmp/pppoker.pcap host 47.254.71.136
+
+# No app PPPoker Desktop: navegar para tela de transacoes, credito, etc.
+# Depois analisar:
+strings /tmp/pppoker.pcap | grep "pb\."</pre>
+      <p style="color:var(--muted);font-size:.82em;margin-top:6px;">Objetivo: descobrir nomes de mensagem para transacoes, game stats, credito e rakeback.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  PPPoker MCP v2.0 &bull; Documentacao Completa &bull; github.com/guilhermexp/pppoker_mcp &bull; 22/02/2026
+</footer>
+
+</div><!-- /.main -->
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+(function() {
+  // Hamburger toggle
+  const hamburger = document.getElementById('hamburger');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+
+  function toggleMenu() {
+    sidebar.classList.toggle('open');
+    hamburger.classList.toggle('open');
+    overlay.classList.toggle('show');
+  }
+  function closeMenu() {
+    sidebar.classList.remove('open');
+    hamburger.classList.remove('open');
+    overlay.classList.remove('show');
+  }
+
+  hamburger.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  // Close menu on link click (mobile)
+  sidebar.querySelectorAll('a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (window.innerWidth <= 900) closeMenu();
+    });
+  });
+
+  // Scroll spy
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('.sidebar a[href^="#"]');
+
+  function onScroll() {
+    var scrollY = window.scrollY + 80;
+    var current = '';
+    sections.forEach(function(section) {
+      if (section.offsetTop <= scrollY) {
+        current = section.getAttribute('id');
+      }
+    });
+    links.forEach(function(link) {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  // Use IntersectionObserver for performance, fallback to scroll
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var id = entry.target.getAttribute('id');
+          links.forEach(function(link) {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + id) {
+              link.classList.add('active');
+            }
+          });
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(function(section) { observer.observe(section); });
+  } else {
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+})();
+</script>
+</body>
+</html>
