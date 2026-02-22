@@ -20,31 +20,10 @@ import {
 } from "../../../schemas/poker/players";
 import { createTRPCRouter, protectedProcedure } from "../../init";
 
-/**
- * Helper to get valid import_ids based on committed status
- */
-async function getCommittedImportIds(
-  supabase: Awaited<ReturnType<typeof createAdminClient>>,
-  teamId: string,
-  includeDraft: boolean,
-): Promise<string[] | null> {
-  if (includeDraft) {
-    return null;
-  }
-
-  const { data: imports } = await supabase
-    .from("poker_imports")
-    .select("id")
-    .eq("team_id", teamId)
-    .eq("status", "completed")
-    .eq("committed", true);
-
-  return imports?.map((i) => i.id) ?? [];
-}
-
 export const pokerPlayersRouter = createTRPCRouter({
   /**
    * Get poker players with pagination and filtering
+   * Data comes from PPPoker sync (no import_id filtering needed for club data)
    */
   get: protectedProcedure
     .input(getPokerPlayersSchema.optional())
@@ -65,39 +44,13 @@ export const pokerPlayersRouter = createTRPCRouter({
         hasRake,
         hasBalance,
         hasAgent,
-        includeDraft,
       } = input ?? {};
-
-      // Get committed import IDs (only show committed data by default)
-      const committedImportIds = await getCommittedImportIds(
-        supabase,
-        teamId!,
-        includeDraft ?? false,
-      );
-
-      // If no committed imports and not including draft, return empty
-      if (committedImportIds !== null && committedImportIds.length === 0) {
-        return {
-          meta: {
-            cursor: null,
-            hasPreviousPage: false,
-            hasNextPage: false,
-            totalCount: 0,
-          },
-          data: [],
-        };
-      }
 
       // Build query
       let query = supabase
         .from("poker_players")
         .select("*", { count: "exact" })
         .eq("team_id", teamId);
-
-      // Filter by committed imports if needed
-      if (committedImportIds !== null) {
-        query = query.in("import_id", committedImportIds);
-      }
 
       // Apply filters
       if (q) {
@@ -322,6 +275,11 @@ export const pokerPlayersRouter = createTRPCRouter({
         rakebackPercent: player.rakeback_percent ?? 0,
         customerId: player.customer_id,
         note: player.note,
+        // Real-time fields from PPPoker sync
+        isOnline: (player as Record<string, unknown>).is_online ?? false,
+        cashboxBalance: Number((player as Record<string, unknown>).cashbox_balance ?? 0),
+        pppokerRole: (player as Record<string, unknown>).pppoker_role ?? null,
+        lastSyncedAt: (player as Record<string, unknown>).last_synced_at ?? null,
         agent: player.agent_id ? (agentsMap[player.agent_id] ?? null) : null,
         superAgent: player.super_agent_id
           ? (superAgentsMap[player.super_agent_id] ?? null)
@@ -829,29 +787,7 @@ export const pokerPlayersRouter = createTRPCRouter({
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
-      const { dateFrom, dateTo, superAgentId, includeDraft } = input ?? {};
-
-      // Get committed import IDs (only show committed data by default)
-      const committedImportIds = await getCommittedImportIds(
-        supabase,
-        teamId!,
-        includeDraft ?? false,
-      );
-
-      // If no committed imports and not including draft, return zeros
-      if (committedImportIds !== null && committedImportIds.length === 0) {
-        return {
-          totalAgents: 0,
-          totalManagedPlayers: 0,
-          totalRake: 0,
-          totalRakePpst: 0,
-          totalRakePpsr: 0,
-          totalCommission: 0,
-          byStatus: {},
-          bySuperAgent: [],
-          agentMetrics: [],
-        };
-      }
+      const { dateFrom, dateTo, superAgentId } = input ?? {};
 
       // Build base query for agents
       let agentsQuery = supabase
@@ -859,12 +795,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         .select("id, nickname, status, rakeback_percent, super_agent_id")
         .eq("team_id", teamId)
         .eq("type", "agent")
-        .limit(10000); // Avoid 1000 row limit
-
-      // Filter by committed imports if needed
-      if (committedImportIds !== null) {
-        agentsQuery = agentsQuery.in("import_id", committedImportIds);
-      }
+        .limit(10000);
 
       if (superAgentId) {
         agentsQuery = agentsQuery.eq("super_agent_id", superAgentId);
@@ -881,8 +812,8 @@ export const pokerPlayersRouter = createTRPCRouter({
 
       const agentIds = (agents ?? []).map((a) => a.id);
 
-      // Get all players managed by these agents (includes agents themselves since they self-reference)
-      let managedPlayersQuery = supabase
+      // Get all players managed by these agents
+      const { data: managedPlayers, error: playersError } = await supabase
         .from("poker_players")
         .select("id, agent_id")
         .eq("team_id", teamId)
@@ -892,18 +823,7 @@ export const pokerPlayersRouter = createTRPCRouter({
             ? agentIds
             : ["00000000-0000-0000-0000-000000000000"],
         )
-        .limit(50000); // Avoid 1000 row limit
-
-      // Filter by committed imports if needed
-      if (committedImportIds !== null) {
-        managedPlayersQuery = managedPlayersQuery.in(
-          "import_id",
-          committedImportIds,
-        );
-      }
-
-      const { data: managedPlayers, error: playersError } =
-        await managedPlayersQuery;
+        .limit(50000);
 
       if (playersError) {
         throw new TRPCError({
@@ -917,12 +837,7 @@ export const pokerPlayersRouter = createTRPCRouter({
         .from("poker_player_summary")
         .select("player_id, rake_total, rake_ppst, rake_ppsr")
         .eq("team_id", teamId)
-        .limit(50000); // Avoid 1000 row limit
-
-      // Filter by committed imports if needed
-      if (committedImportIds !== null) {
-        summaryQuery = summaryQuery.in("import_id", committedImportIds);
-      }
+        .limit(50000);
 
       if (dateFrom) {
         summaryQuery = summaryQuery.gte("period_start", dateFrom);

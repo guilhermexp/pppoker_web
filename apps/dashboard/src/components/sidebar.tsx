@@ -1,20 +1,25 @@
 "use client";
 
 import { cn } from "@midpoker/ui/cn";
+
 import Link from "next/link";
 import { useState } from "react";
 import { MainMenu } from "./main-menu";
+import { useSidebarPinned } from "./sidebar-context";
 import { TeamDropdown } from "./team-dropdown";
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isPinned, setIsPinned } = useSidebarPinned();
+
+  const expanded = isPinned || isExpanded;
 
   return (
     <aside
       className={cn(
         "h-screen flex-shrink-0 flex-col desktop:overflow-hidden desktop:rounded-tl-[10px] desktop:rounded-bl-[10px] justify-between fixed top-0 pb-4 items-center hidden md:flex z-50 transition-all duration-200 ease-&lsqb;cubic-bezier(0.4,0,0.2,1)&rsqb;",
         "bg-background border-r border-border",
-        isExpanded ? "w-[240px]" : "w-[56px]",
+        expanded ? "w-[240px]" : "w-[56px]",
       )}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
@@ -22,10 +27,10 @@ export function Sidebar() {
       <div
         className={cn(
           "absolute top-0 left-0 h-[70px] flex items-center justify-center bg-background border-b border-border transition-all duration-200 ease-&lsqb;cubic-bezier(0.4,0,0.2,1)&rsqb;",
-          isExpanded ? "w-full" : "w-[55px]",
+          expanded ? "w-full" : "w-[55px]",
         )}
       >
-        <Link href="/" className="absolute left-[16px] transition-none">
+        <Link href="/" className="absolute left-[14px] transition-none">
           <svg
             className="h-6 w-auto"
             viewBox="0 0 200 199"
@@ -161,10 +166,10 @@ export function Sidebar() {
       </div>
 
       <div className="flex flex-col w-full pt-[70px] flex-1">
-        <MainMenu isExpanded={isExpanded} />
+        <MainMenu isExpanded={expanded} />
       </div>
 
-      <TeamDropdown isExpanded={isExpanded} />
+      <TeamDropdown isExpanded={expanded} />
     </aside>
   );
 }

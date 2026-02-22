@@ -5,6 +5,7 @@ import { useI18n } from "@/locales/client";
 import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +33,8 @@ export type PokerAgent = {
   rakebackPercent: number;
   currentBalance: number;
   chipBalance: number;
+  isOnline?: boolean;
+  cashboxBalance?: number;
   superAgentId?: string | null;
   superAgent: {
     id: string;
@@ -185,11 +188,19 @@ export const columns: ColumnDef<PokerAgent>[] = [
 
       return (
         <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
+                agent.isOnline ? "bg-green-500" : "bg-gray-400",
+              )}
+            />
+          </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-medium">{agent.nickname}</span>
@@ -294,6 +305,28 @@ export const columns: ColumnDef<PokerAgent>[] = [
         {formatCurrency(row.original.estimatedCommission ?? 0)}
       </span>
     ),
+  },
+  {
+    accessorKey: "cashboxBalance",
+    header: "Caixa",
+    meta: {
+      className: "w-[110px] text-right",
+    },
+    cell: ({ row }) => {
+      const balance = (row.original as PokerAgent).cashboxBalance ?? 0;
+      return (
+        <span
+          className={cn(
+            "font-mono text-sm font-medium",
+            balance > 0 && "text-blue-600",
+            balance < 0 && "text-red-600",
+            balance === 0 && "text-muted-foreground",
+          )}
+        >
+          {formatCurrency(balance)}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "superAgent",

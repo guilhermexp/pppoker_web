@@ -87,6 +87,9 @@ const getItems = (t: ReturnType<typeof useI18n>) => [
     children: [
       { path: "/poker/players", name: t("sidebar.poker_players") },
       { path: "/poker/agents", name: t("sidebar.poker_agents") },
+      { path: "/poker/membros", name: t("sidebar.poker_members") },
+      { path: "/poker/contador", name: t("sidebar.poker_contador") },
+      { path: "/poker/lobby", name: t("sidebar.poker_lobby") },
       { path: "/poker/sessions", name: t("sidebar.poker_sessions") },
       { path: "/poker/transactions", name: t("sidebar.poker_transactions") },
       { path: "/poker/settlements", name: t("sidebar.poker_settlements") },

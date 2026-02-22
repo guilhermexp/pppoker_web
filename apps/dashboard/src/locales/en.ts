@@ -556,10 +556,14 @@ export default {
     poker: "Poker Club",
     poker_players: "Players",
     poker_agents: "Agents",
+    poker_members: "Members",
+    poker_contador: "Counter",
+    poker_lobby: "Lobby",
     poker_sessions: "Sessions",
     poker_transactions: "Transactions",
     poker_settlements: "Settlements",
     poker_import: "Import Data",
+    poker_sync: "Sync Status",
     super_union: "SuperUnion",
     super_union_painel: "SU Panel",
     super_union_import: "Import Data",
@@ -1371,6 +1375,18 @@ export default {
         total_rake: "Total Rake",
         net_result: "Result",
       },
+    },
+    members: {
+      title: "Members",
+      description: "Manage club members, approvals and credit requests",
+    },
+    contador: {
+      title: "Counter",
+      description: "Exchange, send and manage chips for club members",
+    },
+    lobby: {
+      title: "Lobby",
+      description: "Live club tables",
     },
     agents: {
       title: "Agents",

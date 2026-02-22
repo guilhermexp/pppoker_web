@@ -1,9 +1,11 @@
+import { ClientOnly } from "@/components/client-only";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { PokerPlayersHeader } from "@/components/poker/poker-players-header";
 import {
   PokerPlayersStats,
   PokerPlayersStatsSkeleton,
 } from "@/components/poker/poker-players-stats";
+import { SyncStatusBanner } from "@/components/poker/sync-status-banner";
 import { DataTable } from "@/components/tables/poker-players/data-table";
 import { DataTableSkeleton } from "@/components/tables/poker-players/skeleton";
 import { loadPokerPlayerFilterParams } from "@/hooks/use-poker-player-params";
@@ -51,6 +53,14 @@ export default async function PokerPlayersPage(props: Props) {
             {t("poker.players.description")}
           </p>
         </div>
+
+        <ErrorBoundary>
+          <Suspense fallback={<div className="h-16 animate-pulse bg-muted rounded" />}>
+            <ClientOnly fallback={<div className="h-16 animate-pulse bg-muted rounded" />}>
+              <SyncStatusBanner />
+            </ClientOnly>
+          </Suspense>
+        </ErrorBoundary>
 
         <Suspense fallback={<PokerPlayersStatsSkeleton />}>
           <PokerPlayersStats />

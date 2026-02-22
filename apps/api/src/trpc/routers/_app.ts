@@ -20,6 +20,7 @@ import { notificationSettingsRouter } from "./notification-settings";
 import { notificationsRouter } from "./notifications";
 import { oauthApplicationsRouter } from "./oauth-applications";
 import { pokerRouter } from "./poker";
+import { pppokerAuthRouter } from "./pppoker-auth";
 import { reportsRouter } from "./reports";
 import { searchRouter } from "./search";
 import { shortLinksRouter } from "./short-links";
@@ -70,6 +71,7 @@ export const appRouter = createTRPCRouter({
   apiKeys: apiKeysRouter,
   widgets: widgetsRouter,
   poker: pokerRouter,
+  pppokerAuth: pppokerAuthRouter,
   su: suRouter,
   fastchips: fastchipsRouter,
 });

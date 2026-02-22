@@ -1,6 +1,7 @@
 "use client";
 
 import { EmailSignIn } from "@/components/email-sign-in";
+import { PPPokerSignIn } from "@/components/pppoker-sign-in";
 import { LogoReveal } from "@/components/ui/logo-reveal";
 import { motion } from "framer-motion";
 import { ChevronLeftIcon } from "lucide-react";
@@ -315,17 +316,17 @@ export function AuthPage() {
           </div>
           <div className="flex flex-col space-y-1">
             <h1 className="font-heading text-2xl font-bold tracking-wide">
-              Welcome to Mid Poker
+              Bem-vindo ao Mid Poker
             </h1>
             <p className="text-muted-foreground text-base">
-              Sign in to your account to continue
+              Entre para continuar
             </p>
           </div>
 
-          {/* Integração com EmailSignIn do Supabase */}
           <div className="flex items-center justify-center">
-            <EmailSignIn />
+            <PPPokerSignIn />
           </div>
+
 
           <p className="text-muted-foreground mt-8 text-sm">
             By signing in you agree to our{" "}

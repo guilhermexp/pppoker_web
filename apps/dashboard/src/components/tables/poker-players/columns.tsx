@@ -39,6 +39,11 @@ export type PokerPlayer = {
   lastActiveAt: string | null;
   totalRake?: number;
   totalWinnings?: number;
+  // Real-time fields from PPPoker sync
+  isOnline?: boolean;
+  cashboxBalance?: number;
+  pppokerRole?: number | null;
+  lastSyncedAt?: string | null;
   agent: {
     id: string;
     nickname: string;
@@ -154,9 +159,18 @@ export const columns: ColumnDef<PokerPlayer>[] = [
 
       return (
         <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+            </Avatar>
+            {/* Online indicator dot */}
+            <div
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
+                player.isOnline ? "bg-green-500" : "bg-gray-400",
+              )}
+            />
+          </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-medium">{player.nickname}</span>
@@ -256,6 +270,31 @@ export const columns: ColumnDef<PokerPlayer>[] = [
         })}
       </span>
     ),
+  },
+  {
+    accessorKey: "cashboxBalance",
+    header: "Caixa",
+    meta: {
+      className: "w-[120px] text-right",
+    },
+    cell: ({ row }) => {
+      const balance = (row.original as PokerPlayer).cashboxBalance ?? 0;
+      return (
+        <span
+          className={cn(
+            "font-mono text-sm",
+            balance > 0 && "text-blue-600",
+            balance < 0 && "text-red-600",
+            balance === 0 && "text-muted-foreground",
+          )}
+        >
+          {balance.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "creditLimit",

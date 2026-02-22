@@ -8,9 +8,15 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { routers } from "./rest/routers";
 import type { Context } from "./rest/types";
+import { startSyncWorker } from "./services/pppoker-sync";
 import { createTRPCContext } from "./trpc/init";
 import { appRouter } from "./trpc/routers/_app";
 import { checkHealth } from "./utils/health";
+
+// Start PPPoker sync worker (runs every 60s)
+if (process.env.PPPOKER_SYNC_ENABLED !== "false") {
+  startSyncWorker();
+}
 
 const app = new OpenAPIHono<Context>();
 

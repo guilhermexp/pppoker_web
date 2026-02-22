@@ -292,6 +292,16 @@ export const pokerImportsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createPokerImportSchema)
     .mutation(async ({ input, ctx: { teamId, userId } }) => {
+      // Guard: reject club imports - club data syncs automatically via PPPoker API
+      const sourceType = input.sourceType ?? "club";
+      if (sourceType === "club") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Dados de clube sincronizam automaticamente via PPPoker. Use a importação apenas para dados de liga.",
+        });
+      }
+
       const supabase = await createAdminClient();
 
       const { data, error } = await supabase
@@ -301,7 +311,7 @@ export const pokerImportsRouter = createTRPCRouter({
           file_name: input.fileName,
           file_size: input.fileSize,
           file_type: input.fileType,
-          source_type: input.sourceType ?? "club",
+          source_type: sourceType,
           status: "validating",
           raw_data: input.rawData,
         })

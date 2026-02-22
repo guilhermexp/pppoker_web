@@ -573,10 +573,14 @@ export default {
     poker: "Clube de Poker",
     poker_players: "Jogadores",
     poker_agents: "Agentes",
+    poker_members: "Membros",
+    poker_contador: "Contador",
+    poker_lobby: "Lobby",
     poker_sessions: "Sessoes",
     poker_transactions: "Transacoes",
     poker_settlements: "Acertos",
     poker_import: "Importar Dados",
+    poker_sync: "Sincronização",
     super_union: "SuperUnion",
     super_union_painel: "Painel SU",
     super_union_import: "Importar Dados",
@@ -1392,6 +1396,18 @@ export default {
         total_rake: "Rake Total",
         net_result: "Resultado",
       },
+    },
+    members: {
+      title: "Membros",
+      description: "Gerencie membros do clube, aprovacoes e solicitacoes de credito",
+    },
+    contador: {
+      title: "Contador",
+      description: "Troque, envie e gerencie fichas dos membros do clube",
+    },
+    lobby: {
+      title: "Lobby",
+      description: "Mesas ao vivo do clube",
     },
     agents: {
       title: "Agentes",

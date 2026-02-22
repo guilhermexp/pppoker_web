@@ -1,5 +1,8 @@
+import { ClientOnly } from "@/components/client-only";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { PokerDashboardHeader } from "@/components/poker/poker-dashboard-header";
+import { SyncStatusBanner } from "@/components/poker/sync-status-banner";
+import { UnavailableDataBanner } from "@/components/poker/unavailable-data-banner";
 import { PokerStatCard } from "@/components/widgets/poker/poker-stat-card";
 import { PokerWidgetProvider } from "@/components/widgets/poker/poker-widget-provider";
 import { PokerWidgetsGrid } from "@/components/widgets/poker/poker-widgets-grid";
@@ -49,12 +52,24 @@ export default async function PokerPage() {
           {/* Header - Style matching WidgetsHeader */}
           <PokerDashboardHeader />
 
+          {/* Sync status indicator */}
+          <ErrorBoundary>
+            <Suspense fallback={<div className="h-16 animate-pulse bg-muted rounded" />}>
+              <ClientOnly fallback={<div className="h-16 animate-pulse bg-muted rounded" />}>
+                <SyncStatusBanner />
+              </ClientOnly>
+            </Suspense>
+          </ErrorBoundary>
+
           {/* Stats Grid - 2 rows x 4 columns */}
           <ErrorBoundary>
             <Suspense fallback={<PokerWidgetsGridSkeleton />}>
               <PokerWidgetsGrid />
             </Suspense>
           </ErrorBoundary>
+
+          {/* Unavailable data notice */}
+          <UnavailableDataBanner />
         </div>
       </PokerWidgetProvider>
     </HydrateClient>

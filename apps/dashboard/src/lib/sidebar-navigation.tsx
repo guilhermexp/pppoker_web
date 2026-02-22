@@ -238,6 +238,24 @@ export function getSidebarContent(
               },
               {
                 icon: <Icons.PieChart size={16} />,
+                label: t("sidebar.poker_members"),
+                path: "/poker/membros",
+                isActive: isActive("/poker/membros"),
+              },
+              {
+                icon: <Icons.PieChart size={16} />,
+                label: t("sidebar.poker_contador"),
+                path: "/poker/contador",
+                isActive: isActive("/poker/contador"),
+              },
+              {
+                icon: <Icons.PieChart size={16} />,
+                label: t("sidebar.poker_lobby"),
+                path: "/poker/lobby",
+                isActive: isActive("/poker/lobby"),
+              },
+              {
+                icon: <Icons.PieChart size={16} />,
                 label: t("sidebar.poker_sessions"),
                 path: "/poker/sessions",
                 isActive: isActive("/poker/sessions"),
@@ -256,7 +274,7 @@ export function getSidebarContent(
               },
               {
                 icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker_import"),
+                label: t("sidebar.poker_sync"),
                 path: "/poker/import",
                 isActive: isActive("/poker/import"),
               },
