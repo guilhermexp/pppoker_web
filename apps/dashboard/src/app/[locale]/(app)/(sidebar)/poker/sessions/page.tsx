@@ -1,4 +1,5 @@
 import { ErrorBoundary } from "@/components/error-boundary";
+import { PokerDashboardDataPanel } from "@/components/poker/poker-dashboard-data-panel";
 import { PokerSessionsHeader } from "@/components/poker/poker-sessions-header";
 import {
   PokerSessionsStats,
@@ -74,6 +75,8 @@ export default async function PokerSessionsPage(props: Props) {
           </Suspense>
         </ErrorBoundary>
       </div>
+
+      <PokerDashboardDataPanel />
     </HydrateClient>
   );
 }

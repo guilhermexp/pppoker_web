@@ -518,15 +518,11 @@ function TrocarTab() {
     setDialogOpen(true);
   };
 
-  const handleRefresh = () => {
+  const handleTransferSuccess = () => {
+    setSelectedIds(new Set());
     queryClient.invalidateQueries({
       queryKey: trpc.poker.members.getLive.queryKey(),
     });
-  };
-
-  const handleTransferSuccess = () => {
-    setSelectedIds(new Set());
-    handleRefresh();
   };
 
   if (isLoading) {
@@ -581,15 +577,6 @@ function TrocarTab() {
           >
             {sortBy === "nome" ? "Nome" : "Saldo"}
             <Icons.ChevronDown className="ml-1 h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={handleRefresh}
-            disabled={isFetching}
-          >
-            <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
           </Button>
         </div>
       </div>
