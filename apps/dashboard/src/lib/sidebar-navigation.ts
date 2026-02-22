@@ -166,69 +166,21 @@ export function getSidebarContent(
             items: [
               {
                 icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker"),
-                path: "/poker",
-                isActive: isActive("/poker") && pathname === "/poker",
+                label: t("sidebar.poker_contador"),
+                path: "/poker/contador",
+                isActive: isActive("/poker/contador"),
               },
               {
                 icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker_players"),
-                path: "/poker/players",
-                isActive: isActive("/poker/players"),
+                label: t("sidebar.poker_members"),
+                path: "/poker/membros",
+                isActive: isActive("/poker/membros"),
               },
               {
                 icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker_agents"),
-                path: "/poker/agents",
-                isActive: isActive("/poker/agents"),
-              },
-              {
-                icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker_sessions"),
-                path: "/poker/sessions",
-                isActive: isActive("/poker/sessions"),
-              },
-              {
-                icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker_transactions"),
-                path: "/poker/transactions",
-                isActive: isActive("/poker/transactions"),
-              },
-              {
-                icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker_settlements"),
-                path: "/poker/settlements",
-                isActive: isActive("/poker/settlements"),
-              },
-              {
-                icon: <Icons.PieChart size={16} />,
-                label: t("sidebar.poker_import"),
-                path: "/poker/import",
-                isActive: isActive("/poker/import"),
-              },
-            ],
-          },
-        ],
-      };
-
-    case "leagues":
-      return {
-        title: t("sidebar.ligas"),
-        sections: [
-          {
-            title: t("sidebar.management"),
-            items: [
-              {
-                icon: <Icons.Link size={16} />,
-                label: t("sidebar.ligas"),
-                path: "/poker/leagues",
-                isActive: isActive("/poker/leagues") && pathname === "/poker/leagues",
-              },
-              {
-                icon: <Icons.Link size={16} />,
-                label: t("sidebar.ligas_import"),
-                path: "/poker/leagues/import",
-                isActive: isActive("/poker/leagues/import"),
+                label: t("sidebar.poker_lobby"),
+                path: "/poker/lobby",
+                isActive: isActive("/poker/lobby"),
               },
             ],
           },
@@ -430,7 +382,6 @@ export function detectActiveSection(pathname: string): string {
   if (cleanPath.startsWith("/invoices")) return "invoices";
   if (cleanPath.startsWith("/customers")) return "customers";
   if (cleanPath.startsWith("/vault")) return "vault";
-  if (cleanPath.startsWith("/poker/leagues")) return "leagues";
   if (cleanPath.startsWith("/poker")) return "poker";
   if (cleanPath.startsWith("/fastchips")) return "fastchips";
   if (cleanPath.startsWith("/su")) return "su";

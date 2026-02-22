@@ -12,14 +12,10 @@ export default async function PokerMembrosPage() {
   const queryClient = getQueryClient();
   const t = await getI18n();
 
-  // Prefetch members list and stats
   try {
-    await Promise.all([
-      queryClient.fetchInfiniteQuery(
-        trpc.poker.members.list.infiniteQueryOptions({}),
-      ),
-      queryClient.fetchQuery(trpc.poker.members.getStats.queryOptions()),
-    ]);
+    await queryClient.fetchQuery(
+      trpc.poker.members.getLive.queryOptions({}),
+    );
   } catch {
     // SSR prefetch failed, client will fetch via Suspense
   }
