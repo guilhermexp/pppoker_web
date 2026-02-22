@@ -94,6 +94,12 @@ O sistema usa Redis para cache distribuído:
 bun start
 ```
 
+## Integração Nanobot (Refatoração do Agente)
+
+Documentação técnica completa (arquitetura, endpoints, Trigger.dev, debug e manutenção):
+
+- `docs/nanobot-integration.md`
+
 ## Endpoints Principais
 
 - `GET /health` - Status da API

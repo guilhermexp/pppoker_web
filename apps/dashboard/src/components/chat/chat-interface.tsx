@@ -6,6 +6,8 @@ import { useChatStatus } from "@/hooks/use-chat-status";
 import { useChat, useChatActions, useDataPart } from "@ai-sdk-tools/store";
 import type { UIChatMessage } from "@midpoker/api/ai/types";
 import { createClient } from "@midpoker/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@midpoker/ui/alert";
+import { Button } from "@midpoker/ui/button";
 import { cn } from "@midpoker/ui/cn";
 import {
   Conversation,
@@ -15,7 +17,7 @@ import {
 import type { Geo } from "@vercel/functions";
 import { DefaultChatTransport, generateId } from "ai";
 import { parseAsString, useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChatHeader,
   ChatInput,
@@ -31,8 +33,17 @@ type Props = {
 export function ChatInterface({ geo }: Props) {
   const { chatId: routeChatId, isHome } = useChatInterface();
   const chatId = useMemo(() => routeChatId ?? generateId(), [routeChatId]);
-  const { reset } = useChatActions();
+  const { reset, stop } = useChatActions();
   const prevChatIdRef = useRef<string | null>(routeChatId);
+  const lastProgressAtRef = useRef<number>(Date.now());
+  const lastProgressSignatureRef = useRef<string>("");
+  const [stuckRequestWarning, setStuckRequestWarning] = useState<{
+    phase: "submitted" | "streaming";
+    secondsWithoutProgress: number;
+  } | null>(null);
+  const [requestErrorMessage, setRequestErrorMessage] = useState<string | null>(
+    null,
+  );
   const [, clearSuggestions] = useDataPart<{ prompts: string[] }>(
     "suggestions",
   );
@@ -57,25 +68,63 @@ export function ChatInterface({ geo }: Props) {
     () =>
       Object.assign(
         async (url: RequestInfo | URL, requestOptions?: RequestInit) => {
+          const controller = new AbortController();
+          const timeoutMs = 45_000;
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
           const supabase = createClient();
           const {
             data: { session },
           } = await supabase.auth.getSession();
 
-          return fetch(url, {
-            ...requestOptions,
-            headers: {
-              ...requestOptions?.headers,
-              Authorization: `Bearer ${session?.access_token}`,
-              "Content-Type": "application/json",
-            },
-          });
+          try {
+            const response = await fetch(url, {
+              ...requestOptions,
+              signal: requestOptions?.signal ?? controller.signal,
+              headers: {
+                ...requestOptions?.headers,
+                Authorization: `Bearer ${session?.access_token}`,
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (!response.ok) {
+              setRequestErrorMessage(
+                `Falha no backend do chat (${response.status}). Verifique API, banco e runtime do agente.`,
+              );
+            } else {
+              setRequestErrorMessage(null);
+            }
+
+            return response;
+          } catch (error) {
+            const message =
+              error instanceof DOMException && error.name === "AbortError"
+                ? "Tempo limite da requisição do chat. O backend pode estar lento ou travado."
+                : "Falha de conexão com o backend do chat.";
+
+            setRequestErrorMessage(message);
+
+            // Return a synthetic error response so the chat transport can settle
+            // instead of leaving the UI stuck in a processing state.
+            return new Response(JSON.stringify({ error: message }), {
+              status:
+                error instanceof DOMException && error.name === "AbortError"
+                  ? 504
+                  : 503,
+              headers: {
+                "content-type": "application/json",
+              },
+            });
+          } finally {
+            clearTimeout(timeoutId);
+          }
         },
       ),
     [],
   );
 
-  const { messages, status } = useChat<UIChatMessage>({
+  const chat = useChat<UIChatMessage>({
     id: chatId,
     transport: new DefaultChatTransport({
       api: `${process.env.NEXT_PUBLIC_API_URL}/chat`,
@@ -100,6 +149,8 @@ export function ChatInterface({ geo }: Props) {
       },
     }),
   });
+  const { messages, status } = chat;
+  const transportError = (chat as { error?: Error | null }).error ?? null;
 
   const {
     agentStatus,
@@ -120,6 +171,57 @@ export function ChatInterface({ geo }: Props) {
   const [suggestions] = useDataPart<{ prompts: string[] }>("suggestions");
   const hasSuggestions = suggestions?.prompts && suggestions.prompts.length > 0;
   const showCanvas = Boolean(selectedType);
+
+  const progressSignature = useMemo(() => {
+    const lastMessage = messages[messages.length - 1];
+    const lastAssistant =
+      lastMessage?.role === "assistant" ? lastMessage : undefined;
+    const textLength =
+      lastAssistant?.parts
+        ?.filter((part) => part.type === "text")
+        .map((part) => (part as { text?: string }).text?.length ?? 0)
+        .reduce((sum, len) => sum + len, 0) ?? 0;
+    return `${status}:${messages.length}:${lastAssistant?.parts?.length ?? 0}:${textLength}`;
+  }, [messages, status]);
+
+  useEffect(() => {
+    if (progressSignature !== lastProgressSignatureRef.current) {
+      lastProgressSignatureRef.current = progressSignature;
+      lastProgressAtRef.current = Date.now();
+      setStuckRequestWarning(null);
+    }
+  }, [progressSignature]);
+
+  useEffect(() => {
+    if (status === "ready" || status === "error") {
+      setStuckRequestWarning(null);
+      return;
+    }
+
+    if (status !== "submitted" && status !== "streaming") {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      const elapsedMs = Date.now() - lastProgressAtRef.current;
+      const thresholdMs = status === "submitted" ? 12_000 : 25_000;
+
+      if (elapsedMs >= thresholdMs) {
+        setStuckRequestWarning({
+          phase: status,
+          secondsWithoutProgress: Math.floor(elapsedMs / 1000),
+        });
+      }
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [status]);
+
+  useEffect(() => {
+    if (transportError?.message) {
+      setRequestErrorMessage(transportError.message);
+    }
+  }, [transportError]);
 
   return (
     <div
@@ -168,6 +270,48 @@ export function ChatInterface({ geo }: Props) {
               <Conversation>
                 <ConversationContent className="pb-48 pt-14">
                   <div className="max-w-2xl mx-auto w-full">
+                    {(stuckRequestWarning || requestErrorMessage) && (
+                      <div className="mb-4">
+                        <Alert variant="warning">
+                          <AlertTitle>
+                            {requestErrorMessage
+                              ? "Falha no processamento do chat"
+                              : "Processamento demorando mais que o normal"}
+                          </AlertTitle>
+                          <AlertDescription>
+                            <p>
+                              {requestErrorMessage ??
+                                `A resposta está sem progresso há ${stuckRequestWarning?.secondsWithoutProgress ?? 0}s (${stuckRequestWarning?.phase === "submitted" ? "enviando" : "streaming"}). Você pode interromper e tentar novamente.`}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {(status === "streaming" ||
+                                status === "submitted") && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    stop?.();
+                                    setStuckRequestWarning(null);
+                                  }}
+                                >
+                                  Interromper processamento
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setStuckRequestWarning(null);
+                                  setRequestErrorMessage(null);
+                                }}
+                              >
+                                Fechar aviso
+                              </Button>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
                     <ChatMessages
                       messages={messages}
                       isStreaming={
