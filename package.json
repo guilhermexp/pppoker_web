@@ -6,7 +6,7 @@
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
     "clean:workspaces": "turbo clean",
-    "dev": "kill $(lsof -i :9000 -t) 2>/dev/null; kill $(lsof -i :8080 -t) 2>/dev/null; kill $(lsof -i :8000 -t) 2>/dev/null; sleep 1; redis-server --port 6380 --daemonize yes 2>/dev/null; (if [ -d ./Ppfichas ]; then cd ./Ppfichas && uvicorn pppoker_api_server:app --host 0.0.0.0 --port 8000 & elif [ -d /Users/macosx/Ppfichas ]; then cd /Users/macosx/Ppfichas && uvicorn pppoker_api_server:app --host 0.0.0.0 --port 8000 & else echo '[dev] PPPoker bridge não encontrado (./Ppfichas ou /Users/macosx/Ppfichas). Continuando sem bridge.'; fi); turbo dev --filter=@midpoker/dashboard --filter=@midpoker/api --parallel",
+    "dev": "kill $(lsof -i :3100 -t) 2>/dev/null; kill $(lsof -i :3101 -t) 2>/dev/null; kill $(lsof -i :3102 -t) 2>/dev/null; sleep 1; redis-server --port 6380 --daemonize yes 2>/dev/null; (if [ -d ./Ppfichas ]; then cd ./Ppfichas && python3 -m uvicorn pppoker_api_server:app --host 0.0.0.0 --port 3102 & elif [ -d /Users/macosx/Ppfichas ]; then cd /Users/macosx/Ppfichas && python3 -m uvicorn pppoker_api_server:app --host 0.0.0.0 --port 3102 & else echo '[dev] PPPoker bridge nao encontrado. Continuando sem bridge.'; fi); turbo dev --filter=@midpoker/dashboard --filter=@midpoker/api --parallel",
     "test": "turbo test --parallel",
     "start:dashboard": "turbo start --filter=@midpoker/dashboard",
     "dev:api": "turbo dev --filter=@midpoker/api",

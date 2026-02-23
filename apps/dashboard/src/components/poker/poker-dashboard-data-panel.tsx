@@ -133,17 +133,12 @@ function SessionCard({ session }: { session: SessionRow }) {
     : "";
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-white/6 bg-white/[0.015] p-3">
+    <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0 hover:bg-muted/50 transition-colors">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span
-            className={cn(
-              "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium",
-              typeColor,
-            )}
-          >
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
             {typeLabel}
-          </span>
+          </Badge>
           {variantLabel && (
             <span className="text-[10px] text-muted-foreground font-medium">
               {variantLabel}
@@ -170,12 +165,12 @@ function SessionCard({ session }: { session: SessionRow }) {
       </div>
       <div className="text-right flex-shrink-0">
         {rake > 0 && (
-          <p className="text-xs font-mono font-medium text-emerald-400">
+          <p className="text-xs font-mono font-medium text-green-600">
             +{formatCurrency(rake)}
           </p>
         )}
         {(session.guaranteedPrize ?? 0) > 0 && (
-          <p className="text-[10px] text-amber-400">
+          <p className="text-[10px] text-muted-foreground">
             GTD {formatCurrency(session.guaranteedPrize!)}
           </p>
         )}
@@ -331,15 +326,10 @@ export function PokerDashboardDataPanel() {
       )}
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="w-full sm:max-w-lg p-0" title="Dados no clube">
-          <SheetHeader className="border-b border-white/5 px-6 py-4">
+        <SheetContent className="w-full sm:max-w-lg p-0 bg-background" title="Dados no clube">
+          <SheetHeader className="border-b border-border px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/[0.03] text-muted-foreground">
-                  <Icons.Invoice className="h-4 w-4" />
-                </span>
-                <h2 className="text-lg font-semibold">Dados no clube</h2>
-              </div>
+              <h2 className="text-lg font-semibold">Dados no clube</h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -352,14 +342,14 @@ export function PokerDashboardDataPanel() {
           </SheetHeader>
 
           <ScrollArea className="h-[calc(100vh-80px)]">
-            <div className="space-y-4 p-5">
+            <div className="space-y-4 px-6 py-4">
               {/* Date range selector */}
-              <div className="rounded-xl border border-white/8 bg-white/[0.02] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                <div className="flex items-center justify-between rounded-lg bg-white/[0.015] px-1 py-1">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 rounded-md hover:bg-white/[0.05]"
+                    className="h-8 w-8"
                     onClick={goToPrevDay}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -370,31 +360,31 @@ export function PokerDashboardDataPanel() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 rounded-md hover:bg-white/[0.05]"
+                    className="h-8 w-8"
                     onClick={goToNextDay}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
 
-                <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant="outline"
-                    className="h-9 rounded-md border-white/10 bg-white/[0.025] text-foreground hover:bg-white/[0.05]"
+                    className="h-9"
                     onClick={setYesterday}
                   >
                     Ontem
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-9 rounded-md border-white/10 bg-white/[0.025] text-foreground hover:bg-white/[0.05]"
+                    className="h-9"
                     onClick={setLast7Days}
                   >
                     7 d anter.
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-9 rounded-md border-white/10 bg-white/[0.025] text-foreground hover:bg-white/[0.05]"
+                    className="h-9"
                     onClick={setToday}
                   >
                     Hoje
@@ -403,12 +393,12 @@ export function PokerDashboardDataPanel() {
               </div>
 
               {/* Top stats grid */}
-              <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-white/8 bg-white/[0.01]">
+              <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-border">
                 {topStats.map((item, index) => (
                   <div
                     key={item.label}
                     className={cn(
-                      "min-h-[88px] border-white/6 p-3 text-center",
+                      "min-h-[88px] border-border p-3 text-center",
                       index % 3 !== 2 && "border-r",
                       index < 3 && "border-b",
                     )}
@@ -428,28 +418,20 @@ export function PokerDashboardDataPanel() {
               </div>
 
               {/* Game type tabs */}
-              <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-white/[0.015] p-1">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
                 {GAME_TABS.map((tab, i) => (
                   <button
                     key={tab.label}
                     type="button"
                     onClick={() => setSelectedTab(i)}
                     className={cn(
-                      "relative inline-flex h-8 min-w-[56px] items-center justify-center rounded-md border px-3 text-xs font-medium whitespace-nowrap transition-colors",
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap",
                       selectedTab === i
-                        ? "border-primary/25 bg-primary/15 text-foreground"
-                        : "border-transparent bg-transparent text-muted-foreground hover:bg-white/[0.035]",
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/60 text-muted-foreground hover:bg-muted/80",
                     )}
                   >
                     {tab.label}
-                    {tab.badge && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -right-1 -top-1 h-4 px-1 text-[9px]"
-                      >
-                        {tab.badge}
-                      </Badge>
-                    )}
                   </button>
                 ))}
               </div>
@@ -458,40 +440,38 @@ export function PokerDashboardDataPanel() {
               {isLoading ? (
                 <div className="space-y-2">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-20 rounded-lg" />
+                    <Skeleton key={i} className="h-16 rounded-lg" />
                   ))}
                 </div>
               ) : sessionsList.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between px-1">
-                    <p className="text-xs text-muted-foreground">
-                      {stats?.totalSessions ?? 0} partidas encontradas
-                    </p>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {stats?.totalSessions ?? 0} partidas encontradas
+                  </p>
+                  <div className="flex flex-col border-t border-border">
+                    {sessionsList.map((s: any) => (
+                      <SessionCard
+                        key={s.id}
+                        session={{
+                          id: s.id,
+                          tableName: s.tableName,
+                          sessionType: s.sessionType,
+                          gameVariant: s.gameVariant,
+                          startedAt: s.startedAt,
+                          totalRake: s.totalRake,
+                          totalBuyIn: s.totalBuyIn,
+                          totalCashOut: s.totalCashOut,
+                          playerCount: s.playerCount,
+                          handsPlayed: s.handsPlayed,
+                          guaranteedPrize: s.guaranteedPrize,
+                        }}
+                      />
+                    ))}
                   </div>
-                  {sessionsList.map((s: any) => (
-                    <SessionCard
-                      key={s.id}
-                      session={{
-                        id: s.id,
-                        tableName: s.tableName,
-                        sessionType: s.sessionType,
-                        gameVariant: s.gameVariant,
-                        startedAt: s.startedAt,
-                        totalRake: s.totalRake,
-                        totalBuyIn: s.totalBuyIn,
-                        totalCashOut: s.totalCashOut,
-                        playerCount: s.playerCount,
-                        handsPlayed: s.handsPlayed,
-                        guaranteedPrize: s.guaranteedPrize,
-                      }}
-                    />
-                  ))}
                 </div>
               ) : (
-                <div className="flex min-h-[286px] flex-col items-center justify-center rounded-xl border border-dashed border-white/8 bg-gradient-to-b from-white/[0.02] to-white/[0.005] text-center">
-                  <div className="mb-4 rounded-full border border-white/8 bg-white/[0.02] p-4">
-                    <Search className="h-7 w-7 text-muted-foreground" />
-                  </div>
+                <div className="flex flex-col items-center py-16 text-center">
+                  <Icons.Invoice className="mb-3 h-8 w-8 text-muted-foreground" />
                   <p className="text-sm font-medium">Nenhum dado</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Ajuste filtros ou período para visualizar resultados
@@ -500,8 +480,8 @@ export function PokerDashboardDataPanel() {
               )}
 
               {/* League time */}
-              <div className="flex items-center justify-end gap-2 px-1 text-xs text-muted-foreground">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.45)]" />
+              <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
                 <span>Horário da liga: UTC-05:00 {leagueTime}</span>
               </div>
             </div>

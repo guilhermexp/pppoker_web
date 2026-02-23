@@ -40,20 +40,14 @@ export function PendingMembersList() {
 
   if (requests.length === 0) {
     return (
-      <div className="flex items-center justify-center">
-        <div className="flex flex-col items-center mt-20">
-          <div className="p-4 bg-muted rounded-full mb-6">
-            <Icons.Customers className="size-8 text-muted-foreground" />
-          </div>
-          <div className="text-center mb-6 space-y-2">
-            <h2 className="font-medium text-lg">
-              Nenhuma solicitacao pendente
-            </h2>
-            <p className="text-[#606060] text-sm">
-              Novos membros do clube aparecerao aqui para aprovacao.
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col items-center py-16 text-center">
+        <Icons.Customers className="mb-3 h-8 w-8 text-muted-foreground" />
+        <p className="text-sm font-medium">
+          Nenhuma solicitação pendente
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Novos membros do clube aparecerão aqui para aprovação.
+        </p>
       </div>
     );
   }
@@ -67,11 +61,11 @@ export function PendingMembersList() {
         return (
           <div
             key={request.id}
-            className="flex items-center justify-between p-4 border rounded-lg"
+            className="flex items-center justify-between border-b border-border py-3 last:border-b-0"
           >
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="text-sm">{initials}</AvatarFallback>
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <span className="font-medium">{request.nickname}</span>

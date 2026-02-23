@@ -30,11 +30,11 @@ logger = logging.getLogger("pppoker_bridge")
 class PPPokerSession:
     """Wraps a PPPokerClient with metadata for pool management."""
 
-    def __init__(self, uid: int, rdkey: str, server_ip: str | None = None):
+    def __init__(self, uid: int, rdkey: str, server_ip: Optional[str] = None):
         self.uid = uid
         self.rdkey = rdkey
         self.server_ip = server_ip
-        self.client: PPPokerClient | None = None
+        self.client: Optional[PPPokerClient] = None
         self.created_at = time.time()
         self.last_used = time.time()
         self.lock = asyncio.Lock()

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "NODE_ENV=production next build --turbopack",
     "clean": "git clean -xdf .next .turbo node_modules",
-    "dev": "TZ=UTC next dev -p 9000 --turbopack",
+    "dev": "TZ=UTC next dev -p 3100 --turbopack",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",

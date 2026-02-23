@@ -47,10 +47,10 @@ function CreditRequestCard({
   const isReviewing = reviewMutation.isPending;
 
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg">
+    <div className="flex items-center justify-between border-b border-border py-3 last:border-b-0">
       <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback className="text-sm">{initials}</AvatarFallback>
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
           <span className="font-medium">{request.nickname}</span>
@@ -145,20 +145,14 @@ export function CreditRequestsList() {
 
   if (requests.length === 0) {
     return (
-      <div className="flex items-center justify-center">
-        <div className="flex flex-col items-center mt-20">
-          <div className="p-4 bg-muted rounded-full mb-6">
-            <Icons.Invoice className="size-8 text-muted-foreground" />
-          </div>
-          <div className="text-center mb-6 space-y-2">
-            <h2 className="font-medium text-lg">
-              Nenhuma solicitacao de credito
-            </h2>
-            <p className="text-[#606060] text-sm">
-              Solicitacoes de credito dos jogadores aparecerao aqui.
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col items-center py-16 text-center">
+        <Icons.Invoice className="mb-3 h-8 w-8 text-muted-foreground" />
+        <p className="text-sm font-medium">
+          Nenhuma solicitação de crédito
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Solicitações de crédito dos jogadores aparecerão aqui.
+        </p>
       </div>
     );
   }

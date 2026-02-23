@@ -11,6 +11,10 @@ const config = {
         protocol: "https",
         hostname: "**",
       },
+      {
+        protocol: "http",
+        hostname: "alicdn.pppoker.club",
+      },
     ],
   },
   transpilePackages: [
@@ -54,7 +58,7 @@ const config = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: https:",
+              "img-src 'self' data: https: http://alicdn.pppoker.club",
               "font-src 'self' data: https://fonts.gstatic.com",
               // Allow connections to: self, API server, Supabase (auth, realtime, storage)
               "connect-src 'self' http://localhost:* https://*.supabase.co wss://*.supabase.co",

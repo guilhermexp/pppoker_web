@@ -85,16 +85,15 @@ function MemberRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-xl border p-3 transition-colors cursor-pointer",
+        "flex items-center gap-3 border-b border-border py-3 last:border-b-0 transition-colors cursor-pointer",
         isSelected
-          ? "border-primary/50 bg-primary/10"
-          : "border-border/60 bg-muted/30 hover:bg-muted/50",
+          ? "bg-primary/10"
+          : "hover:bg-muted/50",
       )}
       onClick={onToggle}
     >
-      {/* Avatar + online indicator */}
       <div className="relative flex-shrink-0">
-        <Avatar className="h-9 w-9">
+        <Avatar className="h-8 w-8">
           {member.avatar_url && <AvatarImage src={member.avatar_url} />}
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
@@ -106,36 +105,29 @@ function MemberRow({
         />
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm truncate">{member.nome}</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-mono">ID: {member.uid}</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
-          <span
-            className={cn(
-              "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium",
-              roleColor,
-            )}
-          >
+          <Badge variant={
+            member.papel === "Dono" || member.papel === "Gestor" ? "default"
+              : member.papel === "Agente" || member.papel === "Super Agente" ? "outline"
+              : "secondary"
+          }>
             {member.papel}
-          </span>
-          {member.agente_nome ? (
-            <span className="truncate">Agente: {member.agente_nome}</span>
-          ) : member.titulo && member.titulo !== member.nome ? (
-            <span className="truncate">Apelido: {member.titulo}</span>
-          ) : null}
+          </Badge>
         </div>
+        <p className="text-xs text-muted-foreground font-mono">{member.uid}</p>
+        {member.agente_nome ? (
+          <p className="truncate text-xs text-muted-foreground">Agente: {member.agente_nome}</p>
+        ) : member.titulo && member.titulo !== member.nome ? (
+          <p className="truncate text-xs text-muted-foreground">{member.titulo}</p>
+        ) : null}
       </div>
 
-      {/* Balance + actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
         <span
           className={cn(
-            "min-w-[84px] rounded-full px-3 py-1 text-center font-mono text-sm font-medium bg-background/60",
+            "font-mono text-sm",
             cashbox > 0
               ? "text-green-600"
               : cashbox < 0
@@ -143,16 +135,13 @@ function MemberRow({
                 : "text-muted-foreground",
           )}
         >
-          {formatBalance(cashbox)}
-        </span>
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary">
-          <Icons.Currency className="h-3.5 w-3.5" />
+          {cashbox >= 0 ? "+" : ""}{formatBalance(cashbox)}
         </span>
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onToggle()}
           onClick={(e) => e.stopPropagation()}
-          className="flex-shrink-0 rounded-md border-primary/40"
+          className="flex-shrink-0"
         />
       </div>
     </div>
@@ -638,7 +627,7 @@ function TrocarTab() {
       )}
 
       {/* Member list */}
-      <div className="flex flex-col gap-2 max-h-[480px] overflow-y-auto rounded-lg">
+      <div className="flex flex-col max-h-[480px] overflow-y-auto border-t border-border">
         {members.length === 0 ? (
           <div className="flex flex-col items-center py-16">
             <Icons.Customers className="h-8 w-8 text-muted-foreground mb-3" />
@@ -767,30 +756,36 @@ function TransacoesTab() {
   return (
     <div className="flex flex-col gap-4">
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border">
-          <Icons.ReceiptLong className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground">Total</p>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-2">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary flex-shrink-0">
+            <Icons.ReceiptLong className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0 leading-none">
             <p className="font-mono text-sm font-medium">{totalCount}</p>
+            <p className="text-[10px] text-muted-foreground truncate">Total</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border">
-          <ArrowUpRight className="h-4 w-4 text-green-600 flex-shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground">Enviado</p>
+        <div className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-2">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500/10 text-green-600 flex-shrink-0">
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0 leading-none">
             <p className="font-mono text-sm font-medium text-green-600">
               {formatBalance(stats.totalEnvio)}
             </p>
+            <p className="text-[10px] text-muted-foreground truncate">Enviado</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border">
-          <ArrowDownLeft className="h-4 w-4 text-red-600 flex-shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground">Resgatado</p>
+        <div className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-2">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/10 text-red-600 flex-shrink-0">
+            <ArrowDownLeft className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0 leading-none">
             <p className="font-mono text-sm font-medium text-red-600">
               {formatBalance(stats.totalResgate)}
             </p>
+            <p className="text-[10px] text-muted-foreground truncate">Resgatado</p>
           </div>
         </div>
       </div>
@@ -835,7 +830,7 @@ function TransacoesTab() {
       </div>
 
       {/* Transaction list */}
-      <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto">
+      <div className="flex flex-col max-h-[500px] overflow-y-auto border-t border-border">
         {transactions.length === 0 ? (
           <div className="flex flex-col items-center py-16">
             <Icons.Invoice className="h-8 w-8 text-muted-foreground mb-3" />
@@ -854,7 +849,7 @@ function TransacoesTab() {
             return (
               <div
                 key={tx.id}
-                className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-3 border-b border-border py-3 last:border-b-0 hover:bg-muted/50 transition-colors"
               >
                 {/* Icon */}
                 <div
@@ -961,22 +956,19 @@ export function ContadorPage() {
       )}
 
       <div className="min-h-[680px]">
-        <section className="hidden xl:flex min-h-[680px] rounded-xl border bg-background">
-          <div className="flex w-full flex-col p-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold">Transações</h2>
-              <p className="text-sm text-muted-foreground">
-                Lista lateral de transações do contador
-              </p>
-            </div>
-            <TransacoesTab />
+        <section className="hidden xl:flex min-h-[680px] items-center justify-center rounded-xl border border-dashed bg-muted/20">
+          <div className="max-w-sm px-6 text-center">
+            <p className="text-sm font-medium">Área central vazia (temporário)</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              A gestão do contador foi movida para o painel lateral.
+            </p>
           </div>
         </section>
       </div>
 
       <Sheet open={isContadorOpen} onOpenChange={setIsContadorOpen}>
-        <SheetContent className="w-full sm:max-w-lg p-0" title="Contador">
-          <SheetHeader className="px-6 py-4 border-b">
+        <SheetContent className="w-full sm:max-w-lg p-0 bg-background" title="Contador">
+          <SheetHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Contador</h2>
               <Button
@@ -991,29 +983,29 @@ export function ContadorPage() {
           </SheetHeader>
 
           <Tabs defaultValue="trocar" className="w-full">
-            <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
+            <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent h-auto p-0">
               <TabsTrigger
                 value="trocar"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
               >
                 Trocar
               </TabsTrigger>
               <TabsTrigger
                 value="enviar"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
               >
                 Enviar itens
               </TabsTrigger>
               <TabsTrigger
                 value="ticket"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
               >
                 Ticket
               </TabsTrigger>
             </TabsList>
 
             <ScrollArea className="h-[calc(100vh-160px)]">
-              <div className="p-6">
+              <div className="px-6 py-4">
                 <TabsContent value="trocar" className="mt-0">
                   <TrocarTab />
                 </TabsContent>

@@ -16,6 +16,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Loader2, Search } from "lucide-react";
 import { Suspense, useDeferredValue, useMemo, useState } from "react";
 import { CreditRequestsList } from "./credit-requests-list";
+import { MemberDetailView } from "./member-detail-view";
 import { PendingMembersList } from "./pending-members-list";
 import type { ClubMember } from "@/components/tables/poker-membros/columns";
 
@@ -26,18 +27,37 @@ function formatMoney(value: number) {
   });
 }
 
-function CompactMemberRow({ member }: { member: ClubMember }) {
+function CompactMemberRow({
+  member,
+  onClick,
+}: {
+  member: ClubMember;
+  onClick?: () => void;
+}) {
   const initials = member.nickname.slice(0, 2).toUpperCase();
   const subtitle = member.memoName
-    ? `Apelido: ${member.memoName}`
+    ? member.memoName
     : member.agent?.nickname
       ? `Agente: ${member.agent.nickname}`
-      : `Papel: ${member.roleLabel}`;
+      : undefined;
+
+  const badgeVariant =
+    member.type === "super_agent"
+      ? "default"
+      : member.type === "agent"
+        ? "outline"
+        : "secondary";
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+    <div
+      className="flex items-center gap-3 border-b border-border py-3 last:border-b-0 hover:bg-muted/50 transition-colors cursor-pointer"
+      onClick={onClick}
+      onKeyDown={(e) => e.key === "Enter" && onClick?.()}
+      role="button"
+      tabIndex={0}
+    >
       <div className="relative flex-shrink-0">
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-8 w-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
         <div
@@ -49,35 +69,30 @@ function CompactMemberRow({ member }: { member: ClubMember }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{member.nickname}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-medium">{member.nickname}</p>
+        </div>
         <p className="text-xs text-muted-foreground font-mono">
-          ID: {member.ppPokerId}
+          {member.ppPokerId}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+        {subtitle && (
+          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+        )}
       </div>
 
       <div className="flex flex-col items-end gap-1">
         <span
           className={cn(
-            "font-mono text-sm font-medium",
+            "font-mono text-sm",
             member.currentBalance > 0 && "text-green-600",
             member.currentBalance < 0 && "text-red-600",
             member.currentBalance === 0 && "text-muted-foreground",
           )}
         >
+          {member.currentBalance >= 0 ? "+" : ""}
           {formatMoney(member.currentBalance)}
         </span>
-        <Badge
-          variant={member.type === "player" ? "secondary" : "outline"}
-          className={cn(
-            "h-5 px-1.5 text-[10px] border-white/10",
-            member.type === "player"
-              ? "bg-white/[0.06] text-muted-foreground"
-              : "bg-white/[0.03]",
-          )}
-        >
-          {member.roleLabel}
-        </Badge>
+        <Badge variant={badgeVariant}>{member.roleLabel}</Badge>
       </div>
     </div>
   );
@@ -85,7 +100,7 @@ function CompactMemberRow({ member }: { member: ClubMember }) {
 
 function MembrosCompactTab() {
   const trpc = useTRPC();
-  const { q, setParams } = usePokerMembrosParams();
+  const { q, memberId, setParams } = usePokerMembrosParams();
   const deferredSearch = useDeferredValue(q);
   const [sortLabel, setSortLabel] = useState<"Taxa" | "Entrada">("Taxa");
 
@@ -109,6 +124,15 @@ function MembrosCompactTab() {
     () => data?.pages.flatMap((page) => page.data as ClubMember[]) ?? [],
     [data],
   );
+
+  if (memberId) {
+    return (
+      <MemberDetailView
+        memberId={memberId}
+        onBack={() => setParams({ memberId: null })}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -155,7 +179,7 @@ function MembrosCompactTab() {
         </Button>
       </div>
 
-      <div className="flex max-h-[calc(100vh-330px)] flex-col gap-2 overflow-y-auto">
+      <div className="flex max-h-[calc(100vh-330px)] flex-col overflow-y-auto border-t border-border">
         {members.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-center">
             <Icons.Customers className="mb-3 h-8 w-8 text-muted-foreground" />
@@ -165,7 +189,11 @@ function MembrosCompactTab() {
           </div>
         ) : (
           members.map((member) => (
-            <CompactMemberRow key={member.id} member={member} />
+            <CompactMemberRow
+              key={member.id}
+              member={member}
+              onClick={() => setParams({ memberId: member.id })}
+            />
           ))
         )}
       </div>
@@ -173,7 +201,7 @@ function MembrosCompactTab() {
       {hasNextPage && (
         <Button
           variant="outline"
-          className="border-white/10 bg-transparent hover:bg-white/[0.04]"
+          className="mt-2"
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
         >
@@ -216,8 +244,8 @@ export function MembrosPageTabs() {
       </div>
 
       <Sheet open={isPanelOpen} onOpenChange={setIsPanelOpen}>
-        <SheetContent className="w-full sm:max-w-lg p-0" title="Lista de membros">
-          <SheetHeader className="px-6 py-4 border-b">
+        <SheetContent className="w-full sm:max-w-lg p-0 bg-background" title="Lista de membros">
+          <SheetHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Lista de membros</h2>
               <Button
@@ -236,36 +264,36 @@ export function MembrosPageTabs() {
             onValueChange={(value) => setParams({ tab: value })}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-transparent h-auto p-0">
+            <TabsList className="grid w-full grid-cols-3 rounded-none border-b border-border bg-transparent h-auto p-0">
               <TabsTrigger
                 value="members"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-3"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 py-3 text-sm"
               >
                 Membro
                 {stats && stats.totalMembers > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+                  <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1 text-[10px]">
                     {stats.totalMembers}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="pending"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-3"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 py-3 text-sm"
               >
                 Novo membro
                 {stats && stats.pendingMembers > 0 && (
-                  <Badge variant="destructive" className="ml-2 h-5 px-1.5 text-xs">
+                  <Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1 text-[10px]">
                     {stats.pendingMembers}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="credit"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-3 text-center whitespace-normal leading-tight"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-sm text-center whitespace-normal leading-tight"
               >
                 Solicitação de crédito
                 {stats && stats.pendingCredits > 0 && (
-                  <Badge variant="destructive" className="ml-2 h-5 px-1.5 text-xs">
+                  <Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1 text-[10px]">
                     {stats.pendingCredits}
                   </Badge>
                 )}
@@ -273,7 +301,7 @@ export function MembrosPageTabs() {
             </TabsList>
 
             <ScrollArea className="h-[calc(100vh-160px)]">
-              <div className="p-6">
+              <div className="px-6 py-4">
                 <TabsContent value="members" className="mt-0">
                   <MembrosCompactTab />
                 </TabsContent>
