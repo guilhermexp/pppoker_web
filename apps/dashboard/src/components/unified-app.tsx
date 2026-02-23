@@ -16,13 +16,22 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@midpoker/ui/carousel";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@midpoker/ui/dropdown-menu";
 import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { AppSettings } from "./app-settings";
+import { PokerImportSheet } from "./poker-import-sheet";
+import { ImportsList } from "./poker/imports-list";
 
 interface UnifiedAppProps {
   app: UnifiedApp;
@@ -86,12 +95,15 @@ function CarouselWithDots({
   );
 }
 
+type PokerImportType = "club" | "league" | "su";
 
 export function UnifiedAppComponent({ app }: UnifiedAppProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isLoading, setLoading] = useState(false);
-const [params, setParams] = useQueryStates({
+  const [pokerImportType, setPokerImportType] =
+    useState<PokerImportType | null>(null);
+  const [params, setParams] = useQueryStates({
     app: parseAsString,
     settings: parseAsBoolean,
   });
@@ -206,6 +218,26 @@ const [params, setParams] = useQueryStates({
                 ? "Disconnecting..."
                 : "Disconnect"}
             </Button>
+          ) : app.id === "pppoker" ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  Importar
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setPokerImportType("su")}>
+                  Super Union Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPokerImportType("league")}>
+                  Liga Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPokerImportType("club")}>
+                  Clube Data
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Button
               variant="outline"
@@ -217,6 +249,14 @@ const [params, setParams] = useQueryStates({
             </Button>
           )}
         </div>
+
+        {app.id === "pppoker" && (
+          <PokerImportSheet
+            open={pokerImportType !== null}
+            onOpenChange={(open) => !open && setPokerImportType(null)}
+            type={pokerImportType}
+          />
+        )}
 
         <SheetContent>
           <SheetHeader>
@@ -243,6 +283,7 @@ const [params, setParams] = useQueryStates({
                   type="multiple"
                   defaultValue={[
                     "description",
+                    ...(app.id === "pppoker" ? ["imports"] : []),
                     ...(params.settings ? ["settings"] : []),
                   ]}
                   className="mt-4"
@@ -254,7 +295,16 @@ const [params, setParams] = useQueryStates({
                     </AccordionContent>
                   </AccordionItem>
 
-
+                  {app.id === "pppoker" && (
+                    <AccordionItem value="imports" className="border-none">
+                      <AccordionTrigger>Planilhas Importadas</AccordionTrigger>
+                      <AccordionContent>
+                        <Suspense fallback={<ImportsList.Skeleton />}>
+                          <ImportsList />
+                        </Suspense>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
 
                   {app.type === "official" &&
                     app.settings &&

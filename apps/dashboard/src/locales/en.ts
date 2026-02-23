@@ -558,6 +558,9 @@ export default {
     poker_agents: "Agents",
     poker_members: "Members",
     poker_contador: "Counter",
+    poker_jogadores: "Players",
+    poker_agentes: "Agents",
+    poker_super_agentes: "Super Agents",
     poker_lobby: "Lobby",
     poker_sessions: "Sessions",
     poker_transactions: "Transactions",
@@ -1383,6 +1386,18 @@ export default {
     contador: {
       title: "Counter",
       description: "Exchange, send and manage chips for club members",
+    },
+    jogadores: {
+      title: "Players",
+      description: "Club players with live data",
+    },
+    agentes: {
+      title: "Agents",
+      description: "Club agents and their linked players",
+    },
+    super_agentes: {
+      title: "Super Agents",
+      description: "Super agents and club hierarchy",
     },
     lobby: {
       title: "Lobby",
