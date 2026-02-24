@@ -78,25 +78,21 @@ export function PaymentOrdersTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const { data: stats, isLoading: isLoadingStats } = useQuery(
-    trpc.fastchips.paymentOrders.getStats.queryOptions(),
-    {
-      refetchInterval: 5000,
-      refetchOnWindowFocus: true,
-    },
-  );
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
+    ...trpc.fastchips.paymentOrders.getStats.queryOptions(),
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+  });
 
-  const { data, isLoading } = useQuery(
-    trpc.fastchips.paymentOrders.list.queryOptions({
+  const { data, isLoading } = useQuery({
+    ...trpc.fastchips.paymentOrders.list.queryOptions({
       pageSize: 50,
       status: statusFilter === "all" ? undefined : statusFilter,
       search: searchQuery || undefined,
     }),
-    {
-      refetchInterval: 5000,
-      refetchOnWindowFocus: true,
-    },
-  );
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+  });
 
   const updateStatusMutation = useMutation(
     trpc.fastchips.paymentOrders.updateStatus.mutationOptions({

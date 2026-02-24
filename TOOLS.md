@@ -1,24 +1,43 @@
-# TOOLS.md — Fastchips (PPPoker MCP)
+# TOOLS.md — Fastchips
 
-Este arquivo define como o Fastchips deve usar as tools do MCP PPPoker.
+Este arquivo define como o Fastchips deve usar ferramentas.
 
-Objetivo:
-- usar as tools com segurança e consistência
-- diferenciar leitura vs escrita
-- aplicar confirmação obrigatória nas ações sensíveis
-- reduzir erro operacional
+## REGRA FUNDAMENTAL: Runtime vs [APPROVAL]
+
+Você tem apenas **5 ferramentas MCP de leitura** disponíveis no runtime.
+**TODAS as ações de escrita usam o formato [APPROVAL]**, NÃO chamadas MCP.
+
+Se tentar chamar uma ferramenta que não está no runtime (ex: `mcp_pppoker_gerar_link_pagamento`, `mcp_infinitepay_gerar_link_pagamento`), **vai dar erro**.
 
 ## Regra Global (obrigatória)
 
-Antes de usar qualquer tool PPPoker:
-1. executar `login_status`
-2. validar que o login está OK
-3. só então executar a próxima tool
+Antes de usar qualquer tool PPPoker de leitura:
+1. executar `mcp_pppoker_login_status`
+2. validar que o login está OK (uid=13352472)
+3. só então executar a próxima tool de leitura
 
 Se `login_status` falhar:
 - parar o fluxo
 - informar o erro
 - não executar ações seguintes
+
+## Parâmetros Padrão dos Clubes
+
+| Operação | clube_id | liga_id | Motivo |
+|----------|----------|---------|--------|
+| enviar_fichas / sacar_fichas | `4191918` | `3357` | Clube operacional de fichas |
+| info_membro / listar_membros | `4366162` | `1765` | Clube principal Xperience |
+| exportar_planilha | `4366162` | `1765` | Dados do clube principal |
+
+**IMPORTANTE**: Sempre passar `clube_id` e `liga_id` explicitamente nas chamadas.
+Se o operador não especificar o clube, usar os defaults acima conforme o tipo de operação.
+
+## Validação de UIDs PPPoker
+
+- UIDs de jogadores PPPoker têm 7-8 dígitos (ex: 13357477, 11470719, 2914397)
+- Se receber UID com 9+ dígitos, perguntar ao operador se está correto
+- Antes de `enviar_fichas` ou `sacar_fichas`, usar `info_membro(uid=X)` para confirmar que o jogador existe
+- Se `info_membro` retornar erro, NÃO prosseguir com o envio
 
 ## Política de Confirmação
 
@@ -37,165 +56,77 @@ Se `login_status` falhar:
 - `alto`: alteração operacional reversível
 - `critico`: ação irreversível ou de alto impacto
 
-## Ferramentas PPPoker (MCP)
+## Ferramentas de LEITURA (chamada MCP direta — disponíveis no runtime)
 
-### 1. `login_status`
-- Tipo: `Leitura`
-- Risco: `baixo`
+### 1. `mcp_pppoker_login_status`
 - Uso: verificar login HTTP, `uid`, `rdkey`, game server
-- Quando usar:
-  - sempre antes de qualquer outra tool PPPoker
-  - em diagnóstico de falha
-- Confirmação: `não`
+- Quando: sempre antes de qualquer outra tool PPPoker
+- Confirmação: não
 
-### 2. `info_membro`
-- Tipo: `Leitura`
-- Risco: `baixo`
+### 2. `mcp_pppoker_info_membro`
 - Uso: dados detalhados de um membro (role, saldo, crédito, downlines, online)
-- Quando usar:
-  - confirmar alvo antes de ação
-  - investigação operacional
-  - suporte/atendimento
-- Confirmação: `não`
+- Quando: confirmar alvo antes de ação, investigação, suporte
+- Confirmação: não
 
-### 3. `listar_membros`
-- Tipo: `Leitura`
-- Risco: `baixo`
+### 3. `mcp_pppoker_listar_membros`
 - Uso: listar membros do clube com hierarquia e filtros por role
-- Quando usar:
-  - visão geral do clube
-  - localizar membro/agent
-  - análise operacional
-- Confirmação: `não`
+- Quando: visão geral do clube, localizar membro
+- Confirmação: não
 
-### 4. `downlines_agente`
-- Tipo: `Leitura`
-- Risco: `baixo`
+### 4. `mcp_pppoker_downlines_agente`
 - Uso: listar downlines diretos de agente/super agente
-- Quando usar:
-  - análise de estrutura
-  - suporte a agentes
-  - marketing segmentado por hierarquia
-- Confirmação: `não`
+- Quando: análise de estrutura, suporte a agentes
+- Confirmação: não
 
-### 5. `listar_mesas`
-- Tipo: `Leitura`
-- Risco: `baixo`
-- Uso: listar mesas/salas (cash, MTT, SpinUp) e status
-- Quando usar:
-  - monitoramento do clube
-  - análise de tráfego/atividade
-  - suporte operacional
-- Confirmação: `não`
-
-### 6. `clubes_da_liga`
-- Tipo: `Leitura`
-- Risco: `baixo`
-- Uso: listar clubes de uma liga
-- Quando usar:
-  - contexto de liga
-  - análise comparativa
-  - organização de operação multi-clube
-- Confirmação: `não`
-
-### 7. `listar_solicitacoes`
-- Tipo: `Leitura`
-- Risco: `baixo`
+### 5. `mcp_pppoker_listar_solicitacoes`
 - Uso: listar pedidos de entrada pendentes
-- Quando usar:
-  - triagem de solicitações
-  - fluxo de aprovação/rejeição
-- Confirmação: `não`
+- Quando: triagem de solicitações
+- Confirmação: não
 
-### 8. `exportar_planilha`
-- Tipo: `Leitura` (com efeito externo)
-- Risco: `medio`
-- Uso: exportar dados do clube para `.xlsx` via email
-- Quando usar:
-  - relatórios
-  - auditoria
-  - análise externa
-- Confirmação: `sim` (porque envia por email)
-- Confirmar antes:
-  - escopo da exportação
-  - destinatário
-  - clube/liga
+## Ações de ESCRITA (usar [APPROVAL] — NÃO chamar como MCP tool!)
 
-### 9. `enviar_fichas`
-- Tipo: `Escrita`
-- Risco: `alto`
-- Uso: enviar fichas para jogador/agente/super agente
-- Quando usar:
-  - operação financeira solicitada explicitamente
-- Confirmação: `sim` (obrigatória)
-- Confirmar antes:
-  - `target_id`
-  - valor (`amount`)
-  - clube/liga (se aplicável)
-  - intenção (envio)
+Estas ações NÃO estão no runtime MCP. Se tentar chamá-las, vai dar erro.
+Use SEMPRE o formato [APPROVAL] conforme descrito no SOUL.md.
 
-### 10. `sacar_fichas`
-- Tipo: `Escrita`
-- Risco: `alto`
+### `enviar_fichas`
+- Uso: enviar fichas para jogador/agente
+- Params: `{"target_id": UID, "amount": VALOR}`
+- Risco: alto
+
+### `sacar_fichas`
 - Uso: retirar fichas de jogador
-- Quando usar:
-  - operação financeira solicitada explicitamente
-- Confirmação: `sim` (obrigatória)
-- Confirmar antes:
-  - `target_id`
-  - valor (`amount`)
-  - clube/liga (se aplicável)
-  - intenção (saque/retirada)
+- Params: `{"target_id": UID, "amount": VALOR}`
+- Risco: alto
 
-### 11. `aprovar_solicitacao`
-- Tipo: `Escrita`
-- Risco: `alto`
-- Uso: aprovar pedido de entrada no clube
-- Quando usar:
-  - após listar solicitações e validar o alvo
-- Confirmação: `sim` (obrigatória)
-- Confirmar antes:
-  - ID/identificação da solicitação
-  - membro alvo
+### `gerar_link_pagamento`
+- Uso: gerar link checkout InfinitePay (Pix/cartão)
+- Params: `{"descricao": "X fichas PPPoker", "valor_reais": X, "fichas": X, "target_player_id": UID}`
+- **OBRIGATÓRIO**: `target_player_id` = UID PPPoker do jogador que vai receber as fichas (para envio automático após pagamento)
+- Risco: medio
+- Retorna: `checkout_url` e `order_nsu`
+- Após pagamento confirmado pelo webhook, fichas são enviadas automaticamente
 
-### 12. `rejeitar_solicitacao`
-- Tipo: `Escrita`
-- Risco: `alto`
-- Uso: rejeitar pedido de entrada
-- Quando usar:
-  - após triagem/validação
-- Confirmação: `sim` (obrigatória)
-- Confirmar antes:
-  - ID/identificação da solicitação
-  - membro alvo
+### `verificar_pagamento`
+- Uso: verificar status de pagamento
+- Params: `{"order_nsu": "NSU"}`
+- Risco: baixo
 
-### 13. `promover_membro`
-- Tipo: `Escrita`
-- Risco: `alto`
+### `listar_pedidos_pendentes`
+- Uso: listar pedidos em aberto
+- Params: `{}`
+- Risco: baixo
+
+### `aprovar_solicitacao` / `rejeitar_solicitacao`
+- Uso: aprovar/rejeitar pedido de entrada no clube
+- Risco: alto
+
+### `promover_membro`
 - Uso: promover/rebaixar membro (Manager, Agent etc.)
-- Quando usar:
-  - somente após consulta de `info_membro`
-  - quando o usuário solicitar explicitamente
-- Confirmação: `sim` (obrigatória)
-- Confirmar antes:
-  - membro alvo
-  - role atual
-  - role desejada
-  - impacto esperado
+- Risco: alto
 
-### 14. `remover_membro`
-- Tipo: `Escrita`
-- Risco: `critico`
+### `remover_membro`
 - Uso: remover membro do clube (irreversível)
-- Quando usar:
-  - somente em pedido explícito e inequívoco do usuário
-- Confirmação: `sim` (obrigatória e reforçada)
-- Confirmar antes:
-  - membro alvo (nome + ID)
-  - clube
-  - irreversibilidade
-- Regra extra:
-  - exigir confirmação clara e final antes da execução
+- Risco: critico
 
 ## Sequências Recomendadas (prontas)
 
@@ -224,6 +155,14 @@ Se `login_status` falhar:
 3. confirmação explícita do alvo
 4. `aprovar_solicitacao` ou `rejeitar_solicitacao`
 5. reportar resultado
+
+### Venda de fichas com pagamento
+1. coletar dados (jogador UID, fichas, valor)
+2. confirmação explícita do operador
+3. `gerar_link_pagamento` (incluir `target_player_id`!) → enviar link ao jogador
+4. aguardar pagamento (webhook atualiza DB)
+5. fichas sao enviadas AUTOMATICAMENTE pelo sistema apos pagamento confirmado
+6. reportar conclusão ao operador
 
 ## Regras de saída (resposta ao usuário)
 

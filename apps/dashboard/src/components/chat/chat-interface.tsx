@@ -2,14 +2,17 @@
 
 import { Canvas } from "@/components/canvas";
 import { ApprovalCard, type ApprovalData } from "@/components/chat/approval-card";
+import { useSidebarPinned } from "@/components/sidebar-context";
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useChatStatus } from "@/hooks/use-chat-status";
+import { usePaymentWaiter } from "@/hooks/use-payment-waiter";
 import { getApiBaseUrl } from "@/lib/api-base-url";
 import { useChat, useChatActions, useDataPart } from "@ai-sdk-tools/store";
 import type { UIChatMessage } from "@midpoker/api/ai/types";
 import { createClient } from "@midpoker/supabase/client";
 import { Button } from "@midpoker/ui/button";
 import { cn } from "@midpoker/ui/cn";
+import { Loader2, CheckCircle2, Clock } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -18,7 +21,7 @@ import {
 import type { Geo } from "@vercel/functions";
 import { DefaultChatTransport, generateId } from "ai";
 import { parseAsString, useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChatHeader,
   ChatInput,
@@ -30,6 +33,8 @@ import {
 type Props = {
   geo?: Geo;
 };
+
+const CHAT_REQUEST_TIMEOUT_MS = 130_000;
 
 function extractApprovalParts(messages: UIChatMessage[]): ApprovalData[] {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -61,10 +66,11 @@ function extractApprovalParts(messages: UIChatMessage[]): ApprovalData[] {
 }
 
 export function ChatInterface({ geo }: Props) {
+  const { isPinned } = useSidebarPinned();
   const apiBaseUrl = getApiBaseUrl();
   const { chatId: routeChatId, isHome } = useChatInterface();
   const chatId = useMemo(() => routeChatId ?? generateId(), [routeChatId]);
-  const { reset, stop } = useChatActions();
+  const { reset, stop, pushMessage } = useChatActions();
   const prevChatIdRef = useRef<string | null>(routeChatId);
   const [requestErrorMessage, setRequestErrorMessage] = useState<string | null>(
     null,
@@ -83,24 +89,27 @@ export function ChatInterface({ geo }: Props) {
     if (prevChatId && prevChatId !== currentChatId) {
       reset();
       clearSuggestions();
+      setPendingPaymentOrderNsu(null);
     }
 
     // Update the ref for next comparison
     prevChatIdRef.current = currentChatId;
   }, [routeChatId, reset, clearSuggestions]);
 
+  // Fix 17: Create Supabase client once instead of per-request
+  const supabaseClient = useMemo(() => createClient(), []);
+
   const authenticatedFetch = useMemo(
     () =>
       Object.assign(
         async (url: RequestInfo | URL, requestOptions?: RequestInit) => {
           const controller = new AbortController();
-          const timeoutMs = 45_000;
+          const timeoutMs = CHAT_REQUEST_TIMEOUT_MS;
           const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-          const supabase = createClient();
           const {
             data: { session },
-          } = await supabase.auth.getSession();
+          } = await supabaseClient.auth.getSession();
 
           try {
             const response = await fetch(url, {
@@ -146,7 +155,7 @@ export function ChatInterface({ geo }: Props) {
           }
         },
       ),
-    [],
+    [supabaseClient],
   );
 
   const chat = useChat<UIChatMessage>({
@@ -176,13 +185,117 @@ export function ChatInterface({ geo }: Props) {
     }),
   });
   const { messages, status } = chat;
-  const approvalParts = useMemo(() => extractApprovalParts(messages), [messages]);
-  const approvalBatchKey = useMemo(
-    () => approvalParts.map((approval) => approval.id).join("|"),
-    [approvalParts],
+
+  // Fix 7: Only recompute approvals when the last assistant message changes
+  const lastAssistantMessage = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") return messages[i];
+    }
+    return null;
+  }, [messages]);
+  const approvalParts = useMemo(
+    () => (lastAssistantMessage ? extractApprovalParts([lastAssistantMessage]) : []),
+    [lastAssistantMessage],
   );
-  const [approvalOverlayDismissed, setApprovalOverlayDismissed] =
-    useState(false);
+
+  // Payment polling state
+  const [pendingPaymentOrderNsu, setPendingPaymentOrderNsu] =
+    useState<string | null>(null);
+
+  // When a gerar_link_pagamento is approved, start polling
+  const handlePaymentLinkGenerated = useCallback(
+    (orderNsu: string) => {
+      setPendingPaymentOrderNsu(orderNsu);
+    },
+    [],
+  );
+
+  // Payment polling
+  const paymentWaiter = usePaymentWaiter({
+    orderNsu: pendingPaymentOrderNsu,
+    enabled: !!pendingPaymentOrderNsu,
+    apiBaseUrl,
+    maxWaitMs: 300_000,
+    onConfirmed: async (result) => {
+      // Helper: add a local assistant message to the chat (instant, no agent round-trip)
+      const addLocalMessage = (text: string) => {
+        pushMessage({
+          id: generateId(),
+          role: "assistant",
+          parts: [{ type: "text" as const, text }],
+        } as UIChatMessage);
+      };
+
+      // Auto-execute enviar_fichas via backend (verified by server, not chat messages)
+      if (result.target_player_id && result.fichas && pendingPaymentOrderNsu) {
+        try {
+          const supabase = createClient();
+          const { data: { session } } = await supabase.auth.getSession();
+
+          const sendResp = await fetch(`${apiBaseUrl}/nanobot/tools/invoke`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token ?? ""}`,
+            },
+            body: JSON.stringify({
+              toolName: "enviar_fichas",
+              input: {
+                target_id: result.target_player_id,
+                amount: result.fichas,
+                order_nsu: pendingPaymentOrderNsu,
+              },
+            }),
+          });
+
+          const sendPayload = (await sendResp.json().catch(() => ({}))) as {
+            success?: boolean;
+            output?: unknown;
+            error?: string;
+          };
+
+          if (sendResp.ok && sendPayload.success) {
+            addLocalMessage(
+              `Pagamento confirmado e fichas enviadas!\n\n` +
+              `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+              `- **Valor**: R$ ${result.paid_amount} (${result.capture_method})\n` +
+              `- **Fichas**: ${result.fichas} enviadas para UID ${result.target_player_id}`,
+            );
+          } else {
+            addLocalMessage(
+              `Pagamento confirmado, mas houve erro ao enviar fichas: ${sendPayload.error ?? "erro desconhecido"}.\n\n` +
+              `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+              `- **Fichas**: ${result.fichas}, UID: ${result.target_player_id}\n\n` +
+              `Envie as fichas manualmente.`,
+            );
+          }
+        } catch (err) {
+          console.error("[payment-waiter] Auto-send chips failed:", err);
+          addLocalMessage(
+            `Pagamento confirmado, mas erro ao enviar fichas automaticamente.\n\n` +
+            `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+            `- **Fichas**: ${result.fichas}, UID: ${result.target_player_id}\n\n` +
+            `Envie as fichas manualmente.`,
+          );
+        }
+      } else {
+        addLocalMessage(
+          `Pagamento confirmado!\n\n` +
+          `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+          `- **Valor**: R$ ${result.paid_amount} (${result.capture_method})\n` +
+          `- **Fichas a entregar**: ${result.fichas}\n\n` +
+          `Envie as fichas manualmente.`,
+        );
+      }
+
+      // Brief delay so user sees "Pagamento confirmado!" before banner disappears
+      setTimeout(() => setPendingPaymentOrderNsu(null), 3000);
+    },
+    onTimeout: () => {
+      setPendingPaymentOrderNsu(null);
+    },
+  });
+
   const transportError = (chat as { error?: Error | null }).error ?? null;
 
   const {
@@ -221,16 +334,12 @@ export function ChatInterface({ geo }: Props) {
       setRequestErrorMessage(
         "O chat demorou demais e foi interrompido automaticamente. Tente novamente.",
       );
-    }, 60_000);
+    }, CHAT_REQUEST_TIMEOUT_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
   }, [status, stop]);
-
-  useEffect(() => {
-    setApprovalOverlayDismissed(false);
-  }, [approvalBatchKey]);
 
   return (
     <div
@@ -317,6 +426,19 @@ export function ChatInterface({ geo }: Props) {
                         status === "streaming" || status === "submitted"
                       }
                     />
+                    {/* Inline approval cards — rendered inside chat flow */}
+                    {approvalParts.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        {approvalParts.map((approval) => (
+                          <ApprovalCard
+                            key={approval.id}
+                            approval={approval}
+                            isStreaming={status === "streaming" || status === "submitted"}
+                            onPaymentLinkGenerated={handlePaymentLinkGenerated}
+                          />
+                        ))}
+                      </div>
+                    )}
                     <ChatStatusIndicators
                       agentStatus={agentStatus}
                       currentToolCall={currentToolCall}
@@ -338,7 +460,8 @@ export function ChatInterface({ geo }: Props) {
 
         <div
           className={cn(
-            "fixed bottom-0 left-0",
+            "fixed bottom-0 left-0 md:left-[56px]",
+            isPinned && "md:left-[240px]",
             hasMessages && "transition-all duration-300 ease-in-out",
             showCanvas ? "right-0 md:right-[600px]" : "right-0",
           )}
@@ -347,35 +470,58 @@ export function ChatInterface({ geo }: Props) {
         </div>
       </div>
 
-      {approvalParts.length > 0 && !approvalOverlayDismissed && (
+      {/* Floating payment status banner */}
+      {pendingPaymentOrderNsu && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-sm p-4"
-          onClick={() => setApprovalOverlayDismissed(true)}
+          className={cn(
+            "fixed z-30",
+            "left-0 md:left-[56px]",
+            isPinned && "md:left-[240px]",
+            showCanvas ? "right-0 md:right-[600px]" : "right-0",
+          )}
+          style={{ bottom: "88px" }}
         >
-          <div
-            className="w-full max-w-xl space-y-3"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex justify-end">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setApprovalOverlayDismissed(true)}
-              >
-                Fechar
-              </Button>
+          <div className="flex justify-center px-4">
+            <div
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg border",
+                paymentWaiter.status === "polling" &&
+                  "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-800",
+                paymentWaiter.status === "confirmed" &&
+                  "bg-green-50 text-green-800 border-green-200 dark:bg-green-900/60 dark:text-green-200 dark:border-green-800",
+                paymentWaiter.status === "timeout" &&
+                  "bg-muted text-muted-foreground border-border",
+              )}
+            >
+              {paymentWaiter.status === "polling" && (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  <span>
+                    Aguardando pagamento... (
+                    {Math.round(paymentWaiter.elapsedMs / 1000)}s)
+                  </span>
+                </>
+              )}
+              {paymentWaiter.status === "confirmed" && (
+                <>
+                  <CheckCircle2 className="size-4" />
+                  <span>Pagamento confirmado!</span>
+                </>
+              )}
+              {paymentWaiter.status === "timeout" && (
+                <>
+                  <Clock className="size-4" />
+                  <span>
+                    Pagamento nao detectado. Diga &quot;paguei&quot; quando
+                    concluir.
+                  </span>
+                </>
+              )}
             </div>
-            {approvalParts.map((approval) => (
-              <ApprovalCard
-                key={approval.id}
-                approval={approval}
-                isStreaming={status === "streaming" || status === "submitted"}
-                onResolved={() => setApprovalOverlayDismissed(true)}
-              />
-            ))}
           </div>
         </div>
       )}
+
     </div>
   );
 }

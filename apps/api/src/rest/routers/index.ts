@@ -5,6 +5,7 @@ import { chatRouter } from "./chat";
 import { customersRouter } from "./customers";
 import { documentsRouter } from "./documents";
 import { inboxRouter } from "./inbox";
+import { infinitepayWebhookRouter } from "./infinitepay-webhook";
 import { invoicesRouter } from "./invoices";
 import { nanobotRouter } from "./nanobot";
 import { notificationsRouter } from "./notifications";
@@ -24,6 +25,9 @@ const routers = new OpenAPIHono();
 
 // Mount OAuth routes first (publicly accessible)
 routers.route("/oauth", oauthRouter);
+
+// Mount public webhook (InfinitePay calls this — no auth)
+routers.route("/infinitepay/webhook", infinitepayWebhookRouter);
 
 // Mount API-key authenticated routes (before protected middleware)
 routers.route("/payment-orders", paymentOrdersRouter);

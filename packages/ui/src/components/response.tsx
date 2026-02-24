@@ -120,7 +120,14 @@ export const Response = memo(
             );
           }
 
-          return <a {...props} />;
+          return (
+            <a
+              {...props}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-blue-500 hover:text-blue-400 break-all"
+            />
+          );
         },
       }}
       {...props}

@@ -1,4 +1,3 @@
-import { mainAgent } from "@api/ai/agents/main";
 import type { NanobotSettings } from "@api/schemas/nanobot";
 import {
   getChatEngineFromEnv,
@@ -6,10 +5,18 @@ import {
 } from "./chat-engine-config";
 import { nanobotToUIMessageStream } from "./nanobot";
 
+// Fix 20: Lazy-load legacy agent — only imported when engine !== "nanobot"
+async function getLegacyAgent() {
+  const { mainAgent } = await import("@api/ai/agents/main");
+  return mainAgent;
+}
+
+// Use the lazy-loaded agent's type for the options signature
+type LegacyAgent = Awaited<ReturnType<typeof getLegacyAgent>>;
 export type LegacyChatStreamOptions = Parameters<
-  typeof mainAgent.toUIMessageStream
+  LegacyAgent["toUIMessageStream"]
 >[0];
-type ChatResponse = Awaited<ReturnType<typeof mainAgent.toUIMessageStream>>;
+type ChatResponse = Awaited<ReturnType<LegacyAgent["toUIMessageStream"]>>;
 
 function resolveRequestedEngine(options: LegacyChatStreamOptions) {
   const envEngine = getChatEngineFromEnv();
@@ -29,6 +36,7 @@ export async function runChatAgent(
   const engine = resolveRequestedEngine(options);
 
   if (engine !== "nanobot") {
+    const mainAgent = await getLegacyAgent();
     return mainAgent.toUIMessageStream(options);
   }
 
@@ -43,6 +51,7 @@ export async function runChatAgent(
       "[chat-engine] nanobot failed, falling back to legacy",
       error,
     );
+    const mainAgent = await getLegacyAgent();
     return mainAgent.toUIMessageStream(options);
   }
 }

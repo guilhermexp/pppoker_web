@@ -5,6 +5,38 @@ import {
   listChatsSchema,
 } from "@api/schemas/chat";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { nanoid } from "nanoid";
+
+interface RedisMessage {
+  role?: string;
+  content?: unknown;
+  timestamp?: string | Date;
+  [key: string]: unknown;
+}
+
+/**
+ * Convert Redis ConversationMessage to UIMessage format expected by ChatProvider.
+ * Redis stores: {role, content, timestamp}
+ * UI expects: {id, role, parts: [{type: "text", text: "..."}], createdAt}
+ */
+function toUIMessage(raw: RedisMessage, index: number) {
+  const content =
+    typeof raw.content === "string"
+      ? raw.content
+      : raw.content != null
+        ? JSON.stringify(raw.content)
+        : "";
+
+  return {
+    id: (raw as Record<string, unknown>).id
+      ? String((raw as Record<string, unknown>).id)
+      : `redis-${index}-${nanoid(6)}`,
+    role: raw.role ?? "user",
+    content,
+    parts: [{ type: "text" as const, text: content }],
+    createdAt: raw.timestamp ? new Date(raw.timestamp) : undefined,
+  };
+}
 
 export const chatsRouter = createTRPCRouter({
   list: protectedProcedure
@@ -20,10 +52,13 @@ export const chatsRouter = createTRPCRouter({
     }),
 
   get: protectedProcedure.input(getChatSchema).query(async ({ ctx, input }) => {
-    return memoryProvider.getMessages({
+    const raw = await memoryProvider.getMessages({
       chatId: input.chatId,
       limit: 50,
     });
+
+    // Transform Redis ConversationMessage[] to UIMessage[] for the frontend
+    return (raw as RedisMessage[]).map(toUIMessage);
   }),
 
   delete: protectedProcedure

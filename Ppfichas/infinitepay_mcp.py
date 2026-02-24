@@ -7,7 +7,7 @@ Sincroniza pedidos com o banco de dados via REST endpoint interno.
 Uso:
     python3 infinitepay_mcp.py
 
-Variáveis de ambiente:
+Variaveis de ambiente:
     FASTCHIPS_API_URL  — URL da API Hono (ex: http://localhost:3101)
     FASTCHIPS_API_KEY  — chave interna para autenticar chamadas
     FASTCHIPS_TEAM_ID  — team_id para registrar pedidos no DB
@@ -18,7 +18,6 @@ import sys
 import json
 import asyncio
 import time
-from pathlib import Path
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
@@ -26,18 +25,20 @@ from mcp import types
 try:
     import httpx
 except ImportError:
-    print("httpx não encontrado. Instale com: pip install httpx", file=sys.stderr)
+    print("httpx nao encontrado. Instale com: pip install httpx", file=sys.stderr)
     sys.exit(1)
 
-# ── Configuração ───────────────────────────────────────────
+# ── Configuracao ───────────────────────────────────────────
 INFINITEPAY_API_URL = "https://api.infinitepay.io"
 HANDLE = "xperience_solutions"
 
 FASTCHIPS_API_URL = os.environ.get("FASTCHIPS_API_URL", "http://localhost:3101")
 FASTCHIPS_API_KEY = os.environ.get("FASTCHIPS_API_KEY", "")
 FASTCHIPS_TEAM_ID = os.environ.get("FASTCHIPS_TEAM_ID", "")
+# URL publica da API para webhook (InfinitePay precisa acessar de fora)
+INFINITEPAY_WEBHOOK_URL = os.environ.get("INFINITEPAY_WEBHOOK_URL", "")
 
-# ── Pedidos em memória (sessão) ────────────────────────────
+# ── Pedidos em memoria (sessao) ────────────────────────────
 _orders: dict[str, dict] = {}
 
 app = Server("infinitepay")
@@ -47,13 +48,12 @@ app = Server("infinitepay")
 # Helpers
 # ─────────────────────────────────────────────────────────────
 
-def _generate_order_nsu(player_uid: int | None) -> str:
-    """Gera NSU no formato xp_{player_uid}_{timestamp}."""
-    uid_part = player_uid if player_uid else "anon"
-    return f"xp_{uid_part}_{int(time.time())}"
+def _generate_order_nsu() -> str:
+    """Gera NSU no formato xp_{timestamp}."""
+    return f"xp_{int(time.time())}"
 
 
-async def _sync_order_to_db(order: dict, action: str = "upsert") -> dict | None:
+async def _sync_order_to_db(order: dict) -> dict | None:
     """Sincroniza pedido com DB via REST endpoint interno."""
     if not FASTCHIPS_API_KEY or not FASTCHIPS_TEAM_ID:
         return None
@@ -89,11 +89,10 @@ async def list_tools() -> list[types.Tool]:
         types.Tool(
             name="gerar_link_pagamento",
             description=(
-                "Gera um link de checkout InfinitePay para venda de fichas. "
-                "O link permite pagamento via Pix ou cartão. "
-                "Após gerar o link, envie ao jogador e use verificar_pagamento para confirmar. "
-                "NUNCA envie fichas sem verificar o pagamento primeiro. "
-                "PARÂMETROS OBRIGATÓRIOS: descricao, valor_reais, fichas."
+                "Gera um link de checkout InfinitePay para receber pagamento. "
+                "O link permite pagamento via Pix ou cartao. "
+                "Apos gerar o link, envie ao cliente e use verificar_pagamento para confirmar. "
+                "PARAMETROS OBRIGATORIOS: descricao, valor_reais, fichas."
             ),
             inputSchema={
                 "type": "object",
@@ -101,43 +100,49 @@ async def list_tools() -> list[types.Tool]:
                     "descricao": {
                         "type": "string",
                         "description": (
-                            "[OBRIGATÓRIO] Descrição do item no checkout. "
+                            "[OBRIGATORIO] Descricao do item no checkout. "
                             "Exemplo: '500 Fichas - Xperience Poker'."
                         )
                     },
                     "valor_reais": {
                         "type": "number",
                         "description": (
-                            "[OBRIGATÓRIO] Valor em reais (BRL). "
+                            "[OBRIGATORIO] Valor em reais (BRL). "
                             "Exemplo: 10.00 para R$ 10,00."
                         )
                     },
                     "fichas": {
                         "type": "integer",
                         "description": (
-                            "[OBRIGATÓRIO] Quantidade de fichas a entregar após pagamento confirmado. "
-                            "Exemplo: 500."
+                            "[OBRIGATORIO] Quantidade de fichas a entregar apos pagamento confirmado. "
+                            "Campo interno — nao enviado para InfinitePay."
                         )
                     },
-                    "player_uid": {
-                        "type": "integer",
+                    "order_nsu": {
+                        "type": "string",
                         "description": (
-                            "[OPCIONAL] UID PPPoker do jogador. "
-                            "Se informado, facilita rastreamento e envio automático."
+                            "[OPCIONAL] Identificador do pedido no seu sistema. "
+                            "Se nao informado, sera gerado automaticamente."
                         )
                     },
-                    "player_nome": {
+                    "customer_name": {
                         "type": "string",
-                        "description": "[OPCIONAL] Nome do jogador."
+                        "description": "[OPCIONAL] Nome do comprador."
                     },
-                    "player_email": {
+                    "customer_email": {
                         "type": "string",
-                        "description": "[OPCIONAL] Email do jogador."
+                        "description": "[OPCIONAL] Email do comprador."
                     },
-                    "player_telefone": {
+                    "customer_phone": {
                         "type": "string",
-                        "description": "[OPCIONAL] Telefone do jogador."
-                    }
+                        "description": "[OPCIONAL] Telefone do comprador (ex: +5511999887766)."
+                    },
+                    "redirect_url": {
+                        "type": "string",
+                        "description": (
+                            "[OPCIONAL] URL para redirecionar o cliente apos pagamento concluido."
+                        )
+                    },
                 },
                 "required": ["descricao", "valor_reais", "fichas"]
             }
@@ -146,21 +151,31 @@ async def list_tools() -> list[types.Tool]:
         types.Tool(
             name="verificar_pagamento",
             description=(
-                "Verifica o status de um pagamento InfinitePay pelo order_nsu. "
-                "Retorna se o pagamento foi aprovado, valor pago, método, etc. "
+                "Verifica o status de um pagamento InfinitePay. "
+                "Retorna se o pagamento foi aprovado, valor pago, metodo, etc. "
                 "Use SEMPRE antes de enviar fichas para confirmar que o pagamento foi efetuado. "
-                "PARÂMETRO OBRIGATÓRIO: order_nsu."
+                "PARAMETRO OBRIGATORIO: order_nsu."
             ),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "order_nsu": {
                         "type": "string",
+                        "description": "[OBRIGATORIO] ID do pedido retornado por gerar_link_pagamento."
+                    },
+                    "transaction_nsu": {
+                        "type": "string",
                         "description": (
-                            "[OBRIGATÓRIO] ID do pedido retornado por gerar_link_pagamento. "
-                            "Formato: xp_{player_uid}_{timestamp}."
+                            "[OPCIONAL] ID da transacao (recebido via redirect ou webhook). "
+                            "Melhora a precisao da consulta."
                         )
-                    }
+                    },
+                    "slug": {
+                        "type": "string",
+                        "description": (
+                            "[OPCIONAL] Codigo da fatura InfinitePay (recebido via redirect ou webhook)."
+                        )
+                    },
                 },
                 "required": ["order_nsu"]
             }
@@ -169,10 +184,10 @@ async def list_tools() -> list[types.Tool]:
         types.Tool(
             name="listar_pedidos_pendentes",
             description=(
-                "Lista todos os pedidos de pagamento em aberto nesta sessão. "
+                "Lista todos os pedidos de pagamento em aberto nesta sessao. "
                 "Mostra pedidos com status link_gerado (aguardando pagamento) "
                 "e pago (aguardando envio de fichas). "
-                "Não requer parâmetros."
+                "Nao requer parametros."
             ),
             inputSchema={
                 "type": "object",
@@ -190,10 +205,6 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         descricao = arguments["descricao"]
         valor_reais = float(arguments["valor_reais"])
         fichas = int(arguments["fichas"])
-        player_uid = arguments.get("player_uid")
-        player_nome = arguments.get("player_nome")
-        player_email = arguments.get("player_email")
-        player_telefone = arguments.get("player_telefone")
 
         if valor_reais <= 0:
             return [types.TextContent(type="text", text=json.dumps({
@@ -207,29 +218,40 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
                 "error": "fichas deve ser positivo"
             }))]
 
-        order_nsu = _generate_order_nsu(player_uid)
-        valor_centavos = int(valor_reais * 100)
+        order_nsu = arguments.get("order_nsu") or _generate_order_nsu()
+        valor_centavos = int(round(valor_reais * 100))
 
-        # Montar payload InfinitePay
-        checkout_payload = {
+        # Payload conforme doc oficial InfinitePay
+        checkout_payload: dict = {
             "handle": HANDLE,
-            "amount": valor_centavos,
-            "order_nsu": order_nsu,
             "items": [
                 {
                     "description": descricao,
                     "quantity": 1,
-                    "amount": valor_centavos,
+                    "price": valor_centavos,
                 }
             ],
+            "order_nsu": order_nsu,
         }
 
-        if player_nome:
-            checkout_payload["customer_name"] = player_nome
-        if player_email:
-            checkout_payload["customer_email"] = player_email
-        if player_telefone:
-            checkout_payload["customer_phone_number"] = player_telefone
+        # Dados do cliente (opcional) — objeto customer conforme doc
+        customer: dict = {}
+        if arguments.get("customer_name"):
+            customer["name"] = arguments["customer_name"]
+        if arguments.get("customer_email"):
+            customer["email"] = arguments["customer_email"]
+        if arguments.get("customer_phone"):
+            customer["phone_number"] = arguments["customer_phone"]
+        if customer:
+            checkout_payload["customer"] = customer
+
+        # URL de redirecionamento pos-pagamento (opcional)
+        if arguments.get("redirect_url"):
+            checkout_payload["redirect_url"] = arguments["redirect_url"]
+
+        # Webhook para receber confirmacao automatica de pagamento
+        if INFINITEPAY_WEBHOOK_URL:
+            checkout_payload["webhook_url"] = INFINITEPAY_WEBHOOK_URL
 
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -262,10 +284,10 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
                 "error": str(e)
             }))]
 
-        checkout_url = data.get("checkout_url") or data.get("url") or data.get("link")
+        checkout_url = data.get("checkout_url") or data.get("url")
         slug = data.get("slug") or data.get("id")
 
-        # Salvar em memória
+        # Salvar em memoria
         order = {
             "orderNsu": order_nsu,
             "status": "link_gerado",
@@ -273,10 +295,6 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             "valorReais": valor_reais,
             "checkoutUrl": checkout_url,
             "slug": slug,
-            "playerUid": player_uid,
-            "playerNome": player_nome,
-            "playerEmail": player_email,
-            "playerTelefone": player_telefone,
             "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
         _orders[order_nsu] = order
@@ -292,8 +310,8 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             "valor_reais": valor_reais,
             "slug": slug,
             "proximo_passo": (
-                f"Envie o link ao jogador. "
-                f"Após pagamento, use verificar_pagamento(order_nsu='{order_nsu}') "
+                f"Envie o link ao cliente. "
+                f"Apos pagamento, use verificar_pagamento(order_nsu='{order_nsu}') "
                 f"para confirmar antes de enviar fichas."
             ),
         }, indent=2))]
@@ -301,31 +319,40 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
     # ── verificar_pagamento ─────────────────────────────────
     elif name == "verificar_pagamento":
         order_nsu = arguments["order_nsu"]
+        transaction_nsu = arguments.get("transaction_nsu")
+        slug = arguments.get("slug")
 
-        # Buscar na memória local
+        # Buscar na memoria local
         local_order = _orders.get(order_nsu)
 
-        # Consultar InfinitePay
+        # Se nao temos slug, tentar pegar do pedido salvo
+        if not slug and local_order:
+            slug = local_order.get("slug")
+
+        # Endpoint oficial: POST /invoices/public/checkout/payment_check
+        check_payload: dict = {
+            "handle": HANDLE,
+            "order_nsu": order_nsu,
+        }
+        if transaction_nsu:
+            check_payload["transaction_nsu"] = transaction_nsu
+        if slug:
+            check_payload["slug"] = slug
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
-                resp = await client.get(
-                    f"{INFINITEPAY_API_URL}/invoices/public/checkout/links/{order_nsu}",
+                resp = await client.post(
+                    f"{INFINITEPAY_API_URL}/invoices/public/checkout/payment_check",
+                    json=check_payload,
                     headers={"Content-Type": "application/json"},
                 )
-
-                if resp.status_code == 404:
-                    # Tentar endpoint alternativo
-                    resp = await client.get(
-                        f"{INFINITEPAY_API_URL}/invoices/public/{order_nsu}",
-                        headers={"Content-Type": "application/json"},
-                    )
 
                 if resp.status_code not in (200, 201):
                     return [types.TextContent(type="text", text=json.dumps({
                         "status": "error",
                         "step": "infinitepay_api",
                         "http_status": resp.status_code,
-                        "error": f"Não foi possível verificar o pedido {order_nsu}",
+                        "error": f"Nao foi possivel verificar o pedido {order_nsu}",
                         "detail": resp.text[:500],
                     }, indent=2))]
 
@@ -338,58 +365,53 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
                 "error": str(e)
             }))]
 
-        # Interpretar resposta
-        payment_status = data.get("status", "").lower()
-        is_paid = payment_status in ("paid", "approved", "captured", "confirmed")
-
-        transaction_nsu = data.get("transaction_nsu") or data.get("nsu")
-        capture_method = data.get("capture_method") or data.get("payment_method")
-        paid_amount_raw = data.get("paid_amount") or data.get("amount")
+        # Interpretar resposta conforme doc:
+        # { success, paid, amount, paid_amount, installments, capture_method }
+        is_paid = data.get("paid", False) is True
+        capture_method = data.get("capture_method")
+        paid_amount_raw = data.get("paid_amount")
         paid_amount = float(paid_amount_raw) / 100 if paid_amount_raw else None
+        amount_raw = data.get("amount")
+        amount = float(amount_raw) / 100 if amount_raw else None
         installments = data.get("installments")
-        paid_at = data.get("paid_at") or data.get("updated_at")
+        resp_transaction_nsu = data.get("transaction_nsu") or transaction_nsu
 
-        result = {
+        result: dict = {
             "status": "success",
             "order_nsu": order_nsu,
             "paid": is_paid,
-            "payment_status": payment_status,
-            "transaction_nsu": transaction_nsu,
             "capture_method": capture_method,
+            "amount": amount,
             "paid_amount": paid_amount,
             "installments": installments,
-            "paid_at": paid_at,
+            "transaction_nsu": resp_transaction_nsu,
         }
 
         if local_order:
             result["fichas"] = local_order["fichas"]
-            result["player_uid"] = local_order.get("playerUid")
 
-        # Atualizar memória e DB se pago
+        # Atualizar memoria e DB se pago
         if is_paid and local_order:
             local_order["status"] = "pago"
-            local_order["transactionNsu"] = transaction_nsu
+            local_order["transactionNsu"] = resp_transaction_nsu
             local_order["captureMethod"] = capture_method
             local_order["paidAmount"] = paid_amount
             local_order["installments"] = installments
-            local_order["paidAt"] = paid_at
+            local_order["paidAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             _orders[order_nsu] = local_order
             await _sync_order_to_db(local_order)
 
             result["proximo_passo"] = (
-                f"Pagamento CONFIRMADO! Agora use enviar_fichas("
-                f"target_id={local_order.get('playerUid')}, "
-                f"amount={local_order['fichas']}, "
-                f"order_nsu='{order_nsu}') para entregar as fichas. "
-                f"Após enviar, o pedido será marcado como fichas_enviadas."
+                f"Pagamento CONFIRMADO! "
+                f"Agora confirme os dados do jogador e envie as {local_order['fichas']} fichas."
             )
         elif is_paid:
             result["proximo_passo"] = (
-                f"Pagamento CONFIRMADO! Use enviar_fichas(order_nsu='{order_nsu}') para entregar as fichas ao jogador."
+                "Pagamento CONFIRMADO! Confirme os dados do jogador e envie as fichas."
             )
         else:
             result["proximo_passo"] = (
-                "Pagamento AINDA NÃO confirmado. Aguarde o jogador pagar e verifique novamente."
+                "Pagamento AINDA NAO confirmado. Aguarde o cliente pagar e verifique novamente."
             )
 
         return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
@@ -404,8 +426,6 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
                     "status": order["status"],
                     "fichas": order["fichas"],
                     "valor_reais": order.get("valorReais"),
-                    "player_uid": order.get("playerUid"),
-                    "player_nome": order.get("playerNome"),
                     "checkout_url": order.get("checkoutUrl"),
                     "created_at": order.get("createdAt"),
                 })
@@ -422,7 +442,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
 
     else:
         return [types.TextContent(type="text", text=json.dumps({
-            "error": f"Tool '{name}' não reconhecida"
+            "error": f"Tool '{name}' nao reconhecida"
         }))]
 
 

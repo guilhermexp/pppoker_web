@@ -5,7 +5,6 @@ import { getUserContext } from "@api/ai/utils/get-user-context";
 import type { Context } from "@api/rest/types";
 import { chatRequestSchema } from "@api/schemas/chat";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { smoothStream } from "ai";
 import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();
@@ -53,10 +52,6 @@ app.post("/", withRequiredScope("chat.write"), async (c) => {
     context: appContext,
     agentChoice,
     toolChoice,
-    experimental_transform: smoothStream({
-      chunking: "word",
-    }),
-    sendSources: true,
   });
 });
 

@@ -19,7 +19,9 @@ import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();
 const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:8000";
+  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
+const INFINITEPAY_API_URL = "https://api.infinitepay.io";
+const INFINITEPAY_HANDLE = "xperience_solutions";
 
 const nanobotOrchestrationTools = [
   {
@@ -103,6 +105,24 @@ const pppokerChipActionSchema = z.object({
   orderNsu: z.string().min(1).optional(),
   player_nome: z.string().optional(),
   playerNome: z.string().optional(),
+});
+
+const infinitepayGerarLinkSchema = z.object({
+  descricao: z.string().min(1),
+  valor_reais: z.number().positive(),
+  fichas: z.number().int().positive(),
+  order_nsu: z.string().optional(),
+  target_player_id: z.number().int().positive().optional(),
+  customer_name: z.string().optional(),
+  customer_email: z.string().optional(),
+  customer_phone: z.string().optional(),
+  redirect_url: z.string().optional(),
+});
+
+const infinitepayVerificarSchema = z.object({
+  order_nsu: z.string().min(1),
+  transaction_nsu: z.string().optional(),
+  slug: z.string().optional(),
 });
 
 async function getPppokerBridgeCredentials(teamId: string) {
@@ -241,6 +261,35 @@ function isValidInternalToken(c: Context) {
   const authHeader = c.req.header("authorization") ?? "";
   return authHeader === `Bearer ${expected}`;
 }
+
+// ── Payment status polling (lightweight DB check) ──────────────
+app.get("/payment-status", withRequiredScope("chat.write"), async (c) => {
+  const orderNsu = c.req.query("order_nsu");
+  if (!orderNsu) {
+    return c.json({ error: "order_nsu query param is required" }, 400);
+  }
+
+  const teamId = c.get("teamId");
+  const supabase = await createAdminClient();
+
+  const { data } = await supabase
+    .from("fastchips_payment_orders")
+    .select("status, fichas, capture_method, paid_amount, paid_at, order_nsu, metadata")
+    .eq("team_id", teamId)
+    .eq("order_nsu", orderNsu)
+    .maybeSingle();
+
+  const metadata = (data?.metadata ?? {}) as Record<string, unknown>;
+
+  return c.json({
+    paid: data?.status === "pago" || data?.status === "fichas_enviadas",
+    status: data?.status ?? "not_found",
+    fichas: data?.fichas ?? null,
+    capture_method: data?.capture_method ?? null,
+    paid_amount: data?.paid_amount ?? null,
+    target_player_id: typeof metadata.target_player_id === "number" ? metadata.target_player_id : null,
+  });
+});
 
 app.get("/health", withRequiredScope("chat.write"), async (c) => {
   const tools = getLegacyToolManifest();
@@ -441,6 +490,28 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       const ligaId = chipParsed.data.liga_id ?? chipParsed.data.ligaId ?? 3357;
       const orderNsu = chipParsed.data.order_nsu ?? chipParsed.data.orderNsu;
       const playerName = chipParsed.data.player_nome ?? chipParsed.data.playerNome;
+
+      // ── Security: verify payment before sending chips ──────────
+      if (parsed.data.toolName === "enviar_fichas" && orderNsu) {
+        const supabase = await createAdminClient();
+        const { data: paymentOrder } = await supabase
+          .from("fastchips_payment_orders")
+          .select("status, fichas, paid_amount")
+          .eq("team_id", teamId)
+          .eq("order_nsu", orderNsu)
+          .maybeSingle();
+
+        if (!paymentOrder || (paymentOrder.status !== "pago" && paymentOrder.status !== "fichas_enviadas")) {
+          return c.json(
+            {
+              success: false,
+              error: `Pagamento nao confirmado para pedido ${orderNsu}. Status: ${paymentOrder?.status ?? "nao encontrado"}. Fichas so podem ser enviadas apos confirmacao de pagamento via webhook.`,
+            },
+            403,
+          );
+        }
+      }
+
       const creds = await getPppokerBridgeCredentials(teamId);
       const bridgePath =
         parsed.data.toolName === "enviar_fichas"
@@ -502,6 +573,207 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
           (parsed.data.toolName === "enviar_fichas"
             ? "Fichas enviadas com sucesso."
             : "Saque de fichas executado com sucesso."),
+        uiChunks: [],
+      });
+    }
+
+    // ── InfinitePay: gerar_link_pagamento ─────────────────────
+    if (parsed.data.toolName === "gerar_link_pagamento") {
+      const ipParsed = infinitepayGerarLinkSchema.safeParse(
+        parsed.data.input && typeof parsed.data.input === "object"
+          ? parsed.data.input
+          : {},
+      );
+      if (!ipParsed.success) {
+        return c.json({ success: false, error: ipParsed.error }, 400);
+      }
+
+      const orderNsu =
+        ipParsed.data.order_nsu || `xp_${Date.now()}`;
+      const valorCentavos = Math.round(ipParsed.data.valor_reais * 100);
+
+      const checkoutPayload: Record<string, unknown> = {
+        handle: INFINITEPAY_HANDLE,
+        items: [
+          {
+            description: ipParsed.data.descricao,
+            quantity: 1,
+            price: valorCentavos,
+          },
+        ],
+        order_nsu: orderNsu,
+      };
+
+      const customer: Record<string, string> = {};
+      if (ipParsed.data.customer_name) customer.name = ipParsed.data.customer_name;
+      if (ipParsed.data.customer_email) customer.email = ipParsed.data.customer_email;
+      if (ipParsed.data.customer_phone) customer.phone_number = ipParsed.data.customer_phone;
+      if (Object.keys(customer).length > 0) checkoutPayload.customer = customer;
+
+      if (ipParsed.data.redirect_url) checkoutPayload.redirect_url = ipParsed.data.redirect_url;
+
+      const webhookUrl = process.env.INFINITEPAY_WEBHOOK_URL;
+      if (webhookUrl) checkoutPayload.webhook_url = webhookUrl;
+
+      const ipResp = await fetch(
+        `${INFINITEPAY_API_URL}/invoices/public/checkout/links`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(checkoutPayload),
+        },
+      );
+
+      if (!ipResp.ok) {
+        const errText = await ipResp.text().catch(() => "");
+        return c.json(
+          {
+            success: false,
+            error: `InfinitePay API error (${ipResp.status}): ${errText.slice(0, 300)}`,
+          },
+          502,
+        );
+      }
+
+      const ipData = (await ipResp.json()) as Record<string, unknown>;
+      const checkoutUrl = (ipData.checkout_url ?? ipData.url) as string;
+      const slug = (ipData.slug ?? ipData.id) as string | undefined;
+
+      // Save order to DB (include target_player_id in metadata for auto-send after payment)
+      const supabase = await createAdminClient();
+      const orderMetadata: Record<string, unknown> = {};
+      if (ipParsed.data.target_player_id) {
+        orderMetadata.target_player_id = ipParsed.data.target_player_id;
+      }
+
+      await supabase.from("fastchips_payment_orders").upsert(
+        {
+          team_id: teamId,
+          order_nsu: orderNsu,
+          status: "link_gerado",
+          fichas: ipParsed.data.fichas,
+          valor_reais: ipParsed.data.valor_reais,
+          checkout_url: checkoutUrl,
+          slug: slug ?? null,
+          metadata: Object.keys(orderMetadata).length > 0 ? orderMetadata : null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "team_id,order_nsu" },
+      );
+
+      return c.json({
+        success: true,
+        toolName: "gerar_link_pagamento",
+        yielded: [],
+        output: {
+          order_nsu: orderNsu,
+          checkout_url: checkoutUrl,
+          fichas: ipParsed.data.fichas,
+          valor_reais: ipParsed.data.valor_reais,
+          slug,
+        },
+        uiChunks: [],
+      });
+    }
+
+    // ── InfinitePay: verificar_pagamento ────────────────────
+    if (parsed.data.toolName === "verificar_pagamento") {
+      const vpParsed = infinitepayVerificarSchema.safeParse(
+        parsed.data.input && typeof parsed.data.input === "object"
+          ? parsed.data.input
+          : {},
+      );
+      if (!vpParsed.success) {
+        return c.json({ success: false, error: vpParsed.error }, 400);
+      }
+
+      // Check DB first (webhook may have already updated)
+      const supabase = await createAdminClient();
+      const { data: dbOrder } = await supabase
+        .from("fastchips_payment_orders")
+        .select("status, fichas, transaction_nsu, slug, capture_method, paid_amount, paid_at")
+        .eq("team_id", teamId)
+        .eq("order_nsu", vpParsed.data.order_nsu)
+        .maybeSingle();
+
+      if (dbOrder?.status === "pago" || dbOrder?.status === "fichas_enviadas") {
+        return c.json({
+          success: true,
+          toolName: "verificar_pagamento",
+          yielded: [],
+          output: {
+            order_nsu: vpParsed.data.order_nsu,
+            paid: true,
+            status: dbOrder.status,
+            fichas: dbOrder.fichas,
+            capture_method: dbOrder.capture_method,
+            paid_amount: dbOrder.paid_amount,
+            paid_at: dbOrder.paid_at,
+          },
+          uiChunks: [],
+        });
+      }
+
+      // Fallback: check InfinitePay API
+      const checkPayload: Record<string, string> = {
+        handle: INFINITEPAY_HANDLE,
+        order_nsu: vpParsed.data.order_nsu,
+      };
+      const txnNsu = vpParsed.data.transaction_nsu ?? dbOrder?.transaction_nsu;
+      const slug = vpParsed.data.slug ?? dbOrder?.slug;
+      if (txnNsu) checkPayload.transaction_nsu = txnNsu;
+      if (slug) checkPayload.slug = slug;
+
+      const checkResp = await fetch(
+        `${INFINITEPAY_API_URL}/invoices/public/checkout/payment_check`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(checkPayload),
+        },
+      );
+
+      const checkData = checkResp.ok
+        ? ((await checkResp.json()) as Record<string, unknown>)
+        : { paid: false };
+
+      return c.json({
+        success: true,
+        toolName: "verificar_pagamento",
+        yielded: [],
+        output: {
+          order_nsu: vpParsed.data.order_nsu,
+          paid: checkData.paid === true,
+          capture_method: checkData.capture_method ?? null,
+          paid_amount:
+            typeof checkData.paid_amount === "number"
+              ? (checkData.paid_amount as number) / 100
+              : null,
+          fichas: dbOrder?.fichas ?? null,
+        },
+        uiChunks: [],
+      });
+    }
+
+    // ── InfinitePay: listar_pedidos_pendentes ───────────────
+    if (parsed.data.toolName === "listar_pedidos_pendentes") {
+      const supabase = await createAdminClient();
+      const { data: orders } = await supabase
+        .from("fastchips_payment_orders")
+        .select("order_nsu, status, fichas, valor_reais, checkout_url, created_at")
+        .eq("team_id", teamId)
+        .in("status", ["link_gerado", "pago"])
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      return c.json({
+        success: true,
+        toolName: "listar_pedidos_pendentes",
+        yielded: [],
+        output: {
+          total: orders?.length ?? 0,
+          pedidos: orders ?? [],
+        },
         uiChunks: [],
       });
     }

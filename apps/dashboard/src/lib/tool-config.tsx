@@ -18,6 +18,7 @@ import {
   Play,
   Receipt,
   Search,
+  Shield,
   Square,
   Timer,
   TrendingUp,
@@ -345,6 +346,50 @@ export const TOOL_CONFIGS: Record<string, ToolConfig> = {
     name: "Web Search",
     icon: Search,
     description: "Searching the web",
+  },
+
+  // PPPoker MCP tools
+  mcp_pppoker_login_status: {
+    name: "PPPoker Login",
+    icon: Shield,
+    description: "Validating PPPoker login",
+  },
+  mcp_pppoker_info_membro: {
+    name: "Info Membro",
+    icon: User,
+    description: "Fetching member info",
+  },
+  mcp_pppoker_listar_membros: {
+    name: "Listar Membros",
+    icon: Users,
+    description: "Listing club members",
+  },
+  mcp_pppoker_downlines_agente: {
+    name: "Downlines",
+    icon: Users,
+    description: "Fetching agent downlines",
+  },
+  mcp_pppoker_listar_solicitacoes: {
+    name: "Solicitacoes",
+    icon: Inbox,
+    description: "Listing club requests",
+  },
+
+  // Action tools
+  enviar_fichas: {
+    name: "Enviar Fichas",
+    icon: Wallet,
+    description: "Sending chips",
+  },
+  sacar_fichas: {
+    name: "Sacar Fichas",
+    icon: Wallet,
+    description: "Withdrawing chips",
+  },
+  gerar_link_pagamento: {
+    name: "Gerar Link",
+    icon: CreditCard,
+    description: "Generating payment link",
   },
 
   // Memory tools

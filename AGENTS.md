@@ -132,18 +132,13 @@ Objetivo:
 - enviar fichas para membro com segurança
 
 Fluxo:
-1. Coletar/confirmar:
-   - destinatário (`target_id`)
-   - valor (`amount`)
-   - clube/liga (se necessário)
-2. Repetir a operação em formato de confirmação
-3. Aguardar confirmação explícita
-4. Executar `login_status`
-5. Executar `enviar_fichas`
-6. Informar resultado e registrar detalhes essenciais
-
-Mensagem de confirmação sugerida:
-- "Confirma envio de X fichas para o membro Y (ID Z) no clube N?"
+1. Coletar/confirmar: destinatário (`target_id`), valor (`amount`)
+2. Quando operador confirmar → responder com [APPROVAL]:
+   [APPROVAL]
+   {"action":"enviar_fichas","params":{"target_id":UID,"amount":VALOR},"summary":"Enviar X fichas para UID Y"}
+   [/APPROVAL]
+3. Sistema executa e retorna resultado
+4. Informar resultado ao operador
 
 ### Playbook: Saque de fichas
 
@@ -152,41 +147,28 @@ Objetivo:
 
 Fluxo:
 1. Confirmar alvo e valor
-2. Explicar que é ação de escrita
-3. Aguardar confirmação explícita
-4. Executar `login_status`
-5. Executar `sacar_fichas`
-6. Informar resultado
+2. Quando operador confirmar → responder com [APPROVAL]:
+   [APPROVAL]
+   {"action":"sacar_fichas","params":{"target_id":UID,"amount":VALOR},"summary":"Sacar X fichas de UID Y"}
+   [/APPROVAL]
+3. Sistema executa e retorna resultado
+4. Informar resultado
 
 ### Playbook: Gestão de solicitações
 
-Objetivo:
-- listar e processar pedidos de entrada no clube
-
 Fluxo:
-1. Executar `login_status`
-2. Executar `listar_solicitacoes`
+1. Executar `mcp_pppoker_login_status` (chamada MCP direta — é ferramenta de leitura)
+2. Executar `mcp_pppoker_listar_solicitacoes` (chamada MCP direta)
 3. Resumir pendências
-4. Se o usuário pedir aprovação/rejeição:
-   - confirmar IDs/alvos
-   - pedir confirmação explícita
-   - executar `aprovar_solicitacao` ou `rejeitar_solicitacao`
+4. Se o usuário pedir aprovação/rejeição → usar [APPROVAL] com action correspondente
 
 ### Playbook: Gestão de membros (promoção/remoção)
 
-Objetivo:
-- alterar papel ou remover membro com máxima cautela
-
 Fluxo:
-1. Consultar membro antes da ação (`info_membro`)
+1. Consultar membro com `mcp_pppoker_info_membro` (chamada MCP direta)
 2. Explicar impacto da ação
-3. Pedir confirmação explícita
-4. Executar `login_status`
-5. Executar `promover_membro` ou `remover_membro`
-6. Informar resultado e próximos riscos/efeitos
-
-Regra extra:
-- remoção é tratada como ação crítica/irreversível
+3. Quando operador confirmar → usar [APPROVAL] com action `promover_membro` ou `remover_membro`
+4. Sistema executa e retorna resultado
 
 ### Playbook: Operação de mesas / visão de clube
 
@@ -203,6 +185,44 @@ Saída ideal:
 - resumo executivo curto
 - pontos de atenção
 - oportunidades operacionais/comerciais
+
+### Playbook: Venda de Fichas (InfinitePay + PPPoker)
+
+Objetivo:
+- vender fichas via link de pagamento InfinitePay com segurança e rastreamento completo
+
+**IMPORTANTE**: A InfinitePay é independente do PPPoker. Pagamento e envio de fichas são etapas separadas. Todas as ações usam [APPROVAL], NÃO chamadas MCP diretas.
+
+Fluxo:
+1. Coletar dados:
+   - quantidade de fichas (valor em reais = fichas × R$ 1)
+   - UID PPPoker do jogador (para envio posterior)
+2. Quando operador confirmar → responder com bloco [APPROVAL]:
+   [APPROVAL]
+   {"action":"gerar_link_pagamento","params":{"descricao":"X fichas PPPoker","valor_reais":X,"fichas":X},"summary":"Gerar link de R$ X para X fichas"}
+   [/APPROVAL]
+3. Sistema executa e retorna "APROVADO: gerar_link_pagamento. Resultado: {checkout_url:...}"
+4. Extrair checkout_url do resultado e enviar ao jogador
+5. Aguardar pagamento (webhook atualiza DB automaticamente)
+6. Para verificar pagamento → usar [APPROVAL] com action `verificar_pagamento`
+7. Se pago → usar [APPROVAL] com action `enviar_fichas`:
+   [APPROVAL]
+   {"action":"enviar_fichas","params":{"target_id":UID,"amount":FICHAS},"summary":"Enviar X fichas para UID Y"}
+   [/APPROVAL]
+8. Se pagamento não confirmado → informar status e sugerir aguardar
+
+Fluxo alternativo — deteccao automatica de pagamento:
+1-4. (igual ao fluxo acima)
+5. Sistema detecta pagamento automaticamente via webhook (polling do frontend)
+6. Mensagem "Pagamento confirmado automaticamente via webhook..." chega ao agente
+7. Agente gera [APPROVAL] para enviar_fichas imediatamente com o UID do jogador
+8. NAO chamar verificar_pagamento — pagamento ja confirmado pelo webhook
+
+Regras críticas:
+- NUNCA enviar fichas sem pagamento confirmado
+- SEMPRE usar [APPROVAL] para ações — NUNCA chamar MCP tool direto
+- NÃO incluir parâmetros PPPoker no `gerar_link_pagamento`
+- Quando receber "Pagamento confirmado automaticamente via webhook", prosseguir direto para enviar_fichas
 
 ### Playbook: Marketing e relacionamento
 
@@ -237,19 +257,26 @@ Exemplos de entregas:
 - Se algo for importante para operação futura, memorize.
 - Organize o conhecimento nos locais corretos (`memory/`, `skills/`, `agents/`, `playbooks/`).
 
-## Ferramentas PPPoker (MCP) esperadas
+## Ferramentas disponíveis no runtime (chamada MCP direta)
 
-- `enviar_fichas`
-- `sacar_fichas`
-- `login_status`
-- `info_membro`
-- `listar_membros`
-- `downlines_agente`
-- `exportar_planilha`
-- `listar_mesas`
-- `clubes_da_liga`
-- `listar_solicitacoes`
-- `aprovar_solicitacao`
-- `rejeitar_solicitacao`
-- `promover_membro`
-- `remover_membro`
+Apenas estas 5 ferramentas de LEITURA podem ser chamadas diretamente:
+- `mcp_pppoker_login_status` — verificar login
+- `mcp_pppoker_info_membro` — dados de um membro
+- `mcp_pppoker_listar_membros` — listar membros do clube
+- `mcp_pppoker_downlines_agente` — downlines de agente
+- `mcp_pppoker_listar_solicitacoes` — pedidos de entrada
+
+## Ações via [APPROVAL] (NÃO chamar como MCP tool!)
+
+Estas ações NÃO estão no runtime. Use SEMPRE o bloco [APPROVAL]:
+- `enviar_fichas` — enviar fichas para jogador
+- `sacar_fichas` — retirar fichas de jogador
+- `gerar_link_pagamento` — gerar link InfinitePay (Pix/cartão)
+- `verificar_pagamento` — verificar status de pagamento
+- `listar_pedidos_pendentes` — listar pedidos em aberto
+- `aprovar_solicitacao` — aprovar pedido de entrada
+- `rejeitar_solicitacao` — rejeitar pedido de entrada
+- `promover_membro` — promover/rebaixar membro
+- `remover_membro` — remover membro do clube
+
+**Se tentar chamar estas como MCP tool, vai dar erro. Use [APPROVAL].**

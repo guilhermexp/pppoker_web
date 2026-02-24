@@ -11,3 +11,6 @@
 - Testes operacionais reais executados contra PPPoker:
   - envio de `5` fichas para `UID 13357479` no clube `4366162`/liga `1765` -> sucesso (`pb.AddCoinRSP`)
   - saque de `5` fichas de `UID 13357479` no clube `4366162`/liga `1765` -> sucesso (`pb.AddCoinRSP`)
+- Ajuste de regra comercial no agente:
+  - definido preco fixo de compra/venda em `R$ 1 por ficha`
+  - removida necessidade de perguntar "valor em reais" quando o usuario ja informa a quantidade de fichas

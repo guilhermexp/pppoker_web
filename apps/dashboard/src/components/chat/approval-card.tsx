@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -77,16 +78,31 @@ const DEFAULT_CONFIG = {
   bgColor: "bg-card",
 };
 
+function formatToolOutput(action: string, output: Record<string, unknown>): string {
+  if (action === "gerar_link_pagamento" && output.checkout_url) {
+    return `Link gerado: ${output.checkout_url}`;
+  }
+  if (action === "verificar_pagamento") {
+    return output.paid ? "Pagamento confirmado!" : "Pagamento pendente.";
+  }
+  if (typeof output.message === "string") return output.message;
+  if (typeof output.output === "string") return output.output;
+  return JSON.stringify(output);
+}
+
 interface ApprovalCardProps {
   approval: ApprovalData;
   isStreaming?: boolean;
   onResolved?: (status: ApprovalStatus) => void;
+  /** Called when gerar_link_pagamento succeeds — parent starts payment polling */
+  onPaymentLinkGenerated?: (orderNsu: string) => void;
 }
 
 export function ApprovalCard({
   approval,
   isStreaming,
   onResolved,
+  onPaymentLinkGenerated,
 }: ApprovalCardProps) {
   const t = useI18n();
   const { status: chatStatus } = useChat();
@@ -100,6 +116,7 @@ export function ApprovalCard({
       ? String(approval.params.amount)
       : "";
   const [amountInput, setAmountInput] = useState(initialAmount);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const config = ACTION_CONFIG[approval.action] ?? DEFAULT_CONFIG;
   const Icon = config.icon;
@@ -133,6 +150,10 @@ export function ApprovalCard({
 
     setIsSubmitting(true);
     setResultText(null);
+    toast({
+      title: "Aprovacao recebida",
+      description: "Processando operacao...",
+    });
 
     try {
       const supabase = createClient();
@@ -172,31 +193,66 @@ export function ApprovalCard({
       }
 
       setStatus("approved");
-      const executionText =
-        typeof payload.output === "string"
-          ? payload.output
-          : "Operacao executada com sucesso.";
-      setResultText(executionText);
-      onResolved?.("approved");
+      const formattedText =
+        typeof payload.output === "object" && payload.output !== null
+          ? formatToolOutput(approval.action, payload.output as Record<string, unknown>)
+          : typeof payload.output === "string"
+            ? payload.output
+            : "Operacao executada com sucesso.";
+      setResultText(formattedText);
       toast({
         title: "Enviado",
-        description: executionText,
+        description: formattedText,
       });
+
+      // For gerar_link_pagamento: extract data and notify parent to start polling
+      if (
+        approval.action === "gerar_link_pagamento" &&
+        typeof payload.output === "object" &&
+        payload.output !== null
+      ) {
+        const output = payload.output as Record<string, unknown>;
+        if (typeof output.checkout_url === "string") {
+          setCheckoutUrl(output.checkout_url);
+        }
+        if (typeof output.order_nsu === "string") {
+          onPaymentLinkGenerated?.(output.order_nsu);
+        }
+      }
+
+      // Don't auto-dismiss for payment links — user needs to see checkout URL
+      if (approval.action !== "gerar_link_pagamento") {
+        onResolved?.("approved");
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro inesperado";
+      setStatus("pending");
       setResultText(message);
+      toast({
+        title: "Falha na operacao",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
-  }, [apiBaseUrl, approval.action, approval.params, amountInput, isSubmitting, status]);
+  }, [
+    apiBaseUrl,
+    approval.action,
+    approval.params,
+    amountInput,
+    isSubmitting,
+    onPaymentLinkGenerated,
+    onResolved,
+    status,
+    toast,
+  ]);
 
   const handleReject = useCallback(() => {
     if (isSubmitting || status !== "pending") return;
-    setIsSubmitting(true);
     setStatus("rejected");
     setResultText("Operacao cancelada.");
     onResolved?.("rejected");
-    setIsSubmitting(false);
   }, [isSubmitting, onResolved, status]);
 
   const isBusy =
@@ -306,7 +362,23 @@ export function ApprovalCard({
         </div>
       )}
 
-      {resultText && (
+      {/* Checkout link button */}
+      {checkoutUrl && (
+        <div className="px-4 py-3 border-t border-border">
+          <a
+            href={checkoutUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 w-full justify-center rounded-md bg-green-600 hover:bg-green-700 text-white px-3 py-2.5 text-sm font-medium transition-colors"
+          >
+            <ExternalLink className="size-4" />
+            Abrir link de pagamento
+          </a>
+        </div>
+      )}
+
+      {/* Non-payment result text */}
+      {resultText && !checkoutUrl && (
         <div className="px-4 py-3 border-t border-border text-sm text-muted-foreground">
           {resultText}
         </div>

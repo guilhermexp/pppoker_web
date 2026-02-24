@@ -1,3 +1,4 @@
+import { memoryProvider } from "@api/ai/agents/config/shared";
 import type { UIChatMessage } from "@api/ai/types";
 import type { NanobotSettings } from "@api/schemas/nanobot";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
@@ -216,13 +217,10 @@ async function fetchNanobot(
           chatId: (options.context as Record<string, unknown> | undefined)
             ?.chatId,
           message: options.message,
-          messages: (options.context as Record<string, unknown> | undefined)
-            ?.messages,
           text: extractUserTextFromMessage(options.message as UIChatMessage),
           context: options.context,
           agentChoice: (options as Record<string, unknown>).agentChoice,
           toolChoice: (options as Record<string, unknown>).toolChoice,
-          // Forward a small subset of runtime knobs to help the sidecar choose behavior.
           runtime: {
             strategy: (options as Record<string, unknown>).strategy,
             maxRounds: (options as Record<string, unknown>).maxRounds,
@@ -256,7 +254,6 @@ async function fetchNanobot(
                 mcpServers,
               }
             : undefined,
-          mcpServers,
         }),
       },
     );
@@ -352,6 +349,14 @@ async function* parseSSE(
 
       buffer += decoder.decode(value, { stream: true });
 
+      // Guard: if buffer grows beyond 256KB without a boundary, truncate to prevent O(n²) scans
+      if (buffer.length > 262_144) {
+        const lastNewline = buffer.lastIndexOf("\n", buffer.length - 2);
+        if (lastNewline > 0) {
+          buffer = buffer.slice(lastNewline + 1);
+        }
+      }
+
       // Handle both \n\n and \r\n\r\n boundaries (sse_starlette uses \r\n)
       let boundaryIndex = findSSEBoundary(buffer);
       while (boundaryIndex !== -1) {
@@ -436,6 +441,43 @@ function tryWriteDirectChunk(
   return true;
 }
 
+async function persistToRedis(
+  chatId: string,
+  userId: string,
+  userText: string,
+  assistantText: string,
+): Promise<void> {
+  if (!chatId || !userText) return;
+  try {
+    const now = new Date();
+    await memoryProvider.saveMessage({
+      chatId,
+      userId,
+      role: "user",
+      content: userText,
+      timestamp: now,
+    });
+    await memoryProvider.saveMessage({
+      chatId,
+      userId,
+      role: "assistant",
+      content: assistantText,
+      timestamp: now,
+    });
+    const existingChat = await memoryProvider.getChat(chatId);
+    await memoryProvider.saveChat({
+      chatId,
+      userId,
+      title: existingChat?.title || userText.substring(0, 100),
+      createdAt: existingChat?.createdAt || now,
+      updatedAt: now,
+      messageCount: (existingChat?.messageCount ?? 0) + 2,
+    });
+  } catch (err) {
+    console.error("[nanobot] failed to persist messages to Redis:", err);
+  }
+}
+
 const SSE_IDLE_TIMEOUT_MS = 60_000;
 
 async function* parseSSEWithTimeout(
@@ -463,14 +505,15 @@ async function* parseSSEWithTimeout(
 async function pipeNanobotSSEToUIStream(
   response: Response,
   writer: { write: (chunk: any) => void },
-): Promise<{ finishWritten: boolean }> {
-  if (!response.body) return { finishWritten: false };
+): Promise<{ finishWritten: boolean; accumulatedText: string }> {
+  if (!response.body) return { finishWritten: false, accumulatedText: "" };
 
   const textId = nanoid();
   let textStarted = false;
   let textEnded = false;
   let finishWritten = false;
   let receivedAnyData = false;
+  let accumulatedText = "";
 
   const ensureTextStart = () => {
     if (!textStarted) {
@@ -525,6 +568,19 @@ async function pipeNanobotSSEToUIStream(
     if (eventName === "agent-status") {
       if (payload && typeof payload === "object") {
         writer.write({ type: "data-agent-status", data: payload });
+      }
+      continue;
+    }
+
+    if (eventName === "agent-progress") {
+      if (payload && typeof payload === "object") {
+        const progressText = (payload as Record<string, unknown>).text;
+        if (typeof progressText === "string" && progressText.trim()) {
+          writer.write({
+            type: "data-agent-progress",
+            data: { text: progressText },
+          });
+        }
       }
       continue;
     }
@@ -599,6 +655,7 @@ async function pipeNanobotSSEToUIStream(
       if (delta) {
         ensureTextStart();
         writer.write({ type: "text-delta", id: textId, delta });
+        accumulatedText += delta;
       }
     }
   }
@@ -614,7 +671,7 @@ async function pipeNanobotSSEToUIStream(
   }
 
   ensureTextEnd();
-  return { finishWritten };
+  return { finishWritten, accumulatedText };
 }
 
 export async function nanobotToUIMessageStream(
@@ -623,6 +680,14 @@ export async function nanobotToUIMessageStream(
   const nanobotResponse = await fetchNanobot(options);
   const contentType = nanobotResponse.headers.get("content-type") ?? "";
 
+  // Extract context for Redis persistence
+  const ctx = options.context as Record<string, unknown> | undefined;
+  const chatId = (ctx?.chatId as string) ?? "";
+  const userId = (ctx?.userId as string) ?? "";
+  const userText = extractUserTextFromMessage(
+    options.message as UIChatMessage,
+  );
+
   const stream = createUIMessageStream<UIChatMessage>({
     execute: async ({ writer }) => {
       writer.write({ type: "start" });
@@ -630,10 +695,8 @@ export async function nanobotToUIMessageStream(
       writeAgentStatus(writer, { status: "executing", agent: "orchestrator" });
 
       if (contentType.includes("text/event-stream")) {
-        const { finishWritten } = await pipeNanobotSSEToUIStream(
-          nanobotResponse,
-          writer,
-        );
+        const { finishWritten, accumulatedText } =
+          await pipeNanobotSSEToUIStream(nanobotResponse, writer);
         writeAgentStatus(writer, {
           status: "completing",
           agent: "orchestrator",
@@ -641,6 +704,9 @@ export async function nanobotToUIMessageStream(
         if (!finishWritten) {
           writer.write({ type: "finish", finishReason: "stop" });
         }
+
+        // Persist to Redis for frontend history (fire-and-forget)
+        await persistToRedis(chatId, userId, userText, accumulatedText);
         return;
       }
 
@@ -656,6 +722,9 @@ export async function nanobotToUIMessageStream(
           agent: "orchestrator",
         });
         writer.write({ type: "finish", finishReason: "stop" });
+
+        // Persist to Redis for frontend history (fire-and-forget)
+        await persistToRedis(chatId, userId, userText, payload.text);
         return;
       }
 
@@ -663,6 +732,9 @@ export async function nanobotToUIMessageStream(
       writeText(writer, nanoid(), text);
       writeAgentStatus(writer, { status: "completing", agent: "orchestrator" });
       writer.write({ type: "finish", finishReason: "stop" });
+
+      // Persist to Redis for frontend history (fire-and-forget)
+      await persistToRedis(chatId, userId, userText, text);
     },
     onError: (error) => {
       console.error("[nanobot] ui stream error", error);

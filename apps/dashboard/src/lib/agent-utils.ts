@@ -118,6 +118,18 @@ export const getToolMessage = (toolName: string | null) => {
     // Research tools
     webSearch: "Searching the web...",
 
+    // PPPoker MCP tools
+    mcp_pppoker_login_status: "Validando login do clube...",
+    mcp_pppoker_info_membro: "Consultando dados do membro...",
+    mcp_pppoker_listar_membros: "Listando membros do clube...",
+    mcp_pppoker_downlines_agente: "Buscando downlines do agente...",
+    mcp_pppoker_listar_solicitacoes: "Consultando solicitacoes pendentes...",
+
+    // Action tools (invoke endpoint)
+    enviar_fichas: "Enviando fichas...",
+    sacar_fichas: "Sacando fichas...",
+    gerar_link_pagamento: "Gerando link de pagamento...",
+
     // Memory tools
     updateWorkingMemory: "Updating working memory...",
 

@@ -12,6 +12,9 @@
   - resposta de sucesso observada: `pb.AddCoinRSP`
 - UID de teste operacional recorrente confirmado:
   - alvo: `13357479`
+- Regra comercial fixa para compra de fichas:
+  - `1 ficha = R$ 1` (ex.: `10 fichas = R$ 10`)
+  - quando quantidade de fichas estiver definida, nao perguntar valor em reais novamente
 
 ## Runtime/Integração
 
