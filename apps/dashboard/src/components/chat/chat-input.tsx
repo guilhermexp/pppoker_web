@@ -16,6 +16,7 @@ import {
   useChatStatus,
   useDataPart,
 } from "@ai-sdk-tools/store";
+import { useSidebarPinned } from "@/components/sidebar-context";
 import { cn } from "@midpoker/ui/cn";
 import {
   PromptInput,
@@ -55,6 +56,8 @@ export function ChatInput() {
   const [selectedType] = useQueryState("artifact-type", parseAsString);
 
   const isCanvasVisible = !!selectedType;
+
+  const { isPinned } = useSidebarPinned();
 
   const {
     input,
@@ -155,7 +158,8 @@ export function ChatInput() {
       <div
         className={cn(
           "fixed bottom-6 z-20 transition-all duration-300 ease-in-out",
-          "left-0 md:left-[70px] px-4 md:px-6",
+          "left-0 px-4 md:px-6",
+          isPinned ? "md:left-[240px]" : "md:left-[56px]",
           isCanvasVisible ? "right-0 md:right-[603px]" : "right-0",
         )}
       >

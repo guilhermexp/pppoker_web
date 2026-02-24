@@ -7,7 +7,8 @@ import { cn } from "@midpoker/ui/cn";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Users, Trophy, DollarSign, LayoutGrid } from "lucide-react";
+import { useLastUpdate } from "@/hooks/use-last-update";
+import { Loader2, Users, Trophy, DollarSign, LayoutGrid, AlertCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
@@ -278,13 +279,13 @@ export function LobbyPage() {
   const trpc = useTRPC();
   const [tab, setTab] = useState("todas");
 
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isError, dataUpdatedAt } = useQuery(
     trpc.poker.rooms.getLive.queryOptions(
       {},
-      // TODO: reativar auto-refresh quando dashboard estiver pronto
-      // { refetchInterval: 30_000 },
+      { refetchInterval: 30_000 },
     ),
   );
+  const lastUpdate = useLastUpdate(dataUpdatedAt);
 
   const rooms = (data?.rooms ?? []) as Room[];
 
@@ -316,7 +317,26 @@ export function LobbyPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      {isError && (
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <p className="text-sm font-medium text-destructive">
+              Não foi possível conectar ao PPPoker
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Verifique se o bridge está online e tente novamente.
+          </p>
+        </div>
+      )}
+
       <StatsBar rooms={rooms} />
+      {lastUpdate && (
+        <p className="text-xs text-muted-foreground text-right">
+          Atualizado {lastUpdate}
+        </p>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>

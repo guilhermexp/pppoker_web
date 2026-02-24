@@ -1,5 +1,6 @@
 import { ClientOnly } from "@/components/client-only";
 import { ExportStatus } from "@/components/export-status";
+import { ClientFeedback } from "@/feedback";
 import { GlobalTimerProvider } from "@/components/global-timer-provider";
 import { Header } from "@/components/header";
 import { GlobalSheets } from "@/components/sheets/global-sheets";
@@ -100,6 +101,7 @@ export default async function Layout({
             <GlobalSheets />
             <GlobalTimerProvider />
             <TimezoneDetector />
+            <ClientFeedback />
           </ClientOnly>
         </div>
       </SidebarProvider>

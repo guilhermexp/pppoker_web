@@ -21,7 +21,8 @@ import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
+import { useLastUpdate } from "@/hooks/use-last-update";
+import { Loader2, Search, ArrowUpRight, ArrowDownLeft, RefreshCw, AlertCircle } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
@@ -434,13 +435,13 @@ function TrocarTab() {
 
   const deferredSearch = useDeferredValue(search);
 
-  const { data, isLoading, isFetching } = useQuery(
+  const { data, isLoading, isFetching, isError, dataUpdatedAt } = useQuery(
     trpc.poker.members.getLive.queryOptions(
       { q: deferredSearch || undefined },
-      // TODO: reativar auto-refresh quando dashboard estiver pronto
-      // { refetchInterval: 15_000 },
+      { refetchInterval: 15_000 },
     ),
   );
+  const lastUpdate = useLastUpdate(dataUpdatedAt);
 
   const allMembers = (data?.members ?? []) as LiveMember[];
   const clubInfo = (data as any)?.clubInfo as ClubInfo | undefined;
@@ -524,8 +525,28 @@ function TrocarTab() {
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Error banner */}
+      {isError && (
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <p className="text-sm font-medium text-destructive">
+              Não foi possível conectar ao PPPoker
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Verifique se o bridge está online e tente novamente.
+          </p>
+        </div>
+      )}
+
       {/* Stats */}
       <ContadorStats members={allMembers} clubInfo={clubInfo} loggedInUid={loggedInUid} />
+      {lastUpdate && (
+        <p className="text-xs text-muted-foreground text-right -mt-2">
+          Atualizado {lastUpdate}
+        </p>
+      )}
 
       {/* Search */}
       <div className="relative">

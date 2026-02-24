@@ -9,7 +9,7 @@ export default async function Layout({
   const t = await getI18n();
 
   return (
-    <div className="w-full max-w-[1160px]">
+    <div className="w-full">
       <SecondaryMenu
         items={[
           { path: "/settings", label: t("navigation.settings.general") },
@@ -36,8 +36,8 @@ export default async function Layout({
         ]}
       />
 
-      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,800px)_320px] xl:gap-8">
-        <main className="min-w-0 max-w-[800px]">{children}</main>
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px] xl:gap-8">
+        <main className="min-w-0">{children}</main>
 
         <aside className="hidden xl:block">
           <div className="sticky top-24">

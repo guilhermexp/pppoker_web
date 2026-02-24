@@ -14,17 +14,18 @@ export function usePokerPlayersRealtime() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const invalidateAll = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: trpc.poker.players.get.queryKey(),
-    });
-    queryClient.invalidateQueries({
-      queryKey: trpc.poker.players.getStats.queryKey(),
-    });
-    queryClient.invalidateQueries({
-      queryKey: trpc.poker.pppoker.getSyncStatus.queryKey(),
-    });
+    // Invalidate only queries that reflect poker_players table state
+    queryClient.invalidateQueries({ queryKey: trpc.poker.players.get.queryKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.poker.players.getStats.queryKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.poker.pppoker.getSyncStatus.queryKey() });
+    // Membros queries (synced from poker_players)
+    queryClient.invalidateQueries({ queryKey: trpc.poker.members.list.queryKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.poker.members.getStats.queryKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.poker.members.getLive.queryKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.poker.members.listPendingMembers.queryKey() });
   }, [queryClient, trpc]);
 
   useEffect(() => {
@@ -41,8 +42,9 @@ export function usePokerPlayersRealtime() {
           table: "poker_players",
         },
         () => {
-          // Debounce: wait a bit for batch updates to finish
-          setTimeout(invalidateAll, 500);
+          // Debounce: wait for batch updates to finish before invalidating
+          if (debounceRef.current) clearTimeout(debounceRef.current);
+          debounceRef.current = setTimeout(invalidateAll, 500);
         },
       )
       .subscribe();
@@ -50,6 +52,7 @@ export function usePokerPlayersRealtime() {
     channelRef.current = channel;
 
     return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       supabase.removeChannel(channel);
     };
   }, [invalidateAll]);

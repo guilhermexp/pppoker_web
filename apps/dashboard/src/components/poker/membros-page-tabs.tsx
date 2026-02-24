@@ -104,7 +104,11 @@ function MembrosCompactTab() {
   const deferredSearch = useDeferredValue(q);
   const [sortLabel, setSortLabel] = useState<"Taxa" | "Entrada">("Taxa");
 
-  const { data: stats } = useQuery(trpc.poker.members.getStats.queryOptions());
+  const { data: stats } = useQuery(
+    trpc.poker.members.getStats.queryOptions(undefined, {
+      refetchInterval: 60_000,
+    }),
+  );
 
   const queryOptions = trpc.poker.members.list.infiniteQueryOptions(
     { q: deferredSearch || undefined },
@@ -218,7 +222,11 @@ export function MembrosPageTabs() {
   const trpc = useTRPC();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
-  const { data: stats } = useQuery(trpc.poker.members.getStats.queryOptions());
+  const { data: stats } = useQuery(
+    trpc.poker.members.getStats.queryOptions(undefined, {
+      refetchInterval: 60_000,
+    }),
+  );
 
   return (
     <>

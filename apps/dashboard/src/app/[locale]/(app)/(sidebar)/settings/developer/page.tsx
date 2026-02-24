@@ -4,9 +4,9 @@ import { EditApiKeyModal } from "@/components/modals/edit-api-key-modal";
 import { OAuthSecretModal } from "@/components/modals/oauth-secret-modal";
 import { OAuthApplicationCreateSheet } from "@/components/sheets/oauth-application-create-sheet";
 import { OAuthApplicationEditSheet } from "@/components/sheets/oauth-application-edit-sheet";
+import { FeedbackSettings } from "@/components/feedback-settings";
 import { DataTable } from "@/components/tables/api-keys";
 import { OAuthDataTable } from "@/components/tables/oauth-applications";
-import { batchPrefetch, trpc } from "@/trpc/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,16 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  batchPrefetch([
-    trpc.apiKeys.get.queryOptions(),
-    trpc.oauthApplications.list.queryOptions(),
-  ]);
 
   return (
     <>
       <div className="space-y-12">
         <DataTable />
         <OAuthDataTable />
+        <FeedbackSettings />
       </div>
 
       <EditApiKeyModal />
