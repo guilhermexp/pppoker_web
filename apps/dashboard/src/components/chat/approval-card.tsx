@@ -212,7 +212,7 @@ export function ApprovalCard({
         payload.output !== null
       ) {
         const output = payload.output as Record<string, unknown>;
-        if (typeof output.checkout_url === "string") {
+        if (typeof output.checkout_url === "string" && output.checkout_url.startsWith("https://")) {
           setCheckoutUrl(output.checkout_url);
         }
         if (typeof output.order_nsu === "string") {

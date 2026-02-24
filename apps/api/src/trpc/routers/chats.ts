@@ -5,7 +5,6 @@ import {
   listChatsSchema,
 } from "@api/schemas/chat";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
-import { nanoid } from "nanoid";
 
 interface RedisMessage {
   role?: string;
@@ -30,7 +29,7 @@ function toUIMessage(raw: RedisMessage, index: number) {
   return {
     id: (raw as Record<string, unknown>).id
       ? String((raw as Record<string, unknown>).id)
-      : `redis-${index}-${nanoid(6)}`,
+      : `redis-${index}`,
     role: raw.role ?? "user",
     content,
     parts: [{ type: "text" as const, text: content }],

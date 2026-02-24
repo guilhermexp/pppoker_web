@@ -24,6 +24,23 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 const app = new OpenAPIHono();
 
 app.post("/", async (c) => {
+  // --- Issue #1: Webhook signature verification via shared secret header ---
+  // TODO: Replace with IP allowlist once InfinitePay publishes their webhook source IPs.
+  const expectedSecret = process.env.INFINITEPAY_WEBHOOK_SECRET;
+  if (expectedSecret) {
+    const receivedSecret = c.req.header("x-webhook-secret");
+    if (receivedSecret !== expectedSecret) {
+      console.error(
+        "[infinitepay-webhook] Rejected: invalid or missing x-webhook-secret header",
+      );
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+  } else {
+    console.warn(
+      "[infinitepay-webhook] INFINITEPAY_WEBHOOK_SECRET env var is not set — webhook signature verification is DISABLED. Set this variable to secure the endpoint.",
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await c.req.json();
@@ -52,7 +69,7 @@ app.post("/", async (c) => {
 
   if (findError) {
     console.error("[infinitepay-webhook] DB lookup error:", findError.message);
-    return c.json({ error: "DB error" }, 400);
+    return c.json({ error: "DB error" }, 500);
   }
 
   if (!existing) {
@@ -60,6 +77,16 @@ app.post("/", async (c) => {
       `[infinitepay-webhook] Order not found: ${orderNsu}. Webhook data lost.`,
     );
     return c.json({ ok: true, warning: "order_not_found" });
+  }
+
+  // --- Issue #4: Guard against overwriting fichas_enviadas back to pago ---
+  // If fichas have already been sent, the order is fully processed.
+  // Duplicate webhook deliveries must not regress the status.
+  if (existing.status === "fichas_enviadas") {
+    console.log(
+      `[infinitepay-webhook] Order ${orderNsu} already has status 'fichas_enviadas' — skipping update (duplicate delivery).`,
+    );
+    return c.json({ ok: true, warning: "already_processed" });
   }
 
   // Incremental merge: only overwrite fields if the webhook provides actual values.
@@ -111,7 +138,7 @@ app.post("/", async (c) => {
       "[infinitepay-webhook] DB update error:",
       updateError.message,
     );
-    return c.json({ error: "DB update failed" }, 400);
+    return c.json({ error: "DB update failed" }, 500);
   }
 
   console.log(

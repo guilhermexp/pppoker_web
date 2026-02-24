@@ -349,14 +349,6 @@ async function* parseSSE(
 
       buffer += decoder.decode(value, { stream: true });
 
-      // Guard: if buffer grows beyond 256KB without a boundary, truncate to prevent O(n²) scans
-      if (buffer.length > 262_144) {
-        const lastNewline = buffer.lastIndexOf("\n", buffer.length - 2);
-        if (lastNewline > 0) {
-          buffer = buffer.slice(lastNewline + 1);
-        }
-      }
-
       // Handle both \n\n and \r\n\r\n boundaries (sse_starlette uses \r\n)
       let boundaryIndex = findSSEBoundary(buffer);
       while (boundaryIndex !== -1) {
@@ -367,6 +359,14 @@ async function* parseSSE(
         if (parsed) yield parsed;
 
         boundaryIndex = findSSEBoundary(buffer);
+      }
+
+      // Guard: if buffer grows beyond 256KB without a boundary, truncate to prevent O(n²) scans
+      if (buffer.length > 262_144) {
+        const lastNewline = buffer.lastIndexOf("\n", buffer.length - 2);
+        if (lastNewline > 0) {
+          buffer = buffer.slice(lastNewline + 1);
+        }
       }
     }
 
@@ -706,7 +706,7 @@ export async function nanobotToUIMessageStream(
         }
 
         // Persist to Redis for frontend history (fire-and-forget)
-        await persistToRedis(chatId, userId, userText, accumulatedText);
+        void persistToRedis(chatId, userId, userText, accumulatedText).catch(() => {});
         return;
       }
 
@@ -724,7 +724,7 @@ export async function nanobotToUIMessageStream(
         writer.write({ type: "finish", finishReason: "stop" });
 
         // Persist to Redis for frontend history (fire-and-forget)
-        await persistToRedis(chatId, userId, userText, payload.text);
+        void persistToRedis(chatId, userId, userText, payload.text).catch(() => {});
         return;
       }
 
@@ -734,7 +734,7 @@ export async function nanobotToUIMessageStream(
       writer.write({ type: "finish", finishReason: "stop" });
 
       // Persist to Redis for frontend history (fire-and-forget)
-      await persistToRedis(chatId, userId, userText, text);
+      void persistToRedis(chatId, userId, userText, text).catch(() => {});
     },
     onError: (error) => {
       console.error("[nanobot] ui stream error", error);

@@ -292,7 +292,7 @@ export function ChatInterface({ geo }: Props) {
       setTimeout(() => setPendingPaymentOrderNsu(null), 3000);
     },
     onTimeout: () => {
-      setPendingPaymentOrderNsu(null);
+      setTimeout(() => setPendingPaymentOrderNsu(null), 5000);
     },
   });
 

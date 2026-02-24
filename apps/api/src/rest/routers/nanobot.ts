@@ -492,20 +492,39 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       const playerName = chipParsed.data.player_nome ?? chipParsed.data.playerNome;
 
       // ── Security: verify payment before sending chips ──────────
-      if (parsed.data.toolName === "enviar_fichas" && orderNsu) {
+      if (parsed.data.toolName === "enviar_fichas") {
+        if (!orderNsu) {
+          return c.json(
+            { success: false, error: "order_nsu e obrigatorio para enviar fichas." },
+            400,
+          );
+        }
+
         const supabase = await createAdminClient();
-        const { data: paymentOrder } = await supabase
+
+        // Atomic compare-and-swap: only mark as "fichas_enviadas" if currently "pago"
+        const { data: claimedOrder } = await supabase
           .from("fastchips_payment_orders")
-          .select("status, fichas, paid_amount")
+          .update({ status: "fichas_enviadas" })
           .eq("team_id", teamId)
           .eq("order_nsu", orderNsu)
+          .eq("status", "pago")
+          .select("status, fichas, paid_amount")
           .maybeSingle();
 
-        if (!paymentOrder || (paymentOrder.status !== "pago" && paymentOrder.status !== "fichas_enviadas")) {
+        if (!claimedOrder) {
+          // Could not claim — either not found, not paid, or already processed
+          const { data: existing } = await supabase
+            .from("fastchips_payment_orders")
+            .select("status")
+            .eq("team_id", teamId)
+            .eq("order_nsu", orderNsu)
+            .maybeSingle();
+
           return c.json(
             {
               success: false,
-              error: `Pagamento nao confirmado para pedido ${orderNsu}. Status: ${paymentOrder?.status ?? "nao encontrado"}. Fichas so podem ser enviadas apos confirmacao de pagamento via webhook.`,
+              error: `Pagamento nao confirmado para pedido ${orderNsu}. Status: ${existing?.status ?? "nao encontrado"}. Fichas so podem ser enviadas apos confirmacao de pagamento via webhook.`,
             },
             403,
           );
@@ -636,7 +655,13 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       }
 
       const ipData = (await ipResp.json()) as Record<string, unknown>;
-      const checkoutUrl = (ipData.checkout_url ?? ipData.url) as string;
+      const checkoutUrl = (ipData.checkout_url ?? ipData.url) as string | undefined;
+      if (!checkoutUrl) {
+        return c.json(
+          { success: false, error: "InfinitePay nao retornou URL de checkout" },
+          502,
+        );
+      }
       const slug = (ipData.slug ?? ipData.id) as string | undefined;
 
       // Save order to DB (include target_player_id in metadata for auto-send after payment)

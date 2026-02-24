@@ -18,6 +18,7 @@ import sys
 import json
 import asyncio
 import time
+import secrets
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
@@ -49,8 +50,8 @@ app = Server("infinitepay")
 # ─────────────────────────────────────────────────────────────
 
 def _generate_order_nsu() -> str:
-    """Gera NSU no formato xp_{timestamp}."""
-    return f"xp_{int(time.time())}"
+    """Gera NSU com componente aleatorio."""
+    return f"xp_{int(time.time())}_{secrets.token_hex(4)}"
 
 
 async def _sync_order_to_db(order: dict) -> dict | None:
@@ -370,9 +371,9 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         is_paid = data.get("paid", False) is True
         capture_method = data.get("capture_method")
         paid_amount_raw = data.get("paid_amount")
-        paid_amount = float(paid_amount_raw) / 100 if paid_amount_raw else None
+        paid_amount = float(paid_amount_raw) / 100 if paid_amount_raw is not None else None
         amount_raw = data.get("amount")
-        amount = float(amount_raw) / 100 if amount_raw else None
+        amount = float(amount_raw) / 100 if amount_raw is not None else None
         installments = data.get("installments")
         resp_transaction_nsu = data.get("transaction_nsu") or transaction_nsu
 
