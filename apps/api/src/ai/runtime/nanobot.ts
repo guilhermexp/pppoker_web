@@ -216,6 +216,8 @@ async function fetchNanobot(
           chatId: (options.context as Record<string, unknown> | undefined)
             ?.chatId,
           message: options.message,
+          messages: (options.context as Record<string, unknown> | undefined)
+            ?.messages,
           text: extractUserTextFromMessage(options.message as UIChatMessage),
           context: options.context,
           agentChoice: (options as Record<string, unknown>).agentChoice,
@@ -325,6 +327,17 @@ function writeText(
   writer.write({ type: "text-end", id: textId });
 }
 
+function findSSEBoundary(
+  buf: string,
+): { index: number; length: number } | -1 {
+  const rnrn = buf.indexOf("\r\n\r\n");
+  const nn = buf.indexOf("\n\n");
+  if (rnrn === -1 && nn === -1) return -1;
+  if (rnrn !== -1 && (nn === -1 || rnrn <= nn))
+    return { index: rnrn, length: 4 };
+  return { index: nn, length: 2 };
+}
+
 async function* parseSSE(
   stream: ReadableStream<Uint8Array>,
 ): AsyncGenerator<NanobotSSEEvent> {
@@ -339,15 +352,16 @@ async function* parseSSE(
 
       buffer += decoder.decode(value, { stream: true });
 
-      let boundaryIndex = buffer.indexOf("\n\n");
+      // Handle both \n\n and \r\n\r\n boundaries (sse_starlette uses \r\n)
+      let boundaryIndex = findSSEBoundary(buffer);
       while (boundaryIndex !== -1) {
-        const rawEvent = buffer.slice(0, boundaryIndex);
-        buffer = buffer.slice(boundaryIndex + 2);
+        const rawEvent = buffer.slice(0, boundaryIndex.index);
+        buffer = buffer.slice(boundaryIndex.index + boundaryIndex.length);
 
         const parsed = parseSSEEvent(rawEvent);
         if (parsed) yield parsed;
 
-        boundaryIndex = buffer.indexOf("\n\n");
+        boundaryIndex = findSSEBoundary(buffer);
       }
     }
 
@@ -404,6 +418,12 @@ function tryWriteDirectChunk(
       "text-start",
       "text-delta",
       "text-end",
+      "tool-input-start",
+      "tool-input-delta",
+      "tool-input-available",
+      "tool-input-error",
+      "tool-output-available",
+      "tool-output-error",
       "source-url",
       "start",
       "finish",
@@ -416,6 +436,30 @@ function tryWriteDirectChunk(
   return true;
 }
 
+const SSE_IDLE_TIMEOUT_MS = 60_000;
+
+async function* parseSSEWithTimeout(
+  stream: ReadableStream<Uint8Array>,
+  timeoutMs: number,
+): AsyncGenerator<NanobotSSEEvent> {
+  const inner = parseSSE(stream);
+  while (true) {
+    const raceResult = await Promise.race([
+      inner.next(),
+      new Promise<"timeout">((resolve) =>
+        setTimeout(() => resolve("timeout"), timeoutMs),
+      ),
+    ]);
+    if (raceResult === "timeout") {
+      await inner.return(undefined);
+      return;
+    }
+    const result = raceResult as IteratorResult<NanobotSSEEvent>;
+    if (result.done) return;
+    yield result.value;
+  }
+}
+
 async function pipeNanobotSSEToUIStream(
   response: Response,
   writer: { write: (chunk: any) => void },
@@ -426,6 +470,7 @@ async function pipeNanobotSSEToUIStream(
   let textStarted = false;
   let textEnded = false;
   let finishWritten = false;
+  let receivedAnyData = false;
 
   const ensureTextStart = () => {
     if (!textStarted) {
@@ -441,7 +486,7 @@ async function pipeNanobotSSEToUIStream(
     }
   };
 
-  for await (const event of parseSSE(response.body)) {
+  for await (const event of parseSSEWithTimeout(response.body, SSE_IDLE_TIMEOUT_MS)) {
     if (
       event.data &&
       typeof event.data === "object" &&
@@ -455,10 +500,25 @@ async function pipeNanobotSSEToUIStream(
       continue;
     }
 
+    receivedAnyData = true;
     const eventName = (event.event ?? "").toLowerCase();
     const payload = event.data;
 
     if (eventName === "done") {
+      break;
+    }
+
+    if (eventName === "error") {
+      const errorMsg =
+        payload && typeof payload === "object"
+          ? (payload as Record<string, unknown>).error
+          : payload;
+      ensureTextStart();
+      writer.write({
+        type: "text-delta",
+        id: textId,
+        delta: `\n\n⚠️ ${typeof errorMsg === "string" ? errorMsg : "Erro no processamento do agente."}`,
+      });
       break;
     }
 
@@ -482,6 +542,31 @@ async function pipeNanobotSSEToUIStream(
               )
             : undefined;
       writeSuggestions(writer, prompts);
+      continue;
+    }
+
+    if (eventName === "approval-request") {
+      ensureTextEnd();
+      if (payload && typeof payload === "object") {
+        const approval = payload as Record<string, unknown>;
+        const toolCallId = `approval-${approval.id ?? nanoid()}`;
+        writer.write({
+          type: "tool-input-start",
+          toolCallId,
+          toolName: "pppokerApproval",
+        });
+        writer.write({
+          type: "tool-input-available",
+          toolCallId,
+          toolName: "pppokerApproval",
+          input: approval,
+        });
+        writer.write({
+          type: "tool-output-available",
+          toolCallId,
+          output: approval,
+        });
+      }
       continue;
     }
 
@@ -516,6 +601,16 @@ async function pipeNanobotSSEToUIStream(
         writer.write({ type: "text-delta", id: textId, delta });
       }
     }
+  }
+
+  // If the loop ended without receiving any events (timeout), write error
+  if (!receivedAnyData) {
+    ensureTextStart();
+    writer.write({
+      type: "text-delta",
+      id: textId,
+      delta: "⚠️ O agente demorou demais para responder. Tente novamente.",
+    });
   }
 
   ensureTextEnd();

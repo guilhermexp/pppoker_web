@@ -18,7 +18,7 @@ app.post("/", withRequiredScope("chat.write"), async (c) => {
     return c.json({ success: false, error: validationResult.error }, 400);
   }
 
-  const { message, id, timezone, agentChoice, toolChoice, country, city } =
+  const { message, messages, id, timezone, agentChoice, toolChoice, country, city } =
     validationResult.data;
 
   const teamId = c.get("teamId");
@@ -39,6 +39,9 @@ app.post("/", withRequiredScope("chat.write"), async (c) => {
   const nanobotConfig = await getNanobotSettingsForTeam(teamId);
   if (nanobotConfig) {
     appContext.nanobotConfig = nanobotConfig;
+  }
+  if (messages) {
+    appContext.messages = messages;
   }
 
   // Preserve the existing UI contract while allowing engine swaps behind the endpoint.

@@ -1,5 +1,6 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/api-base-url";
 import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
 import { createClient } from "@midpoker/supabase/client";
 import type { QueryClient } from "@tanstack/react-query";
@@ -34,12 +35,13 @@ export function TRPCReactProvider(
     children: React.ReactNode;
   }>,
 ) {
+  const apiBaseUrl = getApiBaseUrl();
   const queryClient = getQueryClient();
   const [trpcClient] = useState(() =>
     createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
-          url: `${process.env.NEXT_PUBLIC_API_URL}/trpc`,
+          url: `${apiBaseUrl}/trpc`,
           transformer: superjson,
           async headers() {
             const supabase = createClient();

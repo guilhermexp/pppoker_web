@@ -10,7 +10,6 @@ import {
   getUserById,
 } from "@midpoker/db/queries";
 import { logger } from "@midpoker/logger";
-import { HTTPException } from "hono/http-exception";
 
 interface GetUserContextParams {
   db: Database;
@@ -41,11 +40,20 @@ export async function getUserContext({
 
   // If team context not cached, fetch bank account status
   if (!teamContext) {
-    const bankAccounts = await getBankAccounts(db, {
-      teamId,
-      enabled: true,
-    });
-    const hasBankAccounts = bankAccounts.length > 0;
+    let hasBankAccounts = false;
+    try {
+      const bankAccounts = await getBankAccounts(db, {
+        teamId,
+        enabled: true,
+      });
+      hasBankAccounts = bankAccounts.length > 0;
+    } catch (error) {
+      logger.warn({
+        msg: "Failed to load bank account context, continuing with fallback",
+        teamId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     teamContext = {
       teamId,
@@ -70,16 +78,56 @@ export async function getUserContext({
     };
   }
 
-  // If not cached, fetch team and user data in parallel
-  const [team, user] = await Promise.all([
-    getTeamById(db, teamId),
-    getUserById(db, userId),
-  ]);
+  // If not cached, fetch team and user data in parallel.
+  // If DB is unavailable, continue with a degraded context so chat does not break.
+  let team:
+    | Awaited<ReturnType<typeof getTeamById>>
+    | null
+    | undefined;
+  let user:
+    | Awaited<ReturnType<typeof getUserById>>
+    | null
+    | undefined;
+
+  try {
+    [team, user] = await Promise.all([
+      getTeamById(db, teamId),
+      getUserById(db, userId),
+    ]);
+  } catch (error) {
+    logger.warn({
+      msg: "Failed to load full user context, using fallback",
+      userId,
+      teamId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   if (!team || !user) {
-    throw new HTTPException(404, {
-      message: "User or team not found",
+    const fallbackContext: ChatUserContext = {
+      userId,
+      teamId,
+      teamName: "Xperience Poker",
+      fullName: "User",
+      baseCurrency: "USD",
+      locale: "pt-BR",
+      dateFormat: "DD/MM/YYYY",
+      country,
+      city,
+      timezone,
+      hasBankAccounts: teamContext.hasBankAccounts,
+    };
+
+    chatCache.setUserContext(userId, teamId, fallbackContext).catch((err) => {
+      logger.warn({
+        msg: "Failed to cache fallback user context",
+        userId,
+        teamId,
+        error: err.message,
+      });
     });
+
+    return fallbackContext;
   }
 
   const context: ChatUserContext = {

@@ -118,11 +118,24 @@ export type NanobotSettings = z.infer<typeof nanobotSettingsSchema>;
 export function normalizeNanobotSettings(
   raw: NanobotSettings,
 ): NanobotSettings {
-  const modelProvider = raw.modelConfig.provider || raw.provider;
-  const modelName = raw.modelConfig.model || raw.model;
-  const soulContent = raw.soulConfig.content || raw.soul;
-  const agentCmdContent = raw.agentCmdConfig.content || raw.agentCmd;
-  const memoryNotes = raw.memoryConfig.notes || raw.memoryNotes;
+  const modelConfig = raw.modelConfig ?? ({} as NanobotSettings["modelConfig"]);
+  const soulConfig = raw.soulConfig ?? ({} as NanobotSettings["soulConfig"]);
+  const agentCmdConfig = raw.agentCmdConfig ?? ({} as NanobotSettings["agentCmdConfig"]);
+  const memoryConfig = raw.memoryConfig ?? ({} as NanobotSettings["memoryConfig"]);
+  const gatewayConfig = raw.gatewayConfig ?? ({} as NanobotSettings["gatewayConfig"]);
+  const channels = raw.channels ?? ({} as NanobotSettings["channels"]);
+  const mcpConfig = raw.mcpConfig ?? ({} as NanobotSettings["mcpConfig"]);
+
+  const whatsapp = gatewayConfig.whatsapp ?? ({} as NanobotSettings["gatewayConfig"]["whatsapp"]);
+  const telegram = gatewayConfig.telegram ?? ({} as NanobotSettings["gatewayConfig"]["telegram"]);
+  const slack = gatewayConfig.slack ?? ({} as NanobotSettings["gatewayConfig"]["slack"]);
+  const pppoker = mcpConfig.pppoker ?? ({} as NanobotSettings["mcpConfig"]["pppoker"]);
+
+  const modelProvider = modelConfig.provider || raw.provider;
+  const modelName = modelConfig.model || raw.model;
+  const soulContent = soulConfig.content || raw.soul;
+  const agentCmdContent = agentCmdConfig.content || raw.agentCmd;
+  const memoryNotes = memoryConfig.notes || raw.memoryNotes;
 
   return {
     ...raw,
@@ -132,58 +145,52 @@ export function normalizeNanobotSettings(
     agentCmd: agentCmdContent,
     memoryNotes,
     modelConfig: {
-      ...raw.modelConfig,
+      ...modelConfig,
       provider: modelProvider,
       model: modelName,
     },
     soulConfig: {
-      ...raw.soulConfig,
+      ...soulConfig,
       content: soulContent,
     },
     agentCmdConfig: {
-      ...raw.agentCmdConfig,
+      ...agentCmdConfig,
       content: agentCmdContent,
     },
     memoryConfig: {
-      ...raw.memoryConfig,
+      ...memoryConfig,
       notes: memoryNotes,
     },
     gatewayConfig: {
-      ...raw.gatewayConfig,
+      ...gatewayConfig,
       whatsapp: {
-        ...raw.gatewayConfig.whatsapp,
-        enabled:
-          raw.gatewayConfig.whatsapp.enabled || raw.channels.whatsappEnabled,
+        ...whatsapp,
+        enabled: whatsapp.enabled || channels.whatsappEnabled,
       },
       telegram: {
-        ...raw.gatewayConfig.telegram,
-        enabled:
-          raw.gatewayConfig.telegram.enabled || raw.channels.telegramEnabled,
+        ...telegram,
+        enabled: telegram.enabled || channels.telegramEnabled,
       },
       slack: {
-        ...raw.gatewayConfig.slack,
-        enabled: raw.gatewayConfig.slack.enabled || raw.channels.slackEnabled,
+        ...slack,
+        enabled: slack.enabled || channels.slackEnabled,
       },
     },
     channels: {
-      ...raw.channels,
-      whatsappEnabled:
-        raw.channels.whatsappEnabled || raw.gatewayConfig.whatsapp.enabled,
-      telegramEnabled:
-        raw.channels.telegramEnabled || raw.gatewayConfig.telegram.enabled,
-      slackEnabled:
-        raw.channels.slackEnabled || raw.gatewayConfig.slack.enabled,
+      ...channels,
+      whatsappEnabled: channels.whatsappEnabled || whatsapp.enabled,
+      telegramEnabled: channels.telegramEnabled || telegram.enabled,
+      slackEnabled: channels.slackEnabled || slack.enabled,
     },
     mcpConfig: {
-      ...raw.mcpConfig,
+      ...mcpConfig,
       pppoker: {
-        ...raw.mcpConfig.pppoker,
-        serverName: raw.mcpConfig.pppoker.serverName || "pppoker",
-        command: raw.mcpConfig.pppoker.command || "python3",
-        scriptPath:
-          raw.mcpConfig.pppoker.scriptPath || "./Ppfichas/pppoker_mcp.py",
-        cwd: raw.mcpConfig.pppoker.cwd || "./Ppfichas",
-        envJson: raw.mcpConfig.pppoker.envJson || "{}",
+        ...pppoker,
+        serverName: pppoker.serverName || "pppoker",
+        command: pppoker.command || "python3",
+        scriptPath: pppoker.scriptPath || "./Ppfichas/pppoker_mcp.py",
+        cwd: pppoker.cwd || "./Ppfichas",
+        envJson: pppoker.envJson || "{}",
       },
     },
   };

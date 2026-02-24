@@ -6436,3 +6436,78 @@ export const fastchipsLinkedAccountsRelations = relations(
     }),
   }),
 );
+
+// ============================================================================
+// Fastchips Payment Orders (InfinitePay)
+// ============================================================================
+
+export const paymentOrderStatusEnum = pgEnum("payment_order_status", [
+  "link_gerado",
+  "pago",
+  "fichas_enviadas",
+  "cancelado",
+  "erro",
+]);
+
+export const fastchipsPaymentOrders = pgTable(
+  "fastchips_payment_orders",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    teamId: uuid("team_id").notNull(),
+    orderNsu: text("order_nsu").notNull(),
+    status: paymentOrderStatusEnum().default("link_gerado").notNull(),
+    playerUid: integer("player_uid"),
+    playerNome: text("player_nome"),
+    playerEmail: text("player_email"),
+    playerTelefone: text("player_telefone"),
+    fichas: integer().notNull(),
+    valorReais: numericCasted({ precision: 14, scale: 2 }).notNull(),
+    checkoutUrl: text("checkout_url"),
+    slug: text(),
+    transactionNsu: text("transaction_nsu"),
+    captureMethod: text("capture_method"),
+    paidAmount: numericCasted({ precision: 14, scale: 2 }),
+    installments: integer(),
+    paidAt: timestamp("paid_at", { withTimezone: true, mode: "string" }),
+    fichasEnviadasAt: timestamp("fichas_enviadas_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    errorMessage: text("error_message"),
+    metadata: jsonb().default({}),
+  },
+  (table) => [
+    unique("fpo_order_nsu_team_key").on(table.orderNsu, table.teamId),
+    index("fpo_team_id_idx").on(table.teamId),
+    index("fpo_status_idx").on(table.status),
+    index("fpo_created_at_idx").on(table.createdAt),
+    index("fpo_player_uid_idx").on(table.playerUid),
+    foreignKey({
+      columns: [table.teamId],
+      foreignColumns: [teams.id],
+      name: "fastchips_payment_orders_team_id_fkey",
+    }).onDelete("cascade"),
+    pgPolicy("Payment orders managed by team members", {
+      as: "permissive",
+      for: "all",
+      to: ["public"],
+      using: sql`team_id IN (SELECT private.get_teams_for_authenticated_user())`,
+    }),
+  ],
+);
+
+export const fastchipsPaymentOrdersRelations = relations(
+  fastchipsPaymentOrders,
+  ({ one }) => ({
+    team: one(teams, {
+      fields: [fastchipsPaymentOrders.teamId],
+      references: [teams.id],
+    }),
+  }),
+);

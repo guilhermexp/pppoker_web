@@ -61,11 +61,19 @@ export function FastChipsMovementsTable() {
       pageSize: 50,
       ...dateFilters,
     }),
+    {
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+    },
   );
 
   // Fetch stats
   const { data: statsData } = useQuery(
     trpc.fastchips.operations.getStats.queryOptions(dateFilters),
+    {
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+    },
   );
 
   // Map tRPC data to table format

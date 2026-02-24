@@ -1,12 +1,13 @@
 "use client";
 
 import { Canvas } from "@/components/canvas";
+import { ApprovalCard, type ApprovalData } from "@/components/chat/approval-card";
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useChatStatus } from "@/hooks/use-chat-status";
+import { getApiBaseUrl } from "@/lib/api-base-url";
 import { useChat, useChatActions, useDataPart } from "@ai-sdk-tools/store";
 import type { UIChatMessage } from "@midpoker/api/ai/types";
 import { createClient } from "@midpoker/supabase/client";
-import { Alert, AlertDescription, AlertTitle } from "@midpoker/ui/alert";
 import { Button } from "@midpoker/ui/button";
 import { cn } from "@midpoker/ui/cn";
 import {
@@ -30,17 +31,41 @@ type Props = {
   geo?: Geo;
 };
 
+function extractApprovalParts(messages: UIChatMessage[]): ApprovalData[] {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message.role !== "assistant") continue;
+
+    const approvals = new Map<string, ApprovalData>();
+    for (const part of message.parts ?? []) {
+      if ((part.type as string) !== "tool-pppokerApproval") continue;
+
+      const output = (part as { output?: Record<string, unknown> }).output;
+      if (!output?.id || !output?.action || !output?.summary) continue;
+
+      const id = String(output.id);
+      approvals.set(id, {
+        id,
+        action: String(output.action),
+        params: (output.params as Record<string, unknown>) ?? {},
+        summary: String(output.summary),
+      });
+    }
+
+    if (approvals.size > 0) {
+      return [...approvals.values()];
+    }
+  }
+
+  return [];
+}
+
 export function ChatInterface({ geo }: Props) {
+  const apiBaseUrl = getApiBaseUrl();
   const { chatId: routeChatId, isHome } = useChatInterface();
   const chatId = useMemo(() => routeChatId ?? generateId(), [routeChatId]);
   const { reset, stop } = useChatActions();
   const prevChatIdRef = useRef<string | null>(routeChatId);
-  const lastProgressAtRef = useRef<number>(Date.now());
-  const lastProgressSignatureRef = useRef<string>("");
-  const [stuckRequestWarning, setStuckRequestWarning] = useState<{
-    phase: "submitted" | "streaming";
-    secondsWithoutProgress: number;
-  } | null>(null);
   const [requestErrorMessage, setRequestErrorMessage] = useState<string | null>(
     null,
   );
@@ -127,7 +152,7 @@ export function ChatInterface({ geo }: Props) {
   const chat = useChat<UIChatMessage>({
     id: chatId,
     transport: new DefaultChatTransport({
-      api: `${process.env.NEXT_PUBLIC_API_URL}/chat`,
+      api: `${apiBaseUrl}/chat`,
       fetch: authenticatedFetch,
       prepareSendMessagesRequest({ messages, id }) {
         const lastMessage = messages[messages.length - 1] as ChatInputMessage;
@@ -141,6 +166,7 @@ export function ChatInterface({ geo }: Props) {
             country: geo?.country,
             city: geo?.city,
             message: lastMessage,
+            messages,
             agentChoice,
             toolChoice,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -150,6 +176,13 @@ export function ChatInterface({ geo }: Props) {
     }),
   });
   const { messages, status } = chat;
+  const approvalParts = useMemo(() => extractApprovalParts(messages), [messages]);
+  const approvalBatchKey = useMemo(
+    () => approvalParts.map((approval) => approval.id).join("|"),
+    [approvalParts],
+  );
+  const [approvalOverlayDismissed, setApprovalOverlayDismissed] =
+    useState(false);
   const transportError = (chat as { error?: Error | null }).error ?? null;
 
   const {
@@ -172,56 +205,32 @@ export function ChatInterface({ geo }: Props) {
   const hasSuggestions = suggestions?.prompts && suggestions.prompts.length > 0;
   const showCanvas = Boolean(selectedType);
 
-  const progressSignature = useMemo(() => {
-    const lastMessage = messages[messages.length - 1];
-    const lastAssistant =
-      lastMessage?.role === "assistant" ? lastMessage : undefined;
-    const textLength =
-      lastAssistant?.parts
-        ?.filter((part) => part.type === "text")
-        .map((part) => (part as { text?: string }).text?.length ?? 0)
-        .reduce((sum, len) => sum + len, 0) ?? 0;
-    return `${status}:${messages.length}:${lastAssistant?.parts?.length ?? 0}:${textLength}`;
-  }, [messages, status]);
-
-  useEffect(() => {
-    if (progressSignature !== lastProgressSignatureRef.current) {
-      lastProgressSignatureRef.current = progressSignature;
-      lastProgressAtRef.current = Date.now();
-      setStuckRequestWarning(null);
-    }
-  }, [progressSignature]);
-
-  useEffect(() => {
-    if (status === "ready" || status === "error") {
-      setStuckRequestWarning(null);
-      return;
-    }
-
-    if (status !== "submitted" && status !== "streaming") {
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      const elapsedMs = Date.now() - lastProgressAtRef.current;
-      const thresholdMs = status === "submitted" ? 12_000 : 25_000;
-
-      if (elapsedMs >= thresholdMs) {
-        setStuckRequestWarning({
-          phase: status,
-          secondsWithoutProgress: Math.floor(elapsedMs / 1000),
-        });
-      }
-    }, 1000);
-
-    return () => window.clearInterval(interval);
-  }, [status]);
-
   useEffect(() => {
     if (transportError?.message) {
       setRequestErrorMessage(transportError.message);
     }
   }, [transportError]);
+
+  useEffect(() => {
+    if (status !== "streaming" && status !== "submitted") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      stop?.();
+      setRequestErrorMessage(
+        "O chat demorou demais e foi interrompido automaticamente. Tente novamente.",
+      );
+    }, 60_000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [status, stop]);
+
+  useEffect(() => {
+    setApprovalOverlayDismissed(false);
+  }, [approvalBatchKey]);
 
   return (
     <div
@@ -270,46 +279,36 @@ export function ChatInterface({ geo }: Props) {
               <Conversation>
                 <ConversationContent className="pb-48 pt-14">
                   <div className="max-w-2xl mx-auto w-full">
-                    {(stuckRequestWarning || requestErrorMessage) && (
+                    {requestErrorMessage && (
                       <div className="mb-4">
-                        <Alert variant="warning">
-                          <AlertTitle>
-                            {requestErrorMessage
-                              ? "Falha no processamento do chat"
-                              : "Processamento demorando mais que o normal"}
-                          </AlertTitle>
-                          <AlertDescription>
-                            <p>
-                              {requestErrorMessage ??
-                                `A resposta está sem progresso há ${stuckRequestWarning?.secondsWithoutProgress ?? 0}s (${stuckRequestWarning?.phase === "submitted" ? "enviando" : "streaming"}). Você pode interromper e tentar novamente.`}
-                            </p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {(status === "streaming" ||
-                                status === "submitted") && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    stop?.();
-                                    setStuckRequestWarning(null);
-                                  }}
-                                >
-                                  Interromper processamento
-                                </Button>
-                              )}
+                        <div className="rounded-lg border border-[#5E2F2F] bg-[#2B1616] p-4 text-[#F5D8D8]">
+                          <p className="font-medium">
+                            Falha no processamento do chat
+                          </p>
+                          <p className="mt-1 text-sm opacity-90">
+                            {requestErrorMessage}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {(status === "streaming" || status === "submitted") && (
                               <Button
                                 size="sm"
-                                variant="ghost"
+                                variant="outline"
                                 onClick={() => {
-                                  setStuckRequestWarning(null);
-                                  setRequestErrorMessage(null);
+                                  stop?.();
                                 }}
                               >
-                                Fechar aviso
+                                Interromper processamento
                               </Button>
-                            </div>
-                          </AlertDescription>
-                        </Alert>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setRequestErrorMessage(null)}
+                            >
+                              Fechar aviso
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     )}
                     <ChatMessages
@@ -347,6 +346,36 @@ export function ChatInterface({ geo }: Props) {
           <ChatInput />
         </div>
       </div>
+
+      {approvalParts.length > 0 && !approvalOverlayDismissed && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-sm p-4"
+          onClick={() => setApprovalOverlayDismissed(true)}
+        >
+          <div
+            className="w-full max-w-xl space-y-3"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setApprovalOverlayDismissed(true)}
+              >
+                Fechar
+              </Button>
+            </div>
+            {approvalParts.map((approval) => (
+              <ApprovalCard
+                key={approval.id}
+                approval={approval}
+                isStreaming={status === "streaming" || status === "submitted"}
+                onResolved={() => setApprovalOverlayDismissed(true)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

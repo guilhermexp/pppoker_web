@@ -35,8 +35,16 @@ export const withAuth: MiddlewareHandler = async (c, next) => {
   // Handle Supabase JWT tokens (try to verify as JWT first)
   const supabaseSession = await verifyAccessToken(token);
   if (supabaseSession) {
-    // Get user from database to get team info
-    const user = await getUserById(db, supabaseSession.user.id);
+    // Reuse cache first to avoid an extra DB read on every chat request.
+    let user = await userCache.get(supabaseSession.user.id);
+
+    if (!user) {
+      // Get user from database to obtain team info.
+      user = await getUserById(db, supabaseSession.user.id);
+      if (user) {
+        await userCache.set(supabaseSession.user.id, user);
+      }
+    }
 
     if (!user) {
       throw new HTTPException(401, { message: "User not found" });

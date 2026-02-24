@@ -9,6 +9,7 @@ import { invoicesRouter } from "./invoices";
 import { nanobotRouter } from "./nanobot";
 import { notificationsRouter } from "./notifications";
 import oauthRouter from "./oauth";
+import { paymentOrdersRouter } from "./payment-orders";
 import { reportsRouter } from "./reports";
 import { searchRouter } from "./search";
 import { tagsRouter } from "./tags";
@@ -23,6 +24,9 @@ const routers = new OpenAPIHono();
 
 // Mount OAuth routes first (publicly accessible)
 routers.route("/oauth", oauthRouter);
+
+// Mount API-key authenticated routes (before protected middleware)
+routers.route("/payment-orders", paymentOrdersRouter);
 
 // Apply protected middleware to all subsequent routes
 routers.use(...protectedMiddleware);

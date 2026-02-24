@@ -1,5 +1,6 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/api-base-url";
 import { createClient } from "@midpoker/supabase/client";
 import { useCallback, useRef, useState } from "react";
 
@@ -12,6 +13,7 @@ interface UseAudioRecordingReturn {
 }
 
 export function useAudioRecording(): UseAudioRecordingReturn {
+  const apiBaseUrl = getApiBaseUrl();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -121,7 +123,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
         } = await supabase.auth.getSession();
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/transcription`,
+          `${apiBaseUrl}/transcription`,
           {
             method: "POST",
             headers: {

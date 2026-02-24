@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getApiBaseUrl } from "@/lib/api-base-url";
 import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
 import { getCountryCode, getLocale, getTimezone } from "@midpoker/location";
 import { createClient } from "@midpoker/supabase/server";
@@ -23,7 +24,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: createTRPCClient({
     links: [
       httpBatchLink({
-        url: `${process.env.NEXT_PUBLIC_API_URL}/trpc`,
+        url: `${getApiBaseUrl()}/trpc`,
         transformer: superjson,
         async headers() {
           const supabase = await createClient();

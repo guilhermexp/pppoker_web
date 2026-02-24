@@ -2,6 +2,7 @@ import {
   getLegacyToolManifest,
   invokeLegacyTool,
 } from "@api/ai/runtime/legacy-tool-gateway";
+import { createAdminClient } from "@api/services/supabase";
 import {
   addNanobotCronJob,
   dispatchNanobotCronJob,
@@ -17,6 +18,8 @@ import { OpenAPIHono, z } from "@hono/zod-openapi";
 import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();
+const PPPOKER_BRIDGE_URL =
+  process.env.PPPOKER_BRIDGE_URL || "http://localhost:8000";
 
 const nanobotOrchestrationTools = [
   {
@@ -90,6 +93,148 @@ const spawnToolActionSchema = z.object({
   timezone: z.string().optional(),
 });
 
+const pppokerChipActionSchema = z.object({
+  target_id: z.number().int().positive().optional(),
+  targetPlayerId: z.number().int().positive().optional(),
+  amount: z.number().int().positive(),
+  liga_id: z.number().int().positive().optional(),
+  ligaId: z.number().int().positive().optional(),
+  order_nsu: z.string().min(1).optional(),
+  orderNsu: z.string().min(1).optional(),
+  player_nome: z.string().optional(),
+  playerNome: z.string().optional(),
+});
+
+async function getPppokerBridgeCredentials(teamId: string) {
+  const supabase = await createAdminClient();
+  const { data } = await supabase
+    .from("pppoker_club_connections")
+    .select("club_id, pppoker_username, pppoker_password")
+    .eq("team_id", teamId)
+    .in("sync_status", ["active", "error"])
+    .limit(1)
+    .single();
+
+  if (!data) {
+    throw new Error(
+      "Nenhuma conexao PPPoker encontrada para este time. Refaca o login PPPoker.",
+    );
+  }
+
+  return data;
+}
+
+async function ensureFastchipsMember(
+  teamId: string,
+  targetPlayerId: number,
+  playerName?: string,
+) {
+  const supabase = await createAdminClient();
+  const pppokerId = String(targetPlayerId);
+
+  const { data: existing } = await supabase
+    .from("fastchips_members")
+    .select("id, name")
+    .eq("team_id", teamId)
+    .eq("pppoker_id", pppokerId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    return { id: existing.id, name: existing.name ?? playerName ?? pppokerId };
+  }
+
+  const fallbackName = playerName?.trim() || `UID ${pppokerId}`;
+
+  await supabase.from("fastchips_members").upsert(
+    {
+      team_id: teamId,
+      name: fallbackName,
+      pppoker_id: pppokerId,
+      status: "active",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "team_id,pppoker_id" },
+  );
+
+  const { data: created } = await supabase
+    .from("fastchips_members")
+    .select("id, name")
+    .eq("team_id", teamId)
+    .eq("pppoker_id", pppokerId)
+    .maybeSingle();
+
+  if (!created?.id) return null;
+  return { id: created.id, name: created.name ?? fallbackName };
+}
+
+async function tryRegisterFastchipsOperation(params: {
+  teamId: string;
+  toolName: "enviar_fichas" | "sacar_fichas";
+  targetPlayerId: number;
+  amount: number;
+  orderNsu?: string;
+  playerName?: string;
+}) {
+  try {
+    const member = await ensureFastchipsMember(
+      params.teamId,
+      params.targetPlayerId,
+      params.playerName,
+    );
+    if (!member?.id) return;
+
+    const supabase = await createAdminClient();
+    const operationType =
+      params.toolName === "enviar_fichas" ? "saida" : "entrada";
+    const purpose = params.toolName === "enviar_fichas" ? "pagamento" : "saque";
+
+    await supabase.from("fastchips_operations").insert({
+      team_id: params.teamId,
+      external_id: `nanobot_${params.toolName}_${params.targetPlayerId}_${Date.now()}`,
+      payment_id: params.orderNsu ?? null,
+      occurred_at: new Date().toISOString(),
+      operation_type: operationType,
+      purpose,
+      member_id: member.id,
+      member_name: member.name,
+      pppoker_id: String(params.targetPlayerId),
+      gross_amount: params.amount,
+      net_amount: params.amount,
+      fee_rate: 0,
+      fee_amount: 0,
+    });
+  } catch (error) {
+    console.warn(
+      "[nanobot/tools/invoke] failed to register fastchips operation",
+      error,
+    );
+  }
+}
+
+async function tryMarkPaymentOrderAsDelivered(
+  teamId: string,
+  orderNsu: string | undefined,
+) {
+  if (!orderNsu) return;
+  try {
+    const supabase = await createAdminClient();
+    await supabase
+      .from("fastchips_payment_orders")
+      .update({
+        status: "fichas_enviadas",
+        fichas_enviadas_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("team_id", teamId)
+      .eq("order_nsu", orderNsu);
+  } catch (error) {
+    console.warn(
+      "[nanobot/tools/invoke] failed to mark payment order as delivered",
+      error,
+    );
+  }
+}
+
 function isValidInternalToken(c: Context) {
   const expected = process.env.NANOBOT_ORCHESTRATION_INTERNAL_TOKEN?.trim();
   if (!expected) return false;
@@ -101,13 +246,13 @@ app.get("/health", withRequiredScope("chat.write"), async (c) => {
   const tools = getLegacyToolManifest();
   return c.json({
     success: true,
-    engine: (process.env.CHAT_AGENT_ENGINE ?? "legacy").toLowerCase(),
+    engine: (process.env.CHAT_AGENT_ENGINE ?? "nanobot").toLowerCase(),
     nanobot: {
       baseUrl: process.env.NANOBOT_BASE_URL ?? null,
       chatPath: process.env.NANOBOT_CHAT_PATH ?? "/api/chat",
       fallbackToLegacy:
-        (process.env.NANOBOT_FALLBACK_TO_LEGACY ?? "true").toLowerCase() !==
-        "false",
+        (process.env.NANOBOT_FALLBACK_TO_LEGACY ?? "false").toLowerCase() ===
+        "true",
       configured: Boolean(process.env.NANOBOT_BASE_URL),
       orchestration: {
         callbackUrl:
@@ -263,6 +408,100 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
           status: task.status,
           message: `Subagent [${task.label ?? task.task.slice(0, 30)}] started (id: ${task.taskId}).`,
         },
+        uiChunks: [],
+      });
+    }
+
+    if (
+      parsed.data.toolName === "enviar_fichas" ||
+      parsed.data.toolName === "sacar_fichas"
+    ) {
+      const chipParsed = pppokerChipActionSchema.safeParse(
+        parsed.data.input && typeof parsed.data.input === "object"
+          ? parsed.data.input
+          : {},
+      );
+
+      if (!chipParsed.success) {
+        return c.json({ success: false, error: chipParsed.error }, 400);
+      }
+
+      const targetPlayerId =
+        chipParsed.data.target_id ?? chipParsed.data.targetPlayerId;
+      if (!targetPlayerId) {
+        return c.json(
+          {
+            success: false,
+            error: "target_id (ou targetPlayerId) e obrigatorio",
+          },
+          400,
+        );
+      }
+
+      const ligaId = chipParsed.data.liga_id ?? chipParsed.data.ligaId ?? 3357;
+      const orderNsu = chipParsed.data.order_nsu ?? chipParsed.data.orderNsu;
+      const playerName = chipParsed.data.player_nome ?? chipParsed.data.playerNome;
+      const creds = await getPppokerBridgeCredentials(teamId);
+      const bridgePath =
+        parsed.data.toolName === "enviar_fichas"
+          ? "chips/send"
+          : "chips/withdraw";
+
+      const bridgeResp = await fetch(
+        `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/${bridgePath}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-PPPoker-Username": creds.pppoker_username,
+            "X-PPPoker-Password": creds.pppoker_password,
+          },
+          body: JSON.stringify({
+            target_player_id: targetPlayerId,
+            amount: chipParsed.data.amount,
+            liga_id: ligaId,
+          }),
+        },
+      );
+
+      const bridgeJson = await bridgeResp
+        .json()
+        .catch(() => ({ success: false, error: "Bridge response invalida" }));
+      if (!bridgeResp.ok || !bridgeJson?.success) {
+        return c.json(
+          {
+            success: false,
+            error:
+              bridgeJson?.error ||
+              bridgeJson?.detail ||
+              `Falha PPPoker bridge (${bridgeResp.status})`,
+          },
+          502,
+        );
+      }
+
+      await tryRegisterFastchipsOperation({
+        teamId,
+        toolName: parsed.data.toolName,
+        targetPlayerId,
+        amount: chipParsed.data.amount,
+        orderNsu,
+        playerName,
+      });
+
+      if (parsed.data.toolName === "enviar_fichas") {
+        await tryMarkPaymentOrderAsDelivered(teamId, orderNsu);
+      }
+
+      return c.json({
+        success: true,
+        toolName: parsed.data.toolName,
+        yielded: [],
+        output:
+          bridgeJson?.message ??
+          (parsed.data.toolName === "enviar_fichas"
+            ? "Fichas enviadas com sucesso."
+            : "Saque de fichas executado com sucesso."),
         uiChunks: [],
       });
     }

@@ -41,8 +41,9 @@ export const fastchipsOperationsRouter = createTRPCRouter({
 
       // Map UI operation type to database enum
       if (operationType) {
+        const normalizedType = String(operationType).toLowerCase();
         const dbOperationType =
-          operationType === "Entrada" ? "entrada" : "saida";
+          normalizedType === "entrada" ? "entrada" : "saida";
         query = query.eq("operation_type", dbOperationType);
       }
 

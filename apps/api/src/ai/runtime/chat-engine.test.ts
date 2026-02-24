@@ -10,8 +10,8 @@ import {
 } from "./nanobot";
 
 describe("chat engine env selection", () => {
-  it("defaults to legacy", () => {
-    expect(getChatEngineFromEnv({})).toBe("legacy");
+  it("defaults to nanobot", () => {
+    expect(getChatEngineFromEnv({})).toBe("nanobot");
   });
 
   it("supports nanobot engine flag", () => {
@@ -20,22 +20,22 @@ describe("chat engine env selection", () => {
     );
   });
 
-  it("falls back to legacy for unknown values", () => {
+  it("falls back to nanobot for unknown values", () => {
     expect(getChatEngineFromEnv({ CHAT_AGENT_ENGINE: "foobar" })).toBe(
-      "legacy",
+      "nanobot",
     );
   });
 
-  it("enables fallback by default", () => {
-    expect(shouldFallbackToLegacyOnNanobotError({})).toBe(true);
+  it("disables fallback by default", () => {
+    expect(shouldFallbackToLegacyOnNanobotError({})).toBe(false);
   });
 
-  it("supports disabling fallback", () => {
+  it("supports enabling fallback", () => {
     expect(
       shouldFallbackToLegacyOnNanobotError({
-        NANOBOT_FALLBACK_TO_LEGACY: "false",
+        NANOBOT_FALLBACK_TO_LEGACY: "true",
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 });
 

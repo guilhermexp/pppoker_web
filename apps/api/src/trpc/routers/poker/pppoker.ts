@@ -31,6 +31,78 @@ async function getBridgeCredentials(teamId: string) {
   return data;
 }
 
+async function ensureFastchipsMember(teamId: string, targetPlayerId: number) {
+  const supabase = await createAdminClient();
+  const pppokerId = String(targetPlayerId);
+
+  const { data: existing } = await supabase
+    .from("fastchips_members")
+    .select("id, name")
+    .eq("team_id", teamId)
+    .eq("pppoker_id", pppokerId)
+    .maybeSingle();
+
+  if (existing?.id) return existing;
+
+  await supabase.from("fastchips_members").upsert(
+    {
+      team_id: teamId,
+      name: `UID ${pppokerId}`,
+      pppoker_id: pppokerId,
+      status: "active",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "team_id,pppoker_id" },
+  );
+
+  const { data: created } = await supabase
+    .from("fastchips_members")
+    .select("id, name")
+    .eq("team_id", teamId)
+    .eq("pppoker_id", pppokerId)
+    .maybeSingle();
+
+  return created ?? null;
+}
+
+async function tryRegisterFastchipsOperation(params: {
+  teamId: string;
+  targetPlayerId: number;
+  amount: number;
+  operationType: "entrada" | "saida";
+  purpose: "pagamento" | "saque";
+}) {
+  try {
+    const member = await ensureFastchipsMember(
+      params.teamId,
+      params.targetPlayerId,
+    );
+    if (!member?.id) return;
+
+    const supabase = await createAdminClient();
+    await supabase.from("fastchips_operations").insert({
+      team_id: params.teamId,
+      external_id: `pppoker_router_${params.operationType}_${params.targetPlayerId}_${Date.now()}`,
+      payment_id: null,
+      occurred_at: new Date().toISOString(),
+      operation_type: params.operationType,
+      purpose: params.purpose,
+      member_id: member.id,
+      member_name: member.name ?? `UID ${params.targetPlayerId}`,
+      pppoker_id: String(params.targetPlayerId),
+      gross_amount: params.amount,
+      net_amount: params.amount,
+      fee_rate: 0,
+      fee_amount: 0,
+    });
+  } catch (error) {
+    logger.warn(
+      { error: error instanceof Error ? error.message : String(error) },
+      "Failed to register Fastchips operation for PPPoker transfer",
+    );
+  }
+}
+
 export const pppokerRouter = createTRPCRouter({
   /**
    * Trigger immediate sync for the current team
@@ -120,6 +192,14 @@ export const pppokerRouter = createTRPCRouter({
         });
       }
 
+      await tryRegisterFastchipsOperation({
+        teamId: teamId!,
+        targetPlayerId: input.targetPlayerId,
+        amount: input.amount,
+        operationType: "saida",
+        purpose: "pagamento",
+      });
+
       return await resp.json();
     }),
 
@@ -161,6 +241,14 @@ export const pppokerRouter = createTRPCRouter({
           message: `Falha ao sacar fichas: ${errText}`,
         });
       }
+
+      await tryRegisterFastchipsOperation({
+        teamId: teamId!,
+        targetPlayerId: input.targetPlayerId,
+        amount: input.amount,
+        operationType: "entrada",
+        purpose: "saque",
+      });
 
       return await resp.json();
     }),

@@ -194,7 +194,7 @@ Observação:
 
 ### Orquestração Trigger.dev (Nanobot)
 ```bash
-NANOBOT_ORCHESTRATION_CALLBACK_URL=http://localhost:8080
+NANOBOT_ORCHESTRATION_CALLBACK_URL=http://localhost:3101
 NANOBOT_ORCHESTRATION_INTERNAL_TOKEN=troque-isto
 ```
 
@@ -252,15 +252,28 @@ bun run dev
 ```
 
 ### Runtime Nanobot
-Suba o runtime/gateway do Nanobot e configure:
-- `NANOBOT_BASE_URL`
-- `NANOBOT_CHAT_PATH`
+O runtime do Nanobot agora faz parte do monorepo em `apps/nanobot/`.
+
+Com `bun dev` na raiz, ele sobe automaticamente na porta 18790.
+
+Para subir individualmente:
+```bash
+bun run dev:nanobot
+```
+
+Configuração via `apps/nanobot/.env`:
+- `PORT` (default: 18790)
+- `OPENAI_API_KEY`
+- `GOOGLE_GENERATIVE_AI_API_KEY`
+- `OPENROUTER_API_KEY`
+- `DEFAULT_PROVIDER` (openai | google | openrouter)
+- `DEFAULT_MODEL` (ex: gpt-4o-mini)
 
 ## Debug e Troubleshooting
 
 ### 1. Verificar saúde da integração
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:8080/nanobot/health
+curl -H "Authorization: Bearer <token>" http://localhost:3101/nanobot/health
 ```
 
 Conferir:
@@ -271,7 +284,7 @@ Conferir:
 
 ### 2. Listar manifesto de tools (inclui cron/spawn)
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:8080/nanobot/tools
+curl -H "Authorization: Bearer <token>" http://localhost:3101/nanobot/tools
 ```
 
 Se `cron` e `spawn` não aparecerem:
@@ -280,7 +293,7 @@ Se `cron` e `spawn` não aparecerem:
 
 ### 3. Testar `cron` diretamente
 ```bash
-curl -X POST http://localhost:8080/nanobot/tools/invoke \
+curl -X POST http://localhost:3101/nanobot/tools/invoke \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -297,7 +310,7 @@ curl -X POST http://localhost:8080/nanobot/tools/invoke \
 
 ### 4. Testar `spawn` diretamente
 ```bash
-curl -X POST http://localhost:8080/nanobot/tools/invoke \
+curl -X POST http://localhost:3101/nanobot/tools/invoke \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -366,6 +379,11 @@ Esperado se não for múltiplo de 60. Use `cron_expr`.
 - `apps/api/src/rest/routers/nanobot.ts`
 - `apps/api/src/ai/runtime/legacy-tool-gateway.ts`
 - `apps/api/src/ai/runtime/nanobot-orchestration.ts`
+
+### Runtime Nanobot (Serviço)
+- `apps/nanobot/src/index.ts` (servidor Hono, porta 18790)
+- `apps/nanobot/src/model.ts` (resolução de provedor/modelo LLM)
+- `apps/nanobot/src/prompt.ts` (construção do system prompt a partir de SOUL.md, AGENTS.md, TOOLS.md)
 
 ### Trigger.dev Tasks (Nanobot)
 - `packages/jobs/src/tasks/nanobot/cron-dispatch.ts`

@@ -100,6 +100,111 @@ type GatewayConfig = {
   defaultTarget: string;
 };
 
+const EMPTY_GATEWAY: GatewayConfig = {
+  enabled: false,
+  displayName: "",
+  endpoint: "",
+  botToken: "",
+  secret: "",
+  defaultTarget: "",
+};
+
+function ensureFormDefaults(
+  data: Record<string, unknown>,
+): NanobotSettingsForm {
+  const d = data as Partial<NanobotSettingsForm>;
+  const mc = d.modelConfig ?? ({} as Partial<NanobotSettingsForm["modelConfig"]>);
+  const sc = d.soulConfig ?? ({} as Partial<NanobotSettingsForm["soulConfig"]>);
+  const ac = d.agentCmdConfig ?? ({} as Partial<NanobotSettingsForm["agentCmdConfig"]>);
+  const mem = d.memoryConfig ?? ({} as Partial<NanobotSettingsForm["memoryConfig"]>);
+  const sk = d.skillsConfig ?? ({} as Partial<NanobotSettingsForm["skillsConfig"]>);
+  const au = d.automationConfig ?? ({} as Partial<NanobotSettingsForm["automationConfig"]>);
+  const gw = d.gatewayConfig ?? ({} as Partial<NanobotSettingsForm["gatewayConfig"]>);
+  const ch = d.channels ?? ({} as Partial<NanobotSettingsForm["channels"]>);
+  const mcp = d.mcpConfig ?? ({} as Partial<NanobotSettingsForm["mcpConfig"]>);
+  const pp = mcp.pppoker ?? ({} as Partial<NanobotSettingsForm["mcpConfig"]["pppoker"]>);
+
+  return {
+    enabled: d.enabled ?? false,
+    fallbackToLegacy: d.fallbackToLegacy ?? true,
+    baseUrl: d.baseUrl ?? "",
+    chatPath: d.chatPath ?? "/api/chat",
+    apiKey: d.apiKey ?? "",
+    provider: d.provider ?? "",
+    model: d.model ?? "",
+    soul: d.soul ?? "",
+    agentCmd: d.agentCmd ?? "",
+    memoryNotes: d.memoryNotes ?? "",
+    channels: {
+      whatsappEnabled: ch.whatsappEnabled ?? false,
+      telegramEnabled: ch.telegramEnabled ?? false,
+      slackEnabled: ch.slackEnabled ?? false,
+    },
+    modelConfig: {
+      provider: mc.provider ?? "",
+      model: mc.model ?? "",
+      temperature: mc.temperature ?? null,
+      topP: mc.topP ?? null,
+      maxTokens: mc.maxTokens ?? null,
+      reasoningEffort: mc.reasoningEffort ?? "",
+      streamMode: mc.streamMode ?? "auto",
+    },
+    soulConfig: {
+      content: sc.content ?? "",
+      versionTag: sc.versionTag ?? "",
+      editable: sc.editable ?? true,
+    },
+    agentCmdConfig: {
+      content: ac.content ?? "",
+      startupInstructions: ac.startupInstructions ?? "",
+      maintenanceInstructions: ac.maintenanceInstructions ?? "",
+      allowSelfEdit: ac.allowSelfEdit ?? false,
+    },
+    memoryConfig: {
+      enabled: mem.enabled ?? true,
+      persistent: mem.persistent ?? true,
+      backend: mem.backend ?? "redis",
+      namespace: mem.namespace ?? "",
+      maxEntries: mem.maxEntries ?? null,
+      summarizationEnabled: mem.summarizationEnabled ?? true,
+      selfModifyEnabled: mem.selfModifyEnabled ?? false,
+      notes: mem.notes ?? "",
+    },
+    skillsConfig: {
+      enabled: sk.enabled ?? true,
+      autoDiscover: sk.autoDiscover ?? true,
+      allowSelfInstall: sk.allowSelfInstall ?? false,
+      allowSelfUpdate: sk.allowSelfUpdate ?? false,
+      allowSelfRegister: sk.allowSelfRegister ?? false,
+      pinnedSkillsText: sk.pinnedSkillsText ?? "",
+      blockedSkillsText: sk.blockedSkillsText ?? "",
+    },
+    automationConfig: {
+      chromeTasksEnabled: au.chromeTasksEnabled ?? false,
+      scheduledTasksEnabled: au.scheduledTasksEnabled ?? false,
+      timezone: au.timezone ?? "",
+      maxConcurrentJobs: au.maxConcurrentJobs ?? null,
+      allowBrowserAutomation: au.allowBrowserAutomation ?? false,
+    },
+    gatewayConfig: {
+      whatsapp: { ...EMPTY_GATEWAY, ...gw.whatsapp },
+      telegram: { ...EMPTY_GATEWAY, ...gw.telegram },
+      slack: { ...EMPTY_GATEWAY, ...gw.slack },
+    },
+    mcpConfig: {
+      pppoker: {
+        enabled: pp.enabled ?? false,
+        serverName: pp.serverName ?? "pppoker",
+        command: pp.command ?? "python3",
+        scriptPath: pp.scriptPath ?? "./Ppfichas/pppoker_mcp.py",
+        extraArgsText: pp.extraArgsText ?? "",
+        cwd: pp.cwd ?? "./Ppfichas",
+        envJson: pp.envJson ?? "{}",
+      },
+    },
+  };
+}
+
 function Section({
   title,
   description,
@@ -240,7 +345,7 @@ export function NanobotSettingsPanel() {
 
   useEffect(() => {
     if (settingsQuery.data) {
-      setForm(settingsQuery.data as NanobotSettingsForm);
+      setForm(ensureFormDefaults(settingsQuery.data as Record<string, unknown>));
     }
   }, [settingsQuery.data]);
 
@@ -248,7 +353,7 @@ export function NanobotSettingsPanel() {
     trpc.nanobot.updateSettings.mutationOptions({
       onSuccess: async (data) => {
         setSaveMessage("Configurações Nanobot salvas.");
-        setForm(data as NanobotSettingsForm);
+        setForm(ensureFormDefaults(data as Record<string, unknown>));
         await queryClient.invalidateQueries({
           queryKey: trpc.nanobot.getSettings.queryKey(),
         });

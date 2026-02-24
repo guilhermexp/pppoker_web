@@ -52,6 +52,9 @@ export const chatRequestSchema = z.object({
       content: "Hello, can you help me with my finances?",
     },
   }),
+  messages: z.array(messageSchema).optional().openapi({
+    description: "Full conversation history for stateless engines",
+  }),
   country: z.string().optional().openapi({
     description: "User's country",
     example: "United States",

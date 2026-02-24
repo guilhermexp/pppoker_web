@@ -1,6 +1,7 @@
 import { AIDevtoolsWrapper } from "@/components/ai-devtools-wrapper";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { ClientOnly } from "@/components/client-only";
+import { getApiBaseUrl } from "@/lib/api-base-url";
 import { Widgets } from "@/components/widgets";
 import { HydrateClient, getQueryClient, trpc } from "@/trpc/server";
 import { Provider as ChatProvider } from "@ai-sdk-tools/store";
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export default async function Overview(props: Props) {
+  const apiBaseUrl = getApiBaseUrl();
   // Validate session before making any tRPC calls
   // This prevents SSR errors when tokens are expired
   const supabase = await createClient();
@@ -87,7 +89,7 @@ export default async function Overview(props: Props) {
             config={{
               streamCapture: {
                 enabled: true,
-                endpoint: `${process.env.NEXT_PUBLIC_API_URL}/chat`,
+                endpoint: `${apiBaseUrl}/chat`,
                 autoConnect: true,
               },
             }}

@@ -1,0 +1,8 @@
+{
+  "name": "@midpoker/nanobot",
+  "private": true,
+  "scripts": {
+    "dev": "TZ=UTC PORT=18790 .venv/bin/python server.py",
+    "start": "TZ=UTC PORT=18790 .venv/bin/python server.py"
+  }
+}

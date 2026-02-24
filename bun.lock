@@ -210,6 +210,21 @@
         "mintlify": "^4.2.202",
       },
     },
+    "apps/nanobot": {
+      "name": "@midpoker/nanobot",
+      "dependencies": {
+        "@ai-sdk/google": "^2.0.42",
+        "@ai-sdk/openai": "^2.0.71",
+        "ai": "^5.0.101",
+        "hono": "^4.10.6",
+        "nanoid": "^5.1.6",
+        "zod": "^4.1.13",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/app-store": {
       "name": "@midpoker/app-store",
       "version": "1.0.0",
@@ -1000,6 +1015,8 @@
     "@midpoker/location": ["@midpoker/location@workspace:packages/location"],
 
     "@midpoker/logger": ["@midpoker/logger@workspace:packages/logger"],
+
+    "@midpoker/nanobot": ["@midpoker/nanobot@workspace:apps/nanobot"],
 
     "@midpoker/notifications": ["@midpoker/notifications@workspace:packages/notifications"],
 

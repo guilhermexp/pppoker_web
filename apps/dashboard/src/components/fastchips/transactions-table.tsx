@@ -46,9 +46,13 @@ export function FastChipsTransactionsTable() {
   const { data, isLoading, error } = useQuery(
     trpc.fastchips.operations.list.queryOptions({
       pageSize: 50,
-      operationType: viewMode === "entries" ? "entrada" : "saida",
+      operationType: viewMode === "entries" ? "Entrada" : "Saída",
       search: searchQuery || undefined,
     }),
+    {
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+    },
   );
 
   // Map tRPC data to table format
