@@ -187,10 +187,139 @@ class BridgeManager:
             "token": token,
         }
 
+    async def start_message_listener(self, team_id: str):
+        """Start a persistent WebSocket listener for incoming WhatsApp messages."""
+        info = self._bridges.get(team_id)
+        if not info:
+            print(f"[bridge-listener] No bridge for team {team_id[:8]}, cannot start listener")
+            return
+
+        # Don't start if already running
+        if info.get("_listener_task") and not info["_listener_task"].done():
+            return
+
+        task = asyncio.create_task(self._message_loop(team_id))
+        info["_listener_task"] = task
+        print(f"[bridge-listener] Message listener started for team {team_id[:8]}")
+
+    async def _message_loop(self, team_id: str):
+        """Persistent loop: connect to bridge, receive messages, route to agent."""
+        import websockets
+
+        retry_delay = 2
+        while team_id in self._bridges:
+            info = self._bridges.get(team_id)
+            if not info:
+                break
+
+            ws_url = info["ws_url"]
+            token = info["token"]
+
+            try:
+                async with websockets.connect(
+                    ws_url,
+                    additional_headers={"Authorization": f"Bearer {token}"},
+                ) as ws:
+                    print(f"[bridge-listener] Connected to bridge for team {team_id[:8]}")
+                    retry_delay = 2  # reset on success
+
+                    while True:
+                        try:
+                            raw = await asyncio.wait_for(ws.recv(), timeout=60)
+                            msg = json.loads(raw)
+                            msg_type = msg.get("type", "")
+
+                            if msg_type == "message":
+                                # Process incoming WhatsApp message
+                                asyncio.create_task(
+                                    self._handle_inbound_message(team_id, msg, ws)
+                                )
+                            elif msg_type == "status":
+                                status = msg.get("status", "")
+                                gw = _get_team_gateway(team_id)
+                                if status == "connected":
+                                    gw["whatsapp"]["status"] = "connected"
+                                elif status == "disconnected":
+                                    gw["whatsapp"]["status"] = "disconnected"
+                                print(f"[bridge-listener] WhatsApp status for {team_id[:8]}: {status}")
+                        except asyncio.TimeoutError:
+                            # Send ping to keep connection alive
+                            try:
+                                await ws.ping()
+                            except Exception:
+                                break
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"[bridge-listener] Connection lost for {team_id[:8]}: {e}")
+                if team_id not in self._bridges:
+                    break
+                await asyncio.sleep(retry_delay)
+                retry_delay = min(retry_delay * 2, 30)
+
+        print(f"[bridge-listener] Listener stopped for team {team_id[:8]}")
+
+    async def _handle_inbound_message(self, team_id: str, msg: dict, ws):
+        """Route an incoming WhatsApp message to the nanobot agent and reply."""
+        sender = msg.get("sender", "")
+        content = msg.get("content", "")
+        is_group = msg.get("isGroup", False)
+
+        if not content or not sender:
+            return
+
+        # Skip group messages for now
+        if is_group:
+            return
+
+        print(f"[bridge-listener] Message from {sender[:20]} for team {team_id[:8]}: {content[:80]}")
+
+        if _agent is None:
+            print("[bridge-listener] Agent not initialized, ignoring message")
+            return
+
+        # Build session key for WhatsApp conversations
+        session_key = f"whatsapp:{team_id}:{sender}"
+
+        try:
+            response = await asyncio.wait_for(
+                _agent.process_direct(
+                    content=content,
+                    session_key=session_key,
+                    channel="whatsapp",
+                    chat_id=session_key,
+                    on_progress=None,
+                ),
+                timeout=_AGENT_TOTAL_TIMEOUT_SECONDS,
+            )
+
+            if response and response.strip():
+                # Clean approval blocks from response (not relevant for WhatsApp)
+                cleaned, _ = extract_approval_requests(response)
+                safe_text = _sanitize_user_facing_response(cleaned)
+
+                if safe_text:
+                    # Send reply back through bridge
+                    reply_cmd = json.dumps({
+                        "type": "send",
+                        "to": sender,
+                        "text": safe_text,
+                    })
+                    await ws.send(reply_cmd)
+                    print(f"[bridge-listener] Replied to {sender[:20]} for team {team_id[:8]}")
+        except asyncio.TimeoutError:
+            print(f"[bridge-listener] Agent timeout for message from {sender[:20]}")
+        except Exception as e:
+            print(f"[bridge-listener] Error processing message: {e}")
+
     def stop_bridge(self, team_id: str):
         info = self._bridges.pop(team_id, None)
         if not info:
             return
+        # Cancel listener task
+        listener = info.get("_listener_task")
+        if listener and not listener.done():
+            listener.cancel()
         try:
             daytona = self._get_daytona()
             sandbox = info.get("sandbox")
@@ -876,8 +1005,9 @@ async def gateway_whatsapp_qr(request: Request):
             }),
         }
 
-        # If already connected, emit connected event and close
+        # If already connected, ensure listener is running and close
         if gw["whatsapp"]["status"] == "connected":
+            await _bridge_manager.start_message_listener(team_id)
             yield {"event": "connected", "data": json.dumps({"team_id": team_id})}
             yield {"event": "done", "data": "[DONE]"}
             return
@@ -918,6 +1048,8 @@ async def gateway_whatsapp_qr(request: Request):
                         elif msg_type == "status" and msg.get("status") == "connected":
                             gw["whatsapp"]["status"] = "connected"
                             gw["whatsapp"]["qr_data"] = None
+                            # Start persistent message listener
+                            await _bridge_manager.start_message_listener(team_id)
                             yield {
                                 "event": "connected",
                                 "data": json.dumps({"team_id": team_id}),
