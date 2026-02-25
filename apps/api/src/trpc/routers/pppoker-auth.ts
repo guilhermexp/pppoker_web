@@ -40,6 +40,83 @@ async function fetchBridgeClubs(
   return data.clubs ?? [];
 }
 
+/**
+ * Find or create a dedicated team for a specific club.
+ * Each club gets its own isolated team (organization).
+ *
+ * A team is "dedicated" when poker_club_id matches. Legacy shared teams
+ * (one team with multiple clubs) are ignored — a new dedicated team is created.
+ */
+async function findOrCreateTeamForClub(
+  adminDb: Awaited<ReturnType<typeof createAdminClient>>,
+  userId: string,
+  clubId: number,
+  clubData: BridgeClub | undefined,
+  username: string,
+  password: string,
+  mappedEmail: string,
+) {
+  const clubIdStr = String(clubId);
+  const clubName = clubData?.club_name ?? `Clube ${clubId}`;
+
+  // Look for an existing DEDICATED team for this club (poker_club_id matches)
+  // that the user belongs to
+  const { data: userTeams } = await adminDb
+    .from("users_on_team")
+    .select("team_id")
+    .eq("user_id", userId);
+
+  if (userTeams && userTeams.length > 0) {
+    const teamIds = userTeams.map((ut) => ut.team_id);
+    const { data: dedicatedTeam } = await adminDb
+      .from("teams")
+      .select("id")
+      .in("id", teamIds)
+      .eq("poker_club_id", clubIdStr)
+      .maybeSingle();
+
+    if (dedicatedTeam) {
+      return dedicatedTeam.id;
+    }
+  }
+
+  // No dedicated team — create one
+  const { data: newTeam, error: teamError } = await adminDb
+    .from("teams")
+    .insert({
+      name: clubName,
+      email: mappedEmail,
+    })
+    .select("id")
+    .single();
+
+  if (teamError || !newTeam) {
+    logger.error({ error: teamError }, "Failed to create team for club");
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Falha ao criar organização para o clube ${clubId}`,
+    });
+  }
+
+  // Link user to new team (check first — no unique constraint on user_id,team_id)
+  const { data: existingLink } = await adminDb
+    .from("users_on_team")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("team_id", newTeam.id)
+    .maybeSingle();
+
+  if (!existingLink) {
+    await adminDb.from("users_on_team").insert({
+      user_id: userId,
+      team_id: newTeam.id,
+      role: "owner",
+    });
+  }
+
+  return newTeam.id;
+}
+
 export const pppokerAuthRouter = createTRPCRouter({
   /**
    * Login with PPPoker credentials.
@@ -47,7 +124,9 @@ export const pppokerAuthRouter = createTRPCRouter({
    * Two behaviours controlled by whether `clubId` is provided:
    *
    * 1. Without clubId → validates credentials, returns list of clubs (no session created)
-   * 2. With clubId → full login: creates Supabase user/session, saves all clubs, returns JWT
+   * 2. With clubId → full login: creates Supabase user/session per club, returns JWT
+   *
+   * Each club gets its own team (organization) for complete data isolation.
    */
   login: publicProcedure
     .input(
@@ -141,24 +220,23 @@ export const pppokerAuthRouter = createTRPCRouter({
       const mappedEmail = `pppoker_${pppokerUid}@midpoker.internal`;
       const mappedPassword = `ppk_${pppokerUid}_${password.slice(0, 8)}`;
 
-      // Try to sign in first
+      // --- Ensure Supabase user exists ---
+      let userId: string;
+      let accessToken: string;
+      let refreshToken: string;
+
       const { data: signInData } =
         await supabase.auth.signInWithPassword({
           email: mappedEmail,
           password: mappedPassword,
         });
 
-      let userId: string;
-      let accessToken: string;
-      let refreshToken: string;
-
       if (signInData?.session) {
-        // Existing user
         userId = signInData.user.id;
         accessToken = signInData.session.access_token;
         refreshToken = signInData.session.refresh_token;
       } else {
-        // New user - create account
+        // New user — create account
         const { data: signUpData, error: signUpError } =
           await supabase.auth.signUp({
             email: mappedEmail,
@@ -181,22 +259,15 @@ export const pppokerAuthRouter = createTRPCRouter({
 
         userId = signUpData.user.id;
 
-        // Auto-confirm the user (since we validated via PPPoker)
         await supabase.auth.admin.updateUserById(userId, {
           email_confirm: true,
         });
 
-        // Create the public.users row
         await adminDb.from("users").upsert(
-          {
-            id: userId,
-            full_name: username,
-            email: mappedEmail,
-          },
+          { id: userId, full_name: username, email: mappedEmail },
           { onConflict: "id" },
         );
 
-        // Sign in to get session
         const { data: newSignIn, error: newSignInError } =
           await supabase.auth.signInWithPassword({
             email: mappedEmail,
@@ -212,108 +283,65 @@ export const pppokerAuthRouter = createTRPCRouter({
 
         accessToken = newSignIn.session.access_token;
         refreshToken = newSignIn.session.refresh_token;
-
-        // Create team linked to club
-        const teamName = `Clube ${clubId}`;
-        const { data: team, error: teamError } = await adminDb
-          .from("teams")
-          .insert({
-            name: teamName,
-            email: mappedEmail,
-          })
-          .select("id")
-          .single();
-
-        if (teamError) {
-          logger.error({ error: teamError }, "Failed to create team");
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: `Falha ao criar equipe: ${teamError.message}`,
-          });
-        }
-
-        // Link user to team
-        await adminDb.from("users_on_team").insert({
-          user_id: userId,
-          team_id: team.id,
-          role: "owner",
-        });
-
-        // Set team_id on user
-        await adminDb
-          .from("users")
-          .update({ team_id: team.id })
-          .eq("id", userId);
       }
 
-      // Ensure public.users row exists for returning users too
+      // Ensure public.users row exists
       await adminDb.from("users").upsert(
-        {
-          id: userId,
-          full_name: username,
-          email: mappedEmail,
-        },
+        { id: userId, full_name: username, email: mappedEmail },
         { onConflict: "id", ignoreDuplicates: true },
       );
 
-      // Get the team_id for saving club connections
-      const { data: userData } = await adminDb
+      // --- Find or create a DEDICATED team for the selected club ---
+      const selectedClub = bridgeClubs.find((c) => c.club_id === clubId);
+
+      const teamId = await findOrCreateTeamForClub(
+        adminDb,
+        userId,
+        clubId,
+        selectedClub,
+        username,
+        password,
+        mappedEmail,
+      );
+
+      // Switch user's active team to the selected club's team
+      await adminDb
         .from("users")
-        .select("team_id")
-        .eq("id", userId)
-        .single();
+        .update({ team_id: teamId })
+        .eq("id", userId);
 
-      if (userData?.team_id) {
-        // Save ALL clubs from bridge (selected one as active, rest as inactive)
-        for (const club of bridgeClubs) {
-          await adminDb.from("pppoker_club_connections").upsert(
-            {
-              team_id: userData.team_id,
-              club_id: club.club_id,
-              club_name: club.club_name,
-              pppoker_username: username,
-              pppoker_password: password,
-              sync_status: club.club_id === clubId ? "active" : "inactive",
-            },
-            { onConflict: "team_id,club_id" },
-          );
-        }
+      // Ensure club connection exists and is active
+      const clubName = selectedClub?.club_name ?? `Clube ${clubId}`;
+      await adminDb.from("pppoker_club_connections").upsert(
+        {
+          team_id: teamId,
+          club_id: clubId,
+          club_name: clubName,
+          pppoker_username: username,
+          pppoker_password: password,
+          sync_status: "active",
+        },
+        { onConflict: "team_id,club_id" },
+      );
 
-        // Fallback: if selected club wasn't in bridge list, save it anyway
-        const selectedInList = bridgeClubs.some((c) => c.club_id === clubId);
-        if (!selectedInList) {
-          await adminDb.from("pppoker_club_connections").upsert(
-            {
-              team_id: userData.team_id,
-              club_id: clubId,
-              pppoker_username: username,
-              pppoker_password: password,
-              sync_status: "active",
-            },
-            { onConflict: "team_id,club_id" },
-          );
-        }
+      // Update poker settings on the team
+      const pokerSettings: Record<string, unknown> = {
+        poker_platform: "pppoker",
+        poker_club_id: String(clubId),
+        poker_club_name: clubName,
+      };
 
-        // Auto-fill poker settings from selected club data
-        const selectedClub = bridgeClubs.find((c) => c.club_id === clubId);
-        const pokerSettings: Record<string, unknown> = {
-          poker_platform: "pppoker",
-          poker_club_id: String(clubId),
-          poker_club_name: selectedClub?.club_name ?? `Clube ${clubId}`,
-        };
-
-        if (selectedClub?.liga_id) {
-          pokerSettings.poker_entity_type = "clube_liga";
-          pokerSettings.poker_liga_id = String(selectedClub.liga_id);
-        } else {
-          pokerSettings.poker_entity_type = "clube_privado";
-        }
-
-        await adminDb
-          .from("teams")
-          .update(pokerSettings)
-          .eq("id", userData.team_id);
+      if (selectedClub?.liga_id) {
+        pokerSettings.poker_entity_type = "clube_liga";
+        pokerSettings.poker_liga_id = String(selectedClub.liga_id);
+      } else {
+        pokerSettings.poker_entity_type = "clube_privado";
       }
+
+      await adminDb
+        .from("teams")
+        .update(pokerSettings)
+        .eq("id", teamId);
 
       return {
         step: "done" as const,

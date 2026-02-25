@@ -153,13 +153,13 @@ export const columns: ColumnDef<ClubMember>[] = [
     ),
   },
   {
-    accessorKey: "currentBalance",
+    accessorKey: "cashboxBalance",
     header: "Saldo",
     meta: {
       className: "w-[120px] text-right",
     },
     cell: ({ row }) => {
-      const balance = row.original.currentBalance;
+      const balance = row.original.cashboxBalance;
       return (
         <span
           className={cn(

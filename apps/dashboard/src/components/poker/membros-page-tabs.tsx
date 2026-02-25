@@ -84,13 +84,13 @@ function CompactMemberRow({
         <span
           className={cn(
             "font-mono text-sm",
-            member.currentBalance > 0 && "text-green-600",
-            member.currentBalance < 0 && "text-red-600",
-            member.currentBalance === 0 && "text-muted-foreground",
+            member.cashboxBalance > 0 && "text-green-600",
+            member.cashboxBalance < 0 && "text-red-600",
+            member.cashboxBalance === 0 && "text-muted-foreground",
           )}
         >
-          {member.currentBalance >= 0 ? "+" : ""}
-          {formatMoney(member.currentBalance)}
+          {member.cashboxBalance >= 0 ? "+" : ""}
+          {formatMoney(member.cashboxBalance)}
         </span>
         <Badge variant={badgeVariant}>{member.roleLabel}</Badge>
       </div>
