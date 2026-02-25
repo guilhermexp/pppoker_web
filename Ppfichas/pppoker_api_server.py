@@ -274,6 +274,10 @@ class ChipTransferRequest(BaseModel):
     liga_id: int = 3357
 
 
+class JoinRequestReview(BaseModel):
+    accept: bool
+
+
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
@@ -535,6 +539,52 @@ async def list_club_rooms(
         "liga_id": result.get("liga_id"),
         "total": len(rooms),
         "rooms": rooms,
+    }
+
+
+@app.get("/clubs/{club_id}/join-requests")
+async def list_join_requests(
+    club_id: int,
+    auth: PPPokerAuth = Depends(require_pppoker_auth),
+):
+    """List pending join requests for a club."""
+    def op(client):
+        client.enter_club(club_id)
+        return client.list_join_requests(club_id)
+
+    _, result = await _run_with_retry(auth.session, op)
+
+    if not result.get("success") and not result.get("requests"):
+        raise HTTPException(502, detail=result.get("error", "Failed to list join requests"))
+
+    return {
+        "success": True,
+        "total": result.get("total", len(result.get("requests", []))),
+        "requests": result.get("requests", []),
+    }
+
+
+@app.post("/clubs/{club_id}/join-requests/{request_id}/review")
+async def review_join_request(
+    club_id: int,
+    request_id: int,
+    req: JoinRequestReview,
+    auth: PPPokerAuth = Depends(require_pppoker_auth),
+):
+    """Approve or reject a join request."""
+    def op(client):
+        client.enter_club(club_id)
+        return client.handle_join_request(club_id, request_id, req.accept)
+
+    _, result = await _run_with_retry(auth.session, op)
+
+    if not result.get("success"):
+        raise HTTPException(502, detail=result.get("error", "Failed to process join request"))
+
+    return {
+        "success": True,
+        "action": result.get("action", "accepted" if req.accept else "rejected"),
+        "uid_handled": result.get("uid_handled"),
     }
 
 

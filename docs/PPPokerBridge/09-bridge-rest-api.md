@@ -12,6 +12,9 @@ Arquivo-fonte: `Ppfichas/pppoker_api_server.py`
 - `POST /clubs/{club_id}/chips/send`
 - `POST /clubs/{club_id}/chips/withdraw`
 - `GET /clubs/{club_id}/rooms`
+- `GET /clubs` — lista clubes do usuario autenticado
+- `GET /clubs/{club_id}/join-requests` — solicitacoes de entrada pendentes
+- `POST /clubs/{club_id}/join-requests/{request_id}/review` — aprovar/rejeitar solicitacao
 
 ## Codigo completo (envio e saque REST)
 

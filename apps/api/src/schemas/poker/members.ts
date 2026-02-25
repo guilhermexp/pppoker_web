@@ -13,7 +13,7 @@ export const listPendingMembersSchema = z.object({
 });
 
 export const reviewMemberSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   action: z.enum(["approved", "rejected"]),
   note: z.string().optional(),
 });
