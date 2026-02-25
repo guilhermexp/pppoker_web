@@ -8,9 +8,9 @@ import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
 import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Button } from "@midpoker/ui/button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Search, RefreshCw, ChevronDown, ChevronRight, AlertCircle } from "lucide-react";
+import { useEffect, useDeferredValue, useMemo, useRef, useState } from "react";
 
 type LiveMember = {
   uid: number;
@@ -30,6 +30,51 @@ type LiveMember = {
   taxa?: number | null;
   maos?: number | null;
 };
+
+const PAPEL_LABEL: Record<number, string> = {
+  1: "Dono",
+  2: "Gestor",
+  4: "Super Agente",
+  5: "Agente",
+  10: "Membro",
+};
+
+type DbMember = {
+  id: string;
+  ppPokerId: string;
+  nickname: string;
+  isOnline: boolean;
+  cashboxBalance: number;
+  pppokerRole: number | null;
+  ganhos: number;
+  taxa: number;
+  maos: number;
+  avatarUrl: string;
+  agenteUid: number | null;
+  agenteNome: string;
+  superAgenteUid: number | null;
+  superAgenteNome: string;
+};
+
+function dbToLiveMember(p: DbMember): LiveMember & { dbId: string } {
+  return {
+    dbId: p.id,
+    uid: Number(p.ppPokerId),
+    nome: p.nickname,
+    papel_num: p.pppokerRole ?? 10,
+    papel: PAPEL_LABEL[p.pppokerRole ?? 10] ?? "Membro",
+    avatar_url: p.avatarUrl,
+    online: p.isOnline,
+    saldo_caixa: p.cashboxBalance,
+    agente_uid: p.agenteUid,
+    agente_nome: p.agenteNome,
+    super_agente_uid: p.superAgenteUid,
+    super_agente_nome: p.superAgenteNome,
+    ganhos: p.ganhos,
+    taxa: p.taxa,
+    maos: p.maos,
+  };
+}
 
 function formatBalance(value: number) {
   return value.toLocaleString("pt-BR", {
@@ -160,12 +205,40 @@ export function AgentesPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("todos");
   const deferredSearch = useDeferredValue(search);
+  const didSync = useRef(false);
 
-  const { data, isLoading, isFetching } = useQuery(
-    trpc.poker.members.getLive.queryOptions({}),
+  // Cache-first: read from DB (instant)
+  const { data, isLoading } = useQuery(
+    trpc.poker.members.list.queryOptions({ pageSize: 500 }),
   );
 
-  const allMembers = useMemo(() => (data?.members ?? []) as LiveMember[], [data]);
+  // Background sync mutation (no retries — bridge TCP can drop)
+  const syncMutation = useMutation({
+    ...trpc.poker.members.syncMembers.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.poker.members.list.queryKey(),
+        });
+      },
+    }),
+    retry: false,
+  });
+
+  // Auto-sync on mount
+  useEffect(() => {
+    if (!didSync.current) {
+      didSync.current = true;
+      syncMutation.mutate({});
+    }
+  }, []);
+
+  const isSyncing = syncMutation.isPending;
+  const syncFailed = syncMutation.isError;
+
+  const allMembers = useMemo(
+    () => (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
+    [data],
+  );
 
   const agents = useMemo(
     () => allMembers.filter((m) => m.papel_num === 5),
@@ -212,9 +285,7 @@ export function AgentesPage() {
   }, [agents]);
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({
-      queryKey: trpc.poker.members.getLive.queryKey(),
-    });
+    syncMutation.mutate({});
   };
 
   if (isLoading) {
@@ -281,10 +352,16 @@ export function AgentesPage() {
           size="icon"
           className="h-11 w-11 flex-shrink-0"
           onClick={handleRefresh}
-          disabled={isFetching}
+          disabled={isSyncing}
         >
-          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+          <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
         </Button>
+        {syncFailed && (
+          <span className="flex items-center gap-1 text-xs text-amber-500">
+            <AlertCircle className="h-3 w-3" />
+            Sync falhou
+          </span>
+        )}
       </div>
 
       {/* Filters */}

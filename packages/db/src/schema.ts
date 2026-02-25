@@ -3528,6 +3528,8 @@ export const pokerPlayers = pgTable(
     avatarUrl: text("avatar_url"),
     agenteUid: integer("agente_uid"),
     agenteNome: text("agente_nome"),
+    superAgenteUid: integer("super_agente_uid"),
+    superAgenteNome: text("super_agente_nome"),
 
     // Full-text search
     fts: tsvector("fts").generatedAlwaysAs(

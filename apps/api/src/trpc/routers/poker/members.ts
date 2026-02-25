@@ -184,7 +184,7 @@ export const pokerMembersRouter = createTRPCRouter({
       let query = supabase
         .from("poker_players")
         .select(
-          "id, pppoker_id, nickname, memo_name, type, status, is_online, cashbox_balance, pppoker_role, credit_limit, current_balance, agent_id, created_at, last_synced_at, ganhos, taxa, maos, avatar_url, agente_uid, agente_nome, stats_period_start, stats_period_end",
+          "id, pppoker_id, nickname, memo_name, type, status, is_online, cashbox_balance, pppoker_role, credit_limit, current_balance, agent_id, super_agent_id, created_at, last_synced_at, ganhos, taxa, maos, avatar_url, agente_uid, agente_nome, super_agente_uid, super_agente_nome, stats_period_start, stats_period_end",
           { count: "exact" },
         )
         .eq("team_id", teamId);
@@ -285,6 +285,10 @@ export const pokerMembersRouter = createTRPCRouter({
         agenteUid: (p as Record<string, unknown>).agente_uid as number | null,
         agenteNome:
           ((p as Record<string, unknown>).agente_nome as string) ?? "",
+        superAgenteUid: (p as Record<string, unknown>).super_agente_uid as number | null,
+        superAgenteNome:
+          ((p as Record<string, unknown>).super_agente_nome as string) ?? "",
+        superAgentId: (p as Record<string, unknown>).super_agent_id as string | null,
         statsPeriodStart:
           ((p as Record<string, unknown>).stats_period_start as string) ?? null,
         statsPeriodEnd:
@@ -744,6 +748,8 @@ export const pokerMembersRouter = createTRPCRouter({
         avatar_url: m.avatar_url ?? "",
         agente_uid: m.agente_uid ?? null,
         agente_nome: m.agente_nome ?? "",
+        super_agente_uid: m.super_agente_uid ?? null,
+        super_agente_nome: m.super_agente_nome ?? "",
         last_synced_at: nowIso,
         stats_period_start: String(periodStart),
         stats_period_end: String(periodEnd),

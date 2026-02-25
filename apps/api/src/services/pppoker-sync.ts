@@ -148,6 +148,8 @@ async function syncClub(connection: ClubConnection): Promise<number> {
       avatar_url: m.avatar_url ?? "",
       agente_uid: m.agente_uid ?? null,
       agente_nome: m.agente_nome ?? "",
+      super_agente_uid: m.super_agente_uid ?? null,
+      super_agente_nome: m.super_agente_nome ?? "",
       last_synced_at: now,
       updated_at: now,
     }));
