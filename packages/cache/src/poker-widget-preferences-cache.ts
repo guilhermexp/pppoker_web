@@ -1,16 +1,22 @@
 import { RedisCache } from "./redis-client";
 
 export const POKER_WIDGET_TYPES = [
-  // Overview stats (default primary widgets)
+  // Live club widgets (default primary)
+  "poker-total-members",
+  "poker-pending-members",
+  "poker-credit-requests",
+  "poker-live-tables",
+  "poker-online-players",
+  "poker-active-agents",
+  "poker-fastchips-sold",
+  // Analytics widgets (available by default)
   "poker-total-sessions",
   "poker-total-players",
-  "poker-active-agents",
   "poker-rake-total",
   "poker-rake-breakdown", // Combined PPST + PPSR
   "poker-total-rakeback",
   "poker-player-results",
   "poker-general-result",
-  // Additional widgets
   "poker-game-types",
   "poker-players-by-region",
 ] as const;
@@ -33,8 +39,8 @@ export const DEFAULT_POKER_WIDGET_ORDER: PokerWidgetType[] = [
 ];
 
 export const DEFAULT_POKER_WIDGET_PREFERENCES: PokerWidgetPreferences = {
-  primaryWidgets: DEFAULT_POKER_WIDGET_ORDER.slice(0, 10), // Show all widgets by default
-  availableWidgets: DEFAULT_POKER_WIDGET_ORDER.slice(10),
+  primaryWidgets: DEFAULT_POKER_WIDGET_ORDER.slice(0, 7), // Live club widgets as primary
+  availableWidgets: DEFAULT_POKER_WIDGET_ORDER.slice(7), // Analytics widgets as available
 };
 
 class PokerWidgetPreferencesCache extends RedisCache {
