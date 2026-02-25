@@ -2194,6 +2194,14 @@ export default {
       league_id: "League ID",
       league_notice:
         "If you do not know or do not have the league ID, fill the field with 0.",
+      status_title: "Service status",
+      status_description:
+        "Fastchips overview: AI agent, messaging gateway, and activation date.",
+      status_service: "Fastchips service",
+      status_agent: "AI Agent (Nanobot)",
+      status_whatsapp: "WhatsApp",
+      status_telegram: "Telegram",
+      reconnect_whatsapp: "Reconnect",
       save: "Save",
       saving: "Saving...",
       saved: "Settings saved successfully",

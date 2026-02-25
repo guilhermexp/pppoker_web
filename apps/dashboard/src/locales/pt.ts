@@ -2226,6 +2226,14 @@ export default {
       league_id: "ID da liga",
       league_notice:
         "Caso nao saiba ou nao tenha o ID da liga, preencha o campo com 0.",
+      status_title: "Status do servico",
+      status_description:
+        "Visao geral do Fastchips: agente IA, gateway de mensagens e data de ativacao.",
+      status_service: "Servico Fastchips",
+      status_agent: "Agente IA (Nanobot)",
+      status_whatsapp: "WhatsApp",
+      status_telegram: "Telegram",
+      reconnect_whatsapp: "Reconectar",
       save: "Salvar",
       saving: "Salvando...",
       saved: "Configuracoes salvas com sucesso",
