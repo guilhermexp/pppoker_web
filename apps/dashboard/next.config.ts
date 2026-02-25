@@ -1,5 +1,6 @@
 /** @type {import("next").NextConfig} */
 const config = {
+  output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
   images: {
@@ -61,7 +62,7 @@ const config = {
               "img-src 'self' data: https: http://alicdn.pppoker.club",
               "font-src 'self' data: https://fonts.gstatic.com",
               // Allow connections to: self, API server, Supabase (auth, realtime, storage)
-              "connect-src 'self' http://localhost:* https://*.supabase.co wss://*.supabase.co",
+              "connect-src 'self' http://localhost:* https://*.supabase.co wss://*.supabase.co https://*.claudedokploy.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

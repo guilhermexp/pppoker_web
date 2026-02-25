@@ -1,0 +1,122 @@
+services:
+  # ── Redis ──────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── PPPoker Bridge (Python FastAPI) ────────────────────────────
+  pppoker-bridge:
+    build:
+      context: .
+      dockerfile: Ppfichas/Dockerfile.prod
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── API (Hono + tRPC) ─────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      pppoker-bridge:
+        condition: service_healthy
+    environment:
+      - PORT=3101
+      - NODE_ENV=production
+      - TZ=UTC
+      - REDIS_URL=redis://redis:6379
+      - PPPOKER_BRIDGE_URL=http://pppoker-bridge:8000
+      - NANOBOT_BASE_URL=http://nanobot:18790
+      - NANOBOT_CHAT_PATH=/api/chat
+      - CHAT_AGENT_ENGINE=nanobot
+      - NANOBOT_FALLBACK_TO_LEGACY=false
+      # ↓ Set these in Dokploy environment variables
+      - DATABASE_PRIMARY_URL=${DATABASE_PRIMARY_URL}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - ALLOWED_API_ORIGINS=${ALLOWED_API_ORIGINS}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - MIDDAY_ENCRYPTION_KEY=${MIDDAY_ENCRYPTION_KEY}
+      - INVOICE_JWT_SECRET=${INVOICE_JWT_SECRET}
+      - MIDDAY_DASHBOARD_URL=${MIDDAY_DASHBOARD_URL}
+      - INFINITEPAY_WEBHOOK_URL=${INFINITEPAY_WEBHOOK_URL}
+      - FASTCHIPS_API_KEY=${FASTCHIPS_API_KEY}
+      - NANOBOT_API_KEY=${NANOBOT_API_KEY}
+      - NANOBOT_ORCHESTRATION_INTERNAL_TOKEN=${NANOBOT_ORCHESTRATION_INTERNAL_TOKEN}
+      - NANOBOT_ORCHESTRATION_CALLBACK_URL=${NANOBOT_ORCHESTRATION_CALLBACK_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3101/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Nanobot (Python AI Agent) ──────────────────────────────────
+  nanobot:
+    build:
+      context: .
+      dockerfile: apps/nanobot/Dockerfile
+    restart: unless-stopped
+    environment:
+      - PORT=18790
+      - TZ=UTC
+      - PYTHONUNBUFFERED=1
+      # Daytona for WhatsApp sandboxes
+      - DAYTONA_API_KEY=${DAYTONA_API_KEY}
+      - DAYTONA_SERVER_URL=${DAYTONA_SERVER_URL}
+      - DAYTONA_TARGET=${DAYTONA_TARGET}
+    volumes:
+      - nanobot_data:/root/.nanobot
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18790/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Dashboard (Next.js) ────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+      args:
+        - NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        - NEXT_PUBLIC_SUPABASE_ID=${NEXT_PUBLIC_SUPABASE_ID}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - INVOICE_JWT_SECRET=${INVOICE_JWT_SECRET}
+      - WEBHOOK_SECRET_KEY=${WEBHOOK_SECRET_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis_data:
+  nanobot_data:

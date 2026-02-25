@@ -1,0 +1,7 @@
+nanobot-ai>=0.1.4
+starlette>=0.45.0
+sse-starlette>=2.0.0
+uvicorn[standard]>=0.34.0
+websockets>=14.0
+daytona-sdk>=0.10.0
+requests>=2.31.0

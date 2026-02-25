@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY Ppfichas/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY Ppfichas/pppoker_direct_api.py .
+COPY Ppfichas/pppoker_api_server.py .
+COPY Ppfichas/pppoker_mcp.py .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "pppoker_api_server:app", "--host", "0.0.0.0", "--port", "8000"]

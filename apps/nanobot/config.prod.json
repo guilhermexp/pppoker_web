@@ -1,0 +1,39 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "/root/.nanobot/workspace",
+      "model": "anthropic/MiniMax-M2.5",
+      "maxTokens": 4096,
+      "temperature": 0.7,
+      "maxToolIterations": 20,
+      "memoryWindow": 50
+    }
+  },
+  "channels": {
+    "whatsapp": { "enabled": false },
+    "telegram": { "enabled": false }
+  },
+  "providers": {
+    "openrouter": { "apiKey": "", "apiBase": null, "extraHeaders": null },
+    "anthropic": { "apiKey": "", "apiBase": "https://api.minimax.io/anthropic", "extraHeaders": null }
+  },
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 18790
+  },
+  "tools": {
+    "web": { "search": { "apiKey": "", "maxResults": 5 } },
+    "exec": { "timeout": 60 },
+    "restrictToWorkspace": false,
+    "mcpServers": {
+      "pppoker": {
+        "command": "python",
+        "args": ["/app/mcp/pppoker_mcp.py"]
+      },
+      "infinitepay": {
+        "command": "python",
+        "args": ["/app/mcp/infinitepay_mcp.py"]
+      }
+    }
+  }
+}
