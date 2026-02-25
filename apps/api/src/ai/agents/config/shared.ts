@@ -7,17 +7,17 @@ import type { ChatUserContext } from "@midpoker/cache/chat-cache";
 import { getSharedRedisClient } from "@midpoker/cache/shared-redis";
 
 const memoryTemplate = readFileSync(
-  join(process.cwd(), "src/ai/agents/config/memory-template.md"),
+  join(import.meta.dirname, "memory-template.md"),
   "utf-8",
 );
 
 const suggestionsInstructions = readFileSync(
-  join(process.cwd(), "src/ai/agents/config/suggestions-instructions.md"),
+  join(import.meta.dirname, "suggestions-instructions.md"),
   "utf-8",
 );
 
 const titleInstructions = readFileSync(
-  join(process.cwd(), "src/ai/agents/config/title-instructions.md"),
+  join(import.meta.dirname, "title-instructions.md"),
   "utf-8",
 );
 
