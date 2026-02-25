@@ -36,16 +36,16 @@ SESSION_MAX_AGE = 1800        # Force reconnect after 30 min regardless
 class PPPokerSession:
     """Wraps a PPPokerClient with metadata for pool management."""
 
-    def __init__(self, uid: int, rdkey: str, server_ip: str | None = None):
+    def __init__(self, uid: int, rdkey: str, server_ip: Optional[str] = None):
         self.uid = uid
         self.rdkey = rdkey
         self.server_ip = server_ip
-        self.client: PPPokerClient | None = None
+        self.client: Optional[PPPokerClient] = None
         self.created_at = time.time()
         self.last_used = time.time()
         self.last_reconnect_at = 0.0
         self.lock = asyncio.Lock()
-        self._heartbeat_task: asyncio.Task | None = None
+        self._heartbeat_task: Optional[asyncio.Task] = None
 
     async def ensure_connected(self) -> PPPokerClient:
         """Ensure we have an authenticated TCP connection, reconnect if needed."""

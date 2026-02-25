@@ -293,6 +293,26 @@ export const pppokerAuthRouter = createTRPCRouter({
             { onConflict: "team_id,club_id" },
           );
         }
+
+        // Auto-fill poker settings from selected club data
+        const selectedClub = bridgeClubs.find((c) => c.club_id === clubId);
+        const pokerSettings: Record<string, unknown> = {
+          poker_platform: "pppoker",
+          poker_club_id: String(clubId),
+          poker_club_name: selectedClub?.club_name ?? `Clube ${clubId}`,
+        };
+
+        if (selectedClub?.liga_id) {
+          pokerSettings.poker_entity_type = "clube_liga";
+          pokerSettings.poker_liga_id = String(selectedClub.liga_id);
+        } else {
+          pokerSettings.poker_entity_type = "clube_privado";
+        }
+
+        await adminDb
+          .from("teams")
+          .update(pokerSettings)
+          .eq("id", userData.team_id);
       }
 
       return {

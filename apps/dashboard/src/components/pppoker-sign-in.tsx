@@ -5,7 +5,7 @@ import { Icons } from "@midpoker/ui/icons";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 interface ClubInfo {
   clubId: number;
@@ -25,16 +25,57 @@ const ROLE_LABELS: Record<string, string> = {
   membro: "Membro",
 };
 
-const ROLE_COLORS: Record<string, string> = {
-  dono: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  gestor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  super_agente: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  agente: "bg-green-500/20 text-green-400 border-green-500/30",
-  membro: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+const ROLE_STYLES: Record<string, { dot: string; text: string }> = {
+  dono: { dot: "bg-yellow-400", text: "text-yellow-400" },
+  gestor: { dot: "bg-blue-400", text: "text-blue-400" },
+  super_agente: { dot: "bg-purple-400", text: "text-purple-400" },
+  agente: { dot: "bg-green-400", text: "text-green-400" },
+  membro: { dot: "bg-zinc-500", text: "text-zinc-500" },
 };
+
+const LAST_CLUB_KEY = "pppoker_last_club_id";
+
+function getLastClubId(): number | null {
+  try {
+    const val = localStorage.getItem(LAST_CLUB_KEY);
+    return val ? Number(val) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveLastClubId(clubId: number) {
+  try {
+    localStorage.setItem(LAST_CLUB_KEY, String(clubId));
+  } catch {
+    // ignore
+  }
+}
 
 function canManageClub(role: string): boolean {
   return role === "dono" || role === "gestor";
+}
+
+function ClubAvatar({ club }: { club: ClubInfo }) {
+  const isUrl =
+    club.avatarUrl?.startsWith("http://") ||
+    club.avatarUrl?.startsWith("https://");
+
+  if (isUrl) {
+    return (
+      <img
+        src={club.avatarUrl}
+        alt={club.clubName}
+        className="h-10 w-10 rounded-full object-cover border border-white/10"
+      />
+    );
+  }
+
+  return (
+    <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-sm font-semibold text-white/60">
+      {(club.clubName || "C").charAt(0).toUpperCase()}
+    </div>
+  );
 }
 
 export function PPPokerSignIn() {
@@ -42,6 +83,7 @@ export function PPPokerSignIn() {
     "credentials",
   );
   const [isLoading, setLoading] = useState(false);
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
@@ -54,11 +96,23 @@ export function PPPokerSignIn() {
   const returnTo = searchParams.get("return_to");
   const trpc = useTRPC();
 
+  const lastClubId = useMemo(() => getLastClubId(), []);
+
+  // Sort: last-used first, then manageable (dono/gestor), then rest
+  const sortedClubs = useMemo(() => {
+    return [...clubs].sort((a, b) => {
+      if (a.clubId === lastClubId) return -1;
+      if (b.clubId === lastClubId) return 1;
+      const aOk = canManageClub(a.userRole) ? 0 : 1;
+      const bOk = canManageClub(b.userRole) ? 0 : 1;
+      return aOk - bOk;
+    });
+  }, [clubs, lastClubId]);
+
   const loginMutation = useMutation(
     trpc.pppokerAuth.login.mutationOptions({
       onSuccess: async (data) => {
         if (data.step === "select_club") {
-          // Step 1 complete: show club selection
           setPppokerUid(data.pppokerUid);
           setClubs(data.clubs);
           setStep("select-club");
@@ -66,8 +120,9 @@ export function PPPokerSignIn() {
           return;
         }
 
-        // Step 2 complete: full login done
         if (data.step === "done") {
+          if (data.clubId) saveLastClubId(data.clubId);
+
           await supabase.auth.setSession({
             access_token: data.accessToken!,
             refresh_token: data.refreshToken!,
@@ -103,6 +158,7 @@ export function PPPokerSignIn() {
 
   const handleSelectClub = (clubId: number) => {
     setLoading(true);
+    setSelectedClubId(clubId);
     setError("");
 
     loginMutation.mutate({
@@ -117,11 +173,12 @@ export function PPPokerSignIn() {
     setStep("credentials");
     setClubs([]);
     setPppokerUid(null);
+    setSelectedClubId(null);
     setError("");
   };
 
   const inputClassName =
-    "w-full bg-[#0e0e0e] dark:bg-white/90 border border-[#0e0e0e] dark:border-white text-white dark:text-[#0e0e0e] font-sans font-medium text-sm h-[40px] px-4 hover:bg-[#1a1a1a] dark:hover:bg-white transition-colors placeholder:text-white/60 dark:placeholder:text-[#70707080] focus:outline-none focus:ring-2 focus:ring-white/20 dark:focus:ring-[#0e0e0e]/20";
+    "w-full bg-[#0e0e0e] border border-white/10 text-white font-sans font-medium text-sm h-[40px] px-4 hover:border-white/20 transition-colors placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 rounded-none";
 
   // ── Step 1: Credentials ──
   if (step === "credentials") {
@@ -160,26 +217,24 @@ export function PPPokerSignIn() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#0e0e0e] dark:bg-white/90 border border-[#0e0e0e] dark:border-white text-white dark:text-[#0e0e0e] font-sans font-medium text-sm h-[40px] px-6 py-4 hover:bg-[#1a1a1a] dark:hover:bg-white transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="w-full bg-white text-black font-sans font-medium text-sm h-[40px] hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <div className="flex items-center justify-center gap-2">
-              <Icons.Play size={16} />
-              <span>
-                {isLoading
-                  ? "Conectando..."
-                  : needsVerify
-                    ? "Verificar e Entrar"
-                    : "Entrar com PPPoker"}
-              </span>
-            </div>
+            <Icons.Play size={14} />
+            <span>
+              {isLoading
+                ? "Conectando..."
+                : needsVerify
+                  ? "Verificar e Entrar"
+                  : "Entrar com PPPoker"}
+            </span>
           </button>
 
           {error && (
             <p
-              className={`text-sm font-sans ${
+              className={`text-xs font-sans ${
                 error.includes("Verificação")
-                  ? "text-yellow-500"
-                  : "text-red-500"
+                  ? "text-yellow-400/90"
+                  : "text-red-400/90"
               }`}
             >
               {error}
@@ -192,33 +247,34 @@ export function PPPokerSignIn() {
 
   // ── Step 2: Club selection ──
   return (
-    <div className="w-full space-y-4">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="w-full space-y-3">
+      {/* Header */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={handleBack}
-          className="text-white/60 dark:text-[#0e0e0e]/60 hover:text-white dark:hover:text-[#0e0e0e] transition-colors"
+          className="text-white/40 hover:text-white transition-colors p-0.5"
         >
-          <Icons.ChevronLeft size={20} />
+          <Icons.ChevronLeft size={18} />
         </button>
-        <span className="text-sm font-sans text-white/80 dark:text-[#0e0e0e]/80">
-          Selecione um clube
-        </span>
+        <div>
+          <p className="text-sm font-medium text-white">
+            Selecione um clube
+          </p>
+          <p className="text-xs text-white/40">
+            {clubs.length} {clubs.length === 1 ? "clube" : "clubes"} encontrados
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-2 max-h-[360px] overflow-y-auto">
-        {clubs.length === 0 && (
-          <p className="text-sm text-white/50 dark:text-[#0e0e0e]/50 text-center py-4">
-            Nenhum clube encontrado para esta conta.
-          </p>
-        )}
-
-        {clubs.map((club) => {
+      {/* Club list */}
+      <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-0.5">
+        {sortedClubs.map((club) => {
           const manageable = canManageClub(club.userRole);
-          const roleLabel =
-            ROLE_LABELS[club.userRole] || club.userRole;
-          const roleColor =
-            ROLE_COLORS[club.userRole] || ROLE_COLORS.membro;
+          const isLastUsed = club.clubId === lastClubId;
+          const isSelected = club.clubId === selectedClubId && isLoading;
+          const roleLabel = ROLE_LABELS[club.userRole] || club.userRole;
+          const roleStyle = ROLE_STYLES[club.userRole] || ROLE_STYLES.membro!;
 
           return (
             <button
@@ -226,41 +282,60 @@ export function PPPokerSignIn() {
               type="button"
               disabled={!manageable || isLoading}
               onClick={() => manageable && handleSelectClub(club.clubId)}
-              className={`w-full text-left p-3 border transition-colors ${
-                manageable
-                  ? "bg-[#0e0e0e] dark:bg-white/90 border-[#1a1a1a] dark:border-white/20 hover:bg-[#1a1a1a] dark:hover:bg-white cursor-pointer"
-                  : "bg-[#0e0e0e]/50 dark:bg-white/50 border-[#1a1a1a]/50 dark:border-white/10 opacity-60 cursor-not-allowed"
+              className={`w-full text-left px-3 py-2.5 rounded transition-all duration-150 ${
+                isSelected
+                  ? "bg-white/10 border border-white/20"
+                  : isLastUsed && manageable
+                    ? "bg-white/[0.06] border border-white/15 hover:bg-white/10"
+                    : manageable
+                      ? "bg-transparent border border-transparent hover:bg-white/[0.04] hover:border-white/10"
+                      : "bg-transparent border border-transparent opacity-40 cursor-not-allowed"
               }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <ClubAvatar club={club} />
+
+                {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-white dark:text-[#0e0e0e] truncate">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white truncate">
                       {club.clubName || `Clube ${club.clubId}`}
                     </span>
-                    <span
-                      className={`text-xs px-2 py-0.5 border rounded-full font-medium ${roleColor}`}
-                    >
-                      {roleLabel}
-                    </span>
-                    {!manageable && (
-                      <span className="text-xs px-2 py-0.5 bg-white/10 dark:bg-[#0e0e0e]/10 text-white/40 dark:text-[#0e0e0e]/40 border border-white/10 dark:border-[#0e0e0e]/10 rounded-full">
-                        Em breve
+                    {isLastUsed && manageable && (
+                      <span className="text-[10px] font-medium text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
+                        Recente
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-white/50 dark:text-[#0e0e0e]/50">
-                    <span>ID: {club.clubId}</span>
-                    <span>{club.memberCount} membros</span>
-                    {club.ligaId && <span>Liga: {club.ligaId}</span>}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`flex items-center gap-1 text-xs ${roleStyle.text}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${roleStyle.dot}`} />
+                      {roleLabel}
+                    </span>
+                    <span className="text-xs text-white/30">
+                      {club.memberCount} membros
+                    </span>
+                    {club.ligaId && (
+                      <span className="text-xs text-white/30">
+                        Liga {club.ligaId}
+                      </span>
+                    )}
                   </div>
                 </div>
-                {manageable && (
-                  <Icons.ChevronRight
-                    size={16}
-                    className="text-white/40 dark:text-[#0e0e0e]/40 flex-shrink-0"
-                  />
-                )}
+
+                {/* Right side */}
+                <div className="flex-shrink-0">
+                  {isSelected ? (
+                    <div className="h-4 w-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                  ) : manageable ? (
+                    <Icons.ChevronRight className="h-4 w-4 text-white/20" />
+                  ) : (
+                    <span className="text-[10px] text-white/30">
+                      Em breve
+                    </span>
+                  )}
+                </div>
               </div>
             </button>
           );
@@ -268,13 +343,7 @@ export function PPPokerSignIn() {
       </div>
 
       {error && (
-        <p className="text-sm font-sans text-red-500">{error}</p>
-      )}
-
-      {isLoading && (
-        <p className="text-sm font-sans text-white/60 dark:text-[#0e0e0e]/60 text-center">
-          Entrando no clube...
-        </p>
+        <p className="text-xs font-sans text-red-400/90 px-1">{error}</p>
       )}
     </div>
   );
