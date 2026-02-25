@@ -92,37 +92,9 @@ export const pokerPlayersRouter = createTRPCRouter({
         query = query.not("agent_id", "is", null);
       }
 
-      // Filter by rake (requires aggregation from session_players)
-      let playerIdsWithRake: string[] | null = null;
+      // Filter by rake (from synced PPPoker data)
       if (hasRake === true) {
-        // Get player IDs that have rake > 0
-        const { data: sessionData } = await supabase
-          .from("poker_session_players")
-          .select("player_id, rake")
-          .eq("team_id", teamId)
-          .gt("rake", 0);
-
-        // Collect unique player IDs with positive rake
-        const playerIdsSet = new Set<string>();
-        for (const row of sessionData ?? []) {
-          playerIdsSet.add(row.player_id);
-        }
-        playerIdsWithRake = [...playerIdsSet];
-
-        if (playerIdsWithRake.length === 0) {
-          // No players have rake
-          return {
-            meta: {
-              cursor: null,
-              hasPreviousPage: false,
-              hasNextPage: false,
-              totalCount: 0,
-            },
-            data: [],
-          };
-        }
-
-        query = query.in("id", playerIdsWithRake);
+        query = query.gt("taxa", 0);
       }
 
       // Apply sorting
@@ -216,31 +188,8 @@ export const pokerPlayersRouter = createTRPCRouter({
         );
       }
 
-      // Fetch rake/winnings stats for all players in current page
+      // Player IDs for activity metrics
       const playerIds = (data ?? []).map((p) => p.id);
-      const statsMap: Record<
-        string,
-        { totalRake: number; totalWinnings: number }
-      > = {};
-      if (playerIds.length > 0) {
-        const { data: sessionStats, error: sessionError } = await supabase
-          .from("poker_session_players")
-          .select("player_id, rake, winnings")
-          .eq("team_id", teamId)
-          .in("player_id", playerIds);
-
-        // Aggregate by player
-        for (const row of sessionStats ?? []) {
-          const current = statsMap[row.player_id] ?? {
-            totalRake: 0,
-            totalWinnings: 0,
-          };
-          statsMap[row.player_id] = {
-            totalRake: current.totalRake + Number(row.rake ?? 0),
-            totalWinnings: current.totalWinnings + Number(row.winnings ?? 0),
-          };
-        }
-      }
 
       // Fetch activity metrics for all players in current page
       const activityMetricsMap =
@@ -284,8 +233,11 @@ export const pokerPlayersRouter = createTRPCRouter({
         superAgent: player.super_agent_id
           ? (superAgentsMap[player.super_agent_id] ?? null)
           : null,
-        totalRake: statsMap[player.id]?.totalRake ?? 0,
-        totalWinnings: statsMap[player.id]?.totalWinnings ?? 0,
+        totalRake: Number((player as Record<string, unknown>).taxa ?? 0),
+        totalWinnings: Number(
+          (player as Record<string, unknown>).ganhos ?? 0,
+        ),
+        totalHands: Number((player as Record<string, unknown>).maos ?? 0),
         activityStatus:
           activityMetricsMap.get(player.id)?.activityStatus ?? "new",
       }));

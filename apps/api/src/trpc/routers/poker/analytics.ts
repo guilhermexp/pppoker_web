@@ -970,92 +970,33 @@ export const pokerAnalyticsRouter = createTRPCRouter({
     .query(async ({ input, ctx: { teamId } }) => {
       const supabase = await createAdminClient();
 
-      // Get committed import IDs
-      const includeDraft = input?.includeDraft ?? false;
-      const committedImportIds = await getCommittedImportIds(
-        supabase,
-        teamId!,
-        includeDraft,
-      );
-
-      // If no committed imports and not including draft, return zeros
-      if (committedImportIds !== null && committedImportIds.length === 0) {
-        return {
-          totalPlayers: 0,
-          playersWithRake: 0,
-          playersWithoutRake: 0,
-          totalRake: 0,
-          totalWinnings: 0,
-          totalLosses: 0,
-          netResult: 0,
-        };
-      }
-
-      // Get all players (type = 'player')
-      let playersQuery = supabase
+      // Read stats directly from poker_players (synced from PPPoker)
+      const { data: players } = await supabase
         .from("poker_players")
-        .select("id", { count: "exact" })
+        .select("id, taxa, ganhos")
         .eq("team_id", teamId)
         .eq("type", "player");
 
-      if (committedImportIds !== null) {
-        playersQuery = playersQuery.in("import_id", committedImportIds);
-      }
-
-      const { count: totalPlayersCount } = await playersQuery;
-
-      // Get player summary data for rake and winnings
-      let summaryQuery = supabase
-        .from("poker_player_summary")
-        .select("player_id, rake_total, winnings_total")
-        .eq("team_id", teamId)
-        .limit(50000);
-
-      if (committedImportIds !== null) {
-        summaryQuery = summaryQuery.in("import_id", committedImportIds);
-      }
-
-      // Apply date filters if provided
-      if (input?.from) {
-        summaryQuery = summaryQuery.gte("period_start", input.from);
-      }
-      if (input?.to) {
-        summaryQuery = summaryQuery.lte("period_end", input.to);
-      }
-
-      const { data: summaryData } = await summaryQuery;
-
-      // Aggregate stats per player
-      const playerStats = new Map<string, { rake: number; winnings: number }>();
-      for (const row of summaryData ?? []) {
-        const current = playerStats.get(row.player_id) ?? {
-          rake: 0,
-          winnings: 0,
-        };
-        current.rake += Number(row.rake_total || 0);
-        current.winnings += Number(row.winnings_total || 0);
-        playerStats.set(row.player_id, current);
-      }
-
-      // Calculate totals
+      const totalPlayers = players?.length ?? 0;
       let totalRake = 0;
       let totalWinnings = 0;
       let totalLosses = 0;
       let playersWithRake = 0;
 
-      for (const [, stats] of playerStats) {
-        totalRake += stats.rake;
-        if (stats.winnings > 0) {
-          totalWinnings += stats.winnings;
+      for (const p of players ?? []) {
+        const taxa = Number(p.taxa ?? 0);
+        const ganhos = Number(p.ganhos ?? 0);
+        totalRake += taxa;
+        if (ganhos > 0) {
+          totalWinnings += ganhos;
         } else {
-          totalLosses += Math.abs(stats.winnings);
+          totalLosses += Math.abs(ganhos);
         }
-        if (stats.rake > 0) {
+        if (taxa > 0) {
           playersWithRake++;
         }
       }
 
-      const totalPlayers = totalPlayersCount ?? 0;
       const playersWithoutRake = totalPlayers - playersWithRake;
       const netResult = totalWinnings - totalLosses;
 

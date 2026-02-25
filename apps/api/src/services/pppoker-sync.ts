@@ -37,6 +37,9 @@ interface PPPokerMember {
   avatar_url: string;
   join_ts: number | null;
   last_active_ts: number | null;
+  ganhos?: number | null;
+  taxa?: number | null;
+  maos?: number | null;
 }
 
 interface ClubConnection {
@@ -51,16 +54,30 @@ interface ClubConnection {
 
 async function fetchClubMembers(
   connection: ClubConnection,
+  ligaId?: number | null,
 ): Promise<PPPokerMember[]> {
-  const resp = await fetch(
+  const url = new URL(
     `${PPPOKER_BRIDGE_URL}/clubs/${connection.club_id}/members`,
-    {
-      headers: {
-        "X-PPPoker-Username": connection.pppoker_username,
-        "X-PPPoker-Password": connection.pppoker_password,
-      },
-    },
   );
+
+  // Pass liga_id + date range so bridge returns ganhos/taxa/maos
+  if (ligaId) {
+    url.searchParams.set("liga_id", String(ligaId));
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(start.getDate() - 30);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+    url.searchParams.set("date_start", fmt(start));
+    url.searchParams.set("date_end", fmt(now));
+  }
+
+  const resp = await fetch(url.toString(), {
+    headers: {
+      "X-PPPoker-Username": connection.pppoker_username,
+      "X-PPPoker-Password": connection.pppoker_password,
+    },
+  });
 
   if (!resp.ok) {
     const text = await resp.text();
@@ -73,7 +90,16 @@ async function fetchClubMembers(
 
 async function syncClub(connection: ClubConnection): Promise<number> {
   const supabase = await createAdminClient();
-  const members = await fetchClubMembers(connection);
+
+  // Fetch liga_id from team settings so bridge returns ganhos/taxa/maos
+  const { data: team } = await supabase
+    .from("teams")
+    .select("poker_liga_id")
+    .eq("id", connection.team_id)
+    .single();
+  const ligaId = team?.poker_liga_id ? Number(team.poker_liga_id) : null;
+
+  const members = await fetchClubMembers(connection, ligaId);
 
   if (members.length === 0) {
     logger.warn(
@@ -116,6 +142,12 @@ async function syncClub(connection: ClubConnection): Promise<number> {
       cashbox_balance: m.saldo_caixa ?? 0,
       pppoker_role: m.papel_num,
       credit_limit: m.credito_linha >= 0 ? m.credito_linha : 0,
+      ganhos: m.ganhos ?? 0,
+      taxa: m.taxa ?? 0,
+      maos: m.maos ?? 0,
+      avatar_url: m.avatar_url ?? "",
+      agente_uid: m.agente_uid ?? null,
+      agente_nome: m.agente_nome ?? "",
       last_synced_at: now,
       updated_at: now,
     }));
