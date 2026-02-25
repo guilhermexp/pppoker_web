@@ -45,6 +45,32 @@ Key packages: `packages/db` (Drizzle ORM), `packages/supabase` (auth), `packages
 
 ## Key Patterns
 
+### Members: Cache-First + Background Sync (migration 0017)
+
+The members page uses a **cache-first** strategy to avoid blocking on PPPoker TCP calls (5-19s):
+
+```
+Page opens → poker_players (Supabase) → instant data (<100ms)
+          → syncMembers (background) → bridge TCP → upsert DB → invalidate cache → UI updates
+```
+
+**How it works:**
+1. `poker.members.list` reads from `poker_players` table (instant)
+2. `poker.members.syncMembers` mutation fetches live data from PPPoker bridge, upserts into DB
+3. Frontend triggers `syncMembers` on mount via `useEffect`, invalidates `list` + `getStats` on success
+4. Manual refresh via RefreshCw button
+
+**DB columns added (migration 0017):** `ganhos`, `taxa`, `maos`, `stats_period_start`, `stats_period_end`, `avatar_url`, `agente_uid`, `agente_nome`
+
+**Files involved:**
+- `supabase/migrations/0017_poker_players_sync_columns.sql` — DB migration
+- `packages/db/src/schema.ts` — Drizzle schema (pokerPlayers)
+- `apps/api/src/trpc/routers/poker/members.ts` — `syncMembers` mutation + `list` with new fields
+- `apps/api/src/schemas/poker/members.ts` — pageSize max bumped to 500
+- `apps/dashboard/src/components/poker/membros-page-tabs.tsx` — cache-first UI
+
+**Important:** `memberId` now passes DB UUID (`p.id`) instead of PPPoker UID (`member.uid`), fixing navigation to `MemberDetailView` which expects `getById(uuid)`.
+
 ### tRPC routers (`apps/api/src/trpc/routers/`)
 - Procedures use Supabase auth context from middleware
 - Team-scoped data: `teamId` comes from auth context, never from client input
