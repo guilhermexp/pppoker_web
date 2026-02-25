@@ -61,16 +61,21 @@ app.post("/", async (c) => {
   const supabase = await createAdminClient();
 
   // Find the existing order by order_nsu
-  const { data: existing, error: findError } = await supabase
+  // Use .limit(1) instead of .maybeSingle() to avoid error when multiple
+  // teams happen to share the same order_nsu (UNIQUE is per team_id+order_nsu)
+  const { data: rows, error: findError } = await supabase
     .from("fastchips_payment_orders")
     .select("id, team_id, status, transaction_nsu, slug, capture_method, paid_amount, metadata")
     .eq("order_nsu", orderNsu)
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(1);
 
   if (findError) {
     console.error("[infinitepay-webhook] DB lookup error:", findError.message);
     return c.json({ error: "DB error" }, 500);
   }
+
+  const existing = rows?.[0] ?? null;
 
   if (!existing) {
     console.warn(

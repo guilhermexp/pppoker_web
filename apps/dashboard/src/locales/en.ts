@@ -2118,6 +2118,50 @@ export default {
         status: "Status:",
       },
     },
+    service: {
+      landing_title: "Activate Fastchips for your club",
+      landing_subtitle:
+        "Automate payments, chip delivery, and player support with a complete integrated system.",
+      feature_payments_title: "Payment Links",
+      feature_payments_description:
+        "Generate payment links via InfinitePay (Pix/Card) for your players to buy chips.",
+      feature_agent_title: "AI Agent",
+      feature_agent_description:
+        "Smart agent that manages payments, chip delivery, and support automatically.",
+      feature_gateway_title: "WhatsApp/Telegram Gateway",
+      feature_gateway_description:
+        "Players interact with the agent directly via WhatsApp or Telegram.",
+      activate_button: "Activate Fastchips",
+      setup_title: "Configure Fastchips",
+      setup_subtitle: "Complete the steps below to activate the service.",
+      step_infinitepay: "InfinitePay",
+      step_nanobot: "AI Agent",
+      step_gateway: "Gateway",
+      step_configured: "Configured",
+      step_not_configured: "Pending",
+      nanobot_description:
+        "The AI agent will manage payments and chip deliveries automatically for your players.",
+      nanobot_enabled: "AI Agent enabled",
+      gateway_whatsapp_title: "WhatsApp",
+      gateway_whatsapp_description:
+        "Connect a WhatsApp number so players can interact with the agent.",
+      gateway_telegram_title: "Telegram",
+      gateway_telegram_description:
+        "Configure a Telegram bot to receive player messages.",
+      gateway_telegram_token_placeholder: "Bot token (@BotFather)",
+      gateway_skip: "Skip - activate without gateway",
+      gateway_test_connection: "Test connection",
+      gateway_connected: "Connected",
+      gateway_disconnected: "Disconnected",
+      gateway_connecting: "Connecting...",
+      finish_button: "Finish and Activate",
+      finish_success: "Fastchips activated successfully!",
+      finish_success_description:
+        "The service is ready to serve your players.",
+      next: "Next",
+      previous: "Previous",
+      loading: "Loading...",
+    },
     controle: {
       title: "Control",
       description: "Fast Chips control panel and reports",
@@ -2144,6 +2188,9 @@ export default {
       league_id: "League ID",
       league_notice:
         "If you do not know or do not have the league ID, fill the field with 0.",
+      save: "Save",
+      saving: "Saving...",
+      saved: "Settings saved successfully",
     },
   },
   approval: {

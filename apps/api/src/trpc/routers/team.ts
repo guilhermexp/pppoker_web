@@ -8,6 +8,10 @@ import {
   normalizeInfinitePaySettings,
 } from "@api/schemas/infinitepay-settings";
 import {
+  fastchipsServiceSettingsSchema,
+  normalizeFastchipsServiceSettings,
+} from "@api/schemas/fastchips-service";
+import {
   acceptTeamInviteSchema,
   createTeamSchema,
   declineTeamInviteSchema,
@@ -775,26 +779,42 @@ export const teamRouter = createTRPCRouter({
 
   testInfinitePayHandle: protectedProcedure
     .input(z.object({ handle: z.string().min(1) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx: { teamId } }) => {
+      // Fail early if webhook URL is not configured — without it the test
+      // would always timeout because InfinitePay won't know where to send
+      // the payment confirmation callback.
+      const webhookUrl = process.env.INFINITEPAY_WEBHOOK_URL;
+      if (!webhookUrl) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "INFINITEPAY_WEBHOOK_URL não está configurada no servidor. " +
+            "Configure a URL do webhook para que o teste de pagamento funcione.",
+        });
+      }
+
       const valorCentavos = 100; // R$1,00
       const orderNsu = `test_${Date.now()}`;
+
+      const checkoutPayload: Record<string, unknown> = {
+        handle: input.handle.trim(),
+        items: [
+          {
+            description: "Teste de configuração - R$1,00",
+            quantity: 1,
+            price: valorCentavos,
+          },
+        ],
+        order_nsu: orderNsu,
+        webhook_url: webhookUrl,
+      };
 
       const resp = await fetch(
         "https://api.infinitepay.io/invoices/public/checkout/links",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            handle: input.handle.trim(),
-            items: [
-              {
-                description: "Teste de configuração - R$1,00",
-                quantity: 1,
-                price: valorCentavos,
-              },
-            ],
-            order_nsu: orderNsu,
-          }),
+          body: JSON.stringify(checkoutPayload),
         },
       );
 
@@ -817,8 +837,224 @@ export const teamRouter = createTRPCRouter({
         });
       }
 
+      const slug = (data.slug ?? data.id) as string | undefined;
+
+      // Save test order to DB so the webhook handler can find and update it
+      const supabase = await createAdminClient();
+      await supabase.from("fastchips_payment_orders").upsert(
+        {
+          team_id: teamId,
+          order_nsu: orderNsu,
+          status: "link_gerado",
+          fichas: 0,
+          valor_reais: 1.0,
+          checkout_url: checkoutUrl,
+          slug: slug ?? null,
+          metadata: { test_payment: true },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "team_id,order_nsu" },
+      );
+
       return { checkoutUrl, orderNsu };
     }),
+
+  checkTestPaymentStatus: protectedProcedure
+    .input(z.object({ orderNsu: z.string().min(1) }))
+    .query(async ({ input, ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+      const { data } = await supabase
+        .from("fastchips_payment_orders")
+        .select("status, paid_amount, capture_method, paid_at")
+        .eq("team_id", teamId)
+        .eq("order_nsu", input.orderNsu)
+        .maybeSingle();
+
+      return {
+        paid: data?.status === "pago" || data?.status === "fichas_enviadas",
+        status: data?.status ?? "not_found",
+        paidAmount: data?.paid_amount ?? null,
+        captureMethod: data?.capture_method ?? null,
+        paidAt: data?.paid_at ?? null,
+      };
+    }),
+
+  // ==========================================================================
+  // FASTCHIPS SERVICE SETTINGS
+  // ==========================================================================
+
+  getFastchipsServiceSettings: protectedProcedure.query(
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+      const { data, error } = await supabase
+        .from("teams")
+        .select("export_settings")
+        .eq("id", teamId)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to load Fastchips service settings: ${error.message}`,
+        });
+      }
+
+      const exportSettings = data?.export_settings as
+        | Record<string, unknown>
+        | null;
+      return normalizeFastchipsServiceSettings(
+        exportSettings?.fastchips_service,
+      );
+    },
+  ),
+
+  updateFastchipsServiceSettings: protectedProcedure
+    .input(fastchipsServiceSettingsSchema.partial())
+    .mutation(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Read current export_settings to merge
+      const { data: team, error: getError } = await supabase
+        .from("teams")
+        .select("export_settings")
+        .eq("id", teamId)
+        .single();
+
+      if (getError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to read settings: ${getError.message}`,
+        });
+      }
+
+      const exportSettings =
+        team?.export_settings && typeof team.export_settings === "object"
+          ? {
+              ...(team.export_settings as Record<string, unknown>),
+            }
+          : {};
+
+      // Deep merge: preserve existing fields not in input
+      const existing = (exportSettings.fastchips_service ?? {}) as Record<
+        string,
+        unknown
+      >;
+      exportSettings.fastchips_service = {
+        ...existing,
+        ...input,
+        // Deep merge nested objects
+        ...(input.setupSteps
+          ? {
+              setupSteps: {
+                ...((existing.setupSteps ?? {}) as Record<string, unknown>),
+                ...input.setupSteps,
+              },
+            }
+          : {}),
+        ...(input.controlPanel
+          ? {
+              controlPanel: {
+                ...((existing.controlPanel ?? {}) as Record<string, unknown>),
+                ...input.controlPanel,
+              },
+            }
+          : {}),
+        ...(input.gateway
+          ? {
+              gateway: {
+                ...((existing.gateway ?? {}) as Record<string, unknown>),
+                ...input.gateway,
+              },
+            }
+          : {}),
+      };
+
+      const { error: updateError } = await supabase
+        .from("teams")
+        .update({ export_settings: exportSettings })
+        .eq("id", teamId);
+
+      if (updateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to save Fastchips service settings: ${updateError.message}`,
+        });
+      }
+
+      return normalizeFastchipsServiceSettings(
+        exportSettings.fastchips_service,
+      );
+    }),
+
+  activateFastchipsService: protectedProcedure.mutation(
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+
+      // Read current export_settings to validate pre-requisites
+      const { data: team, error: getError } = await supabase
+        .from("teams")
+        .select("export_settings")
+        .eq("id", teamId)
+        .single();
+
+      if (getError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to read settings: ${getError.message}`,
+        });
+      }
+
+      const exportSettings =
+        team?.export_settings && typeof team.export_settings === "object"
+          ? {
+              ...(team.export_settings as Record<string, unknown>),
+            }
+          : {};
+
+      // Validate InfinitePay is configured
+      const ipSettings = exportSettings.infinitepay as
+        | Record<string, unknown>
+        | undefined;
+      if (!ipSettings?.enabled || !ipSettings?.handle) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "InfinitePay deve estar configurado antes de ativar o Fastchips",
+        });
+      }
+
+      // Activate the service
+      const existing = (exportSettings.fastchips_service ?? {}) as Record<
+        string,
+        unknown
+      >;
+      exportSettings.fastchips_service = {
+        ...existing,
+        status: "active",
+        activatedAt: new Date().toISOString(),
+        setupSteps: {
+          ...((existing.setupSteps ?? {}) as Record<string, unknown>),
+          infinitepayConfigured: true,
+        },
+      };
+
+      const { error: updateError } = await supabase
+        .from("teams")
+        .update({ export_settings: exportSettings })
+        .eq("id", teamId);
+
+      if (updateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to activate Fastchips service: ${updateError.message}`,
+        });
+      }
+
+      return normalizeFastchipsServiceSettings(
+        exportSettings.fastchips_service,
+      );
+    },
+  ),
 
   searchLigas: protectedProcedure.query(async ({ ctx: { teamId } }) => {
     const supabase = await createAdminClient();

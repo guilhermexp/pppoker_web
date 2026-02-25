@@ -34,6 +34,9 @@ from nanobot.session.manager import SessionManager
 # ---------------------------------------------------------------------------
 _agent: AgentLoop | None = None
 _bus: MessageBus | None = None
+
+# Per-team gateway connections: { team_id: { "whatsapp": {...}, "telegram": {...} } }
+_gateway_connections: dict[str, dict] = {}
 _LLM_RETRY_ATTEMPTS = int(os.environ.get("NANOBOT_LLM_RETRY_ATTEMPTS", "4"))
 _LLM_RETRY_DELAY_SECONDS = float(
     os.environ.get("NANOBOT_LLM_RETRY_DELAY_SECONDS", "1.5")
@@ -680,6 +683,202 @@ async def chat(request: Request):
 
 
 # ---------------------------------------------------------------------------
+# Gateway endpoints
+# ---------------------------------------------------------------------------
+
+def _get_team_gateway(team_id: str) -> dict:
+    """Get or create gateway state for a team."""
+    if team_id not in _gateway_connections:
+        _gateway_connections[team_id] = {
+            "whatsapp": {"status": "disconnected", "qr_data": None},
+            "telegram": {"status": "disconnected", "bot_token": None},
+        }
+    return _gateway_connections[team_id]
+
+
+async def gateway_status(request: Request):
+    """GET /gateway/status?team_id=xxx — returns connection status for all channels."""
+    team_id = request.query_params.get("team_id", "")
+    if not team_id:
+        return JSONResponse({"error": "team_id query param is required"}, status_code=400)
+
+    gw = _get_team_gateway(team_id)
+    return JSONResponse({
+        "team_id": team_id,
+        "whatsapp": {
+            "status": gw["whatsapp"]["status"],
+            "has_qr": gw["whatsapp"]["qr_data"] is not None,
+        },
+        "telegram": {
+            "status": gw["telegram"]["status"],
+            "has_token": gw["telegram"]["bot_token"] is not None,
+        },
+    })
+
+
+async def gateway_whatsapp_qr(request: Request):
+    """GET /gateway/whatsapp/qr?team_id=xxx — SSE stream that emits QR code data for WhatsApp linking."""
+    team_id = request.query_params.get("team_id", "")
+    if not team_id:
+        return JSONResponse({"error": "team_id query param is required"}, status_code=400)
+
+    gw = _get_team_gateway(team_id)
+
+    async def qr_events():
+        # Emit current status
+        yield {
+            "event": "status",
+            "data": json.dumps({
+                "status": gw["whatsapp"]["status"],
+                "team_id": team_id,
+            }),
+        }
+
+        # If already connected, emit connected event and close
+        if gw["whatsapp"]["status"] == "connected":
+            yield {"event": "connected", "data": json.dumps({"team_id": team_id})}
+            yield {"event": "done", "data": "[DONE]"}
+            return
+
+        # Try to initialize WhatsApp bridge for this team
+        gw["whatsapp"]["status"] = "waiting_qr"
+        try:
+            from nanobot.channels.whatsapp import WhatsAppChannel
+            auth_dir = Path.home() / ".nanobot" / "whatsapp-auth" / team_id
+            auth_dir.mkdir(parents=True, exist_ok=True)
+
+            channel = WhatsAppChannel(auth_dir=str(auth_dir))
+            qr_queue: asyncio.Queue[str | None] = asyncio.Queue()
+
+            async def on_qr(qr_data: str):
+                await qr_queue.put(qr_data)
+
+            async def on_connected():
+                gw["whatsapp"]["status"] = "connected"
+                gw["whatsapp"]["qr_data"] = None
+                await qr_queue.put(None)
+
+            channel.on_qr = on_qr
+            channel.on_connected = on_connected
+
+            # Start channel connection in background
+            connect_task = asyncio.create_task(channel.connect())
+
+            # Stream QR codes as they arrive (timeout after 120s)
+            try:
+                start = time.monotonic()
+                while time.monotonic() - start < 120:
+                    try:
+                        qr_data = await asyncio.wait_for(qr_queue.get(), timeout=30)
+                        if qr_data is None:
+                            # Connected successfully
+                            yield {
+                                "event": "connected",
+                                "data": json.dumps({"team_id": team_id}),
+                            }
+                            yield {"event": "done", "data": "[DONE]"}
+                            return
+                        gw["whatsapp"]["qr_data"] = qr_data
+                        yield {
+                            "event": "qr",
+                            "data": json.dumps({"qr_data": qr_data, "team_id": team_id}),
+                        }
+                    except asyncio.TimeoutError:
+                        yield {
+                            "event": "status",
+                            "data": json.dumps({"status": "waiting_qr", "team_id": team_id}),
+                        }
+
+                # Timeout reached
+                gw["whatsapp"]["status"] = "disconnected"
+                connect_task.cancel()
+                yield {
+                    "event": "timeout",
+                    "data": json.dumps({"team_id": team_id}),
+                }
+                yield {"event": "done", "data": "[DONE]"}
+            except Exception:
+                connect_task.cancel()
+                raise
+
+        except ImportError:
+            # WhatsApp channel not available in this environment
+            gw["whatsapp"]["status"] = "unavailable"
+            yield {
+                "event": "error",
+                "data": json.dumps({
+                    "error": "WhatsApp bridge not available in this environment",
+                    "team_id": team_id,
+                }),
+            }
+            yield {"event": "done", "data": "[DONE]"}
+        except Exception as e:
+            gw["whatsapp"]["status"] = "error"
+            yield {
+                "event": "error",
+                "data": json.dumps({"error": str(e), "team_id": team_id}),
+            }
+            yield {"event": "done", "data": "[DONE]"}
+
+    return EventSourceResponse(qr_events(), sep="\n")
+
+
+async def gateway_whatsapp_disconnect(request: Request):
+    """POST /gateway/whatsapp/disconnect — disconnect WhatsApp for a team."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    team_id = body.get("team_id", "")
+    if not team_id:
+        return JSONResponse({"error": "team_id is required"}, status_code=400)
+
+    gw = _get_team_gateway(team_id)
+    gw["whatsapp"] = {"status": "disconnected", "qr_data": None}
+
+    return JSONResponse({"success": True, "team_id": team_id})
+
+
+async def gateway_telegram_connect(request: Request):
+    """POST /gateway/telegram/connect — start Telegram bot with token for a team."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    team_id = body.get("team_id", "")
+    bot_token = body.get("bot_token", "")
+    if not team_id or not bot_token:
+        return JSONResponse({"error": "team_id and bot_token are required"}, status_code=400)
+
+    gw = _get_team_gateway(team_id)
+
+    try:
+        from nanobot.channels.telegram import TelegramChannel
+
+        channel = TelegramChannel(bot_token=bot_token)
+        # Test connection by getting bot info
+        await channel.test_connection()
+        gw["telegram"] = {"status": "connected", "bot_token": bot_token}
+        return JSONResponse({"success": True, "status": "connected", "team_id": team_id})
+    except ImportError:
+        gw["telegram"] = {"status": "unavailable", "bot_token": None}
+        return JSONResponse({
+            "success": False,
+            "error": "Telegram channel not available in this environment",
+            "team_id": team_id,
+        }, status_code=501)
+    except Exception as e:
+        gw["telegram"] = {"status": "error", "bot_token": None}
+        return JSONResponse({
+            "success": False,
+            "error": str(e),
+            "team_id": team_id,
+        }, status_code=400)
+
+
+# ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
 
@@ -687,6 +886,10 @@ app = Starlette(
     routes=[
         Route("/health", health, methods=["GET"]),
         Route("/api/chat", chat, methods=["POST"]),
+        Route("/gateway/status", gateway_status, methods=["GET"]),
+        Route("/gateway/whatsapp/qr", gateway_whatsapp_qr, methods=["GET"]),
+        Route("/gateway/whatsapp/disconnect", gateway_whatsapp_disconnect, methods=["POST"]),
+        Route("/gateway/telegram/connect", gateway_telegram_connect, methods=["POST"]),
     ],
     on_startup=[_startup],
     on_shutdown=[_shutdown],

@@ -1,6 +1,11 @@
 "use client";
 
+import {
+  useFastchipsServiceMutation,
+  useFastchipsServiceQuery,
+} from "@/hooks/use-team";
 import { useI18n } from "@/locales/client";
+import { Button } from "@midpoker/ui/button";
 import { Card, CardContent } from "@midpoker/ui/card";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
@@ -12,16 +17,65 @@ import {
   SelectValue,
 } from "@midpoker/ui/select";
 import { Switch } from "@midpoker/ui/switch";
+import { useToast } from "@midpoker/ui/use-toast";
 import { useEffect, useState } from "react";
 
 export function FastChipsControlPanel() {
   const t = useI18n();
+  const { data: service } = useFastchipsServiceQuery();
+  const mutation = useFastchipsServiceMutation();
+  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
-  const [withdrawType, setWithdrawType] = useState("auto");
+
+  // Local state initialized from server data
+  const cp = service.controlPanel;
+  const [minPurchase, setMinPurchase] = useState(cp.minPurchaseReais);
+  const [minWithdraw, setMinWithdraw] = useState(cp.minWithdrawReais);
+  const [dailyLimit, setDailyLimit] = useState(cp.dailyLimit);
+  const [notifications, setNotifications] = useState(cp.notificationsEnabled);
+  const [withdrawType, setWithdrawType] = useState(cp.withdrawType);
+  const [maxWithdraw, setMaxWithdraw] = useState(cp.maxWithdrawReais);
+  const [leagueId, setLeagueId] = useState(cp.leagueId);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Sync when server data changes (e.g. after save)
+  // Use individual primitive deps to avoid re-running on object reference change
+  useEffect(() => {
+    setMinPurchase(cp.minPurchaseReais);
+    setMinWithdraw(cp.minWithdrawReais);
+    setDailyLimit(cp.dailyLimit);
+    setNotifications(cp.notificationsEnabled);
+    setWithdrawType(cp.withdrawType);
+    setMaxWithdraw(cp.maxWithdrawReais);
+    setLeagueId(cp.leagueId);
+  }, [cp.minPurchaseReais, cp.minWithdrawReais, cp.dailyLimit, cp.notificationsEnabled, cp.withdrawType, cp.maxWithdrawReais, cp.leagueId]);
+
+  function handleSave() {
+    mutation.mutate(
+      {
+        controlPanel: {
+          minPurchaseReais: minPurchase,
+          minWithdrawReais: minWithdraw,
+          dailyLimit,
+          notificationsEnabled: notifications,
+          withdrawType,
+          maxWithdrawReais: maxWithdraw,
+          leagueId,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: t("fastchips.controle.saved"),
+            duration: 3000,
+          });
+        },
+      },
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -44,7 +98,15 @@ export function FastChipsControlPanel() {
                 <span className="flex h-9 w-10 items-center justify-center rounded-md border bg-muted/30 text-sm text-muted-foreground">
                   R$
                 </span>
-                <Input className="max-w-[160px]" defaultValue="5,00" />
+                <Input
+                  className="max-w-[160px]"
+                  type="number"
+                  min={1}
+                  value={minPurchase}
+                  onChange={(e) =>
+                    setMinPurchase(Number(e.target.value) || 0)
+                  }
+                />
               </div>
             </div>
 
@@ -56,7 +118,15 @@ export function FastChipsControlPanel() {
                 <span className="flex h-9 w-10 items-center justify-center rounded-md border bg-muted/30 text-sm text-muted-foreground">
                   R$
                 </span>
-                <Input className="max-w-[160px]" defaultValue="50,00" />
+                <Input
+                  className="max-w-[160px]"
+                  type="number"
+                  min={1}
+                  value={minWithdraw}
+                  onChange={(e) =>
+                    setMinWithdraw(Number(e.target.value) || 0)
+                  }
+                />
               </div>
             </div>
 
@@ -64,7 +134,15 @@ export function FastChipsControlPanel() {
               <span className="text-sm font-medium">
                 {t("fastchips.controle.daily_limit")}
               </span>
-              <Input className="max-w-[120px]" defaultValue="4" />
+              <Input
+                className="max-w-[120px]"
+                type="number"
+                min={1}
+                value={dailyLimit}
+                onChange={(e) =>
+                  setDailyLimit(Number(e.target.value) || 0)
+                }
+              />
             </div>
 
             <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:items-center">
@@ -72,7 +150,10 @@ export function FastChipsControlPanel() {
                 {t("fastchips.controle.notifications")}
               </span>
               <div className="flex items-center gap-3">
-                <Switch defaultChecked />
+                <Switch
+                  checked={notifications}
+                  onCheckedChange={setNotifications}
+                />
                 <span className="text-sm text-muted-foreground">
                   {t("fastchips.controle.notifications_enabled")}
                 </span>
@@ -99,7 +180,7 @@ export function FastChipsControlPanel() {
                   {t("fastchips.controle.withdraw_type")}
                 </span>
                 {mounted ? (
-                  <Select value={withdrawType} onValueChange={setWithdrawType}>
+                  <Select value={withdrawType} onValueChange={(v: "auto" | "manual") => setWithdrawType(v)}>
                     <SelectTrigger className="max-w-[240px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -125,7 +206,15 @@ export function FastChipsControlPanel() {
                   <span className="flex h-9 w-10 items-center justify-center rounded-md border bg-muted/30 text-sm text-muted-foreground">
                     R$
                   </span>
-                  <Input className="max-w-[160px]" defaultValue="3.000,00" />
+                  <Input
+                    className="max-w-[160px]"
+                    type="number"
+                    min={1}
+                    value={maxWithdraw}
+                    onChange={(e) =>
+                      setMaxWithdraw(Number(e.target.value) || 0)
+                    }
+                  />
                 </div>
               </div>
             </CardContent>
@@ -154,7 +243,11 @@ export function FastChipsControlPanel() {
                 <span className="text-sm font-medium">
                   {t("fastchips.controle.league_id")}
                 </span>
-                <Input className="max-w-[240px]" defaultValue="2136" />
+                <Input
+                  className="max-w-[240px]"
+                  value={leagueId}
+                  onChange={(e) => setLeagueId(e.target.value)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -165,6 +258,18 @@ export function FastChipsControlPanel() {
           </div>
         </div>
       </section>
+
+      {/* Save button */}
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSave}
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending
+            ? t("fastchips.controle.saving")
+            : t("fastchips.controle.save")}
+        </Button>
+      </div>
     </div>
   );
 }

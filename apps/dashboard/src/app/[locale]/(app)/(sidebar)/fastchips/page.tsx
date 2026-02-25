@@ -1,20 +1,27 @@
+"use client";
+
+import { ActivationLanding } from "@/components/fastchips/activation-landing";
 import { PaymentOrdersTable } from "@/components/fastchips/payment-orders-table";
-import { getI18n } from "@/locales/server";
-import type { Metadata } from "next";
+import { SetupWizard } from "@/components/fastchips/setup-wizard";
+import { useFastchipsServiceQuery } from "@/hooks/use-team";
+import { useI18n } from "@/locales/client";
+import { Suspense } from "react";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getI18n();
-  return {
-    title: t("fastchips.title"),
-  };
-}
+function FastChipsPageContent() {
+  const t = useI18n();
+  const { data: service } = useFastchipsServiceQuery();
 
-export default async function FastChipsPage() {
-  const t = await getI18n();
+  if (service.status === "inactive") {
+    return <ActivationLanding />;
+  }
 
+  if (service.status === "setup") {
+    return <SetupWizard />;
+  }
+
+  // status === "active"
   return (
     <div className="flex flex-col gap-6 mt-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{t("fastchips.title")}</h1>
@@ -23,9 +30,21 @@ export default async function FastChipsPage() {
           </p>
         </div>
       </div>
-
-      {/* Payment Orders Dashboard */}
       <PaymentOrdersTable />
     </div>
+  );
+}
+
+export default function FastChipsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center mt-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <FastChipsPageContent />
+    </Suspense>
   );
 }

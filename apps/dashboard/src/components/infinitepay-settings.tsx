@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCheckTestPaymentQuery,
   useInfinitePaySettingsQuery,
   useInfinitePaySettingsMutation,
   useTestInfinitePayHandleMutation,
@@ -25,19 +26,118 @@ import {
 } from "@midpoker/ui/form";
 import { Input } from "@midpoker/ui/input";
 import { Button } from "@midpoker/ui/button";
-import { Suspense, useState } from "react";
+import { Icons } from "@midpoker/ui/icons";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod/v3";
 
 const formSchema = z.object({
   handle: z.string().min(1, "Handle é obrigatório"),
 });
 
+const PAYMENT_TIMEOUT_SECONDS = 5 * 60; // 5 minutes
+
 type TestState =
   | { step: "idle" }
   | { step: "testing" }
-  | { step: "link_generated"; checkoutUrl: string }
+  | { step: "waiting_payment"; checkoutUrl: string; orderNsu: string; startedAt: number }
   | { step: "approved" }
+  | { step: "timeout" }
   | { step: "error"; message: string };
+
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function PaymentPoller({
+  orderNsu,
+  startedAt,
+  checkoutUrl,
+  onPaid,
+  onTimeout,
+  onCancel,
+}: {
+  orderNsu: string;
+  startedAt: number;
+  checkoutUrl: string;
+  onPaid: () => void;
+  onTimeout: () => void;
+  onCancel: () => void;
+}) {
+  const { data } = useCheckTestPaymentQuery(orderNsu);
+  const [remaining, setRemaining] = useState(PAYMENT_TIMEOUT_SECONDS);
+  const paidHandled = useRef(false);
+
+  // Countdown timer
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      const left = Math.max(0, PAYMENT_TIMEOUT_SECONDS - elapsed);
+      setRemaining(left);
+      if (left === 0) {
+        onTimeout();
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startedAt, onTimeout]);
+
+  // Auto-approve when payment detected
+  useEffect(() => {
+    if (data?.paid && !paidHandled.current) {
+      paidHandled.current = true;
+      onPaid();
+    }
+  }, [data?.paid, onPaid]);
+
+  return (
+    <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="text-sm font-medium">Aguardando pagamento...</p>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        Pague o link de R$1,00 abaixo para confirmar que o webhook está
+        funcionando. O valor será recebido na sua conta InfinitePay.
+      </p>
+
+      <a
+        href={checkoutUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-primary underline break-all"
+      >
+        {checkoutUrl}
+      </a>
+
+      <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Icons.Time className="h-4 w-4" />
+          <span>Tempo restante: {formatCountdown(remaining)}</span>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+        >
+          Cancelar
+        </Button>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div
+          className="h-full rounded-full bg-primary transition-all duration-1000"
+          style={{
+            width: `${(remaining / PAYMENT_TIMEOUT_SECONDS) * 100}%`,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function InfinitePaySettingsForm() {
   const { data } = useInfinitePaySettingsQuery();
@@ -64,8 +164,10 @@ function InfinitePaySettingsForm() {
       {
         onSuccess: (result) => {
           setTestState({
-            step: "link_generated",
+            step: "waiting_payment",
             checkoutUrl: result.checkoutUrl,
+            orderNsu: result.orderNsu,
+            startedAt: Date.now(),
           });
         },
         onError: (err) => {
@@ -78,7 +180,8 @@ function InfinitePaySettingsForm() {
     );
   }
 
-  function handleApproveAndSave() {
+  const handlePaymentConfirmed = useCallback(() => {
+    // Auto-save settings when webhook confirms payment
     saveMutation.mutate(
       {
         enabled: true,
@@ -90,7 +193,11 @@ function InfinitePaySettingsForm() {
         },
       },
     );
-  }
+  }, [saveMutation, form]);
+
+  const handleTimeout = useCallback(() => {
+    setTestState({ step: "timeout" });
+  }, []);
 
   function handleDisable() {
     saveMutation.mutate(
@@ -129,9 +236,13 @@ function InfinitePaySettingsForm() {
                     <Input
                       {...field}
                       placeholder="Ex: meu_clube_poker"
+                      disabled={testState.step === "waiting_payment"}
                       onChange={(e) => {
                         field.onChange(e);
-                        if (testState.step !== "idle") {
+                        if (
+                          testState.step !== "idle" &&
+                          testState.step !== "waiting_payment"
+                        ) {
                           setTestState({ step: "idle" });
                         }
                       }}
@@ -149,7 +260,7 @@ function InfinitePaySettingsForm() {
             {/* Test Flow */}
             <div className="space-y-3">
               {/* Step 1: Test button */}
-              {(testState.step === "idle" || testState.step === "error") && (
+              {(testState.step === "idle" || testState.step === "error" || testState.step === "timeout") && (
                 <div className="space-y-2">
                   <Button
                     type="button"
@@ -166,6 +277,15 @@ function InfinitePaySettingsForm() {
                       {testState.message}
                     </p>
                   )}
+                  {testState.step === "timeout" && (
+                    <div className="rounded-lg border border-yellow-500/30 p-3 bg-yellow-500/5">
+                      <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                        Tempo esgotado. O pagamento não foi detectado em 5
+                        minutos. Verifique se o webhook está configurado
+                        corretamente e tente novamente.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -176,53 +296,30 @@ function InfinitePaySettingsForm() {
                 </p>
               )}
 
-              {/* Step 3: Link generated - user verifies */}
-              {testState.step === "link_generated" && (
-                <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
-                  <p className="text-sm font-medium">
-                    Link de teste gerado com sucesso!
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Clique no link abaixo para verificar se abre corretamente.
-                    Não precisa pagar.
-                  </p>
-                  <a
-                    href={testState.checkoutUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary underline break-all"
-                  >
-                    {testState.checkoutUrl}
-                  </a>
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      type="button"
-                      onClick={handleApproveAndSave}
-                      disabled={saveMutation.isPending}
-                    >
-                      {saveMutation.isPending
-                        ? "Salvando..."
-                        : "Link funcionou - Aprovar e Salvar"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setTestState({ step: "idle" })}
-                    >
-                      Testar novamente
-                    </Button>
-                  </div>
-                </div>
+              {/* Step 3: Waiting for payment via webhook */}
+              {testState.step === "waiting_payment" && (
+                <PaymentPoller
+                  orderNsu={testState.orderNsu}
+                  startedAt={testState.startedAt}
+                  checkoutUrl={testState.checkoutUrl}
+                  onPaid={handlePaymentConfirmed}
+                  onTimeout={handleTimeout}
+                  onCancel={() => setTestState({ step: "idle" })}
+                />
               )}
 
               {/* Step 4: Approved */}
               {testState.step === "approved" && (
                 <div className="rounded-lg border border-green-500/30 p-4 bg-green-500/5">
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                    InfinitePay configurado e ativo!
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Os links de pagamento do seu clube agora usam o handle "{handle}".
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icons.Check className="h-4 w-4 text-green-600" />
+                    <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                      Pagamento confirmado via webhook!
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    InfinitePay configurado e ativo. Os links de pagamento do
+                    seu clube agora usam o handle &ldquo;{handle}&rdquo;.
                   </p>
                 </div>
               )}

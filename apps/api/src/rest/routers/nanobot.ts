@@ -1010,4 +1010,113 @@ app.post("/orchestration/subagent/dispatch", async (c) => {
   }
 });
 
+// ── Gateway proxy endpoints ─────────────────────────────────────
+const NANOBOT_BASE_URL =
+  process.env.NANOBOT_BASE_URL || "http://localhost:18790";
+
+app.get("/gateway/status", withRequiredScope("chat.write"), async (c) => {
+  const teamId = c.get("teamId");
+  try {
+    const resp = await fetch(
+      `${NANOBOT_BASE_URL}/gateway/status?team_id=${teamId}`,
+    );
+    const data = await resp.json();
+    return c.json(data, resp.status as 200);
+  } catch {
+    return c.json(
+      { error: "Failed to connect to nanobot gateway" },
+      502,
+    );
+  }
+});
+
+app.get("/gateway/whatsapp/qr", withRequiredScope("chat.write"), async (c) => {
+  const teamId = c.get("teamId");
+  try {
+    const resp = await fetch(
+      `${NANOBOT_BASE_URL}/gateway/whatsapp/qr?team_id=${teamId}`,
+      { headers: { Accept: "text/event-stream" } },
+    );
+
+    if (!resp.ok || !resp.body) {
+      return c.json(
+        { error: `Nanobot returned ${resp.status}` },
+        502,
+      );
+    }
+
+    // Proxy SSE stream directly
+    return new Response(resp.body, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  } catch {
+    return c.json(
+      { error: "Failed to connect to nanobot gateway" },
+      502,
+    );
+  }
+});
+
+app.post(
+  "/gateway/whatsapp/disconnect",
+  withRequiredScope("chat.write"),
+  async (c) => {
+    const teamId = c.get("teamId");
+    try {
+      const resp = await fetch(
+        `${NANOBOT_BASE_URL}/gateway/whatsapp/disconnect`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ team_id: teamId }),
+        },
+      );
+      const data = await resp.json();
+      return c.json(data, resp.status as 200);
+    } catch {
+      return c.json(
+        { error: "Failed to connect to nanobot gateway" },
+        502,
+      );
+    }
+  },
+);
+
+app.post(
+  "/gateway/telegram/connect",
+  withRequiredScope("chat.write"),
+  async (c) => {
+    const teamId = c.get("teamId");
+    const body = await c.req.json();
+    const botToken = body?.bot_token;
+
+    if (!botToken || typeof botToken !== "string") {
+      return c.json({ error: "bot_token is required" }, 400);
+    }
+
+    try {
+      const resp = await fetch(
+        `${NANOBOT_BASE_URL}/gateway/telegram/connect`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ team_id: teamId, bot_token: botToken }),
+        },
+      );
+      const data = await resp.json();
+      return c.json(data, resp.status as 200);
+    } catch {
+      return c.json(
+        { error: "Failed to connect to nanobot gateway" },
+        502,
+      );
+    }
+  },
+);
+
 export { app as nanobotRouter };

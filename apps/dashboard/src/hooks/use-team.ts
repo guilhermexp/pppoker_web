@@ -3,6 +3,7 @@
 import { useTRPC } from "@/trpc/client";
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -147,5 +148,62 @@ export function useTestInfinitePayHandleMutation() {
 
   return useMutation(
     trpc.team.testInfinitePayHandle.mutationOptions(),
+  );
+}
+
+export function useCheckTestPaymentQuery(orderNsu: string | null) {
+  const trpc = useTRPC();
+
+  return useQuery({
+    ...trpc.team.checkTestPaymentStatus.queryOptions(
+      { orderNsu: orderNsu! },
+    ),
+    enabled: !!orderNsu,
+    refetchInterval: (query) => {
+      // Stop polling once paid
+      if (query.state.data?.paid) return false;
+      return 5000; // Poll every 5 seconds
+    },
+  });
+}
+
+// =============================================================================
+// FASTCHIPS SERVICE HOOKS
+// =============================================================================
+
+export function useFastchipsServiceQuery() {
+  const trpc = useTRPC();
+  return useSuspenseQuery(
+    trpc.team.getFastchipsServiceSettings.queryOptions(),
+  );
+}
+
+export function useFastchipsServiceMutation() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.team.updateFastchipsServiceSettings.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.team.getFastchipsServiceSettings.queryKey(),
+        });
+      },
+    }),
+  );
+}
+
+export function useActivateFastchipsMutation() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.team.activateFastchipsService.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.team.getFastchipsServiceSettings.queryKey(),
+        });
+      },
+    }),
   );
 }

@@ -2150,6 +2150,50 @@ export default {
         status: "Status:",
       },
     },
+    service: {
+      landing_title: "Ative o Fastchips para seu clube",
+      landing_subtitle:
+        "Automatize pagamentos, envio de fichas e atendimento ao jogador com um sistema completo e integrado.",
+      feature_payments_title: "Links de Pagamento",
+      feature_payments_description:
+        "Gere links de pagamento via InfinitePay (Pix/Cartao) para seus jogadores comprarem fichas.",
+      feature_agent_title: "Agente IA",
+      feature_agent_description:
+        "Agente inteligente que gerencia pagamentos, envio de fichas e atendimento automaticamente.",
+      feature_gateway_title: "Gateway WhatsApp/Telegram",
+      feature_gateway_description:
+        "Jogadores interagem com o agente diretamente pelo WhatsApp ou Telegram.",
+      activate_button: "Ativar Fastchips",
+      setup_title: "Configurar Fastchips",
+      setup_subtitle: "Complete os passos abaixo para ativar o servico.",
+      step_infinitepay: "InfinitePay",
+      step_nanobot: "Agente IA",
+      step_gateway: "Gateway",
+      step_configured: "Configurado",
+      step_not_configured: "Pendente",
+      nanobot_description:
+        "O agente IA vai gerenciar pagamentos e envios de fichas automaticamente para seus jogadores.",
+      nanobot_enabled: "Agente IA ativado",
+      gateway_whatsapp_title: "WhatsApp",
+      gateway_whatsapp_description:
+        "Conecte um numero de WhatsApp para que os jogadores possam interagir com o agente.",
+      gateway_telegram_title: "Telegram",
+      gateway_telegram_description:
+        "Configure um bot do Telegram para receber mensagens dos jogadores.",
+      gateway_telegram_token_placeholder: "Token do bot (@BotFather)",
+      gateway_skip: "Pular - ativar sem gateway",
+      gateway_test_connection: "Testar conexao",
+      gateway_connected: "Conectado",
+      gateway_disconnected: "Desconectado",
+      gateway_connecting: "Conectando...",
+      finish_button: "Finalizar e Ativar",
+      finish_success: "Fastchips ativado com sucesso!",
+      finish_success_description:
+        "O servico esta pronto para atender seus jogadores.",
+      next: "Proximo",
+      previous: "Anterior",
+      loading: "Carregando...",
+    },
     controle: {
       title: "Controle",
       description: "Painel de controle e relatorios Fast Chips",
@@ -2176,6 +2220,9 @@ export default {
       league_id: "ID da liga",
       league_notice:
         "Caso nao saiba ou nao tenha o ID da liga, preencha o campo com 0.",
+      save: "Salvar",
+      saving: "Salvando...",
+      saved: "Configuracoes salvas com sucesso",
     },
   },
   approval: {
