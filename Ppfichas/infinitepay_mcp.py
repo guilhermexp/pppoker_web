@@ -31,13 +31,15 @@ except ImportError:
 
 # ── Configuracao ───────────────────────────────────────────
 INFINITEPAY_API_URL = "https://api.infinitepay.io"
-HANDLE = "xperience_solutions"
 
 FASTCHIPS_API_URL = os.environ.get("FASTCHIPS_API_URL", "http://localhost:3101")
 FASTCHIPS_API_KEY = os.environ.get("FASTCHIPS_API_KEY", "")
 FASTCHIPS_TEAM_ID = os.environ.get("FASTCHIPS_TEAM_ID", "")
 # URL publica da API para webhook (InfinitePay precisa acessar de fora)
 INFINITEPAY_WEBHOOK_URL = os.environ.get("INFINITEPAY_WEBHOOK_URL", "")
+
+# Cache do handle por team (evita chamada a cada request)
+_handle_cache: dict[str, str] = {}
 
 # ── Pedidos em memoria (sessao) ────────────────────────────
 _orders: dict[str, dict] = {}
@@ -48,6 +50,36 @@ app = Server("infinitepay")
 # ─────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────
+
+async def _get_handle() -> str:
+    """Busca o handle InfinitePay configurado para o time via API."""
+    if FASTCHIPS_TEAM_ID in _handle_cache:
+        return _handle_cache[FASTCHIPS_TEAM_ID]
+
+    if not FASTCHIPS_API_KEY or not FASTCHIPS_TEAM_ID:
+        raise ValueError(
+            "InfinitePay nao configurado. Configure o handle em Settings > Pagamentos."
+        )
+
+    url = f"{FASTCHIPS_API_URL}/api/infinitepay-settings?teamId={FASTCHIPS_TEAM_ID}"
+    headers = {"x-api-key": FASTCHIPS_API_KEY}
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, headers=headers)
+            if resp.status_code != 200:
+                raise ValueError(f"Erro ao buscar config InfinitePay: HTTP {resp.status_code}")
+            data = resp.json()
+            if not data.get("enabled") or not data.get("handle"):
+                raise ValueError(
+                    "InfinitePay nao configurado para este time. "
+                    "Configure o handle em Settings > Pagamentos."
+                )
+            _handle_cache[FASTCHIPS_TEAM_ID] = data["handle"]
+            return data["handle"]
+    except httpx.TimeoutException:
+        raise ValueError("Timeout ao buscar configuracao InfinitePay")
+
 
 def _generate_order_nsu() -> str:
     """Gera NSU com componente aleatorio."""
@@ -219,12 +251,20 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
                 "error": "fichas deve ser positivo"
             }))]
 
+        try:
+            handle = await _get_handle()
+        except ValueError as e:
+            return [types.TextContent(type="text", text=json.dumps({
+                "status": "error",
+                "error": str(e)
+            }))]
+
         order_nsu = arguments.get("order_nsu") or _generate_order_nsu()
         valor_centavos = int(round(valor_reais * 100))
 
         # Payload conforme doc oficial InfinitePay
         checkout_payload: dict = {
-            "handle": HANDLE,
+            "handle": handle,
             "items": [
                 {
                     "description": descricao,
@@ -330,9 +370,17 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         if not slug and local_order:
             slug = local_order.get("slug")
 
+        try:
+            handle = await _get_handle()
+        except ValueError as e:
+            return [types.TextContent(type="text", text=json.dumps({
+                "status": "error",
+                "error": str(e)
+            }))]
+
         # Endpoint oficial: POST /invoices/public/checkout/payment_check
         check_payload: dict = {
-            "handle": HANDLE,
+            "handle": handle,
             "order_nsu": order_nsu,
         }
         if transaction_nsu:

@@ -5,6 +5,7 @@ import { chatRouter } from "./chat";
 import { customersRouter } from "./customers";
 import { documentsRouter } from "./documents";
 import { inboxRouter } from "./inbox";
+import { infinitepaySettingsRouter } from "./infinitepay-settings";
 import { infinitepayWebhookRouter } from "./infinitepay-webhook";
 import { invoicesRouter } from "./invoices";
 import { nanobotRouter } from "./nanobot";
@@ -31,6 +32,7 @@ routers.route("/infinitepay/webhook", infinitepayWebhookRouter);
 
 // Mount API-key authenticated routes (before protected middleware)
 routers.route("/payment-orders", paymentOrdersRouter);
+routers.route("/infinitepay-settings", infinitepaySettingsRouter);
 
 // Apply protected middleware to all subsequent routes
 routers.use(...protectedMiddleware);

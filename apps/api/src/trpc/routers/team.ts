@@ -4,6 +4,10 @@ import {
   updatePokerSettingsSchema,
 } from "@api/schemas/poker";
 import {
+  infinitePaySettingsSchema,
+  normalizeInfinitePaySettings,
+} from "@api/schemas/infinitepay-settings";
+import {
   acceptTeamInviteSchema,
   createTeamSchema,
   declineTeamInviteSchema,
@@ -48,6 +52,7 @@ import type {
 import { logger } from "@midpoker/logger";
 import { tasks } from "@trigger.dev/sdk";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 // Helper to get team via Supabase REST (avoids Drizzle connection pool issues)
 async function getTeamViaSupabase(teamId: string) {
@@ -693,6 +698,126 @@ export const teamRouter = createTRPCRouter({
       }
 
       return { success: true };
+    }),
+
+  // ==========================================================================
+  // INFINITEPAY SETTINGS
+  // ==========================================================================
+
+  getInfinitePaySettings: protectedProcedure.query(
+    async ({ ctx: { teamId } }) => {
+      const supabase = await createAdminClient();
+      const { data, error } = await supabase
+        .from("teams")
+        .select("export_settings")
+        .eq("id", teamId)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to load InfinitePay settings: ${error.message}`,
+        });
+      }
+
+      const exportSettings = data?.export_settings as
+        | Record<string, unknown>
+        | null;
+      return normalizeInfinitePaySettings(exportSettings?.infinitepay);
+    },
+  ),
+
+  updateInfinitePaySettings: protectedProcedure
+    .input(infinitePaySettingsSchema)
+    .mutation(async ({ ctx: { teamId }, input }) => {
+      const supabase = await createAdminClient();
+
+      // Read current export_settings to merge
+      const { data: team, error: getError } = await supabase
+        .from("teams")
+        .select("export_settings")
+        .eq("id", teamId)
+        .single();
+
+      if (getError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to read settings: ${getError.message}`,
+        });
+      }
+
+      const exportSettings =
+        team?.export_settings && typeof team.export_settings === "object"
+          ? {
+              ...(team.export_settings as Record<string, unknown>),
+            }
+          : {};
+
+      exportSettings.infinitepay = {
+        enabled: input.enabled,
+        handle: input.handle.trim(),
+      };
+
+      const { error: updateError } = await supabase
+        .from("teams")
+        .update({ export_settings: exportSettings })
+        .eq("id", teamId);
+
+      if (updateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to save InfinitePay settings: ${updateError.message}`,
+        });
+      }
+
+      return normalizeInfinitePaySettings(exportSettings.infinitepay);
+    }),
+
+  testInfinitePayHandle: protectedProcedure
+    .input(z.object({ handle: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const valorCentavos = 100; // R$1,00
+      const orderNsu = `test_${Date.now()}`;
+
+      const resp = await fetch(
+        "https://api.infinitepay.io/invoices/public/checkout/links",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            handle: input.handle.trim(),
+            items: [
+              {
+                description: "Teste de configuração - R$1,00",
+                quantity: 1,
+                price: valorCentavos,
+              },
+            ],
+            order_nsu: orderNsu,
+          }),
+        },
+      );
+
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => "");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `InfinitePay retornou erro (${resp.status}): ${errText.slice(0, 300)}`,
+        });
+      }
+
+      const data = (await resp.json()) as Record<string, unknown>;
+      const checkoutUrl = (data.checkout_url ?? data.url) as string | undefined;
+
+      if (!checkoutUrl) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "InfinitePay não retornou URL de checkout. Verifique se o handle está correto.",
+        });
+      }
+
+      return { checkoutUrl, orderNsu };
     }),
 
   searchLigas: protectedProcedure.query(async ({ ctx: { teamId } }) => {

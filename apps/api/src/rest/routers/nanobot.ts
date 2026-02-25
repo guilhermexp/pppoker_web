@@ -21,7 +21,22 @@ const app = new OpenAPIHono<Context>();
 const PPPOKER_BRIDGE_URL =
   process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
 const INFINITEPAY_API_URL = "https://api.infinitepay.io";
-const INFINITEPAY_HANDLE = "xperience_solutions";
+
+async function getInfinitePayHandle(teamId: string): Promise<string> {
+  const supabase = await createAdminClient();
+  const { data } = await supabase
+    .from("teams")
+    .select("export_settings")
+    .eq("id", teamId)
+    .single();
+
+  const exportSettings = data?.export_settings as Record<string, unknown> | null;
+  const ipSettings = exportSettings?.infinitepay as Record<string, unknown> | undefined;
+  if (ipSettings?.enabled && typeof ipSettings.handle === "string" && ipSettings.handle) {
+    return ipSettings.handle;
+  }
+  throw new Error("InfinitePay não configurado para este time. Configure o handle em Settings > Pagamentos.");
+}
 
 const nanobotOrchestrationTools = [
   {
@@ -607,12 +622,14 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
         return c.json({ success: false, error: ipParsed.error }, 400);
       }
 
+      const infinitePayHandle = await getInfinitePayHandle(teamId);
+
       const orderNsu =
         ipParsed.data.order_nsu || `xp_${Date.now()}`;
       const valorCentavos = Math.round(ipParsed.data.valor_reais * 100);
 
       const checkoutPayload: Record<string, unknown> = {
-        handle: INFINITEPAY_HANDLE,
+        handle: infinitePayHandle,
         items: [
           {
             description: ipParsed.data.descricao,
@@ -740,8 +757,9 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       }
 
       // Fallback: check InfinitePay API
+      const infinitePayHandle = await getInfinitePayHandle(teamId);
       const checkPayload: Record<string, string> = {
-        handle: INFINITEPAY_HANDLE,
+        handle: infinitePayHandle,
         order_nsu: vpParsed.data.order_nsu,
       };
       const txnNsu = vpParsed.data.transaction_nsu ?? dbOrder?.transaction_nsu;

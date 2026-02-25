@@ -117,3 +117,35 @@ export function useSearchLigasQuery() {
   const trpc = useTRPC();
   return useSuspenseQuery(trpc.team.searchLigas.queryOptions());
 }
+
+// =============================================================================
+// INFINITEPAY SETTINGS HOOKS
+// =============================================================================
+
+export function useInfinitePaySettingsQuery() {
+  const trpc = useTRPC();
+  return useSuspenseQuery(trpc.team.getInfinitePaySettings.queryOptions());
+}
+
+export function useInfinitePaySettingsMutation() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.team.updateInfinitePaySettings.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.team.getInfinitePaySettings.queryKey(),
+        });
+      },
+    }),
+  );
+}
+
+export function useTestInfinitePayHandleMutation() {
+  const trpc = useTRPC();
+
+  return useMutation(
+    trpc.team.testInfinitePayHandle.mutationOptions(),
+  );
+}
