@@ -8,8 +8,14 @@ import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
 import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Button } from "@midpoker/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@midpoker/ui/dropdown-menu";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, RefreshCw } from "lucide-react";
+import { Loader2, Search, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 
 type LiveMember = {
@@ -32,6 +38,19 @@ type LiveMember = {
   maos?: number | null;
 };
 
+type SortKey = "ganhos" | "taxa" | "maos" | "ultima_conexao" | "ultimo_jogo" | "buyin_spinup" | "chip_storm" | "indice_shark";
+
+const SORT_OPTIONS: { key: SortKey; label: string; available: boolean }[] = [
+  { key: "ganhos", label: "Ganhos", available: true },
+  { key: "taxa", label: "Taxa", available: true },
+  { key: "maos", label: "Mãos", available: true },
+  { key: "ultima_conexao", label: "Última conexão", available: true },
+  { key: "ultimo_jogo", label: "Último jogo", available: false },
+  { key: "buyin_spinup", label: "Buy-in de SpinUp", available: false },
+  { key: "chip_storm", label: "Chip Storm", available: false },
+  { key: "indice_shark", label: "Índice Shark", available: false },
+];
+
 function formatTimeAgo(ts?: number): string {
   if (!ts || ts === 0) return "—";
   const now = Date.now() / 1000;
@@ -42,8 +61,73 @@ function formatTimeAgo(ts?: number): string {
   return `${Math.floor(diff / 86400)}d`;
 }
 
-function JogadorRow({ member }: { member: LiveMember }) {
+function formatMoney(value: number) {
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function getSortValue(member: LiveMember, sortKey: SortKey): number {
+  switch (sortKey) {
+    case "ganhos":
+      return member.ganhos ?? 0;
+    case "taxa":
+      return member.taxa ?? 0;
+    case "maos":
+      return member.maos ?? 0;
+    case "ultima_conexao":
+      return member.last_active_ts ?? 0;
+    default:
+      return 0;
+  }
+}
+
+function formatSortValue(member: LiveMember, sortKey: SortKey): string | null {
+  switch (sortKey) {
+    case "ganhos": {
+      const v = member.ganhos;
+      if (v == null) return null;
+      return `${v >= 0 ? "+" : ""}${formatMoney(v)}`;
+    }
+    case "taxa": {
+      const v = member.taxa;
+      if (v == null || v === 0) return null;
+      return formatMoney(v);
+    }
+    case "maos": {
+      const v = member.maos;
+      if (v == null || v === 0) return null;
+      return `${v.toLocaleString("pt-BR")}`;
+    }
+    case "ultima_conexao":
+      return member.online ? "Online" : formatTimeAgo(member.last_active_ts);
+    default:
+      return "—";
+  }
+}
+
+function sortValueColor(member: LiveMember, sortKey: SortKey): string {
+  if (sortKey === "ganhos") {
+    const v = member.ganhos ?? 0;
+    if (v > 0) return "text-green-600";
+    if (v < 0) return "text-red-600";
+  }
+  if (sortKey === "ultima_conexao" && member.online) {
+    return "text-green-600";
+  }
+  return "text-muted-foreground";
+}
+
+function JogadorRow({
+  member,
+  sortKey,
+}: {
+  member: LiveMember;
+  sortKey: SortKey;
+}) {
   const initials = member.nome.slice(0, 2).toUpperCase();
+  const displayValue = formatSortValue(member, sortKey);
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
@@ -72,30 +156,33 @@ function JogadorRow({ member }: { member: LiveMember }) {
       </div>
 
       <div className="flex flex-col items-end gap-1">
-        {member.ganhos != null && (
+        {displayValue && (
           <span
             className={cn(
               "font-mono text-sm font-medium",
-              member.ganhos > 0 && "text-green-600",
-              member.ganhos < 0 && "text-red-600",
-              member.ganhos === 0 && "text-muted-foreground",
+              sortValueColor(member, sortKey),
+            )}
+          >
+            {displayValue}
+          </span>
+        )}
+        {/* Secondary info: show other stats below the main sort value */}
+        {sortKey !== "ganhos" && member.ganhos != null && member.ganhos !== 0 && (
+          <span
+            className={cn(
+              "font-mono text-[10px]",
+              member.ganhos > 0 ? "text-green-600/70" : "text-red-600/70",
             )}
           >
             {member.ganhos >= 0 ? "+" : ""}
-            {member.ganhos.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {formatMoney(member.ganhos)}
           </span>
         )}
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          {member.taxa != null && member.taxa > 0 && (
-            <span>Taxa: {member.taxa.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}</span>
-          )}
-          {member.maos != null && member.maos > 0 && (
-            <span>{member.maos} mãos</span>
-          )}
-        </div>
-        <span className="text-xs text-muted-foreground">
-          {member.online ? "Online" : formatTimeAgo(member.last_active_ts)}
-        </span>
+        {sortKey !== "ultima_conexao" && (
+          <span className="text-[10px] text-muted-foreground">
+            {member.online ? "Online" : formatTimeAgo(member.last_active_ts)}
+          </span>
+        )}
         {!member.agente_uid && (
           <Badge
             variant="secondary"
@@ -114,6 +201,8 @@ export function JogadoresPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("todos");
+  const [sortKey, setSortKey] = useState<SortKey>("ganhos");
+  const [sortAsc, setSortAsc] = useState(false);
   const deferredSearch = useDeferredValue(search);
 
   const { data, isLoading, isFetching } = useQuery(
@@ -141,15 +230,24 @@ export function JogadoresPage() {
     // Filter
     switch (filter) {
       case "online":
-        return result.filter((m) => m.online);
+        result = result.filter((m) => m.online);
+        break;
       case "sem_agente":
-        return result.filter((m) => !m.agente_uid);
-      default:
-        return result;
+        result = result.filter((m) => !m.agente_uid);
+        break;
     }
-  }, [allMembers, deferredSearch, filter]);
 
-  const stats = useMemo(() => {
+    // Sort
+    const sorted = [...result].sort((a, b) => {
+      const va = getSortValue(a, sortKey);
+      const vb = getSortValue(b, sortKey);
+      return sortAsc ? va - vb : vb - va;
+    });
+
+    return sorted;
+  }, [allMembers, deferredSearch, filter, sortKey, sortAsc]);
+
+  const pageStats = useMemo(() => {
     const online = allMembers.filter((m) => m.online).length;
     const comAgente = allMembers.filter((m) => m.agente_uid).length;
     return { total: allMembers.length, online, comAgente };
@@ -160,6 +258,8 @@ export function JogadoresPage() {
       queryKey: trpc.poker.members.getLive.queryKey(),
     });
   };
+
+  const currentSortLabel = SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? "Ganhos";
 
   if (isLoading) {
     return (
@@ -178,7 +278,7 @@ export function JogadoresPage() {
             <Icons.Customers className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className="font-mono text-sm font-medium">{stats.total}</p>
+            <p className="font-mono text-sm font-medium">{pageStats.total}</p>
             <p className="text-[10px] text-muted-foreground truncate">Total</p>
           </div>
         </div>
@@ -187,7 +287,7 @@ export function JogadoresPage() {
             <Icons.Customers className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className="font-mono text-sm font-medium text-green-600">{stats.online}</p>
+            <p className="font-mono text-sm font-medium text-green-600">{pageStats.online}</p>
             <p className="text-[10px] text-muted-foreground truncate">Online</p>
           </div>
         </div>
@@ -196,7 +296,7 @@ export function JogadoresPage() {
             <Icons.Customers className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className="font-mono text-sm font-medium text-blue-600">{stats.comAgente}</p>
+            <p className="font-mono text-sm font-medium text-blue-600">{pageStats.comAgente}</p>
             <p className="text-[10px] text-muted-foreground truncate">Com agente</p>
           </div>
         </div>
@@ -224,32 +324,84 @@ export function JogadoresPage() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {[
-          { key: "todos", label: "Todos", count: allMembers.length },
-          { key: "online", label: "Online", count: allMembers.filter((m) => m.online).length },
-          { key: "sem_agente", label: "Sem agente", count: allMembers.filter((m) => !m.agente_uid).length },
-        ].map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setFilter(f.key)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap",
-              filter === f.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted/80",
-            )}
-          >
-            {f.label}
-            <span className="opacity-70">({f.count})</span>
-          </button>
-        ))}
+      {/* Filters + Sort */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {[
+            { key: "todos", label: "Todos", count: allMembers.length },
+            { key: "online", label: "Online", count: allMembers.filter((m) => m.online).length },
+            { key: "sem_agente", label: "Sem agente", count: allMembers.filter((m) => !m.agente_uid).length },
+          ].map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setFilter(f.key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap",
+                filter === f.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted/80",
+              )}
+            >
+              {f.label}
+              <span className="opacity-70">({f.count})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Sort dropdown */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs px-2">
+                {currentSortLabel}
+                <ArrowUpDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {SORT_OPTIONS.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.key}
+                  disabled={!opt.available}
+                  onClick={() => {
+                    if (opt.key === sortKey) {
+                      setSortAsc((prev) => !prev);
+                    } else {
+                      setSortKey(opt.key);
+                      setSortAsc(false);
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center justify-between",
+                    !opt.available && "opacity-40",
+                  )}
+                >
+                  <span>{opt.label}</span>
+                  {opt.key === sortKey && (
+                    sortAsc
+                      ? <ChevronUp className="h-3.5 w-3.5 text-primary" />
+                      : <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  {!opt.available && (
+                    <Badge variant="secondary" className="h-4 px-1 text-[9px]">
+                      Em breve
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Member count */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+        <span>Membro: {filtered.length}</span>
+        {isFetching && <Loader2 className="h-3 w-3 animate-spin" />}
       </div>
 
       {/* List */}
-      <ScrollArea className="h-[calc(100vh-340px)]">
+      <ScrollArea className="h-[calc(100vh-400px)]">
         <div className="flex flex-col gap-2">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-center">
@@ -260,7 +412,7 @@ export function JogadoresPage() {
             </div>
           ) : (
             filtered.map((member) => (
-              <JogadorRow key={member.uid} member={member} />
+              <JogadorRow key={member.uid} member={member} sortKey={sortKey} />
             ))
           )}
         </div>

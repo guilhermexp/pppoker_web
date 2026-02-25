@@ -7,44 +7,141 @@ import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import { cn } from "@midpoker/ui/cn";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@midpoker/ui/dropdown-menu";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
 import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Loader2, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, Search, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import { Suspense, useDeferredValue, useMemo, useState } from "react";
 import { CreditRequestsList } from "./credit-requests-list";
 import { MemberDetailView } from "./member-detail-view";
 import { PendingMembersList } from "./pending-members-list";
-import type { ClubMember } from "@/components/tables/poker-membros/columns";
+
+type LiveMember = {
+  uid: number;
+  nome: string;
+  papel_num: number;
+  papel: string;
+  avatar_url?: string;
+  online: boolean;
+  saldo_caixa?: number | null;
+  credito_linha?: number;
+  agente_uid?: number | null;
+  agente_nome?: string;
+  titulo?: string;
+  last_active_ts?: number;
+  ganhos?: number | null;
+  taxa?: number | null;
+  maos?: number | null;
+};
+
+type SortKey = "ganhos" | "taxa" | "maos" | "ultima_conexao" | "ultimo_jogo" | "buyin_spinup" | "chip_storm" | "indice_shark";
+
+const SORT_OPTIONS: { key: SortKey; label: string; available: boolean }[] = [
+  { key: "ganhos", label: "Ganhos", available: true },
+  { key: "taxa", label: "Taxa", available: true },
+  { key: "maos", label: "Mãos", available: true },
+  { key: "ultima_conexao", label: "Última conexão", available: true },
+  { key: "ultimo_jogo", label: "Último jogo", available: false },
+  { key: "buyin_spinup", label: "Buy-in de SpinUp", available: false },
+  { key: "chip_storm", label: "Chip Storm", available: false },
+  { key: "indice_shark", label: "Índice Shark", available: false },
+];
+
+const PAPEL_LABEL: Record<number, string> = {
+  1: "Dono",
+  2: "Gestor",
+  4: "Super Agente",
+  5: "Agente",
+  10: "Membro",
+};
 
 function formatMoney(value: number) {
   return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
 
+function formatTimeAgo(ts?: number): string {
+  if (!ts || ts === 0) return "—";
+  const now = Date.now() / 1000;
+  const diff = now - ts;
+  if (diff < 60) return "agora";
+  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
+
+function getSortValue(member: LiveMember, sortKey: SortKey): number {
+  switch (sortKey) {
+    case "ganhos": return member.ganhos ?? 0;
+    case "taxa": return member.taxa ?? 0;
+    case "maos": return member.maos ?? 0;
+    case "ultima_conexao": return member.last_active_ts ?? 0;
+    default: return 0;
+  }
+}
+
+function formatSortValue(member: LiveMember, sortKey: SortKey): string | null {
+  switch (sortKey) {
+    case "ganhos": {
+      const v = member.ganhos;
+      if (v == null) return null;
+      return `${v >= 0 ? "+" : ""}${formatMoney(v)}`;
+    }
+    case "taxa": {
+      const v = member.taxa;
+      if (v == null || v === 0) return null;
+      return formatMoney(v);
+    }
+    case "maos": {
+      const v = member.maos;
+      if (v == null || v === 0) return null;
+      return v.toLocaleString("pt-BR");
+    }
+    case "ultima_conexao":
+      return member.online ? "Online" : formatTimeAgo(member.last_active_ts);
+    default:
+      return "—";
+  }
+}
+
+function sortValueColor(member: LiveMember, sortKey: SortKey): string {
+  if (sortKey === "ganhos") {
+    const v = member.ganhos ?? 0;
+    if (v > 0) return "text-green-600";
+    if (v < 0) return "text-red-600";
+  }
+  if (sortKey === "ultima_conexao" && member.online) return "text-green-600";
+  return "text-muted-foreground";
+}
+
 function CompactMemberRow({
   member,
+  sortKey,
   onClick,
 }: {
-  member: ClubMember;
+  member: LiveMember;
+  sortKey: SortKey;
   onClick?: () => void;
 }) {
-  const initials = member.nickname.slice(0, 2).toUpperCase();
-  const subtitle = member.memoName
-    ? member.memoName
-    : member.agent?.nickname
-      ? `Agente: ${member.agent.nickname}`
-      : undefined;
+  const initials = (member.nome || "?").slice(0, 2).toUpperCase();
+  const displayValue = formatSortValue(member, sortKey);
+  const roleLabel = PAPEL_LABEL[member.papel_num] ?? "Membro";
 
   const badgeVariant =
-    member.type === "super_agent"
+    member.papel_num === 4
       ? "default"
-      : member.type === "agent"
+      : member.papel_num === 5
         ? "outline"
         : "secondary";
 
@@ -63,36 +160,42 @@ function CompactMemberRow({
         <div
           className={cn(
             "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
-            member.isOnline ? "bg-green-500" : "bg-gray-400",
+            member.online ? "bg-green-500" : "bg-gray-400",
           )}
         />
       </div>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-medium">{member.nickname}</p>
+          <p className="truncate text-sm font-medium">{member.nome}</p>
         </div>
         <p className="text-xs text-muted-foreground font-mono">
-          {member.ppPokerId}
+          ID: {member.uid}
         </p>
-        {subtitle && (
-          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+        {member.agente_nome && (
+          <p className="truncate text-xs text-muted-foreground">
+            Agente: {member.agente_nome}
+          </p>
         )}
       </div>
 
       <div className="flex flex-col items-end gap-1">
-        <span
-          className={cn(
-            "font-mono text-sm",
-            member.cashboxBalance > 0 && "text-green-600",
-            member.cashboxBalance < 0 && "text-red-600",
-            member.cashboxBalance === 0 && "text-muted-foreground",
-          )}
-        >
-          {member.cashboxBalance >= 0 ? "+" : ""}
-          {formatMoney(member.cashboxBalance)}
-        </span>
-        <Badge variant={badgeVariant}>{member.roleLabel}</Badge>
+        {displayValue && (
+          <span
+            className={cn(
+              "font-mono text-sm font-medium",
+              sortValueColor(member, sortKey),
+            )}
+          >
+            {displayValue}
+          </span>
+        )}
+        {sortKey !== "ultima_conexao" && (
+          <span className="text-[10px] text-muted-foreground">
+            {member.online ? "Online" : formatTimeAgo(member.last_active_ts)}
+          </span>
+        )}
+        <Badge variant={badgeVariant}>{roleLabel}</Badge>
       </div>
     </div>
   );
@@ -102,32 +205,39 @@ function MembrosCompactTab() {
   const trpc = useTRPC();
   const { q, memberId, setParams } = usePokerMembrosParams();
   const deferredSearch = useDeferredValue(q);
-  const [sortLabel, setSortLabel] = useState<"Taxa" | "Entrada">("Taxa");
+  const [sortKey, setSortKey] = useState<SortKey>("ganhos");
+  const [sortAsc, setSortAsc] = useState(false);
 
-  const { data: stats } = useQuery(
-    trpc.poker.members.getStats.queryOptions(undefined, {
-      refetchInterval: 60_000,
-    }),
+  const { data, isLoading, isFetching } = useQuery(
+    trpc.poker.members.getLive.queryOptions({}),
   );
 
-  const queryOptions = trpc.poker.members.list.infiniteQueryOptions(
-    { q: deferredSearch || undefined },
-    { getNextPageParam: ({ meta }) => meta?.cursor },
-  );
-
-  const {
-    data,
-    isLoading,
-    isFetching,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery(queryOptions);
-
-  const members = useMemo(
-    () => data?.pages.flatMap((page) => page.data as ClubMember[]) ?? [],
+  const allMembers = useMemo(
+    () => (data?.members ?? []) as LiveMember[],
     [data],
   );
+
+  const filtered = useMemo(() => {
+    let result = allMembers;
+
+    if (deferredSearch) {
+      const searchQ = deferredSearch.toLowerCase();
+      result = result.filter(
+        (m) =>
+          m.nome.toLowerCase().includes(searchQ) ||
+          String(m.uid).includes(searchQ) ||
+          (m.titulo && m.titulo.toLowerCase().includes(searchQ)),
+      );
+    }
+
+    return [...result].sort((a, b) => {
+      const va = getSortValue(a, sortKey);
+      const vb = getSortValue(b, sortKey);
+      return sortAsc ? va - vb : vb - va;
+    });
+  }, [allMembers, deferredSearch, sortKey, sortAsc]);
+
+  const currentSortLabel = SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? "Ganhos";
 
   if (memberId) {
     return (
@@ -161,30 +271,55 @@ function MembrosCompactTab() {
       <div className="flex items-center justify-between gap-3 text-sm">
         <div className="flex items-center gap-3 text-muted-foreground">
           <span className="font-medium text-foreground">
-            Membro: {stats?.totalMembers ?? members.length}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span className="h-4 w-4 rounded border border-border" />
-            <span>Certificado: {stats?.pendingCredits ?? 0}</span>
+            Membro: {filtered.length}
           </span>
           {isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 text-xs"
-          onClick={() =>
-            setSortLabel((prev) => (prev === "Taxa" ? "Entrada" : "Taxa"))
-          }
-        >
-          {sortLabel}
-          <Icons.ChevronDown className="ml-1 h-3 w-3" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs px-2">
+              {currentSortLabel}
+              <ArrowUpDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {SORT_OPTIONS.map((opt) => (
+              <DropdownMenuItem
+                key={opt.key}
+                disabled={!opt.available}
+                onClick={() => {
+                  if (opt.key === sortKey) {
+                    setSortAsc((prev) => !prev);
+                  } else {
+                    setSortKey(opt.key);
+                    setSortAsc(false);
+                  }
+                }}
+                className={cn(
+                  "flex items-center justify-between",
+                  !opt.available && "opacity-40",
+                )}
+              >
+                <span>{opt.label}</span>
+                {opt.key === sortKey && (
+                  sortAsc
+                    ? <ChevronUp className="h-3.5 w-3.5 text-primary" />
+                    : <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                )}
+                {!opt.available && (
+                  <Badge variant="secondary" className="h-4 px-1 text-[9px]">
+                    Em breve
+                  </Badge>
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex max-h-[calc(100vh-330px)] flex-col overflow-y-auto border-t border-border">
-        {members.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-center">
             <Icons.Customers className="mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
@@ -192,27 +327,16 @@ function MembrosCompactTab() {
             </p>
           </div>
         ) : (
-          members.map((member) => (
+          filtered.map((member) => (
             <CompactMemberRow
-              key={member.id}
+              key={member.uid}
               member={member}
-              onClick={() => setParams({ memberId: member.id })}
+              sortKey={sortKey}
+              onClick={() => setParams({ memberId: String(member.uid) })}
             />
           ))
         )}
       </div>
-
-      {hasNextPage && (
-        <Button
-          variant="outline"
-          className="mt-2"
-          onClick={() => fetchNextPage()}
-          disabled={isFetchingNextPage}
-        >
-          {isFetchingNextPage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Carregar mais
-        </Button>
-      )}
     </div>
   );
 }
