@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const getMembersListSchema = z.object({
   cursor: z.string().optional(),
-  pageSize: z.number().min(1).max(100).optional(),
+  pageSize: z.number().min(1).max(500).optional(),
   q: z.string().optional(),
   sort: z.tuple([z.string(), z.string()]).nullable().optional(),
 });

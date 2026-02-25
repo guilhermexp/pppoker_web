@@ -184,7 +184,7 @@ export const pokerMembersRouter = createTRPCRouter({
       let query = supabase
         .from("poker_players")
         .select(
-          "id, pppoker_id, nickname, memo_name, type, status, is_online, cashbox_balance, pppoker_role, credit_limit, current_balance, agent_id, created_at, last_synced_at",
+          "id, pppoker_id, nickname, memo_name, type, status, is_online, cashbox_balance, pppoker_role, credit_limit, current_balance, agent_id, created_at, last_synced_at, ganhos, taxa, maos, avatar_url, agente_uid, agente_nome, stats_period_start, stats_period_end",
           { count: "exact" },
         )
         .eq("team_id", teamId);
@@ -278,6 +278,17 @@ export const pokerMembersRouter = createTRPCRouter({
         createdAt: p.created_at,
         lastSyncedAt: (p as Record<string, unknown>).last_synced_at ?? null,
         agent: p.agent_id ? (agentsMap[p.agent_id] ?? null) : null,
+        ganhos: Number((p as Record<string, unknown>).ganhos ?? 0),
+        taxa: Number((p as Record<string, unknown>).taxa ?? 0),
+        maos: Number((p as Record<string, unknown>).maos ?? 0),
+        avatarUrl: ((p as Record<string, unknown>).avatar_url as string) ?? "",
+        agenteUid: (p as Record<string, unknown>).agente_uid as number | null,
+        agenteNome:
+          ((p as Record<string, unknown>).agente_nome as string) ?? "",
+        statsPeriodStart:
+          ((p as Record<string, unknown>).stats_period_start as string) ?? null,
+        statsPeriodEnd:
+          ((p as Record<string, unknown>).stats_period_end as string) ?? null,
       }));
 
       return {
@@ -643,5 +654,129 @@ export const pokerMembersRouter = createTRPCRouter({
       }
 
       return { id: data.id };
+    }),
+
+  /**
+   * Sync members from PPPoker bridge into poker_players (background sync)
+   */
+  syncMembers: protectedProcedure
+    .input(
+      z
+        .object({
+          dateStart: z.number().optional(),
+          dateEnd: z.number().optional(),
+        })
+        .optional()
+        .default({}),
+    )
+    .mutation(async ({ input, ctx: { teamId } }) => {
+      const creds = await getBridgeCredentials(teamId!);
+
+      // Build URL with query params for stats (same logic as getLive)
+      const url = new URL(
+        `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/members`,
+      );
+      if (creds.liga_id) {
+        url.searchParams.set("liga_id", String(creds.liga_id));
+        const now = new Date();
+        const start = new Date(now);
+        start.setDate(start.getDate() - 30);
+        const dateStart =
+          input.dateStart ??
+          Number(
+            `${start.getFullYear()}${String(start.getMonth() + 1).padStart(2, "0")}${String(start.getDate()).padStart(2, "0")}`,
+          );
+        const dateEnd =
+          input.dateEnd ??
+          Number(
+            `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`,
+          );
+        url.searchParams.set("date_start", String(dateStart));
+        url.searchParams.set("date_end", String(dateEnd));
+      }
+
+      const resp = await fetch(url.toString(), {
+        headers: {
+          "X-PPPoker-Username": creds.pppoker_username,
+          "X-PPPoker-Password": creds.pppoker_password,
+        },
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Falha ao sincronizar membros: ${errText}`,
+        });
+      }
+
+      const json = await resp.json();
+      const parsed = getLiveMembersResponse.parse(json);
+
+      const now = new Date();
+      const start = new Date(now);
+      start.setDate(start.getDate() - 30);
+      const periodStart =
+        input.dateStart ??
+        Number(
+          `${start.getFullYear()}${String(start.getMonth() + 1).padStart(2, "0")}${String(start.getDate()).padStart(2, "0")}`,
+        );
+      const periodEnd =
+        input.dateEnd ??
+        Number(
+          `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`,
+        );
+
+      const supabase = await createAdminClient();
+      const nowIso = new Date().toISOString();
+
+      // Batch upsert members
+      const rows = parsed.members.map((m) => ({
+        pppoker_id: String(m.uid),
+        team_id: teamId,
+        nickname: m.nome,
+        is_online: m.online,
+        cashbox_balance: m.saldo_caixa ?? 0,
+        pppoker_role: m.papel_num,
+        ganhos: m.ganhos ?? 0,
+        taxa: m.taxa ?? 0,
+        maos: m.maos ?? 0,
+        avatar_url: m.avatar_url ?? "",
+        agente_uid: m.agente_uid ?? null,
+        agente_nome: m.agente_nome ?? "",
+        last_synced_at: nowIso,
+        stats_period_start: String(periodStart),
+        stats_period_end: String(periodEnd),
+        updated_at: nowIso,
+      }));
+
+      if (rows.length === 0) {
+        return { synced: 0, total: 0 };
+      }
+
+      // Upsert in batches of 200
+      let synced = 0;
+      const BATCH_SIZE = 200;
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const batch = rows.slice(i, i + BATCH_SIZE);
+        const { error } = await supabase.from("poker_players").upsert(batch, {
+          onConflict: "pppoker_id,team_id",
+          ignoreDuplicates: false,
+        });
+
+        if (error) {
+          logger.error(
+            { error: error.message, batch: i },
+            "syncMembers upsert error",
+          );
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Erro ao salvar membros: ${error.message}`,
+          });
+        }
+        synced += batch.length;
+      }
+
+      return { synced, total: parsed.members.length };
     }),
 });

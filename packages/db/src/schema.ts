@@ -3507,6 +3507,28 @@ export const pokerPlayers = pgTable(
     note: text("note"),
     metadata: jsonb("metadata"),
 
+    // PPPoker sync fields (from migration 0013)
+    isOnline: boolean("is_online").default(false),
+    cashboxBalance: numericCasted("cashbox_balance", {
+      precision: 19,
+      scale: 2,
+    }).default(0),
+    pppokerRole: integer("pppoker_role"),
+    lastSyncedAt: timestamp("last_synced_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+
+    // PPPoker stats fields (from migration 0017)
+    ganhos: numericCasted("ganhos", { precision: 14, scale: 2 }).default(0),
+    taxa: numericCasted("taxa", { precision: 14, scale: 2 }).default(0),
+    maos: integer("maos").default(0),
+    statsPeriodStart: text("stats_period_start"),
+    statsPeriodEnd: text("stats_period_end"),
+    avatarUrl: text("avatar_url"),
+    agenteUid: integer("agente_uid"),
+    agenteNome: text("agente_nome"),
+
     // Full-text search
     fts: tsvector("fts").generatedAlwaysAs(
       (): SQL =>

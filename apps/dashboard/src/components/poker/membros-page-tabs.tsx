@@ -18,9 +18,9 @@ import { Input } from "@midpoker/ui/input";
 import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, Search, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
-import { Suspense, useDeferredValue, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, RefreshCw, Search, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
+import { Suspense, useEffect, useDeferredValue, useMemo, useRef, useState } from "react";
 import { CreditRequestsList } from "./credit-requests-list";
 import { MemberDetailView } from "./member-detail-view";
 import { PendingMembersList } from "./pending-members-list";
@@ -201,19 +201,77 @@ function CompactMemberRow({
   );
 }
 
+type DbMember = {
+  id: string;
+  ppPokerId: string;
+  nickname: string;
+  isOnline: boolean;
+  cashboxBalance: number;
+  pppokerRole: number | null;
+  ganhos: number;
+  taxa: number;
+  maos: number;
+  avatarUrl: string;
+  agenteUid: number | null;
+  agenteNome: string;
+};
+
+function dbToLiveMember(p: DbMember): LiveMember & { dbId: string } {
+  return {
+    dbId: p.id,
+    uid: Number(p.ppPokerId),
+    nome: p.nickname,
+    papel_num: p.pppokerRole ?? 10,
+    papel: PAPEL_LABEL[p.pppokerRole ?? 10] ?? "Membro",
+    avatar_url: p.avatarUrl,
+    online: p.isOnline,
+    saldo_caixa: p.cashboxBalance,
+    agente_uid: p.agenteUid,
+    agente_nome: p.agenteNome,
+    ganhos: p.ganhos,
+    taxa: p.taxa,
+    maos: p.maos,
+  };
+}
+
 function MembrosCompactTab() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { q, memberId, setParams } = usePokerMembrosParams();
   const deferredSearch = useDeferredValue(q);
   const [sortKey, setSortKey] = useState<SortKey>("ganhos");
   const [sortAsc, setSortAsc] = useState(false);
+  const didSync = useRef(false);
 
-  const { data, isLoading, isFetching } = useQuery(
-    trpc.poker.members.getLive.queryOptions({}),
+  // Cache-first: read from DB (instant)
+  const { data, isLoading } = useQuery(
+    trpc.poker.members.list.queryOptions({ pageSize: 500 }),
   );
 
+  // Background sync mutation
+  const syncMutation = useMutation(
+    trpc.poker.members.syncMembers.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.poker.members.list.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.poker.members.getStats.queryKey(),
+        });
+      },
+    }),
+  );
+
+  // Auto-sync on mount
+  useEffect(() => {
+    if (!didSync.current) {
+      didSync.current = true;
+      syncMutation.mutate({});
+    }
+  }, []);
+
   const allMembers = useMemo(
-    () => (data?.members ?? []) as LiveMember[],
+    () => (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
     [data],
   );
 
@@ -225,8 +283,7 @@ function MembrosCompactTab() {
       result = result.filter(
         (m) =>
           m.nome.toLowerCase().includes(searchQ) ||
-          String(m.uid).includes(searchQ) ||
-          (m.titulo && m.titulo.toLowerCase().includes(searchQ)),
+          String(m.uid).includes(searchQ),
       );
     }
 
@@ -238,6 +295,7 @@ function MembrosCompactTab() {
   }, [allMembers, deferredSearch, sortKey, sortAsc]);
 
   const currentSortLabel = SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? "Ganhos";
+  const isSyncing = syncMutation.isPending;
 
   if (memberId) {
     return (
@@ -248,10 +306,12 @@ function MembrosCompactTab() {
     );
   }
 
-  if (isLoading) {
+  // DB empty + sync in progress = first load
+  if (isLoading || (allMembers.length === 0 && isSyncing)) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-20 gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Sincronizando membros...</p>
       </div>
     );
   }
@@ -273,49 +333,62 @@ function MembrosCompactTab() {
           <span className="font-medium text-foreground">
             Membro: {filtered.length}
           </span>
-          {isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          {isSyncing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs px-2">
-              {currentSortLabel}
-              <ArrowUpDown className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {SORT_OPTIONS.map((opt) => (
-              <DropdownMenuItem
-                key={opt.key}
-                disabled={!opt.available}
-                onClick={() => {
-                  if (opt.key === sortKey) {
-                    setSortAsc((prev) => !prev);
-                  } else {
-                    setSortKey(opt.key);
-                    setSortAsc(false);
-                  }
-                }}
-                className={cn(
-                  "flex items-center justify-between",
-                  !opt.available && "opacity-40",
-                )}
-              >
-                <span>{opt.label}</span>
-                {opt.key === sortKey && (
-                  sortAsc
-                    ? <ChevronUp className="h-3.5 w-3.5 text-primary" />
-                    : <ChevronDown className="h-3.5 w-3.5 text-primary" />
-                )}
-                {!opt.available && (
-                  <Badge variant="secondary" className="h-4 px-1 text-[9px]">
-                    Em breve
-                  </Badge>
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            disabled={isSyncing}
+            onClick={() => syncMutation.mutate({})}
+            aria-label="Atualizar membros"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", isSyncing && "animate-spin")} />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs px-2">
+                {currentSortLabel}
+                <ArrowUpDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {SORT_OPTIONS.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.key}
+                  disabled={!opt.available}
+                  onClick={() => {
+                    if (opt.key === sortKey) {
+                      setSortAsc((prev) => !prev);
+                    } else {
+                      setSortKey(opt.key);
+                      setSortAsc(false);
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center justify-between",
+                    !opt.available && "opacity-40",
+                  )}
+                >
+                  <span>{opt.label}</span>
+                  {opt.key === sortKey && (
+                    sortAsc
+                      ? <ChevronUp className="h-3.5 w-3.5 text-primary" />
+                      : <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  {!opt.available && (
+                    <Badge variant="secondary" className="h-4 px-1 text-[9px]">
+                      Em breve
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="flex max-h-[calc(100vh-330px)] flex-col overflow-y-auto border-t border-border">
@@ -332,7 +405,7 @@ function MembrosCompactTab() {
               key={member.uid}
               member={member}
               sortKey={sortKey}
-              onClick={() => setParams({ memberId: String(member.uid) })}
+              onClick={() => setParams({ memberId: (member as LiveMember & { dbId: string }).dbId })}
             />
           ))
         )}
