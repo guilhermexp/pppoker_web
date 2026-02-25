@@ -232,10 +232,17 @@ function SetupWizardInner() {
   const { data: service } = useFastchipsServiceQuery();
   const { data: ipData } = useInfinitePaySettingsQuery();
   const activateMutation = useActivateFastchipsMutation();
-  const [currentStep, setCurrentStep] = useState(0);
   const [activated, setActivated] = useState(false);
 
   const ipConfigured = !!(ipData?.enabled && ipData?.handle);
+
+  // Derive initial step from server state so remounts land on the right step
+  const initialStep = !ipConfigured
+    ? 0
+    : !service.setupSteps.nanobotConfigured
+      ? 1
+      : 2;
+  const [currentStep, setCurrentStep] = useState(initialStep);
 
   const canGoNext =
     currentStep === 0
