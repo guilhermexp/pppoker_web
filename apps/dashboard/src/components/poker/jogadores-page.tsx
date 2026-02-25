@@ -27,6 +27,9 @@ type LiveMember = {
   super_agente_nome?: string;
   last_active_ts?: number;
   titulo?: string;
+  ganhos?: number | null;
+  taxa?: number | null;
+  maos?: number | null;
 };
 
 function formatTimeAgo(ts?: number): string {
@@ -69,6 +72,27 @@ function JogadorRow({ member }: { member: LiveMember }) {
       </div>
 
       <div className="flex flex-col items-end gap-1">
+        {member.ganhos != null && (
+          <span
+            className={cn(
+              "font-mono text-sm font-medium",
+              member.ganhos > 0 && "text-green-600",
+              member.ganhos < 0 && "text-red-600",
+              member.ganhos === 0 && "text-muted-foreground",
+            )}
+          >
+            {member.ganhos >= 0 ? "+" : ""}
+            {member.ganhos.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        )}
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          {member.taxa != null && member.taxa > 0 && (
+            <span>Taxa: {member.taxa.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}</span>
+          )}
+          {member.maos != null && member.maos > 0 && (
+            <span>{member.maos} mãos</span>
+          )}
+        </div>
         <span className="text-xs text-muted-foreground">
           {member.online ? "Online" : formatTimeAgo(member.last_active_ts)}
         </span>

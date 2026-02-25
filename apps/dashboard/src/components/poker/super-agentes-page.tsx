@@ -26,6 +26,9 @@ type LiveMember = {
   super_agente_uid?: number | null;
   super_agente_nome?: string;
   titulo?: string;
+  ganhos?: number | null;
+  taxa?: number | null;
+  maos?: number | null;
 };
 
 function formatBalance(value: number) {

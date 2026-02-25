@@ -33,7 +33,17 @@ async function getBridgeCredentials(teamId: string) {
     });
   }
 
-  return data;
+  // Fetch liga_id from team settings
+  const { data: team } = await supabase
+    .from("teams")
+    .select("poker_liga_id")
+    .eq("id", teamId)
+    .single();
+
+  return {
+    ...data,
+    liga_id: team?.poker_liga_id ? Number(team.poker_liga_id) : null,
+  };
 }
 
 const liveMemberSchema = z
@@ -54,6 +64,9 @@ const liveMemberSchema = z
     super_agente_uid: z.number().nullable().optional(),
     super_agente_nome: z.string().optional().default(""),
     downlines: z.array(z.unknown()).optional().default([]),
+    ganhos: z.number().nullable().optional(),
+    taxa: z.number().nullable().optional(),
+    maos: z.number().nullable().optional(),
   })
   .passthrough();
 
@@ -85,6 +98,8 @@ export const pokerMembersRouter = createTRPCRouter({
       z
         .object({
           q: z.string().optional(),
+          dateStart: z.number().optional(),
+          dateEnd: z.number().optional(),
         })
         .optional()
         .default({}),
@@ -92,8 +107,24 @@ export const pokerMembersRouter = createTRPCRouter({
     .query(async ({ input, ctx: { teamId } }) => {
       const creds = await getBridgeCredentials(teamId!);
 
+      // Build URL with query params for stats
+      const url = new URL(`${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/members`);
+      if (creds.liga_id) {
+        url.searchParams.set("liga_id", String(creds.liga_id));
+        // Default date range: last 30 days if not specified
+        const now = new Date();
+        const start = new Date(now);
+        start.setDate(start.getDate() - 30);
+        const dateStart = input.dateStart ??
+          Number(`${start.getFullYear()}${String(start.getMonth() + 1).padStart(2, "0")}${String(start.getDate()).padStart(2, "0")}`);
+        const dateEnd = input.dateEnd ??
+          Number(`${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`);
+        url.searchParams.set("date_start", String(dateStart));
+        url.searchParams.set("date_end", String(dateEnd));
+      }
+
       const resp = await fetch(
-        `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/members`,
+        url.toString(),
         {
           headers: {
             "X-PPPoker-Username": creds.pppoker_username,
