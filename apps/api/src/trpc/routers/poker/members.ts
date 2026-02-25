@@ -312,82 +312,99 @@ export const pokerMembersRouter = createTRPCRouter({
   }),
 
   /**
-   * List pending member requests
+   * List pending member join requests (live from PPPoker via bridge)
    */
   listPendingMembers: protectedProcedure
     .input(listPendingMembersSchema.optional())
-    .query(async ({ input, ctx: { teamId } }) => {
-      const supabase = await createAdminClient();
-      const { cursor, pageSize = 50 } = input ?? {};
+    .query(async ({ ctx: { teamId } }) => {
+      const creds = await getBridgeCredentials(teamId!);
 
-      const currentCursor = cursor ? Number.parseInt(cursor, 10) : 0;
-      const offset = currentCursor * pageSize;
+      const resp = await fetch(
+        `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/join-requests`,
+        {
+          headers: {
+            "X-PPPoker-Username": creds.pppoker_username,
+            "X-PPPoker-Password": creds.pppoker_password,
+          },
+        },
+      );
 
-      const { data, error, count } = await supabase
-        .from("club_member_requests")
-        .select("*", { count: "exact" })
-        .eq("team_id", teamId)
-        .eq("status", "pending")
-        .order("requested_at", { ascending: false })
-        .range(offset, offset + pageSize - 1);
-
-      if (error) {
-        logger.error({ error: error.message }, "members.listPendingMembers error");
+      if (!resp.ok) {
+        const errText = await resp.text();
+        logger.error({ error: errText }, "members.listPendingMembers bridge error");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
+          message: `Falha ao buscar solicitações: ${errText}`,
         });
       }
 
-      const hasNextPage = offset + pageSize < (count ?? 0);
+      const json = await resp.json();
+      const requests = json.requests ?? [];
 
       return {
         meta: {
-          cursor: hasNextPage ? String(currentCursor + 1) : null,
-          hasNextPage,
-          totalCount: count ?? 0,
+          cursor: null,
+          hasNextPage: false,
+          totalCount: requests.length,
         },
-        data: (data ?? []).map((r) => ({
-          id: r.id,
-          playerId: r.player_id,
-          ppPokerId: r.pppoker_id,
-          nickname: r.nickname,
-          status: r.status,
-          requestedAt: r.requested_at,
-          note: r.note,
+        data: requests.map((r: {
+          request_id: number;
+          uid: number;
+          nome: string;
+          avatar_url?: string;
+          timestamp?: number;
+          mensagem?: string;
+        }) => ({
+          id: String(r.request_id),
+          playerId: null,
+          ppPokerId: String(r.uid),
+          nickname: r.nome,
+          avatarUrl: r.avatar_url ?? "",
+          status: "pending",
+          requestedAt: r.timestamp
+            ? new Date(r.timestamp * 1000).toISOString()
+            : new Date().toISOString(),
+          note: r.mensagem ?? null,
         })),
       };
     }),
 
   /**
-   * Approve or reject a member request
+   * Approve or reject a member join request (via bridge → PPPoker TCP)
    */
   reviewMember: protectedProcedure
     .input(reviewMemberSchema)
-    .mutation(async ({ input, ctx: { teamId, session } }) => {
-      const supabase = await createAdminClient();
+    .mutation(async ({ input, ctx: { teamId } }) => {
+      const creds = await getBridgeCredentials(teamId!);
 
-      const { data, error } = await supabase
-        .from("club_member_requests")
-        .update({
-          status: input.action,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: session.userId,
-          note: input.note ?? null,
-        })
-        .eq("id", input.id)
-        .eq("team_id", teamId)
-        .select()
-        .single();
+      const resp = await fetch(
+        `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/join-requests/${input.id}/review`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-PPPoker-Username": creds.pppoker_username,
+            "X-PPPoker-Password": creds.pppoker_password,
+          },
+          body: JSON.stringify({
+            accept: input.action === "approved",
+          }),
+        },
+      );
 
-      if (error) {
+      if (!resp.ok) {
+        const errText = await resp.text();
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error.message,
+          message: `Falha ao processar solicitação: ${errText}`,
         });
       }
 
-      return { id: data.id, status: data.status };
+      const result = await resp.json();
+      return {
+        id: input.id,
+        status: result.action === "accepted" ? "approved" : "rejected",
+      };
     }),
 
   /**
