@@ -8,6 +8,8 @@ import asyncio
 import json
 import os
 import re
+import signal
+import subprocess
 import time
 import sys
 import uuid
@@ -66,6 +68,103 @@ _ALLOWED_MCP_TOOL_NAMES = {
 }
 
 _ORIGINAL_CONNECT_MCP_SERVERS = None
+
+# ---------------------------------------------------------------------------
+# WhatsApp Bridge Manager — spawns Node.js bridge processes on-demand
+# ---------------------------------------------------------------------------
+_BRIDGE_DIR = Path(__file__).parent / "bridge"
+_BRIDGE_ENTRY = _BRIDGE_DIR / "dist" / "index.js"
+_BRIDGE_BASE_PORT = 3001
+_BRIDGE_PORT_COUNTER = 0
+
+
+class BridgeManager:
+    """Manages per-team WhatsApp bridge Node.js subprocesses."""
+
+    def __init__(self):
+        # { team_id: { "process": Popen, "port": int, "auth_dir": str } }
+        self._bridges: dict[str, dict] = {}
+        self._lock = asyncio.Lock()
+
+    def _next_port(self) -> int:
+        global _BRIDGE_PORT_COUNTER
+        port = _BRIDGE_BASE_PORT + _BRIDGE_PORT_COUNTER
+        _BRIDGE_PORT_COUNTER += 1
+        return port
+
+    async def ensure_bridge(self, team_id: str) -> int:
+        """Start a bridge for the team if not already running. Returns the port."""
+        async with self._lock:
+            info = self._bridges.get(team_id)
+            if info and info["process"].poll() is None:
+                return info["port"]
+
+            if not _BRIDGE_ENTRY.exists():
+                raise FileNotFoundError(
+                    f"Bridge not built. Expected {_BRIDGE_ENTRY}"
+                )
+
+            port = self._next_port()
+            auth_dir = Path.home() / ".nanobot" / "whatsapp-auth" / team_id
+            auth_dir.mkdir(parents=True, exist_ok=True)
+
+            env = {**os.environ, "BRIDGE_PORT": str(port), "AUTH_DIR": str(auth_dir)}
+            proc = subprocess.Popen(
+                ["node", str(_BRIDGE_ENTRY)],
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(_BRIDGE_DIR),
+            )
+            self._bridges[team_id] = {
+                "process": proc,
+                "port": port,
+                "auth_dir": str(auth_dir),
+            }
+            print(f"[bridge-manager] Started bridge for team {team_id[:8]}... on port {port} (pid={proc.pid})")
+
+            # Wait for WebSocket server to be ready (poll up to 5s)
+            import websockets
+
+            ws_url = f"ws://127.0.0.1:{port}"
+            for _ in range(50):
+                await asyncio.sleep(0.1)
+                if proc.poll() is not None:
+                    stderr = proc.stderr.read().decode() if proc.stderr else ""
+                    raise RuntimeError(f"Bridge process exited early: {stderr[:300]}")
+                try:
+                    ws = await asyncio.wait_for(
+                        websockets.connect(ws_url), timeout=0.5
+                    )
+                    await ws.close()
+                    return port
+                except (ConnectionRefusedError, OSError, asyncio.TimeoutError):
+                    continue
+
+            raise RuntimeError("Bridge started but WebSocket not ready after 5s")
+
+    def stop_bridge(self, team_id: str):
+        info = self._bridges.pop(team_id, None)
+        if info and info["process"].poll() is None:
+            info["process"].terminate()
+            try:
+                info["process"].wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                info["process"].kill()
+            print(f"[bridge-manager] Stopped bridge for team {team_id[:8]}...")
+
+    def stop_all(self):
+        for team_id in list(self._bridges.keys()):
+            self.stop_bridge(team_id)
+
+    def get_port(self, team_id: str) -> int | None:
+        info = self._bridges.get(team_id)
+        if info and info["process"].poll() is None:
+            return info["port"]
+        return None
+
+
+_bridge_manager = BridgeManager()
 
 
 def _make_provider(config):
@@ -265,6 +364,7 @@ async def _prewarm_agent():
 async def _shutdown():
     """Cleanup on server stop."""
     global _agent
+    _bridge_manager.stop_all()
     if _agent:
         await _agent.close_mcp()
         _agent.stop()
@@ -740,15 +840,17 @@ async def gateway_whatsapp_qr(request: Request):
             yield {"event": "done", "data": "[DONE]"}
             return
 
-        # Connect directly to the WhatsApp bridge via WebSocket.
-        # The bridge is a Node.js process (Baileys) that emits QR codes
-        # and status updates over WebSocket.
+        # Spawn a bridge subprocess for this team (on-demand) and connect
+        # to it via WebSocket to receive QR codes.
         gw["whatsapp"]["status"] = "waiting_qr"
-        bridge_url = os.environ.get("WHATSAPP_BRIDGE_URL", "ws://localhost:3001")
         bridge_token = os.environ.get("WHATSAPP_BRIDGE_TOKEN", "")
 
         try:
             import websockets
+
+            # Start or reuse bridge process for this team
+            port = await _bridge_manager.ensure_bridge(team_id)
+            bridge_url = f"ws://127.0.0.1:{port}"
 
             async with websockets.connect(bridge_url) as ws:
                 # Authenticate if token is configured
@@ -786,8 +888,9 @@ async def gateway_whatsapp_qr(request: Request):
                             "data": json.dumps({"status": "waiting_qr", "team_id": team_id}),
                         }
 
-                # Timeout reached (120s)
+                # Timeout reached (120s) — stop the bridge for this team
                 gw["whatsapp"]["status"] = "disconnected"
+                _bridge_manager.stop_bridge(team_id)
                 yield {
                     "event": "timeout",
                     "data": json.dumps({"team_id": team_id}),
@@ -804,12 +907,12 @@ async def gateway_whatsapp_qr(request: Request):
                 }),
             }
             yield {"event": "done", "data": "[DONE]"}
-        except (ConnectionRefusedError, OSError):
+        except FileNotFoundError as e:
             gw["whatsapp"]["status"] = "unavailable"
             yield {
                 "event": "error",
                 "data": json.dumps({
-                    "error": "WhatsApp bridge is not running on " + bridge_url,
+                    "error": str(e),
                     "team_id": team_id,
                 }),
             }
@@ -838,6 +941,7 @@ async def gateway_whatsapp_disconnect(request: Request):
 
     gw = _get_team_gateway(team_id)
     gw["whatsapp"] = {"status": "disconnected", "qr_data": None}
+    _bridge_manager.stop_bridge(team_id)
 
     return JSONResponse({"success": True, "team_id": team_id})
 
