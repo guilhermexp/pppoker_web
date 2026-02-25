@@ -34,14 +34,6 @@ import { useState } from "react";
 
 type StatusFilter = "all" | "link_gerado" | "pago" | "fichas_enviadas" | "cancelado" | "erro";
 
-const STATUS_BADGE: Record<string, { variant: string; className: string }> = {
-  link_gerado: { variant: "outline", className: "bg-amber-100 text-amber-700 border-amber-200" },
-  pago: { variant: "outline", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  fichas_enviadas: { variant: "outline", className: "bg-blue-100 text-blue-700 border-blue-200" },
-  cancelado: { variant: "outline", className: "bg-gray-100 text-gray-500 border-gray-200" },
-  erro: { variant: "outline", className: "bg-red-100 text-red-700 border-red-200" },
-};
-
 const STATUS_LABELS: Record<string, string> = {
   link_gerado: "Link Gerado",
   pago: "Pago",
@@ -49,6 +41,99 @@ const STATUS_LABELS: Record<string, string> = {
   cancelado: "Cancelado",
   erro: "Erro",
 };
+
+// The normal flow steps in order
+const FLOW_STEPS = ["link_gerado", "pago", "fichas_enviadas"] as const;
+const FLOW_STEP_LABELS: Record<string, string> = {
+  link_gerado: "Link",
+  pago: "Pago",
+  fichas_enviadas: "Enviado",
+};
+
+function getStepIndex(status: string): number {
+  const idx = FLOW_STEPS.indexOf(status as (typeof FLOW_STEPS)[number]);
+  return idx >= 0 ? idx : -1;
+}
+
+function OrderTimeline({ status }: { status: string }) {
+  // For error/cancelled, show a special badge
+  if (status === "erro" || status === "cancelado") {
+    return (
+      <Badge
+        variant="outline"
+        className={
+          status === "erro"
+            ? "bg-red-500/10 text-red-500 border-red-500/20"
+            : "bg-muted text-muted-foreground border-border"
+        }
+      >
+        {STATUS_LABELS[status] ?? status}
+      </Badge>
+    );
+  }
+
+  const currentIdx = getStepIndex(status);
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {FLOW_STEPS.map((step, i) => {
+        const isCompleted = i < currentIdx;
+        const isCurrent = i === currentIdx;
+        const isFuture = i > currentIdx;
+
+        return (
+          <div key={step} className="flex items-center">
+            {/* Step indicator */}
+            <div className="flex flex-col items-center">
+              <div
+                className={`
+                  flex items-center justify-center rounded-full text-[10px] font-medium
+                  ${
+                    isCompleted
+                      ? "h-5 w-5 bg-emerald-500/20 text-emerald-500"
+                      : isCurrent
+                        ? "h-5 w-5 bg-primary text-primary-foreground"
+                        : "h-5 w-5 bg-muted text-muted-foreground/40"
+                  }
+                `}
+              >
+                {isCompleted ? (
+                  <Icons.Check className="h-3 w-3" />
+                ) : (
+                  <span>{i + 1}</span>
+                )}
+              </div>
+              <span
+                className={`
+                  text-[10px] mt-0.5 whitespace-nowrap
+                  ${
+                    isCompleted
+                      ? "text-emerald-500"
+                      : isCurrent
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground/40"
+                  }
+                `}
+              >
+                {FLOW_STEP_LABELS[step]}
+              </span>
+            </div>
+
+            {/* Connector line between steps */}
+            {i < FLOW_STEPS.length - 1 && (
+              <div
+                className={`
+                  w-4 h-[2px] mx-0.5 mt-[-12px]
+                  ${i < currentIdx ? "bg-emerald-500/40" : "bg-muted"}
+                `}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function formatCurrency(value: number): string {
   return `R$ ${value.toFixed(2).replace(".", ",")}`;
@@ -256,7 +341,7 @@ export function PaymentOrdersTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("fastchips.payment_orders.table.status")}</TableHead>
+                <TableHead className="min-w-[160px]">{t("fastchips.payment_orders.table.status")}</TableHead>
                 <TableHead>{t("fastchips.payment_orders.table.jogador")}</TableHead>
                 <TableHead>{t("fastchips.payment_orders.table.fichas")}</TableHead>
                 <TableHead>{t("fastchips.payment_orders.table.valor")}</TableHead>
@@ -290,12 +375,7 @@ export function PaymentOrdersTable() {
                 orders.map((order) => (
                   <TableRow key={order.id} className="even:bg-muted/20">
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={STATUS_BADGE[order.status]?.className ?? ""}
-                      >
-                        {STATUS_LABELS[order.status] ?? order.status}
-                      </Badge>
+                      <OrderTimeline status={order.status} />
                     </TableCell>
                     <TableCell>
                       <div>

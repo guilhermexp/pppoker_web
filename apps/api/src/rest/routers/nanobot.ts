@@ -237,6 +237,7 @@ async function tryRegisterFastchipsOperation(params: {
       net_amount: params.amount,
       fee_rate: 0,
       fee_amount: 0,
+      source: "agent",
     });
   } catch (error) {
     console.warn(

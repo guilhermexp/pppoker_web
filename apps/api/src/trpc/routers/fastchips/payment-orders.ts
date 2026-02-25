@@ -100,10 +100,12 @@ export const fastchipsPaymentOrdersRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx: { teamId } }) => {
     const supabase = await createAdminClient();
 
-    // Contagem por status
+    // Fetch all fields needed for stats
     const { data: allOrders, error } = await supabase
       .from("fastchips_payment_orders")
-      .select("status, valor_reais, fichas, created_at")
+      .select(
+        "status, valor_reais, fichas, created_at, paid_at, fichas_enviadas_at",
+      )
       .eq("team_id", teamId);
 
     if (error) {
@@ -114,22 +116,45 @@ export const fastchipsPaymentOrdersRouter = createTRPCRouter({
     }
 
     const orders = allOrders ?? [];
-    const today = new Date().toISOString().split("T")[0];
 
-    const linkGerado = orders.filter((o) => o.status === "link_gerado").length;
-    const pago = orders.filter((o) => o.status === "pago").length;
-    const fichasEnviadas = orders.filter((o) => o.status === "fichas_enviadas").length;
-    const fichasEnviadasHoje = orders.filter(
-      (o) => o.status === "fichas_enviadas" && o.created_at?.startsWith(today),
+    // Use Brazil timezone (UTC-3) for "today" to match user's local date
+    const today = new Date().toLocaleDateString("en-CA", {
+      timeZone: "America/Sao_Paulo",
+    }); // "YYYY-MM-DD"
+
+    function isToday(dateStr: string | null): boolean {
+      if (!dateStr) return false;
+      // Convert the UTC timestamp to Brazil date
+      const d = new Date(dateStr);
+      const brDate = d.toLocaleDateString("en-CA", {
+        timeZone: "America/Sao_Paulo",
+      });
+      return brDate === today;
+    }
+
+    const linkGerado = orders.filter(
+      (o) => o.status === "link_gerado",
     ).length;
+    const pago = orders.filter((o) => o.status === "pago").length;
+    const fichasEnviadas = orders.filter(
+      (o) => o.status === "fichas_enviadas",
+    ).length;
+
+    // "Concluídos Hoje" = fichas enviadas onde fichas_enviadas_at é hoje
+    const fichasEnviadasHoje = orders.filter(
+      (o) =>
+        o.status === "fichas_enviadas" && isToday(o.fichas_enviadas_at),
+    ).length;
+
     const erro = orders.filter((o) => o.status === "erro").length;
     const cancelado = orders.filter((o) => o.status === "cancelado").length;
 
+    // "Total Vendido Hoje" = soma do valor de pedidos pagos/concluídos hoje (por paid_at)
     const totalVendidoHoje = orders
       .filter(
         (o) =>
           ["pago", "fichas_enviadas"].includes(o.status) &&
-          o.created_at?.startsWith(today),
+          isToday(o.paid_at),
       )
       .reduce((sum, o) => sum + Number(o.valor_reais ?? 0), 0);
 

@@ -1,20 +1,55 @@
 "use client";
 
 import { useFastchipsTransactionParams } from "@/hooks/use-fastchips-transaction-params";
-import { useI18n } from "@/locales/client";
+import { useTRPC } from "@/trpc/client";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import { Sheet, SheetContent } from "@midpoker/ui/sheet";
-import { fastChipsTransactions } from "./transactions-data";
+import { Skeleton } from "@midpoker/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+
+function formatCurrency(value: number): string {
+  return `R$ ${(value / 100).toFixed(2).replace(".", ",")}`;
+}
+
+function formatDateTime(dateStr: string | null): string {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function DetailRow({
+  label,
+  value,
+}: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-muted-foreground text-sm">{label}</span>
+      <span className="text-sm font-medium text-right">{value}</span>
+    </div>
+  );
+}
 
 export function FastChipsTransactionDetailSheet() {
-  const t = useI18n();
-  const { fastchipsTransactionId, setParams } = useFastchipsTransactionParams();
+  const trpc = useTRPC();
+  const { fastchipsTransactionId, setParams } =
+    useFastchipsTransactionParams();
   const isOpen = Boolean(fastchipsTransactionId);
-  const transaction =
-    fastChipsTransactions.find((item) => item.id === fastchipsTransactionId) ??
-    fastChipsTransactions[0];
+
+  const { data: op, isLoading } = useQuery({
+    ...trpc.fastchips.operations.getById.queryOptions({
+      id: fastchipsTransactionId ?? "",
+    }),
+    enabled: isOpen,
+  });
+
+  const isEntry = op?.operationType === "Entrada";
 
   return (
     <Sheet
@@ -35,97 +70,126 @@ export function FastChipsTransactionDetailSheet() {
           >
             <Icons.ArrowBack className="h-4 w-4" />
           </Button>
-          <h2 className="font-semibold text-sm">
-            {t("fastchips.transacoes.details_title")}
-          </h2>
+          <h2 className="font-semibold text-sm">Detalhes da Transação</h2>
         </div>
 
-        <div className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t("fastchips.transacoes.player_data")}
-            </h3>
-            <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.player_fields.name")}
+        {isLoading || !op ? (
+          <div className="space-y-4 pt-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        ) : (
+          <div className="space-y-5 pt-4">
+            {/* Type + Purpose */}
+            <div className="flex items-center justify-between">
+              <Badge
+                variant="outline"
+                className={
+                  isEntry
+                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                    : "bg-red-500/10 text-red-500 border-red-500/20"
+                }
+              >
+                {op.operationType}
+              </Badge>
+              {op.purpose && (
+                <span className="text-sm text-muted-foreground">
+                  {op.purpose}
                 </span>
-                <span>{transaction?.name}</span>
+              )}
+            </div>
+
+            {/* Player */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Jogador
+              </h3>
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                <DetailRow label="Nome" value={op.memberName || "-"} />
+                <DetailRow label="Player ID" value={op.ppPokerId || "-"} />
+                {op.member && (
+                  <DetailRow
+                    label="Membro"
+                    value={(op.member as any).name || "-"}
+                  />
+                )}
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.player_fields.id")}
-                </span>
-                <span>{transaction?.playerId}</span>
+            </div>
+
+            {/* Values */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Valores
+              </h3>
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                <DetailRow
+                  label="Fichas"
+                  value={Math.round(
+                    op.grossAmount / 100,
+                  ).toLocaleString("pt-BR")}
+                />
+                <DetailRow
+                  label="Valor Bruto"
+                  value={formatCurrency(op.grossAmount)}
+                />
+                {op.feeRate != null && op.feeRate > 0 && (
+                  <DetailRow
+                    label="Taxa"
+                    value={`${op.feeRate}%`}
+                  />
+                )}
+                {op.feeAmount != null && op.feeAmount > 0 && (
+                  <DetailRow
+                    label="Valor da Taxa"
+                    value={formatCurrency(op.feeAmount)}
+                  />
+                )}
+                <DetailRow
+                  label="Valor Líquido"
+                  value={formatCurrency(op.netAmount ?? op.grossAmount)}
+                />
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.player_fields.email")}
-                </span>
-                <span>{transaction?.email}</span>
+            </div>
+
+            {/* Dates */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Datas
+              </h3>
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                <DetailRow
+                  label="Data da Operação"
+                  value={formatDateTime(op.occurredAt)}
+                />
+                <DetailRow
+                  label="Registrado em"
+                  value={formatDateTime(op.createdAt)}
+                />
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.player_fields.phone")}
-                </span>
-                <span>{transaction?.phone}</span>
+            </div>
+
+            {/* IDs */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Identificadores
+              </h3>
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                {op.externalId && (
+                  <DetailRow label="ID Externo" value={op.externalId} />
+                )}
+                {op.paymentId && (
+                  <DetailRow label="ID Pagamento" value={op.paymentId} />
+                )}
+                {(op as any).import && (
+                  <DetailRow
+                    label="Importação"
+                    value={(op as any).import.file_name}
+                  />
+                )}
               </div>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t("fastchips.transacoes.purchase_data")}
-            </h3>
-            <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.purchase_fields.chips")}
-                </span>
-                <span>{transaction?.chips}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.purchase_fields.amount")}
-                </span>
-                <span>{transaction?.amount}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.purchase_fields.date")}
-                </span>
-                <span>{transaction?.date}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.purchase_fields.time")}
-                </span>
-                <span>{transaction?.time}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">
-                  {t("fastchips.transacoes.purchase_fields.status")}
-                </span>
-                <Badge
-                  variant="secondary"
-                  className={`border ${
-                    transaction?.status === "completed"
-                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                      : "bg-amber-100 text-amber-700 border-amber-200"
-                  }`}
-                >
-                  {transaction?.status === "completed"
-                    ? t("fastchips.transacoes.status_completed")
-                    : t("fastchips.transacoes.status_unpaid")}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          <Button className="w-full" size="sm">
-            {t("fastchips.transacoes.view_movements")}
-          </Button>
-        </div>
+        )}
       </SheetContent>
     </Sheet>
   );
