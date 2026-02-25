@@ -5,6 +5,9 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 COPY apps/api/package.json apps/api/
+COPY apps/dashboard/package.json apps/dashboard/
+COPY apps/docs/package.json apps/docs/
+COPY apps/nanobot/package.json apps/nanobot/
 COPY packages/tsconfig/package.json packages/tsconfig/
 COPY packages/db/package.json packages/db/
 COPY packages/cache/package.json packages/cache/

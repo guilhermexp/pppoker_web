@@ -6,6 +6,8 @@ WORKDIR /app
 COPY package.json bun.lock ./
 COPY apps/dashboard/package.json apps/dashboard/
 COPY apps/api/package.json apps/api/
+COPY apps/docs/package.json apps/docs/
+COPY apps/nanobot/package.json apps/nanobot/
 COPY packages/tsconfig/package.json packages/tsconfig/
 COPY packages/ui/package.json packages/ui/
 COPY packages/utils/package.json packages/utils/
