@@ -38,6 +38,9 @@ ENV TZ=UTC
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Re-link workspace packages (symlinks don't survive Docker COPY --from)
+RUN bun install --frozen-lockfile
+
 EXPOSE 3101
 ENV PORT=3101
 
