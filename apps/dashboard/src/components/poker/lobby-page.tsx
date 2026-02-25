@@ -1,14 +1,26 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { Badge } from "@midpoker/ui/badge";
-import { Card, CardContent, CardHeader } from "@midpoker/ui/card";
+import { Card, CardContent } from "@midpoker/ui/card";
 import { cn } from "@midpoker/ui/cn";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { useLastUpdate } from "@/hooks/use-last-update";
-import { Loader2, Users, Trophy, DollarSign, LayoutGrid, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  Users,
+  Trophy,
+  DollarSign,
+  LayoutGrid,
+  AlertCircle,
+  Clock,
+  Timer,
+  RotateCcw,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
@@ -32,6 +44,11 @@ type Room = {
   status: number; // 0=idle, 1=reg, 2=running, 3=finished
   scheduled_ts: number;
   start_ts: number;
+  next_start_ts?: number;
+  last_update_ts?: number;
+  creation_ts?: number;
+  late_reg_level?: number;
+  re_entry_min?: number;
   guaranteed: number;
   prize?: {
     total: number;
@@ -43,42 +60,46 @@ type Room = {
   creator_uid: number;
 };
 
+type SortKey = "status" | "players" | "buyin" | "name";
+type SortDir = "asc" | "desc";
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const GAME_TYPE_COLORS: Record<string, string> = {
-  NLH: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
-  PLO4: "bg-purple-500/15 text-purple-700 dark:text-purple-400",
-  PLO5: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
-  MTT: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  SNG: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  SpinUp: "bg-rose-500/15 text-rose-700 dark:text-rose-400",
-  OFC: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-400",
+  NLH: "bg-blue-500/15 text-blue-400 border-blue-500/20",
+  "NLH Cash": "bg-blue-500/15 text-blue-400 border-blue-500/20",
+  PLO4: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  PLO5: "bg-violet-500/15 text-violet-400 border-violet-500/20",
+  PLO6: "bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/20",
+  MTT: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  SNG: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  SpinUp: "bg-rose-500/15 text-rose-400 border-rose-500/20",
+  OFC: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
+  ShortDeck: "bg-orange-500/15 text-orange-400 border-orange-500/20",
 };
 
-const STATUS_MAP: Record<number, { label: string; variant: string }> = {
-  0: { label: "Idle", variant: "bg-gray-500/15 text-gray-600 dark:text-gray-400" },
-  1: { label: "Registrando", variant: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400" },
-  2: { label: "Rodando", variant: "bg-green-500/15 text-green-700 dark:text-green-400" },
-  3: { label: "Finalizado", variant: "bg-red-500/15 text-red-600 dark:text-red-400" },
+const STATUS_CONFIG: Record<number, { label: string; color: string; dot: string }> = {
+  0: { label: "Idle", color: "text-gray-400", dot: "bg-gray-400" },
+  1: { label: "Registrando", color: "text-yellow-400", dot: "bg-yellow-400 animate-pulse" },
+  2: { label: "Rodando", color: "text-green-400", dot: "bg-green-400 animate-pulse" },
+  3: { label: "Finalizado", color: "text-red-400", dot: "bg-red-400" },
 };
-
-function gameTypeBadgeClass(type: string) {
-  return GAME_TYPE_COLORS[type] ?? "bg-muted text-muted-foreground";
-}
 
 function statusInfo(status: number) {
-  return STATUS_MAP[status] ?? STATUS_MAP[0]!;
+  return STATUS_CONFIG[status] ?? STATUS_CONFIG[0]!;
 }
 
 function formatChips(value: number) {
   if (value === 0) return "-";
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(value % 1000 === 0 ? 0 : 1)}K`;
   return value.toLocaleString("pt-BR");
 }
 
 function formatTime(ts: number) {
-  if (ts === 0) return null;
+  if (!ts || ts === 0) return null;
   const d = new Date(ts * 1000);
   return d.toLocaleString("pt-BR", {
     day: "2-digit",
@@ -88,6 +109,36 @@ function formatTime(ts: number) {
   });
 }
 
+function formatBlindDuration(seconds: number) {
+  if (!seconds || seconds === 0) return null;
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}min`;
+}
+
+function sortRooms(rooms: Room[], key: SortKey, dir: SortDir): Room[] {
+  const sorted = [...rooms].sort((a, b) => {
+    switch (key) {
+      case "status": {
+        // Running first, then registering, then idle, then finished
+        const order = [2, 1, 0, 3];
+        const ai = order.indexOf(a.status);
+        const bi = order.indexOf(b.status);
+        if (ai !== bi) return ai - bi;
+        return b.current_players - a.current_players;
+      }
+      case "players":
+        return b.current_players - a.current_players;
+      case "buyin":
+        return b.buy_in - a.buy_in;
+      case "name":
+        return a.nome.localeCompare(b.nome, "pt-BR");
+      default:
+        return 0;
+    }
+  });
+  return dir === "desc" ? sorted.reverse() : sorted;
+}
+
 // ---------------------------------------------------------------------------
 // Stats Bar
 // ---------------------------------------------------------------------------
@@ -95,13 +146,15 @@ function formatTime(ts: number) {
 function StatsBar({ rooms }: { rooms: Room[] }) {
   const active = rooms.filter((r) => r.is_running).length;
   const totalPlayers = rooms.reduce((s, r) => s + r.current_players, 0);
+  const totalRegistered = rooms.reduce((s, r) => s + (r.is_tournament ? r.registered : 0), 0);
   const tournaments = rooms.filter((r) => r.is_tournament && r.status !== 3).length;
+  const cashGames = rooms.filter((r) => !r.is_tournament).length;
 
   const stats = [
-    { icon: LayoutGrid, label: "Total mesas", value: rooms.length },
-    { icon: DollarSign, label: "Ativas", value: active },
-    { icon: Users, label: "Jogadores", value: totalPlayers },
-    { icon: Trophy, label: "Torneios", value: tournaments },
+    { icon: LayoutGrid, label: "Total", value: rooms.length, sub: null },
+    { icon: Zap, label: "Ativas", value: active, sub: null },
+    { icon: Users, label: "Jogadores", value: totalPlayers, sub: totalRegistered > 0 ? `+${totalRegistered} reg` : null },
+    { icon: Trophy, label: "Torneios", value: tournaments, sub: cashGames > 0 ? `${cashGames} cash` : null },
   ];
 
   return (
@@ -109,12 +162,17 @@ function StatsBar({ rooms }: { rooms: Room[] }) {
       {stats.map((s) => (
         <div
           key={s.label}
-          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border"
+          className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border"
         >
           <s.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">{s.label}</p>
-            <p className="font-mono text-sm font-medium">{s.value}</p>
+            <div className="flex items-baseline gap-1.5">
+              <p className="font-mono text-sm font-medium">{s.value}</p>
+              {s.sub && (
+                <p className="text-[10px] text-muted-foreground">{s.sub}</p>
+              )}
+            </div>
           </div>
         </div>
       ))}
@@ -128,53 +186,74 @@ function StatsBar({ rooms }: { rooms: Room[] }) {
 
 function RoomCard({ room }: { room: Room }) {
   const si = statusInfo(room.status);
+  const gameColor = GAME_TYPE_COLORS[room.game_type] ?? "bg-muted text-muted-foreground border-border";
+  const playerPercent = room.max_players > 0 ? (room.current_players / room.max_players) * 100 : 0;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-2">
+    <Card className={cn(
+      "overflow-hidden transition-colors",
+      room.is_running && "border-green-500/20",
+      room.status === 1 && "border-yellow-500/20",
+    )}>
+      <CardContent className="p-4 space-y-3">
+        {/* Header: name + badges */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-medium leading-tight truncate">
-            {room.nome}
-          </h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-medium leading-tight truncate">
+              {room.nome}
+            </h3>
+            <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+              ID: {room.room_id}
+            </p>
+          </div>
           <div className="flex gap-1 flex-shrink-0">
-            <span
-              className={cn(
-                "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium",
-                gameTypeBadgeClass(room.game_type),
-              )}
-            >
+            <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold border", gameColor)}>
               {room.game_type}
-            </span>
-            <span
-              className={cn(
-                "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium",
-                si.variant,
-              )}
-            >
-              {si.label}
             </span>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-2">
-        {/* Players */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Users className="h-3.5 w-3.5" />
-          <span>
-            {room.current_players}/{room.max_players}
-          </span>
-          {room.is_tournament && room.registered > 0 && (
-            <span className="ml-1">({room.registered} reg)</span>
-          )}
+
+        {/* Status + players row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className={cn("h-2 w-2 rounded-full flex-shrink-0", si.dot)} />
+            <span className={cn("text-xs font-medium", si.color)}>{si.label}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs">
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="font-mono font-medium">
+              {room.current_players}/{room.max_players}
+            </span>
+            {room.is_tournament && room.registered > 0 && (
+              <span className="text-muted-foreground">
+                ({room.registered} reg)
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Buy-in / Rake */}
-        <div className="flex items-center gap-3 text-xs">
+        {/* Player fill bar */}
+        <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className={cn(
+              "h-full rounded-full transition-all",
+              playerPercent >= 80 ? "bg-red-500" : playerPercent >= 50 ? "bg-yellow-500" : "bg-green-500",
+            )}
+            style={{ width: `${Math.min(playerPercent, 100)}%` }}
+          />
+        </div>
+
+        {/* Buy-in / Rake / Fee */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
           {room.buy_in > 0 && (
-            <span className="text-muted-foreground">
-              Buy-in: <span className="text-foreground font-medium">{formatChips(room.buy_in)}</span>
-              {room.fee > 0 && <span> +{formatChips(room.fee)}</span>}
-            </span>
+            <div className="flex items-center gap-1">
+              <DollarSign className="h-3 w-3 text-muted-foreground" />
+              <span className="text-muted-foreground">Buy-in:</span>
+              <span className="font-medium font-mono">{formatChips(room.buy_in)}</span>
+              {room.fee > 0 && (
+                <span className="text-muted-foreground">+{formatChips(room.fee)}</span>
+              )}
+            </div>
           )}
           {room.rake > 0 && (
             <span className="text-muted-foreground">
@@ -183,37 +262,113 @@ function RoomCard({ room }: { room: Room }) {
           )}
         </div>
 
-        {/* Tournament extras */}
+        {/* Tournament details */}
         {room.is_tournament && (
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {room.guaranteed > 0 && (
               <span>
-                GTD: <span className="text-foreground font-medium">{formatChips(room.guaranteed)}</span>
+                GTD: <span className="text-foreground font-medium font-mono">{formatChips(room.guaranteed)}</span>
               </span>
             )}
             {room.starting_chips > 0 && (
               <span>
-                Stack: <span className="text-foreground font-medium">{formatChips(room.starting_chips)}</span>
+                Stack: <span className="text-foreground font-medium font-mono">{formatChips(room.starting_chips)}</span>
               </span>
             )}
             {room.prize && room.prize.total > 0 && (
               <span>
-                Prize: <span className="text-foreground font-medium">{formatChips(room.prize.total)}</span>
+                Prize: <span className="text-foreground font-medium font-mono">{formatChips(room.prize.total)}</span>
+              </span>
+            )}
+            {room.blind_duration > 0 && (
+              <span className="flex items-center gap-1">
+                <Timer className="h-3 w-3" />
+                Blinds: <span className="text-foreground font-medium">{formatBlindDuration(room.blind_duration)}</span>
+              </span>
+            )}
+            {!!room.late_reg_level && room.late_reg_level > 0 && (
+              <span>
+                Late reg: <span className="text-foreground font-medium">Nv. {room.late_reg_level}</span>
+              </span>
+            )}
+            {!!room.re_entry_min && room.re_entry_min > 0 && (
+              <span className="flex items-center gap-1">
+                <RotateCcw className="h-3 w-3" />
+                Re-entry: <span className="text-foreground font-medium">{room.re_entry_min}min</span>
               </span>
             )}
           </div>
         )}
 
-        {/* Time */}
-        {(room.scheduled_ts || room.start_ts) && (
-          <p className="text-[11px] text-muted-foreground">
-            {room.start_ts
-              ? `Inicio: ${formatTime(room.start_ts)}`
-              : `Agendado: ${formatTime(room.scheduled_ts)}`}
-          </p>
-        )}
+        {/* Timestamps */}
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground">
+          {room.start_ts ? (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              Inicio: {formatTime(room.start_ts)}
+            </span>
+          ) : room.scheduled_ts ? (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              Agendado: {formatTime(room.scheduled_ts)}
+            </span>
+          ) : null}
+          {room.creation_ts ? (
+            <span>Criado: {formatTime(room.creation_ts)}</span>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sort Controls
+// ---------------------------------------------------------------------------
+
+function SortControls({
+  sortKey,
+  sortDir,
+  onSort,
+}: {
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey) => void;
+}) {
+  const options: { key: SortKey; label: string }[] = [
+    { key: "status", label: "Status" },
+    { key: "players", label: "Jogadores" },
+    { key: "buyin", label: "Buy-in" },
+    { key: "name", label: "Nome" },
+  ];
+
+  return (
+    <div className="flex items-center gap-1 text-xs">
+      <span className="text-muted-foreground mr-1">Ordenar:</span>
+      {options.map((opt) => {
+        const isActive = sortKey === opt.key;
+        return (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => onSort(opt.key)}
+            className={cn(
+              "px-2 py-1 rounded transition-colors flex items-center gap-0.5",
+              isActive
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
+            )}
+          >
+            {opt.label}
+            {isActive && (
+              sortDir === "asc"
+                ? <ChevronUp className="h-3 w-3" />
+                : <ChevronDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -226,11 +381,13 @@ function RoomsSkeleton() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <Card key={i}>
-          <CardHeader className="pb-2">
-            <Skeleton className="h-4 w-3/4" />
-          </CardHeader>
-          <CardContent className="pt-0 space-y-2">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-12" />
+            </div>
             <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-1 w-full" />
             <Skeleton className="h-3 w-2/3" />
             <Skeleton className="h-3 w-1/3" />
           </CardContent>
@@ -254,7 +411,7 @@ function EmptyState({ message }: { message: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// Room Grid (filtered)
+// Room Grid (filtered + sorted)
 // ---------------------------------------------------------------------------
 
 function RoomGrid({ rooms }: { rooms: Room[] }) {
@@ -278,6 +435,8 @@ function RoomGrid({ rooms }: { rooms: Room[] }) {
 export function LobbyPage() {
   const trpc = useTRPC();
   const [tab, setTab] = useState("todas");
+  const [sortKey, setSortKey] = useState<SortKey>("status");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const { data, isLoading, isError, dataUpdatedAt } = useQuery(
     trpc.poker.rooms.getLive.queryOptions(
@@ -289,18 +448,32 @@ export function LobbyPage() {
 
   const rooms = (data?.rooms ?? []) as Room[];
 
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
   const filtered = useMemo(() => {
+    let result: Room[];
     switch (tab) {
       case "ativas":
-        return rooms.filter((r) => r.is_running);
+        result = rooms.filter((r) => r.is_running);
+        break;
       case "torneios":
-        return rooms.filter((r) => r.is_tournament);
+        result = rooms.filter((r) => r.is_tournament);
+        break;
       case "cash":
-        return rooms.filter((r) => !r.is_tournament);
+        result = rooms.filter((r) => !r.is_tournament);
+        break;
       default:
-        return rooms;
+        result = rooms;
     }
-  }, [rooms, tab]);
+    return sortRooms(result, sortKey, sortDir);
+  }, [rooms, tab, sortKey, sortDir]);
 
   if (isLoading) {
     return (
@@ -322,21 +495,25 @@ export function LobbyPage() {
           <div className="flex items-center justify-center gap-2">
             <AlertCircle className="h-4 w-4 text-destructive" />
             <p className="text-sm font-medium text-destructive">
-              Não foi possível conectar ao PPPoker
+              Nao foi possivel conectar ao PPPoker
             </p>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Verifique se o bridge está online e tente novamente.
+            Verifique se o bridge esta online e tente novamente.
           </p>
         </div>
       )}
 
       <StatsBar rooms={rooms} />
-      {lastUpdate && (
-        <p className="text-xs text-muted-foreground text-right">
-          Atualizado {lastUpdate}
-        </p>
-      )}
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        {lastUpdate && (
+          <p className="text-xs text-muted-foreground">
+            Atualizado {lastUpdate}
+          </p>
+        )}
+        <SortControls sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+      </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
@@ -350,7 +527,7 @@ export function LobbyPage() {
             Torneios ({rooms.filter((r) => r.is_tournament).length})
           </TabsTrigger>
           <TabsTrigger value="cash">
-            Cash Games ({rooms.filter((r) => !r.is_tournament).length})
+            Cash ({rooms.filter((r) => !r.is_tournament).length})
           </TabsTrigger>
         </TabsList>
 

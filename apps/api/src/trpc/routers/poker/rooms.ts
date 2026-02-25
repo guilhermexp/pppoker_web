@@ -51,12 +51,17 @@ const roomSchema = z
     starting_chips: z.number(),
     blind_duration: z.number(),
     status: z.number(),
-    scheduled_ts: z.number(),
-    start_ts: z.number(),
+    scheduled_ts: z.number().nullable().optional(),
+    start_ts: z.number().nullable().optional(),
+    next_start_ts: z.number().nullable().optional(),
+    last_update_ts: z.number().nullable().optional(),
+    creation_ts: z.number().nullable().optional(),
+    late_reg_level: z.number().optional().default(0),
+    re_entry_min: z.number().optional().default(0),
     guaranteed: z.number(),
     prize: prizeSchema.optional(),
     rake: z.number(),
-    creator_uid: z.number(),
+    creator_uid: z.number().nullable().optional(),
   })
   .passthrough();
 
