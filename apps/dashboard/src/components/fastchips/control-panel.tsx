@@ -91,6 +91,8 @@ function WhatsAppReconnect({
   const [status, setStatus] = useState<ReconnectStatus>({ step: "idle" });
   const abortRef = useRef<AbortController | null>(null);
 
+  const startedRef = useRef(false);
+
   const cleanup = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -101,6 +103,9 @@ function WhatsAppReconnect({
   useEffect(() => cleanup, [cleanup]);
 
   useEffect(() => {
+    // Guard against React strict mode double-fire
+    if (startedRef.current) return;
+    startedRef.current = true;
     startConnect();
     return cleanup;
   }, []);
@@ -288,8 +293,12 @@ function ServiceStatusSection() {
   const { data: gw, loading: gwLoading, refetch: refetchGw } = useGatewayStatus();
   const [showReconnect, setShowReconnect] = useState(false);
 
-  const whatsappActive =
-    service.gateway.whatsappLinked || gw?.whatsapp?.status === "connected";
+  // Runtime status takes priority over persisted DB value.
+  // The DB `whatsappLinked` may be stale (sandbox destroyed on restart).
+  const whatsappRuntimeStatus = gw?.whatsapp?.status;
+  const whatsappActive = gwLoading
+    ? service.gateway.whatsappLinked // show DB value while loading
+    : whatsappRuntimeStatus === "connected"; // once loaded, only trust runtime
   const telegramActive =
     service.gateway.telegramLinked || gw?.telegram?.status === "connected";
 
@@ -336,9 +345,20 @@ function ServiceStatusSection() {
               {gwLoading ? (
                 <span className="text-xs text-muted-foreground">...</span>
               ) : whatsappActive ? (
-                <span className="text-xs text-green-600">
-                  {t("fastchips.service.gateway_connected")}
-                </span>
+                <>
+                  <span className="text-xs text-green-600">
+                    {t("fastchips.service.gateway_connected")}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-muted-foreground"
+                    onClick={() => setShowReconnect(true)}
+                  >
+                    {t("fastchips.controle.reconnect_whatsapp")}
+                  </Button>
+                </>
               ) : (
                 <Button
                   type="button"

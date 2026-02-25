@@ -94,6 +94,7 @@ class BridgeManager:
         # { team_id: { "sandbox_id": str, "ws_url": str, "token": str } }
         self._bridges: dict[str, dict] = {}
         self._lock = asyncio.Lock()
+        self._qr_active: set[str] = set()  # team_ids with active QR sessions
         self._daytona = None
 
     def _get_daytona(self):
@@ -130,19 +131,66 @@ class BridgeManager:
         from daytona import CreateSandboxFromImageParams, SessionExecuteRequest
 
         daytona = self._get_daytona()
+        sandbox_name = f"wa-bridge-{team_id[:8]}"
+
+        # Check if a sandbox with this name already exists (from a previous run)
+        sandbox = None
+        try:
+            existing = daytona.list()
+            items = existing.items if hasattr(existing, "items") else existing
+            for s in items:
+                if getattr(s, "name", None) == sandbox_name:
+                    sandbox = s
+                    break
+        except Exception as e:
+            print(f"[bridge-manager] Failed to list sandboxes: {e}")
+
+        if sandbox is not None:
+            print(f"[bridge-manager] Found existing sandbox {sandbox_name}, removing it...")
+            try:
+                daytona.delete(sandbox)
+            except Exception as e:
+                print(f"[bridge-manager] Failed to delete old sandbox: {e}")
 
         print(f"[bridge-manager] Creating Daytona sandbox for team {team_id[:8]}...")
-        sandbox = daytona.create(
-            CreateSandboxFromImageParams(
-                image="node:20-slim",
-                name=f"wa-bridge-{team_id[:8]}",
-                language="javascript",
-                env_vars={"BRIDGE_PORT": str(_BRIDGE_PORT)},
-                auto_stop_interval=10,    # stop after 10 min idle
-                auto_delete_interval=60,  # delete after 1 hour
-            ),
-            timeout=120,
-        )
+        try:
+            sandbox = daytona.create(
+                CreateSandboxFromImageParams(
+                    image="node:20-slim",
+                    name=sandbox_name,
+                    language="javascript",
+                    env_vars={"BRIDGE_PORT": str(_BRIDGE_PORT)},
+                    auto_stop_interval=10,    # stop after 10 min idle
+                    auto_delete_interval=60,  # delete after 1 hour
+                ),
+                timeout=120,
+            )
+        except Exception as create_err:
+            if "already exists" in str(create_err).lower():
+                # Race condition or stale sandbox — find it and delete, then retry
+                print(f"[bridge-manager] Sandbox {sandbox_name} already exists, force-deleting...")
+                try:
+                    items = daytona.list()
+                    items = items.items if hasattr(items, "items") else items
+                    for s in items:
+                        if getattr(s, "name", None) == sandbox_name:
+                            daytona.delete(s)
+                            break
+                except Exception:
+                    pass
+                sandbox = daytona.create(
+                    CreateSandboxFromImageParams(
+                        image="node:20-slim",
+                        name=sandbox_name,
+                        language="javascript",
+                        env_vars={"BRIDGE_PORT": str(_BRIDGE_PORT)},
+                        auto_stop_interval=10,
+                        auto_delete_interval=60,
+                    ),
+                    timeout=120,
+                )
+            else:
+                raise
 
         # Upload bridge source files
         for root, dirs, files in os.walk(str(_BRIDGE_DIR)):
@@ -282,21 +330,23 @@ class BridgeManager:
         session_key = f"whatsapp:{team_id}:{sender}"
 
         try:
-            response = await asyncio.wait_for(
-                _agent.process_direct(
-                    content=content,
-                    session_key=session_key,
-                    channel="whatsapp",
-                    chat_id=session_key,
-                    on_progress=None,
-                ),
-                timeout=_AGENT_TOTAL_TIMEOUT_SECONDS,
-            )
+            async with _agent_semaphore:
+                response = await asyncio.wait_for(
+                    _agent.process_direct(
+                        content=content,
+                        session_key=session_key,
+                        channel="whatsapp",
+                        chat_id=session_key,
+                        on_progress=None,
+                    ),
+                    timeout=_AGENT_TOTAL_TIMEOUT_SECONDS,
+                )
 
             if response and response.strip():
-                # Clean approval blocks from response (not relevant for WhatsApp)
+                # Clean approval blocks and format for WhatsApp
                 cleaned, _ = extract_approval_requests(response)
                 safe_text = _sanitize_user_facing_response(cleaned)
+                safe_text = _format_for_whatsapp(safe_text)
 
                 if safe_text:
                     # Send reply back through bridge
@@ -617,6 +667,36 @@ def _is_transient_llm_error(error_text: str) -> bool:
         or "connection closed" in msg
         or "timeout" in msg
     )
+
+
+def _format_for_whatsapp(text: str) -> str:
+    """Convert markdown formatting to WhatsApp-compatible format."""
+    if not text:
+        return text
+
+    import re as _re
+
+    # Strip bold around URLs: **https://...** → https://...
+    text = _re.sub(r'\*\*(https?://[^\s*]+)\*\*', r'\1', text)
+
+    # Convert markdown bold **text** → *text* (WhatsApp bold)
+    text = _re.sub(r'\*\*(.+?)\*\*', r'*\1*', text)
+
+    # Convert markdown italic _text_ stays the same (WhatsApp uses _ too)
+
+    # Convert markdown links [text](url) → text: url
+    text = _re.sub(r'\[([^\]]+)\]\((https?://[^\)]+)\)', r'\1: \2', text)
+
+    # Remove triple backticks (code blocks)
+    text = text.replace('```', '')
+
+    # Convert inline code `text` → text
+    text = _re.sub(r'`([^`]+)`', r'\1', text)
+
+    # Remove heading markers
+    text = _re.sub(r'^#{1,6}\s+', '', text, flags=_re.MULTILINE)
+
+    return text.strip()
 
 
 def _sanitize_user_facing_response(response_text: str) -> str:
@@ -996,6 +1076,23 @@ async def gateway_whatsapp_qr(request: Request):
     gw = _get_team_gateway(team_id)
 
     async def qr_events():
+        # Reject concurrent QR requests for the same team (React strict mode fires twice)
+        if team_id in _bridge_manager._qr_active:
+            yield {
+                "event": "status",
+                "data": json.dumps({"status": "already_in_progress", "team_id": team_id}),
+            }
+            yield {"event": "done", "data": "[DONE]"}
+            return
+
+        _bridge_manager._qr_active.add(team_id)
+        try:
+            async for event in _qr_events_inner(team_id, gw):
+                yield event
+        finally:
+            _bridge_manager._qr_active.discard(team_id)
+
+    async def _qr_events_inner(team_id, gw):
         # Emit current status
         yield {
             "event": "status",
