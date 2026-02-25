@@ -11,7 +11,7 @@ Configurar no Claude Desktop (~/.claude/claude_desktop_config.json):
   "mcpServers": {
     "pppoker": {
       "command": "python3",
-      "args": ["/caminho/para/Ppfichas/pppoker_mcp.py"]
+      "args": ["/Users/macosx/Ppfichas/pppoker_mcp.py"]
     }
   }
 }
@@ -20,14 +20,12 @@ Configurar no Claude Desktop (~/.claude/claude_desktop_config.json):
 import sys
 import json
 import asyncio
-from pathlib import Path
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
 
-# Import do nosso cliente PPPoker (usa diretório deste arquivo, sem path hardcoded)
-BASE_DIR = Path(__file__).resolve().parent
-sys.path.insert(0, str(BASE_DIR))
+# Import do nosso cliente PPPoker
+sys.path.insert(0, '/Users/macosx/Ppfichas')
 from pppoker_direct_api import (
     http_login, crypto_password, xxtea_encode_for_http,
     PPPokerClient, build_add_coin_req, build_export_game_data_req,

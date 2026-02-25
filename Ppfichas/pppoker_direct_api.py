@@ -468,6 +468,11 @@ def http_login(username: str, password: str, verify_code: str = None) -> dict:
         return {'success': False, 'error': str(e)}
 
 
+def build_club_list_req() -> bytes:
+    """Build pb.ClubListREQ message — returns all clubs the user belongs to."""
+    return build_message('pb.ClubListREQ', b'')
+
+
 def build_club_info_req(clube_id: int) -> bytes:
     """
     Build pb.ClubInfoREQ message - enter/select club
@@ -1001,6 +1006,7 @@ class PPPokerClient:
         self.sock = None
         self.connected = False
         self.authenticated = False
+        self.club_info = None
 
     def connect(self, server: str = None) -> bool:
         """Connect to game server"""
@@ -1041,6 +1047,34 @@ class PPPokerClient:
             print(f"[-] Recv error: {e}")
             return b''
 
+    def send_heartbeat(self) -> bool:
+        """Send heartbeat and verify connection is alive."""
+        if not self.connected or not self.authenticated:
+            return False
+        try:
+            self.send(build_heartbeat_req())
+            old_timeout = self.sock.gettimeout()
+            self.sock.settimeout(3)
+            try:
+                resp = self.sock.recv(4096)
+                if resp:
+                    parsed = parse_response(resp)
+                    if parsed['message'] == 'pb.HeartBeatRSP':
+                        return True
+                    # Got some other message, connection is still alive
+                    return True
+                return False  # Empty response = connection dead
+            except socket.timeout:
+                return True  # Timeout is ok, server just had nothing to say
+            except Exception:
+                return False
+            finally:
+                self.sock.settimeout(old_timeout)
+        except Exception:
+            self.authenticated = False
+            self.connected = False
+            return False
+
     def login(self) -> bool:
         """Authenticate to server"""
         if not self.connected:
@@ -1079,6 +1113,76 @@ class PPPokerClient:
 
         return True
 
+    def list_clubs(self) -> list:
+        """
+        List all clubs the authenticated user belongs to.
+        Returns list of dicts with club_id, club_name, avatar_url, user_role, etc.
+        """
+        if not self.authenticated:
+            return []
+
+        req = build_club_list_req()
+        self.send(req)
+        time.sleep(0.5)
+
+        ROLE_MAP = {1: 'dono', 2: 'gestor', 4: 'super_agente', 5: 'agente', 10: 'membro'}
+
+        # Read with larger buffer to get full response
+        for _ in range(5):
+            try:
+                raw = self.sock.recv(65536)
+            except Exception:
+                raw = b''
+            if not raw:
+                time.sleep(0.3)
+                continue
+
+            # Parse all framed messages in response
+            offset = 0
+            while offset < len(raw) - 4:
+                try:
+                    total_len = struct.unpack('>I', raw[offset:offset+4])[0]
+                    msg_data = raw[offset:offset+4+total_len]
+                    parsed = parse_response(msg_data)
+                    offset += 4 + total_len
+
+                    if parsed['message'] != 'pb.ClubListRSP':
+                        continue
+
+                    fields = _parse_proto_fields(parsed['payload'])
+                    clubs = []
+                    for club_raw in fields.get(1, []):
+                        if not isinstance(club_raw, bytes):
+                            continue
+                        sub = _parse_proto_fields(club_raw)
+                        club_id = _first(sub, 1)
+                        role_num = _first(sub, 5, 0)
+                        liga_id = None
+                        f7_raw = _first(sub, 7)
+                        if isinstance(f7_raw, bytes):
+                            try:
+                                f7_sub = _parse_proto_fields(f7_raw)
+                                liga_id = _first(f7_sub, 2)
+                            except:
+                                pass
+
+                        clubs.append({
+                            'club_id': club_id,
+                            'club_name': _first(sub, 2, ''),
+                            'avatar_url': _first(sub, 3, ''),
+                            'member_count': _first(sub, 4, 0),
+                            'user_role_num': role_num,
+                            'user_role': ROLE_MAP.get(role_num, f'unknown({role_num})'),
+                            'liga_id': liga_id,
+                        })
+                    return clubs
+                except Exception:
+                    break
+
+            time.sleep(0.3)
+
+        return []
+
     def enter_club(self, clube_id: int, silent: bool = True) -> bool:
         """
         Enter/select a club before doing operations
@@ -1086,6 +1190,8 @@ class PPPokerClient:
         Args:
             clube_id: ID do clube para entrar (ex: 4210947)
             silent: Se True, não mostra mensagens de erro (padrão)
+
+        Side effect: populates self.club_info with parsed ClubInfoRSP data
         """
         if not self.authenticated:
             return False
@@ -1103,12 +1209,34 @@ class PPPokerClient:
             parsed = parse_response(resp)
 
             if parsed['message'] == 'pb.ClubInfoRSP':
+                self._parse_club_info(parsed.get('payload', b''))
                 return True
             elif parsed['message'] in ['pb.HeartBeatRSP', 'pb.CallGameBRC', 'pb.PushBRC']:
                 time.sleep(0.1)
                 continue
 
         return True  # Continue anyway - transfer works without entering club
+
+    def _parse_club_info(self, payload: bytes):
+        """Parse ClubInfoRSP payload and store in self.club_info."""
+        try:
+            fields = _parse_proto_fields(payload)
+            f2_raw = fields.get(2, [None])[0]
+            if not isinstance(f2_raw, bytes):
+                return
+            sub = _parse_proto_fields(f2_raw)
+            self.club_info = {
+                'club_id': _first(sub, 1),
+                'club_name': _first(sub, 2, ''),
+                'avatar_url': _first(sub, 3, ''),
+                'user_role': _first(sub, 5, 0),
+                'total_members': _first(sub, 6, 0),
+                'fichas_disponiveis': (_first(sub, 18, 0) or 0) / 100,  # caixa do clube
+                'owner_uid': _first(sub, 12, 0),
+                'owner_name': _first(sub, 13, ''),
+            }
+        except Exception:
+            pass
 
     def transfer_chips(self, target_player_id: int, amount: int,
                        clube_id: int, liga_id: int = 3357) -> dict:
