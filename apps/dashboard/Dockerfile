@@ -1,13 +1,7 @@
-FROM oven/bun:1.2 AS base
+FROM oven/bun:1.2 AS deps-base
 
-# System deps for native modules (canvas, sharp)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 make g++ pkg-config \
-    libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# -- deps --
-FROM base AS deps
+# -- deps (Bun for fast install) --
+FROM deps-base AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 COPY apps/dashboard/package.json apps/dashboard/
@@ -34,11 +28,22 @@ COPY packages/notifications/package.json packages/notifications/
 COPY packages/app-store/package.json packages/app-store/
 RUN bun install --frozen-lockfile
 
-# -- builder --
-FROM base AS builder
+# -- builder (Node.js for full Next.js compatibility) --
+FROM node:22-slim AS builder
+
+# System deps for canvas/sharp native modules
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libjpeg62-turbo libgif7 \
+    librsvg2-2 libpixman-1-0 libexpat1 libvips42 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Remove standalone output to avoid Next.js 16 middleware nft.json bug
+# (next start with full node_modules is used instead)
+RUN sed -i '/output: "standalone"/d' apps/dashboard/next.config.ts
 
 # Build args become NEXT_PUBLIC_ env vars at build time
 ARG NEXT_PUBLIC_URL
@@ -57,21 +62,37 @@ ENV NEXT_PUBLIC_SUPABASE_ID=$NEXT_PUBLIC_SUPABASE_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
-RUN cd apps/dashboard && NODE_ENV=production bun next build
+RUN cd apps/dashboard && npx next build
 
 # -- runner --
-FROM base AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
+
+# Runtime native deps for canvas/sharp + curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libjpeg62-turbo libgif7 \
+    librsvg2-2 libpixman-1-0 libexpat1 libvips42 curl \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN adduser --system --uid 1001 nextjs
-RUN mkdir .next && chown nextjs:bun .next
 
-COPY --from=builder --chown=nextjs:bun /app/apps/dashboard/.next/standalone ./
-COPY --from=builder --chown=nextjs:bun /app/apps/dashboard/.next/static ./apps/dashboard/.next/static
-COPY --from=builder --chown=nextjs:bun /app/apps/dashboard/public ./apps/dashboard/public
+# Node modules (needed for next start + serverExternalPackages)
+COPY --from=deps --chown=nextjs:nextjs /app/node_modules ./node_modules
+
+# Built dashboard output
+COPY --from=builder --chown=nextjs:nextjs /app/apps/dashboard/.next ./apps/dashboard/.next
+
+# Dashboard config and assets
+COPY --from=builder --chown=nextjs:nextjs /app/apps/dashboard/public ./apps/dashboard/public
+COPY --from=builder --chown=nextjs:nextjs /app/apps/dashboard/next.config.ts ./apps/dashboard/next.config.ts
+COPY --from=builder --chown=nextjs:nextjs /app/apps/dashboard/package.json ./apps/dashboard/package.json
+COPY --from=builder --chown=nextjs:nextjs /app/apps/dashboard/image-loader.ts ./apps/dashboard/image-loader.ts
+
+# Root package.json for monorepo resolution
+COPY --from=builder --chown=nextjs:nextjs /app/package.json ./package.json
 
 USER nextjs
 
@@ -79,4 +100,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "apps/dashboard/server.js"]
+CMD ["node_modules/.bin/next", "start", "apps/dashboard", "--hostname", "0.0.0.0", "--port", "3000"]
