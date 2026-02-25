@@ -8,12 +8,15 @@ import {
 } from "@/hooks/use-team";
 import { useI18n } from "@/locales/client";
 import { InfinitePaySettings } from "@/components/infinitepay-settings";
+import { getApiBaseUrl } from "@/lib/api-base-url";
+import { createClient } from "@midpoker/supabase/client";
 import { Button } from "@midpoker/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@midpoker/ui/card";
 import { Icons } from "@midpoker/ui/icons";
 import { Switch } from "@midpoker/ui/switch";
 import { cn } from "@midpoker/ui/cn";
-import { Suspense, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 const STEPS = ["infinitepay", "nanobot", "gateway"] as const;
 type Step = (typeof STEPS)[number];
@@ -153,6 +156,191 @@ function StepNanobot() {
   );
 }
 
+type WhatsAppStatus =
+  | { step: "idle" }
+  | { step: "connecting" }
+  | { step: "waiting_qr"; qrData: string }
+  | { step: "connected" }
+  | { step: "timeout" }
+  | { step: "error"; message: string };
+
+function WhatsAppConnector() {
+  const t = useI18n();
+  const { data: service } = useFastchipsServiceQuery();
+  const serviceMutation = useFastchipsServiceMutation();
+  const [status, setStatus] = useState<WhatsAppStatus>({ step: "idle" });
+  const abortRef = useRef<AbortController | null>(null);
+
+  const cleanup = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => cleanup, [cleanup]);
+
+  async function handleConnect() {
+    cleanup();
+    setStatus({ step: "connecting" });
+
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      setStatus({ step: "error", message: "Sessao expirada. Recarregue a pagina." });
+      return;
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const apiBase = getApiBaseUrl();
+      const resp = await fetch(`${apiBase}/nanobot/gateway/whatsapp/qr`, {
+        headers: {
+          Accept: "text/event-stream",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        signal: controller.signal,
+      });
+
+      if (!resp.ok || !resp.body) {
+        const text = await resp.text().catch(() => "");
+        setStatus({
+          step: "error",
+          message: text || `Erro do servidor (${resp.status})`,
+        });
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        let currentEvent = "";
+        for (const line of lines) {
+          if (line.startsWith("event:")) {
+            currentEvent = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            const raw = line.slice(5).trim();
+            if (raw === "[DONE]") continue;
+
+            try {
+              const data = JSON.parse(raw);
+
+              if (currentEvent === "qr" && data.qr_data) {
+                setStatus({ step: "waiting_qr", qrData: data.qr_data });
+              } else if (currentEvent === "connected") {
+                setStatus({ step: "connected" });
+                serviceMutation.mutate({
+                  gateway: { whatsappLinked: true, whatsappLinkedAt: new Date().toISOString() },
+                });
+                return;
+              } else if (currentEvent === "timeout") {
+                setStatus({ step: "timeout" });
+                return;
+              } else if (currentEvent === "error") {
+                setStatus({
+                  step: "error",
+                  message: data.error || "Erro desconhecido",
+                });
+                return;
+              }
+            } catch {
+              // ignore parse errors
+            }
+            currentEvent = "";
+          }
+        }
+      }
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      setStatus({
+        step: "error",
+        message: err instanceof Error ? err.message : "Falha na conexao",
+      });
+    }
+  }
+
+  if (service.gateway.whatsappLinked || status.step === "connected") {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/5 px-4 py-3">
+        <Icons.Check className="h-4 w-4 text-green-600" />
+        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+          {t("fastchips.service.gateway_connected")}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {status.step === "idle" && (
+        <Button type="button" variant="outline" onClick={handleConnect}>
+          {t("fastchips.service.gateway_connect_whatsapp")}
+        </Button>
+      )}
+
+      {status.step === "connecting" && (
+        <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30">
+          <div className="text-center text-muted-foreground">
+            <div className="h-6 w-6 mx-auto mb-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <p className="text-sm">{t("fastchips.service.gateway_connecting")}</p>
+          </div>
+        </div>
+      )}
+
+      {status.step === "waiting_qr" && (
+        <div className="space-y-3">
+          <div className="flex justify-center rounded-lg border bg-white p-4">
+            <QRCodeSVG value={status.qrData} size={240} />
+          </div>
+          <p className="text-sm text-muted-foreground text-center">
+            {t("fastchips.service.gateway_scan_qr")}
+          </p>
+          <div className="flex justify-center">
+            <Button type="button" variant="outline" size="sm" onClick={() => { cleanup(); setStatus({ step: "idle" }); }}>
+              {t("fastchips.service.gateway_cancel")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {status.step === "timeout" && (
+        <div className="space-y-3">
+          <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 px-4 py-3">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+              {t("fastchips.service.gateway_timeout")}
+            </p>
+          </div>
+          <Button type="button" variant="outline" onClick={handleConnect}>
+            {t("fastchips.service.gateway_retry")}
+          </Button>
+        </div>
+      )}
+
+      {status.step === "error" && (
+        <div className="space-y-3">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <p className="text-sm text-destructive">{status.message}</p>
+          </div>
+          <Button type="button" variant="outline" onClick={handleConnect}>
+            {t("fastchips.service.gateway_retry")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StepGateway() {
   const t = useI18n();
   const { data: service } = useFastchipsServiceQuery();
@@ -171,28 +359,7 @@ function StepGateway() {
           <p className="text-sm text-muted-foreground">
             {t("fastchips.service.gateway_whatsapp_description")}
           </p>
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "h-2 w-2 rounded-full",
-                service.gateway.whatsappLinked ? "bg-green-500" : "bg-muted-foreground/40",
-              )}
-            />
-            <span className="text-sm">
-              {service.gateway.whatsappLinked
-                ? t("fastchips.service.gateway_connected")
-                : t("fastchips.service.gateway_disconnected")}
-            </span>
-          </div>
-          {/* QR code area - will be connected to server.py gateway endpoint later */}
-          {!service.gateway.whatsappLinked && (
-            <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30">
-              <div className="text-center text-muted-foreground">
-                <Icons.QrCode className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">{t("fastchips.service.gateway_connecting")}</p>
-              </div>
-            </div>
-          )}
+          <WhatsAppConnector />
         </CardContent>
       </Card>
 

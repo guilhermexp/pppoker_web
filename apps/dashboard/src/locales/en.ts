@@ -2154,6 +2154,11 @@ export default {
       gateway_connected: "Connected",
       gateway_disconnected: "Disconnected",
       gateway_connecting: "Connecting...",
+      gateway_connect_whatsapp: "Connect WhatsApp",
+      gateway_scan_qr: "Scan the QR code with your WhatsApp to link",
+      gateway_cancel: "Cancel",
+      gateway_timeout: "Timed out. The QR code expired. Try again.",
+      gateway_retry: "Try again",
       finish_button: "Finish and Activate",
       finish_success: "Fastchips activated successfully!",
       finish_success_description:
