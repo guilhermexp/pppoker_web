@@ -255,11 +255,17 @@ function RoomCard({ room }: { room: Room }) {
               )}
             </div>
           )}
-          {room.rake > 0 && (
-            <span className="text-muted-foreground">
-              Rake: <span className="text-foreground font-medium">{room.rake}%</span>
-            </span>
-          )}
+          {(() => {
+            // For tournaments, calculate rake from fee/buy_in (f95 is unreliable)
+            const rakePercent = room.is_tournament && room.buy_in > 0 && room.fee > 0
+              ? Math.round((room.fee / room.buy_in) * 100)
+              : room.rake > 0 && room.rake <= 50 ? room.rake : null;
+            return rakePercent != null && rakePercent > 0 ? (
+              <span className="text-muted-foreground">
+                Rake: <span className="text-foreground font-medium">{rakePercent}%</span>
+              </span>
+            ) : null;
+          })()}
         </div>
 
         {/* Tournament details */}
