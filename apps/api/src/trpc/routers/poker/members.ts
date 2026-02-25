@@ -14,7 +14,7 @@ import {
 import { createTRPCRouter, protectedProcedure } from "../../init";
 
 const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:8000";
+  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
 
 async function getBridgeCredentials(teamId: string) {
   const supabase = await createAdminClient();

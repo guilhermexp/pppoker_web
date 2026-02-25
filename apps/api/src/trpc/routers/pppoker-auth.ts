@@ -5,7 +5,7 @@ import { z } from "@hono/zod-openapi";
 import { createTRPCRouter, publicProcedure } from "../init";
 
 const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:8000";
+  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
 
 /** Shape returned by GET /clubs on the bridge */
 interface BridgeClub {

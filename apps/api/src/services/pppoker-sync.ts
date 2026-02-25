@@ -8,7 +8,7 @@ import { createAdminClient } from "@api/services/supabase";
 import { logger } from "@midpoker/logger";
 
 const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:8000";
+  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
 
 const SYNC_INTERVAL_MS = 60_000; // 60 seconds
 
