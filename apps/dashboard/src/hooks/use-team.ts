@@ -181,13 +181,43 @@ export function useFastchipsServiceQuery() {
 export function useFastchipsServiceMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const queryKey = trpc.team.getFastchipsServiceSettings.queryKey();
 
   return useMutation(
     trpc.team.updateFastchipsServiceSettings.mutationOptions({
-      onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.team.getFastchipsServiceSettings.queryKey(),
+      onMutate: async (newData) => {
+        await queryClient.cancelQueries({ queryKey });
+        const previous = queryClient.getQueryData(queryKey);
+        queryClient.setQueryData(queryKey, (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            ...newData,
+            ...(newData.setupSteps
+              ? { setupSteps: { ...old.setupSteps, ...newData.setupSteps } }
+              : {}),
+            ...(newData.gateway
+              ? { gateway: { ...old.gateway, ...newData.gateway } }
+              : {}),
+            ...(newData.controlPanel
+              ? {
+                  controlPanel: {
+                    ...old.controlPanel,
+                    ...newData.controlPanel,
+                  },
+                }
+              : {}),
+          };
         });
+        return { previous };
+      },
+      onError: (_, __, context) => {
+        if (context?.previous) {
+          queryClient.setQueryData(queryKey, context.previous);
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey });
       },
     }),
   );
@@ -196,13 +226,30 @@ export function useFastchipsServiceMutation() {
 export function useActivateFastchipsMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const queryKey = trpc.team.getFastchipsServiceSettings.queryKey();
 
   return useMutation(
     trpc.team.activateFastchipsService.mutationOptions({
-      onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.team.getFastchipsServiceSettings.queryKey(),
+      onMutate: async () => {
+        await queryClient.cancelQueries({ queryKey });
+        const previous = queryClient.getQueryData(queryKey);
+        queryClient.setQueryData(queryKey, (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: "active",
+            activatedAt: new Date().toISOString(),
+          };
         });
+        return { previous };
+      },
+      onError: (_, __, context) => {
+        if (context?.previous) {
+          queryClient.setQueryData(queryKey, context.previous);
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey });
       },
     }),
   );

@@ -406,7 +406,6 @@ function SetupWizardInner() {
   const { data: service } = useFastchipsServiceQuery();
   const { data: ipData } = useInfinitePaySettingsQuery();
   const activateMutation = useActivateFastchipsMutation();
-  const [activated, setActivated] = useState(false);
 
   const ipConfigured = !!(ipData?.enabled && ipData?.handle);
 
@@ -438,29 +437,11 @@ function SetupWizardInner() {
   }
 
   function handleFinish() {
-    activateMutation.mutate(undefined, {
-      onSuccess: () => setActivated(true),
-    });
+    activateMutation.mutate();
   }
 
   function handleSkipGateway() {
     handleFinish();
-  }
-
-  if (activated) {
-    return (
-      <div className="flex flex-col items-center gap-4 mt-12 max-w-md mx-auto text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-          <Icons.Check className="h-8 w-8 text-green-600" />
-        </div>
-        <h2 className="text-2xl font-bold">
-          {t("fastchips.service.finish_success")}
-        </h2>
-        <p className="text-muted-foreground">
-          {t("fastchips.service.finish_success_description")}
-        </p>
-      </div>
-    );
   }
 
   return (
