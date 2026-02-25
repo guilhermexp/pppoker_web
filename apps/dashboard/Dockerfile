@@ -1,5 +1,11 @@
 FROM oven/bun:1.2 AS base
 
+# System deps for native modules (canvas, sharp)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ pkg-config \
+    libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # -- deps --
 FROM base AS deps
 WORKDIR /app
@@ -47,10 +53,11 @@ ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SUPABASE_ID=$NEXT_PUBLIC_SUPABASE_ID
 
-# Next.js telemetry
+# Next.js telemetry + memory optimization
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
-RUN cd apps/dashboard && bun run build
+RUN cd apps/dashboard && NODE_ENV=production bun next build
 
 # -- runner --
 FROM base AS runner
