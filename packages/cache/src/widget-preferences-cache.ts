@@ -1,7 +1,12 @@
 import { RedisCache } from "./redis-client";
 
 export const WIDGET_TYPES = [
-  // Critical financial health (default primary widgets)
+  // Fastchips / Agent widgets
+  "fastchips-agent-status",
+  "fastchips-sold",
+  "fastchips-timeline",
+
+  // Critical financial health
   "runway",
   "cash-flow",
   "account-balances",
@@ -61,9 +66,17 @@ export interface WidgetPreferences {
 
 export const DEFAULT_WIDGET_ORDER: WidgetType[] = [...WIDGET_TYPES];
 
+const DEFAULT_PRIMARY: WidgetType[] = [
+  "fastchips-agent-status",
+  "fastchips-sold",
+  "fastchips-timeline",
+];
+
 export const DEFAULT_WIDGET_PREFERENCES: WidgetPreferences = {
-  primaryWidgets: DEFAULT_WIDGET_ORDER.slice(0, 8), // First 8 widgets
-  availableWidgets: DEFAULT_WIDGET_ORDER.slice(8), // Remaining widgets
+  primaryWidgets: DEFAULT_PRIMARY,
+  availableWidgets: DEFAULT_WIDGET_ORDER.filter(
+    (w) => !DEFAULT_PRIMARY.includes(w),
+  ),
 };
 
 class WidgetPreferencesCache extends RedisCache {

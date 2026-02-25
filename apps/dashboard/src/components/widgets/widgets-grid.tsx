@@ -32,9 +32,11 @@ import { BillableHoursWidget } from "./billable-hours";
 import { CashFlowWidget } from "./cash-flow";
 import { CategoryExpensesWidget } from "./category-expenses";
 import { CustomerLifetimeValueWidget } from "./customer-lifetime-value";
+import { FastchipsAgentStatusWidget } from "./fastchips-agent-status";
+import { FastchipsSoldWidget } from "./fastchips-sold";
+import { FastchipsTimelineWidget } from "./fastchips-timeline";
 import { GrowthRateWidget } from "./growth-rate";
 import { InboxWidget } from "./inbox";
-// import { Insights } from "./insights";
 import { InvoicePaymentScoreWidget } from "./invoice-payment-score";
 import { MonthlySpendingWidget } from "./monthly-spending";
 import { OutstandingInvoicesWidget } from "./outstanding-invoices";
@@ -110,6 +112,9 @@ function SortableCard({
 
 // Widget mapping to components
 const WIDGET_COMPONENTS: Record<WidgetType, React.ComponentType> = {
+  "fastchips-agent-status": FastchipsAgentStatusWidget,
+  "fastchips-sold": FastchipsSoldWidget,
+  "fastchips-timeline": FastchipsTimelineWidget,
   runway: RunwayWidget,
   "top-customer": TopCustomerWidget,
   "revenue-summary": RevenueSummaryWidget,
