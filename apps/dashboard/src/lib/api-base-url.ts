@@ -3,6 +3,12 @@ function trimTrailingSlash(value: string): string {
 }
 
 export function getApiBaseUrl(): string {
+  // Server-side: prefer internal Docker URL to avoid hairpin NAT
+  if (typeof window === "undefined") {
+    const internal = process.env.API_INTERNAL_URL?.trim();
+    if (internal) return trimTrailingSlash(internal);
+  }
+
   const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (configured) return trimTrailingSlash(configured);
 
