@@ -248,9 +248,9 @@ function MembrosCompactTab() {
     trpc.poker.members.list.queryOptions({ pageSize: 500 }),
   );
 
-  // Background sync mutation
-  const syncMutation = useMutation(
-    trpc.poker.members.syncMembers.mutationOptions({
+  // Background sync mutation (no retries — bridge TCP can drop)
+  const syncMutation = useMutation({
+    ...trpc.poker.members.syncMembers.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.poker.members.list.queryKey(),
@@ -260,7 +260,8 @@ function MembrosCompactTab() {
         });
       },
     }),
-  );
+    retry: false,
+  });
 
   // Auto-sync on mount
   useEffect(() => {
@@ -306,12 +307,12 @@ function MembrosCompactTab() {
     );
   }
 
-  // DB empty + sync in progress = first load
-  if (isLoading || (allMembers.length === 0 && isSyncing)) {
+  // Only block on initial DB load, not on sync
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Sincronizando membros...</p>
+        <p className="text-sm text-muted-foreground">Carregando membros...</p>
       </div>
     );
   }
@@ -334,6 +335,9 @@ function MembrosCompactTab() {
             Membro: {filtered.length}
           </span>
           {isSyncing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          {syncMutation.isError && (
+            <span className="text-xs text-destructive">Sync falhou</span>
+          )}
         </div>
 
         <div className="flex items-center gap-1">
