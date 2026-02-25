@@ -740,74 +740,76 @@ async def gateway_whatsapp_qr(request: Request):
             yield {"event": "done", "data": "[DONE]"}
             return
 
-        # Try to initialize WhatsApp bridge for this team
+        # Connect directly to the WhatsApp bridge via WebSocket.
+        # The bridge is a Node.js process (Baileys) that emits QR codes
+        # and status updates over WebSocket.
         gw["whatsapp"]["status"] = "waiting_qr"
+        bridge_url = os.environ.get("WHATSAPP_BRIDGE_URL", "ws://localhost:3001")
+        bridge_token = os.environ.get("WHATSAPP_BRIDGE_TOKEN", "")
+
         try:
-            from nanobot.channels.whatsapp import WhatsAppChannel
-            auth_dir = Path.home() / ".nanobot" / "whatsapp-auth" / team_id
-            auth_dir.mkdir(parents=True, exist_ok=True)
+            import websockets
 
-            channel = WhatsAppChannel(auth_dir=str(auth_dir))
-            qr_queue: asyncio.Queue[str | None] = asyncio.Queue()
+            async with websockets.connect(bridge_url) as ws:
+                # Authenticate if token is configured
+                if bridge_token:
+                    await ws.send(json.dumps({"type": "auth", "token": bridge_token}))
 
-            async def on_qr(qr_data: str):
-                await qr_queue.put(qr_data)
-
-            async def on_connected():
-                gw["whatsapp"]["status"] = "connected"
-                gw["whatsapp"]["qr_data"] = None
-                await qr_queue.put(None)
-
-            channel.on_qr = on_qr
-            channel.on_connected = on_connected
-
-            # Start channel connection in background
-            connect_task = asyncio.create_task(channel.connect())
-
-            # Stream QR codes as they arrive (timeout after 120s)
-            try:
+                # Listen for QR codes and status updates (timeout after 120s)
                 start = time.monotonic()
                 while time.monotonic() - start < 120:
                     try:
-                        qr_data = await asyncio.wait_for(qr_queue.get(), timeout=30)
-                        if qr_data is None:
-                            # Connected successfully
+                        raw = await asyncio.wait_for(ws.recv(), timeout=30)
+                        msg = json.loads(raw)
+                        msg_type = msg.get("type", "")
+
+                        if msg_type == "qr":
+                            qr_data = msg.get("qr", "")
+                            gw["whatsapp"]["qr_data"] = qr_data
+                            yield {
+                                "event": "qr",
+                                "data": json.dumps({"qr_data": qr_data, "team_id": team_id}),
+                            }
+                        elif msg_type == "status" and msg.get("status") == "connected":
+                            gw["whatsapp"]["status"] = "connected"
+                            gw["whatsapp"]["qr_data"] = None
                             yield {
                                 "event": "connected",
                                 "data": json.dumps({"team_id": team_id}),
                             }
                             yield {"event": "done", "data": "[DONE]"}
                             return
-                        gw["whatsapp"]["qr_data"] = qr_data
-                        yield {
-                            "event": "qr",
-                            "data": json.dumps({"qr_data": qr_data, "team_id": team_id}),
-                        }
                     except asyncio.TimeoutError:
+                        # Keep-alive: re-emit waiting status
                         yield {
                             "event": "status",
                             "data": json.dumps({"status": "waiting_qr", "team_id": team_id}),
                         }
 
-                # Timeout reached
+                # Timeout reached (120s)
                 gw["whatsapp"]["status"] = "disconnected"
-                connect_task.cancel()
                 yield {
                     "event": "timeout",
                     "data": json.dumps({"team_id": team_id}),
                 }
                 yield {"event": "done", "data": "[DONE]"}
-            except Exception:
-                connect_task.cancel()
-                raise
 
         except ImportError:
-            # WhatsApp channel not available in this environment
             gw["whatsapp"]["status"] = "unavailable"
             yield {
                 "event": "error",
                 "data": json.dumps({
-                    "error": "WhatsApp bridge not available in this environment",
+                    "error": "websockets library not installed",
+                    "team_id": team_id,
+                }),
+            }
+            yield {"event": "done", "data": "[DONE]"}
+        except (ConnectionRefusedError, OSError):
+            gw["whatsapp"]["status"] = "unavailable"
+            yield {
+                "event": "error",
+                "data": json.dumps({
+                    "error": "WhatsApp bridge is not running on " + bridge_url,
                     "team_id": team_id,
                 }),
             }
@@ -855,25 +857,30 @@ async def gateway_telegram_connect(request: Request):
     gw = _get_team_gateway(team_id)
 
     try:
-        from nanobot.channels.telegram import TelegramChannel
+        from telegram import Bot
 
-        channel = TelegramChannel(bot_token=bot_token)
-        # Test connection by getting bot info
-        await channel.test_connection()
+        bot = Bot(token=bot_token)
+        # Validate token by fetching bot info
+        bot_info = await bot.get_me()
         gw["telegram"] = {"status": "connected", "bot_token": bot_token}
-        return JSONResponse({"success": True, "status": "connected", "team_id": team_id})
+        return JSONResponse({
+            "success": True,
+            "status": "connected",
+            "team_id": team_id,
+            "bot_username": bot_info.username,
+        })
     except ImportError:
         gw["telegram"] = {"status": "unavailable", "bot_token": None}
         return JSONResponse({
             "success": False,
-            "error": "Telegram channel not available in this environment",
+            "error": "python-telegram-bot library not available",
             "team_id": team_id,
         }, status_code=501)
     except Exception as e:
         gw["telegram"] = {"status": "error", "bot_token": None}
         return JSONResponse({
             "success": False,
-            "error": str(e),
+            "error": "Invalid bot token",
             "team_id": team_id,
         }, status_code=400)
 
