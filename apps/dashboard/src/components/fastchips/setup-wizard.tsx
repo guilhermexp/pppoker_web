@@ -159,6 +159,7 @@ function StepNanobot() {
 type WhatsAppStatus =
   | { step: "idle" }
   | { step: "connecting" }
+  | { step: "creating_sandbox" }
   | { step: "waiting_qr"; qrData: string }
   | { step: "connected" }
   | { step: "timeout" }
@@ -236,7 +237,9 @@ function WhatsAppConnector() {
             try {
               const data = JSON.parse(raw);
 
-              if (currentEvent === "qr" && data.qr_data) {
+              if (currentEvent === "status" && data.status === "creating_sandbox") {
+                setStatus({ step: "creating_sandbox" });
+              } else if (currentEvent === "qr" && data.qr_data) {
                 setStatus({ step: "waiting_qr", qrData: data.qr_data });
               } else if (currentEvent === "connected") {
                 setStatus({ step: "connected" });
@@ -289,11 +292,15 @@ function WhatsAppConnector() {
         </Button>
       )}
 
-      {status.step === "connecting" && (
+      {(status.step === "connecting" || status.step === "creating_sandbox") && (
         <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30">
           <div className="text-center text-muted-foreground">
             <div className="h-6 w-6 mx-auto mb-2 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="text-sm">{t("fastchips.service.gateway_connecting")}</p>
+            <p className="text-sm">
+              {status.step === "creating_sandbox"
+                ? t("fastchips.service.gateway_creating_sandbox")
+                : t("fastchips.service.gateway_connecting")}
+            </p>
           </div>
         </div>
       )}

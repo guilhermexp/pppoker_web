@@ -2154,6 +2154,7 @@ export default {
       gateway_connected: "Connected",
       gateway_disconnected: "Disconnected",
       gateway_connecting: "Connecting...",
+      gateway_creating_sandbox: "Setting up secure environment... this may take up to 1 minute",
       gateway_connect_whatsapp: "Connect WhatsApp",
       gateway_scan_qr: "Scan the QR code with your WhatsApp to link",
       gateway_cancel: "Cancel",

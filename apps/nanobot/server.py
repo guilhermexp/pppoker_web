@@ -8,12 +8,23 @@ import asyncio
 import json
 import os
 import re
-import signal
-import subprocess
 import time
 import sys
 import uuid
 from pathlib import Path
+
+# Load .env file (lightweight, no dependency on python-dotenv)
+_env_file = Path(__file__).parent / ".env"
+if _env_file.exists():
+    for line in _env_file.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
@@ -70,98 +81,129 @@ _ALLOWED_MCP_TOOL_NAMES = {
 _ORIGINAL_CONNECT_MCP_SERVERS = None
 
 # ---------------------------------------------------------------------------
-# WhatsApp Bridge Manager — spawns Node.js bridge processes on-demand
+# WhatsApp Bridge Manager — Daytona sandbox per team (secure, isolated)
 # ---------------------------------------------------------------------------
 _BRIDGE_DIR = Path(__file__).parent / "bridge"
-_BRIDGE_ENTRY = _BRIDGE_DIR / "dist" / "index.js"
-_BRIDGE_BASE_PORT = 3001
-_BRIDGE_PORT_COUNTER = 0
+_BRIDGE_PORT = 3001
 
 
 class BridgeManager:
-    """Manages per-team WhatsApp bridge Node.js subprocesses."""
+    """Manages per-team WhatsApp bridge sandboxes via Daytona."""
 
     def __init__(self):
-        # { team_id: { "process": Popen, "port": int, "auth_dir": str } }
+        # { team_id: { "sandbox_id": str, "ws_url": str, "token": str } }
         self._bridges: dict[str, dict] = {}
         self._lock = asyncio.Lock()
+        self._daytona = None
 
-    def _next_port(self) -> int:
-        global _BRIDGE_PORT_COUNTER
-        port = _BRIDGE_BASE_PORT + _BRIDGE_PORT_COUNTER
-        _BRIDGE_PORT_COUNTER += 1
-        return port
+    def _get_daytona(self):
+        if self._daytona is None:
+            from daytona import Daytona, DaytonaConfig
 
-    async def ensure_bridge(self, team_id: str) -> int:
-        """Start a bridge for the team if not already running. Returns the port."""
+            api_key = os.environ.get("DAYTONA_API_KEY", "")
+            api_url = os.environ.get("DAYTONA_SERVER_URL", "")
+            target = os.environ.get("DAYTONA_TARGET", "us")
+            if not api_key or not api_url:
+                raise RuntimeError(
+                    "DAYTONA_API_KEY and DAYTONA_SERVER_URL must be set"
+                )
+            self._daytona = Daytona(DaytonaConfig(
+                api_key=api_key, api_url=api_url, target=target,
+            ))
+        return self._daytona
+
+    async def ensure_bridge(self, team_id: str) -> tuple[str, str]:
+        """Start a bridge sandbox for the team. Returns (ws_url, auth_header)."""
         async with self._lock:
             info = self._bridges.get(team_id)
-            if info and info["process"].poll() is None:
-                return info["port"]
+            if info:
+                return info["ws_url"], info["token"]
 
-            if not _BRIDGE_ENTRY.exists():
-                raise FileNotFoundError(
-                    f"Bridge not built. Expected {_BRIDGE_ENTRY}"
-                )
+            # Run sync Daytona ops in thread to avoid blocking event loop
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, self._create_bridge, team_id)
+            self._bridges[team_id] = result
+            return result["ws_url"], result["token"]
 
-            port = self._next_port()
-            auth_dir = Path.home() / ".nanobot" / "whatsapp-auth" / team_id
-            auth_dir.mkdir(parents=True, exist_ok=True)
+    def _create_bridge(self, team_id: str) -> dict:
+        """Synchronous: create sandbox, upload bridge, build, start."""
+        from daytona import CreateSandboxFromImageParams, SessionExecuteRequest
 
-            env = {**os.environ, "BRIDGE_PORT": str(port), "AUTH_DIR": str(auth_dir)}
-            proc = subprocess.Popen(
-                ["node", str(_BRIDGE_ENTRY)],
-                env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=str(_BRIDGE_DIR),
-            )
-            self._bridges[team_id] = {
-                "process": proc,
-                "port": port,
-                "auth_dir": str(auth_dir),
-            }
-            print(f"[bridge-manager] Started bridge for team {team_id[:8]}... on port {port} (pid={proc.pid})")
+        daytona = self._get_daytona()
 
-            # Wait for WebSocket server to be ready (poll up to 5s)
-            import websockets
+        print(f"[bridge-manager] Creating Daytona sandbox for team {team_id[:8]}...")
+        sandbox = daytona.create(
+            CreateSandboxFromImageParams(
+                image="node:20-slim",
+                name=f"wa-bridge-{team_id[:8]}",
+                language="javascript",
+                env_vars={"BRIDGE_PORT": str(_BRIDGE_PORT)},
+                auto_stop_interval=10,    # stop after 10 min idle
+                auto_delete_interval=60,  # delete after 1 hour
+            ),
+            timeout=120,
+        )
 
-            ws_url = f"ws://127.0.0.1:{port}"
-            for _ in range(50):
-                await asyncio.sleep(0.1)
-                if proc.poll() is not None:
-                    stderr = proc.stderr.read().decode() if proc.stderr else ""
-                    raise RuntimeError(f"Bridge process exited early: {stderr[:300]}")
-                try:
-                    ws = await asyncio.wait_for(
-                        websockets.connect(ws_url), timeout=0.5
-                    )
-                    await ws.close()
-                    return port
-                except (ConnectionRefusedError, OSError, asyncio.TimeoutError):
-                    continue
+        # Upload bridge source files
+        for root, dirs, files in os.walk(str(_BRIDGE_DIR)):
+            dirs[:] = [d for d in dirs if d not in ("node_modules", "dist", ".git")]
+            for f in files:
+                local_path = os.path.join(root, f)
+                rel_path = os.path.relpath(local_path, str(_BRIDGE_DIR))
+                with open(local_path, "rb") as fh:
+                    sandbox.fs.upload_file(fh.read(), f"/app/bridge/{rel_path}")
 
-            raise RuntimeError("Bridge started but WebSocket not ready after 5s")
+        # Install deps and build
+        resp = sandbox.process.exec(
+            "cd /app/bridge && npm install && npx tsc", timeout=60
+        )
+        if resp.exit_code != 0:
+            daytona.delete(sandbox)
+            raise RuntimeError(f"Bridge build failed: {resp.result[:300]}")
+
+        # Start bridge as background session
+        session_id = "bridge"
+        sandbox.process.create_session(session_id)
+        sandbox.process.execute_session_command(
+            session_id,
+            SessionExecuteRequest(
+                command="cd /app/bridge && node dist/index.js",
+                run_async=True,
+            ),
+        )
+
+        # Get signed preview URL for WebSocket access
+        import time
+        time.sleep(3)  # wait for bridge to bind port
+        signed = sandbox.create_signed_preview_url(_BRIDGE_PORT, expires_in_seconds=7200)
+        ws_url = signed.url.replace("https://", "wss://")
+        token = signed.token
+
+        print(f"[bridge-manager] Bridge ready for team {team_id[:8]}: {ws_url}")
+        return {
+            "sandbox_id": sandbox.id,
+            "sandbox": sandbox,
+            "ws_url": ws_url,
+            "token": token,
+        }
 
     def stop_bridge(self, team_id: str):
         info = self._bridges.pop(team_id, None)
-        if info and info["process"].poll() is None:
-            info["process"].terminate()
-            try:
-                info["process"].wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                info["process"].kill()
-            print(f"[bridge-manager] Stopped bridge for team {team_id[:8]}...")
+        if not info:
+            return
+        try:
+            daytona = self._get_daytona()
+            sandbox = info.get("sandbox")
+            if sandbox:
+                sandbox.process.delete_session("bridge")
+                daytona.delete(sandbox)
+            print(f"[bridge-manager] Deleted sandbox for team {team_id[:8]}...")
+        except Exception as e:
+            print(f"[bridge-manager] Cleanup error for team {team_id[:8]}: {e}")
 
     def stop_all(self):
         for team_id in list(self._bridges.keys()):
             self.stop_bridge(team_id)
-
-    def get_port(self, team_id: str) -> int | None:
-        info = self._bridges.get(team_id)
-        if info and info["process"].poll() is None:
-            return info["port"]
-        return None
 
 
 _bridge_manager = BridgeManager()
@@ -840,23 +882,24 @@ async def gateway_whatsapp_qr(request: Request):
             yield {"event": "done", "data": "[DONE]"}
             return
 
-        # Spawn a bridge subprocess for this team (on-demand) and connect
-        # to it via WebSocket to receive QR codes.
+        # Create a Daytona sandbox with the WhatsApp bridge and connect
+        # via WebSocket to receive QR codes (secure, isolated per team).
         gw["whatsapp"]["status"] = "waiting_qr"
-        bridge_token = os.environ.get("WHATSAPP_BRIDGE_TOKEN", "")
 
         try:
             import websockets
 
-            # Start or reuse bridge process for this team
-            port = await _bridge_manager.ensure_bridge(team_id)
-            bridge_url = f"ws://127.0.0.1:{port}"
+            # Create or reuse Daytona sandbox for this team
+            yield {
+                "event": "status",
+                "data": json.dumps({"status": "creating_sandbox", "team_id": team_id}),
+            }
+            ws_url, token = await _bridge_manager.ensure_bridge(team_id)
 
-            async with websockets.connect(bridge_url) as ws:
-                # Authenticate if token is configured
-                if bridge_token:
-                    await ws.send(json.dumps({"type": "auth", "token": bridge_token}))
-
+            async with websockets.connect(
+                ws_url,
+                additional_headers={"Authorization": f"Bearer {token}"},
+            ) as ws:
                 # Listen for QR codes and status updates (timeout after 120s)
                 start = time.monotonic()
                 while time.monotonic() - start < 120:
@@ -882,13 +925,12 @@ async def gateway_whatsapp_qr(request: Request):
                             yield {"event": "done", "data": "[DONE]"}
                             return
                     except asyncio.TimeoutError:
-                        # Keep-alive: re-emit waiting status
                         yield {
                             "event": "status",
                             "data": json.dumps({"status": "waiting_qr", "team_id": team_id}),
                         }
 
-                # Timeout reached (120s) — stop the bridge for this team
+                # Timeout reached (120s) — stop the bridge sandbox
                 gw["whatsapp"]["status"] = "disconnected"
                 _bridge_manager.stop_bridge(team_id)
                 yield {
@@ -897,31 +939,14 @@ async def gateway_whatsapp_qr(request: Request):
                 }
                 yield {"event": "done", "data": "[DONE]"}
 
-        except ImportError:
-            gw["whatsapp"]["status"] = "unavailable"
-            yield {
-                "event": "error",
-                "data": json.dumps({
-                    "error": "websockets library not installed",
-                    "team_id": team_id,
-                }),
-            }
-            yield {"event": "done", "data": "[DONE]"}
-        except FileNotFoundError as e:
-            gw["whatsapp"]["status"] = "unavailable"
-            yield {
-                "event": "error",
-                "data": json.dumps({
-                    "error": str(e),
-                    "team_id": team_id,
-                }),
-            }
-            yield {"event": "done", "data": "[DONE]"}
         except Exception as e:
             gw["whatsapp"]["status"] = "error"
+            error_msg = str(e)
+            if "DAYTONA_API_KEY" in error_msg:
+                error_msg = "Daytona not configured. Set DAYTONA_API_KEY and DAYTONA_SERVER_URL."
             yield {
                 "event": "error",
-                "data": json.dumps({"error": str(e), "team_id": team_id}),
+                "data": json.dumps({"error": error_msg, "team_id": team_id}),
             }
             yield {"event": "done", "data": "[DONE]"}
 

@@ -91,5 +91,10 @@ dist-ssr
 # Auto Claude data directory
 .auto-claude/
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
 # Redis
 *.rdb
