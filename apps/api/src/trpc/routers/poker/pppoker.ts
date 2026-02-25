@@ -105,6 +105,31 @@ async function tryRegisterFastchipsOperation(params: {
 
 export const pppokerRouter = createTRPCRouter({
   /**
+   * List all clubs the authenticated PPPoker user belongs to (post-login)
+   */
+  listMyClubs: protectedProcedure.query(async ({ ctx: { teamId } }) => {
+    const creds = await getBridgeCredentials(teamId!);
+
+    const resp = await fetch(`${PPPOKER_BRIDGE_URL}/clubs`, {
+      headers: {
+        "X-PPPoker-Username": creds.pppoker_username,
+        "X-PPPoker-Password": creds.pppoker_password,
+      },
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Falha ao buscar clubes: ${errText}`,
+      });
+    }
+
+    const data = await resp.json();
+    return { clubs: data.clubs ?? [] };
+  }),
+
+  /**
    * Trigger immediate sync for the current team
    */
   syncNow: protectedProcedure.mutation(async ({ ctx: { teamId } }) => {

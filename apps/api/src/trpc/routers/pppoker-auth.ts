@@ -7,20 +7,54 @@ import { createTRPCRouter, publicProcedure } from "../init";
 const PPPOKER_BRIDGE_URL =
   process.env.PPPOKER_BRIDGE_URL || "http://localhost:8000";
 
+/** Shape returned by GET /clubs on the bridge */
+interface BridgeClub {
+  club_id: number;
+  club_name: string;
+  avatar_url: string;
+  member_count: number;
+  user_role_num: number;
+  user_role: string;
+  liga_id: number | null;
+}
+
+async function fetchBridgeClubs(
+  username: string,
+  password: string,
+): Promise<BridgeClub[]> {
+  const resp = await fetch(`${PPPOKER_BRIDGE_URL}/clubs`, {
+    headers: {
+      "X-PPPoker-Username": username,
+      "X-PPPoker-Password": password,
+    },
+  });
+
+  if (!resp.ok) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Falha ao buscar clubes do PPPoker.",
+    });
+  }
+
+  const data = (await resp.json()) as { clubs: BridgeClub[] };
+  return data.clubs ?? [];
+}
+
 export const pppokerAuthRouter = createTRPCRouter({
   /**
    * Login with PPPoker credentials.
-   * 1. Validates credentials against PPPoker API via bridge
-   * 2. Creates/finds a Supabase user mapped by PPPoker UID
-   * 3. Creates a team linked to the club_id
-   * 4. Returns a Supabase session (JWT)
+   *
+   * Two behaviours controlled by whether `clubId` is provided:
+   *
+   * 1. Without clubId → validates credentials, returns list of clubs (no session created)
+   * 2. With clubId → full login: creates Supabase user/session, saves all clubs, returns JWT
    */
   login: publicProcedure
     .input(
       z.object({
         username: z.string().min(1),
         password: z.string().min(1),
-        clubId: z.number().int().positive(),
+        clubId: z.number().int().positive().optional(),
         verifyCode: z.string().optional(),
       }),
     )
@@ -74,18 +108,41 @@ export const pppokerAuthRouter = createTRPCRouter({
 
       const pppokerUid = loginResult.uid;
 
-      // Step 2: Create or find Supabase user mapped by PPPoker UID
-      // Use separate clients: one for auth operations (which changes internal session),
-      // and one for DB operations that must keep service_role privileges
+      // Fetch all clubs for this user
+      let bridgeClubs: BridgeClub[] = [];
+      try {
+        bridgeClubs = await fetchBridgeClubs(username, password);
+      } catch (err) {
+        logger.warn({ err }, "Failed to fetch clubs list from bridge");
+      }
+
+      // ── Step "select_club": no clubId → return clubs for selection ──
+      if (!clubId) {
+        return {
+          step: "select_club" as const,
+          pppokerUid,
+          clubs: bridgeClubs.map((c) => ({
+            clubId: c.club_id,
+            clubName: c.club_name,
+            userRole: c.user_role,
+            userRoleNum: c.user_role_num,
+            memberCount: c.member_count,
+            ligaId: c.liga_id,
+            avatarUrl: c.avatar_url,
+          })),
+        };
+      }
+
+      // ── Step "done": clubId provided → full login ──
+
       const supabase = await createAdminClient();
       const adminDb = await createAdminClient();
 
-      // Use a deterministic email for the Supabase user based on PPPoker UID
       const mappedEmail = `pppoker_${pppokerUid}@midpoker.internal`;
       const mappedPassword = `ppk_${pppokerUid}_${password.slice(0, 8)}`;
 
       // Try to sign in first
-      const { data: signInData, error: signInError } =
+      const { data: signInData } =
         await supabase.auth.signInWithPassword({
           email: mappedEmail,
           password: mappedPassword,
@@ -96,7 +153,7 @@ export const pppokerAuthRouter = createTRPCRouter({
       let refreshToken: string;
 
       if (signInData?.session) {
-        // Existing user - sign in succeeded
+        // Existing user
         userId = signInData.user.id;
         accessToken = signInData.session.access_token;
         refreshToken = signInData.session.refresh_token;
@@ -129,7 +186,7 @@ export const pppokerAuthRouter = createTRPCRouter({
           email_confirm: true,
         });
 
-        // Create the public.users row (auth.users does NOT auto-create it)
+        // Create the public.users row
         await adminDb.from("users").upsert(
           {
             id: userId,
@@ -156,7 +213,7 @@ export const pppokerAuthRouter = createTRPCRouter({
         accessToken = newSignIn.session.access_token;
         refreshToken = newSignIn.session.refresh_token;
 
-        // Step 3: Create team linked to club
+        // Create team linked to club
         const teamName = `Clube ${clubId}`;
         const { data: team, error: teamError } = await adminDb
           .from("teams")
@@ -187,15 +244,6 @@ export const pppokerAuthRouter = createTRPCRouter({
           .from("users")
           .update({ team_id: team.id })
           .eq("id", userId);
-
-        // Create club connection record
-        await adminDb.from("pppoker_club_connections").insert({
-          team_id: team.id,
-          club_id: clubId,
-          pppoker_username: username,
-          pppoker_password: password,
-          sync_status: "active",
-        });
       }
 
       // Ensure public.users row exists for returning users too
@@ -208,7 +256,7 @@ export const pppokerAuthRouter = createTRPCRouter({
         { onConflict: "id", ignoreDuplicates: true },
       );
 
-      // Ensure club connection exists for existing users too
+      // Get the team_id for saving club connections
       const { data: userData } = await adminDb
         .from("users")
         .select("team_id")
@@ -216,20 +264,39 @@ export const pppokerAuthRouter = createTRPCRouter({
         .single();
 
       if (userData?.team_id) {
-        // Upsert club connection
-        await adminDb.from("pppoker_club_connections").upsert(
-          {
-            team_id: userData.team_id,
-            club_id: clubId,
-            pppoker_username: username,
-            pppoker_password: password,
-            sync_status: "active",
-          },
-          { onConflict: "team_id,club_id" },
-        );
+        // Save ALL clubs from bridge (selected one as active, rest as inactive)
+        for (const club of bridgeClubs) {
+          await adminDb.from("pppoker_club_connections").upsert(
+            {
+              team_id: userData.team_id,
+              club_id: club.club_id,
+              club_name: club.club_name,
+              pppoker_username: username,
+              pppoker_password: password,
+              sync_status: club.club_id === clubId ? "active" : "inactive",
+            },
+            { onConflict: "team_id,club_id" },
+          );
+        }
+
+        // Fallback: if selected club wasn't in bridge list, save it anyway
+        const selectedInList = bridgeClubs.some((c) => c.club_id === clubId);
+        if (!selectedInList) {
+          await adminDb.from("pppoker_club_connections").upsert(
+            {
+              team_id: userData.team_id,
+              club_id: clubId,
+              pppoker_username: username,
+              pppoker_password: password,
+              sync_status: "active",
+            },
+            { onConflict: "team_id,club_id" },
+          );
+        }
       }
 
       return {
+        step: "done" as const,
         accessToken,
         refreshToken,
         pppokerUid,
