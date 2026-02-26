@@ -1,5 +1,5 @@
-import { buildAppContext } from "@api/ai/agents/config/shared";
-import { runChatAgent } from "@api/ai/runtime/chat-engine";
+import { buildAppContext } from "@api/ai/runtime/app-context";
+import { nanobotToUIMessageStream } from "@api/ai/runtime/nanobot";
 import { getNanobotSettingsForTeam } from "@api/ai/runtime/nanobot-team-settings";
 import { getUserContext } from "@api/ai/utils/get-user-context";
 import type { Context } from "@api/rest/types";
@@ -43,8 +43,7 @@ app.post("/", withRequiredScope("chat.write"), async (c) => {
     appContext.messages = messages;
   }
 
-  // Preserve the existing UI contract while allowing engine swaps behind the endpoint.
-  return runChatAgent({
+  return nanobotToUIMessageStream({
     message,
     strategy: "auto",
     maxRounds: 5,

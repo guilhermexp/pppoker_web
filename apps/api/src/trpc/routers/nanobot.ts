@@ -1,4 +1,3 @@
-import { getLegacyToolManifest } from "@api/ai/runtime/legacy-tool-gateway";
 import {
   nanobotSettingsSchema,
   normalizeNanobotSettings,
@@ -87,19 +86,10 @@ export const nanobotRouter = createTRPCRouter({
 
   status: protectedProcedure.query(async () => {
     return {
-      engine: (process.env.CHAT_AGENT_ENGINE ?? "nanobot").toLowerCase(),
-      fallbackToLegacy:
-        (process.env.NANOBOT_FALLBACK_TO_LEGACY ?? "false").toLowerCase() ===
-        "true",
+      engine: "nanobot" as const,
       baseUrl: process.env.NANOBOT_BASE_URL ?? "",
       chatPath: process.env.NANOBOT_CHAT_PATH ?? "/api/chat",
       hasApiKey: Boolean(process.env.NANOBOT_API_KEY),
-    };
-  }),
-
-  toolsManifest: protectedProcedure.query(async () => {
-    return {
-      tools: getLegacyToolManifest(),
     };
   }),
 });

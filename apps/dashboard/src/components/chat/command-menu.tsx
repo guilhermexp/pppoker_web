@@ -11,12 +11,10 @@ import {
   normalizeNanobotSkills,
 } from "@/lib/chat-commands";
 import { useChatStore } from "@/store/chat";
-import { useTRPC } from "@/trpc/client";
 import { useChatActions, useChatId, useDataPart } from "@ai-sdk-tools/store";
 import { AnimatedSizeContainer } from "@midpoker/ui/animated-size-container";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
-import { useQuery } from "@tanstack/react-query";
 import { type RefObject, useEffect, useRef } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 
@@ -36,10 +34,6 @@ export function CommandMenu() {
   const { sendMessage } = useChatActions();
   const chatId = useChatId();
   const { setChatId, startNewSession } = useChatInterface();
-  const trpc = useTRPC();
-  const { data: toolsManifest } = useQuery(
-    trpc.nanobot.toolsManifest.queryOptions(),
-  );
   const [nanobotCommandsData] = useDataPart<{
     commands?: NanobotCommandPayload[];
   }>("nanobot-commands");
@@ -107,9 +101,7 @@ export function CommandMenu() {
 
   useEffect(() => {
     const sessionCommands = createNanobotSessionCommands();
-    const manifestCommands = createNanobotCommandSuggestions(
-      toolsManifest?.tools ?? [],
-    );
+    const manifestCommands = createNanobotCommandSuggestions([]);
     const streamCommands = normalizeNanobotCommands(
       nanobotCommandsData?.commands,
     );
@@ -124,7 +116,6 @@ export function CommandMenu() {
     nanobotCommandsData?.commands,
     nanobotSkillsData?.skills,
     setDynamicCommands,
-    toolsManifest?.tools,
   ]);
 
   if (!showCommands || filteredCommands.length === 0) return null;

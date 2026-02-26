@@ -1,7 +1,3 @@
-import {
-  getLegacyToolManifest,
-  invokeLegacyTool,
-} from "@api/ai/runtime/legacy-tool-gateway";
 import { createAdminClient } from "@api/services/supabase";
 import {
   addNanobotCronJob,
@@ -308,16 +304,12 @@ app.get("/payment-status", withRequiredScope("chat.write"), async (c) => {
 });
 
 app.get("/health", withRequiredScope("chat.write"), async (c) => {
-  const tools = getLegacyToolManifest();
   return c.json({
     success: true,
-    engine: (process.env.CHAT_AGENT_ENGINE ?? "nanobot").toLowerCase(),
+    engine: "nanobot",
     nanobot: {
       baseUrl: process.env.NANOBOT_BASE_URL ?? null,
       chatPath: process.env.NANOBOT_CHAT_PATH ?? "/api/chat",
-      fallbackToLegacy:
-        (process.env.NANOBOT_FALLBACK_TO_LEGACY ?? "false").toLowerCase() ===
-        "true",
       configured: Boolean(process.env.NANOBOT_BASE_URL),
       orchestration: {
         callbackUrl:
@@ -333,7 +325,7 @@ app.get("/health", withRequiredScope("chat.write"), async (c) => {
       },
     },
     tools: {
-      total: tools.length + nanobotOrchestrationTools.length,
+      total: nanobotOrchestrationTools.length,
     },
   });
 });
@@ -341,7 +333,7 @@ app.get("/health", withRequiredScope("chat.write"), async (c) => {
 app.get("/tools", withRequiredScope("chat.write"), async (c) => {
   return c.json({
     success: true,
-    tools: [...nanobotOrchestrationTools, ...getLegacyToolManifest()],
+    tools: [...nanobotOrchestrationTools],
   });
 });
 
@@ -353,7 +345,6 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
     return c.json({ success: false, error: parsed.error }, 400);
   }
 
-  const db = c.get("db");
   const teamId = c.get("teamId");
   const session = c.get("session");
 
@@ -822,19 +813,14 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       });
     }
 
-    const result = await invokeLegacyTool({
-      db,
-      teamId,
-      userId: session.user.id,
-      toolName: parsed.data.toolName,
-      input: parsed.data.input,
-      chatId: parsed.data.chatId ?? `nanobot_tool_${Date.now()}`,
-      country: parsed.data.country,
-      city: parsed.data.city,
-      timezone: parsed.data.timezone,
-    });
-
-    return c.json({ success: true, ...result });
+    return c.json(
+      {
+        success: false,
+        error: `Unknown tool: ${parsed.data.toolName}`,
+        code: "UNKNOWN_TOOL",
+      },
+      400,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return c.json(
@@ -858,8 +844,6 @@ app.post("/orchestration/cron", withRequiredScope("chat.write"), async (c) => {
     return c.json({ success: false, error: parsed.error }, 400);
   }
 
-  const db = c.get("db");
-  void db; // kept for parity with other nanobot gateway handlers
   const teamId = c.get("teamId");
   const session = c.get("session");
 

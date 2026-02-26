@@ -38,6 +38,17 @@ import { useRouter } from "next/navigation";
 
 type TeamMember = RouterOutputs["team"]["members"][number];
 
+function extractPppokerNumericId(email?: string | null) {
+  if (!email) return null;
+  const match = email.match(/^pppoker_(\d+)@/i);
+  return match?.[1] ?? null;
+}
+
+function isInternalMappedEmail(email?: string | null) {
+  if (!email) return false;
+  return email.endsWith("@midpoker.internal");
+}
+
 const userFilterFn: FilterFn<TeamMember> = (
   row: Row<TeamMember>,
   _: string,
@@ -53,7 +64,13 @@ export const columns: ColumnDef<TeamMember>[] = [
     id: "user",
     accessorKey: "user.full_name",
     filterFn: userFilterFn,
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const meta = table.options.meta;
+      const email = row.original.user?.email;
+      const pppokerNumericId = extractPppokerNumericId(email);
+      const isInternal = isInternalMappedEmail(email);
+      const pokerClubId = (meta as any)?.pokerClubId as string | null;
+
       return (
         <div>
           <div className="flex items-center space-x-4">
@@ -74,9 +91,23 @@ export const columns: ColumnDef<TeamMember>[] = [
               <span className="font-medium text-sm">
                 {row.original.user?.fullName}
               </span>
-              <span className="text-sm text-[#606060]">
-                {row.original.user?.email}
-              </span>
+              {!isInternal && (
+                <span className="text-sm text-[#606060]">
+                  {email}
+                </span>
+              )}
+              {pppokerNumericId && (
+                <div className="flex items-center gap-2 text-xs text-[#606060]">
+                  <span>
+                    ID: <span className="font-mono font-medium text-foreground">{pppokerNumericId}</span>
+                  </span>
+                  {pokerClubId && (
+                    <span>
+                      Clube: <span className="font-mono font-medium text-foreground">{pokerClubId}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

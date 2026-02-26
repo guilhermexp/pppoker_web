@@ -33,6 +33,7 @@ function getQueryClient() {
 export function TRPCReactProvider(
   props: Readonly<{
     children: React.ReactNode;
+    initialAccessToken?: string | null;
   }>,
 ) {
   const apiBaseUrl = getApiBaseUrl();
@@ -44,15 +45,24 @@ export function TRPCReactProvider(
           url: `${apiBaseUrl}/trpc`,
           transformer: superjson,
           async headers() {
-            const supabase = createClient();
+            const headers: Record<string, string> = {};
 
+            // During SSR of client components (App Router streaming),
+            // use the token from the server layout to avoid relying on
+            // the browser Supabase client in a non-browser environment.
+            if (isServer) {
+              if (props.initialAccessToken) {
+                headers.Authorization = `Bearer ${props.initialAccessToken}`;
+              }
+
+              return headers;
+            }
+
+            const supabase = createClient();
             const {
               data: { session },
             } = await supabase.auth.getSession();
 
-            const headers: Record<string, string> = {};
-
-            // Only send Authorization header if we have a valid session
             if (session?.access_token) {
               headers.Authorization = `Bearer ${session.access_token}`;
             }

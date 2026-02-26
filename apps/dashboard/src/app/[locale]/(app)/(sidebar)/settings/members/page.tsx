@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 export default function Members() {
   prefetch(trpc.team.members.queryOptions());
   prefetch(trpc.team.teamInvites.queryOptions());
+  prefetch(trpc.team.getPokerSettings.queryOptions());
 
   return <TeamMembers />;
 }

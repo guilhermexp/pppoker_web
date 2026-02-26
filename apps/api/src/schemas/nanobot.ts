@@ -89,7 +89,6 @@ export const nanobotMcpConfigSchema = z.object({
 
 export const nanobotSettingsSchema = z.object({
   enabled: z.boolean().default(false),
-  fallbackToLegacy: z.boolean().default(true),
   baseUrl: z.string().url().or(z.literal("")).default(""),
   chatPath: z.string().default("/api/chat"),
   apiKey: z.string().optional().default(""),

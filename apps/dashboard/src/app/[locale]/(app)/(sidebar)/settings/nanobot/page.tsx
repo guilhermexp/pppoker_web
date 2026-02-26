@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 export default async function Page() {
   prefetch(trpc.nanobot.getSettings.queryOptions());
   prefetch(trpc.nanobot.status.queryOptions());
-  prefetch(trpc.nanobot.toolsManifest.queryOptions());
 
   return <NanobotSettingsPanel />;
 }

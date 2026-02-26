@@ -25,11 +25,10 @@ Objetivo:
 ## Componentes da Integração
 
 ### 1. Chat Engine Dispatcher (API)
-Responsável por escolher o engine (`legacy` ou `nanobot`) com fallback.
+Responsável por encaminhar o chat para o runtime `nanobot`.
 
 Arquivos:
 - `apps/api/src/rest/routers/chat.ts`
-- `apps/api/src/ai/runtime/chat-engine.ts`
 - `apps/api/src/ai/runtime/nanobot.ts`
 
 ### 2. Adapter do Nanobot (compatibilidade de stream)
@@ -53,8 +52,7 @@ Endpoints:
 
 Arquivos:
 - `apps/api/src/rest/routers/nanobot.ts`
-- `apps/api/src/ai/runtime/legacy-tool-gateway.ts`
-- `apps/api/src/ai/tools/registry.ts`
+- `apps/api/src/ai/runtime/nanobot-orchestration.ts`
 
 ### 4. Orquestração Nanobot com Trigger.dev (cron + subagentes)
 Responsável por:
@@ -84,17 +82,17 @@ Arquivos:
 ### Fluxo 1: Chat síncrono (`POST /chat`)
 1. Frontend envia request para `POST /chat`
 2. API monta contexto do usuário/time
-3. Dispatcher escolhe `legacy` ou `nanobot`
+3. API encaminha para o runtime `nanobot`
 4. Adapter Nanobot chama runtime externo (`NANOBOT_BASE_URL + NANOBOT_CHAT_PATH`)
 5. Adapter converte stream para formato esperado pela UI
 6. Frontend renderiza igual ao fluxo antigo
 
 Observação:
-- fallback para agente legado pode ser ligado por env e por config
+- o endpoint `/chat` opera em modo `nanobot-only`
 
 ### Fluxo 2: Tool `cron` via Nanobot -> Trigger.dev
 1. Nanobot chama `cron(...)` via `/nanobot/tools/invoke`
-2. API intercepta `toolName="cron"` e não envia para o gateway legado
+2. API intercepta `toolName="cron"` e encaminha para a orquestração interna
 3. `nanobot-orchestration.ts` cria registro no Redis
 4. Para recorrente:
    - cria `schedules.create(...)` no Trigger.dev (`nanobot-cron-dispatch`)
@@ -123,15 +121,12 @@ Todos estes endpoints estão em:
 - `GET /nanobot/health`
   - status da integração
   - engine atual
-  - info de fallback
+  - runtime ativo (`nanobot`)
   - info de orquestração Trigger.dev
 - `GET /nanobot/tools`
-  - manifesto de tools (inclui `cron`, `spawn` e tools legadas)
+  - manifesto de tools de orquestração (`cron`, `spawn`)
 - `POST /nanobot/tools/invoke`
-  - executa:
-    - tools legadas (via `legacy-tool-gateway`)
-    - `cron` (via Trigger.dev + Redis)
-    - `spawn` (via Trigger.dev + Redis)
+  - executa `cron` e `spawn` (via Trigger.dev + Redis)
 
 ### Orquestração (uso explícito)
 - `POST /nanobot/orchestration/cron`
@@ -163,7 +158,7 @@ Tela frontend:
 - `apps/dashboard/src/components/nanobot-settings-panel.tsx`
 
 ### Seções expostas na UI
-- Runtime (enabled, fallback, baseUrl, chatPath, apiKey)
+- Runtime (enabled, baseUrl, chatPath, apiKey)
 - Configurações de Modelo
 - Soul (alma do agente)
 - Agent CMD / Instruções Persistentes
@@ -172,17 +167,11 @@ Tela frontend:
 - Automações / Chrome / Tarefas Agendadas
 - Gateways (WhatsApp, Telegram, Slack)
 - MCPs (PPPoker Club Manager)
-- Tools Legadas (manifesto)
+- Tools de Orquestração (manifesto)
 
 ## Variáveis de Ambiente (Operação)
 
-### Engine do chat
-```bash
-CHAT_AGENT_ENGINE=nanobot
-NANOBOT_FALLBACK_TO_LEGACY=true
-```
-
-### Runtime Nanobot (fallback/global)
+### Runtime Nanobot
 ```bash
 NANOBOT_BASE_URL=http://localhost:18790
 NANOBOT_CHAT_PATH=/api/chat
@@ -350,7 +339,7 @@ Esperado se não for múltiplo de 60. Use `cron_expr`.
 
 ### Curto prazo
 - materializar config do Nanobot por time em workspace/arquivos (`SOUL.md`, `AGENTS.md`, `MEMORY.md`) no runtime
-- fazer o runtime Nanobot usar automaticamente `/nanobot/tools` (cron/spawn + legado)
+- fazer o runtime Nanobot usar automaticamente `/nanobot/tools` (cron/spawn)
 - emitir `data-nanobot-skills` e `data-nanobot-commands` no stream do runtime
 
 ### Médio prazo
@@ -367,7 +356,6 @@ Esperado se não for múltiplo de 60. Use `cron_expr`.
 
 ### API / Chat Engine
 - `apps/api/src/rest/routers/chat.ts`
-- `apps/api/src/ai/runtime/chat-engine.ts`
 - `apps/api/src/ai/runtime/nanobot.ts`
 
 ### Nanobot Settings / Config
@@ -377,7 +365,6 @@ Esperado se não for múltiplo de 60. Use `cron_expr`.
 
 ### Tools + Orquestração
 - `apps/api/src/rest/routers/nanobot.ts`
-- `apps/api/src/ai/runtime/legacy-tool-gateway.ts`
 - `apps/api/src/ai/runtime/nanobot-orchestration.ts`
 
 ### Runtime Nanobot (Serviço)

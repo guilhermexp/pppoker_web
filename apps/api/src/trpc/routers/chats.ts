@@ -1,4 +1,4 @@
-import { memoryProvider } from "@api/ai/agents/config/shared";
+import { memoryProvider } from "@api/ai/runtime/app-context";
 import {
   deleteChatSchema,
   getChatSchema,

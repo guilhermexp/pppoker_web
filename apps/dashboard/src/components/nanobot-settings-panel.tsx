@@ -13,7 +13,6 @@ import { useEffect, useState } from "react";
 
 type NanobotSettingsForm = {
   enabled: boolean;
-  fallbackToLegacy: boolean;
   baseUrl: string;
   chatPath: string;
   apiKey: string;
@@ -126,7 +125,6 @@ function ensureFormDefaults(
 
   return {
     enabled: d.enabled ?? false,
-    fallbackToLegacy: d.fallbackToLegacy ?? true,
     baseUrl: d.baseUrl ?? "",
     chatPath: d.chatPath ?? "/api/chat",
     apiKey: d.apiKey ?? "",
@@ -338,7 +336,6 @@ export function NanobotSettingsPanel() {
 
   const settingsQuery = useQuery(trpc.nanobot.getSettings.queryOptions());
   const statusQuery = useQuery(trpc.nanobot.status.queryOptions());
-  const toolsQuery = useQuery(trpc.nanobot.toolsManifest.queryOptions());
 
   const [form, setForm] = useState<NanobotSettingsForm | null>(null);
   const [saveMessage, setSaveMessage] = useState("");
@@ -369,7 +366,6 @@ export function NanobotSettingsPanel() {
   }
 
   const status = statusQuery.data;
-  const tools = toolsQuery.data?.tools ?? [];
 
   const setField = <K extends keyof NanobotSettingsForm>(
     key: K,
@@ -519,16 +515,7 @@ export function NanobotSettingsPanel() {
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">
             <CardTitle>Nanobot Runtime</CardTitle>
-            <Badge
-              variant={status?.engine === "nanobot" ? "default" : "secondary"}
-            >
-              {status?.engine === "nanobot"
-                ? "Ativo no /chat"
-                : "Engine atual: legado"}
-            </Badge>
-            {status?.fallbackToLegacy && (
-              <Badge variant="outline">Fallback p/ legado</Badge>
-            )}
+            <Badge variant="default">Ativo no /chat</Badge>
           </div>
           <p className="text-sm text-muted-foreground">
             Refatoração sem mudar UX/UI: o frontend continua igual, mas o
@@ -536,22 +523,12 @@ export function NanobotSettingsPanel() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <ToggleRow
-              label="Habilitar Nanobot neste time"
-              description="Ativa a configuração da equipe; a troca global de engine ainda pode ser controlada por env."
-              checked={form.enabled}
-              onCheckedChange={(checked) => setField("enabled", checked)}
-            />
-            <ToggleRow
-              label="Fallback automático para o agente legado"
-              description="Se o runtime do Nanobot falhar, o `/chat` volta para o agente anterior."
-              checked={form.fallbackToLegacy}
-              onCheckedChange={(checked) =>
-                setField("fallbackToLegacy", checked)
-              }
-            />
-          </div>
+          <ToggleRow
+            label="Habilitar Nanobot neste time"
+            description="Ativa a configuração da equipe; a troca global de engine ainda pode ser controlada por env."
+            checked={form.enabled}
+            onCheckedChange={(checked) => setField("enabled", checked)}
+          />
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>URL base do runtime Nanobot</Label>
@@ -1066,26 +1043,6 @@ export function NanobotSettingsPanel() {
             </p>
           </div>
         </div>
-      </Section>
-
-      <Section
-        title="Tools Legadas (compatibilidade)"
-        description="Manifesto das tools atuais expostas para o runtime do Nanobot, preservando tool names/canvas/UX."
-      >
-        <div className="flex flex-wrap gap-2">
-          {tools.slice(0, 20).map((tool) => (
-            <Badge key={tool.name} variant="secondary">
-              {tool.name}
-            </Badge>
-          ))}
-          {tools.length > 20 && (
-            <Badge variant="outline">+{tools.length - 20} tools</Badge>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Total: {tools.length} tools. Endpoints: `GET /nanobot/tools` e `POST
-          /nanobot/tools/invoke`.
-        </p>
       </Section>
 
       <div className="flex items-center gap-3">

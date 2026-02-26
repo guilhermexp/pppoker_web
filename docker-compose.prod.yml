@@ -44,8 +44,6 @@ services:
       - PPPOKER_BRIDGE_URL=http://pppoker-bridge:8000
       - NANOBOT_BASE_URL=http://nanobot:18790
       - NANOBOT_CHAT_PATH=/api/chat
-      - CHAT_AGENT_ENGINE=nanobot
-      - NANOBOT_FALLBACK_TO_LEGACY=false
       # ↓ Set these in Dokploy environment variables
       - DATABASE_PRIMARY_URL=${DATABASE_PRIMARY_URL}
       - SUPABASE_URL=${SUPABASE_URL}

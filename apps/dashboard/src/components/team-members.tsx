@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { Suspense } from "react";
 import { DataTable as MembersTable } from "./tables/members";
+import { MyClubs } from "./tables/members/my-clubs";
 import { DataTable as PendingInvitesTable } from "./tables/pending-invites";
 import { PendingInvitesSkeleton } from "./tables/pending-invites/skeleton";
 
@@ -11,8 +12,11 @@ export function TeamMembers() {
         <TabsTrigger value="members" className="p-0 m-0 mr-4">
           Team Members
         </TabsTrigger>
-        <TabsTrigger value="pending" className="p-0 m-0">
+        <TabsTrigger value="pending" className="p-0 m-0 mr-4">
           Pending Invitations
+        </TabsTrigger>
+        <TabsTrigger value="clubs" className="p-0 m-0">
+          Meus Clubes
         </TabsTrigger>
       </TabsList>
 
@@ -25,6 +29,12 @@ export function TeamMembers() {
       <TabsContent value="pending">
         <Suspense fallback={<PendingInvitesSkeleton />}>
           <PendingInvitesTable />
+        </Suspense>
+      </TabsContent>
+
+      <TabsContent value="clubs">
+        <Suspense fallback={<PendingInvitesSkeleton />}>
+          <MyClubs />
         </Suspense>
       </TabsContent>
     </Tabs>

@@ -8,11 +8,16 @@ import type { ReactNode } from "react";
 type ProviderProps = {
   locale: string;
   children: ReactNode;
+  initialAccessToken?: string | null;
 };
 
-export function Providers({ locale, children }: ProviderProps) {
+export function Providers({
+  locale,
+  children,
+  initialAccessToken,
+}: ProviderProps) {
   return (
-    <TRPCReactProvider>
+    <TRPCReactProvider initialAccessToken={initialAccessToken}>
       <I18nProviderClient locale={locale}>
         <ThemeProvider
           attribute="class"

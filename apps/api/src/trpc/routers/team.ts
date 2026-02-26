@@ -151,6 +151,7 @@ export const teamRouter = createTRPCRouter({
       .from("users_on_team")
       .select(`
         id,
+        team_id,
         role,
         created_at,
         user:user_id (
@@ -172,6 +173,7 @@ export const teamRouter = createTRPCRouter({
 
     return (members ?? []).map((m: any) => ({
       id: m.id,
+      teamId: m.team_id,
       role: m.role,
       createdAt: m.created_at,
       user: m.user

@@ -2,38 +2,16 @@
 
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import type { AppRouter } from "@midpoker/api/trpc/routers/_app";
-import { Skeleton } from "@midpoker/ui/skeleton";
 import type { inferRouterOutputs } from "@trpc/server";
-import { Suspense } from "react";
-import { ClientOnly } from "../client-only";
-import { SuggestedActions } from "../suggested-actions";
 import { WidgetsHeader } from "./header";
-import { WidgetProvider, useIsCustomizing } from "./widget-provider";
+import { WidgetProvider } from "./widget-provider";
 import { WidgetsGrid } from "./widgets-grid";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type WidgetPreferences = RouterOutputs["widgets"]["getWidgetPreferences"];
 
-function SuggestedActionsSkeleton() {
-  const skeletonWidths = ["w-28", "w-32", "w-36", "w-28", "w-32", "w-28"];
-
-  return (
-    <div className="w-[calc(100%+16px)] md:w-full -mx-4 md:mx-0 md:px-6 mt-10 mb-8 flex items-center justify-center">
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide w-full md:w-auto pl-4 md:pl-0">
-        {skeletonWidths.map((width, index) => (
-          <Skeleton
-            key={`suggested-actions-skeleton-${index}`}
-            className={`${width} h-[34px] border border-[#e6e6e6] dark:border-[#1d1d1d] flex-shrink-0`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function WidgetsContent() {
   const { isChatPage } = useChatInterface();
-  const isCustomizing = useIsCustomizing();
 
   if (isChatPage) {
     return null;
@@ -43,13 +21,6 @@ function WidgetsContent() {
     <div className="flex flex-col mt-6">
       <WidgetsHeader />
       <WidgetsGrid />
-      {!isCustomizing && (
-        <ClientOnly fallback={<SuggestedActionsSkeleton />}>
-          <Suspense fallback={<SuggestedActionsSkeleton />}>
-            <SuggestedActions />
-          </Suspense>
-        </ClientOnly>
-      )}
     </div>
   );
 }

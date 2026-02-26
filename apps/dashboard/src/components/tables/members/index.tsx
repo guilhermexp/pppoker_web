@@ -28,6 +28,9 @@ export function DataTable() {
   const { data } = useSuspenseQuery({
     ...trpc.team.members.queryOptions(),
   });
+  const { data: pokerSettings } = useSuspenseQuery({
+    ...trpc.team.getPokerSettings.queryOptions(),
+  });
 
   const table = useReactTable({
     getRowId: (row) => row.id,
@@ -42,6 +45,7 @@ export function DataTable() {
     meta: {
       currentUser: data?.find((member) => member?.user?.id === user?.id),
       totalOwners: data?.filter((member) => member?.role === "owner").length,
+      pokerClubId: pokerSettings?.pokerClubId ?? null,
     },
   });
 

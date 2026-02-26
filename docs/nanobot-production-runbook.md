@@ -54,9 +54,6 @@ Responsabilidades:
 
 ### Variáveis obrigatórias (API)
 ```bash
-CHAT_AGENT_ENGINE=nanobot
-NANOBOT_FALLBACK_TO_LEGACY=true
-
 NANOBOT_BASE_URL=https://<nanobot-runtime>
 NANOBOT_CHAT_PATH=/api/chat
 NANOBOT_API_KEY=<opcional-ou-global>
@@ -112,8 +109,8 @@ NANOBOT_ORCHESTRATION_INTERNAL_TOKEN=<mesmo token da API>
 3. Testar chat do time piloto.
 
 ### Fase 6. Cutover controlado
-1. Ativar `CHAT_AGENT_ENGINE=nanobot` no ambiente.
-2. Manter `NANOBOT_FALLBACK_TO_LEGACY=true`.
+1. Confirmar `NANOBOT_BASE_URL` e `NANOBOT_CHAT_PATH` no ambiente.
+2. Reiniciar API/runtime Nanobot (se necessário).
 3. Monitorar logs e erros nas primeiras horas.
 
 ## Validação Pós-Deploy (Smoke Tests)
@@ -128,7 +125,7 @@ Conferir:
 - `engine = nanobot`
 - `nanobot.configured = true`
 - `nanobot.orchestration.hasInternalToken = true`
-- `tools.total` maior que manifesto legado (deve incluir `cron` e `spawn`)
+- `tools.total` inclui as tools de orquestração esperadas (`cron` e `spawn`)
 
 ### 2. Manifesto de tools
 ```bash
@@ -207,27 +204,15 @@ Depois:
 
 ## Rollback (Procedimento Seguro)
 
-### Rollback rápido (recomendado)
-1. Definir `CHAT_AGENT_ENGINE=legacy`
-2. Manter API de pé
-3. Reiniciar API
-4. Validar `/chat` com agente legado
-
-Vantagem:
-- preserva frontend/UI
-- não exige remover settings Nanobot
-- mantém jobs/registro para análise posterior
-
-### Rollback parcial (Nanobot com fallback)
-Se a falha for intermitente:
-1. manter `CHAT_AGENT_ENGINE=nanobot`
-2. garantir `NANOBOT_FALLBACK_TO_LEGACY=true`
-3. investigar runtime Nanobot / Trigger sem interromper chat
+### Rollback operacional (nanobot-only)
+1. Desabilitar o time piloto em `Settings > Nanobot` (se a falha for por configuração de time).
+2. Corrigir indisponibilidade do runtime (`NANOBOT_BASE_URL`, rede, auth, health).
+3. Reiniciar API/runtime e validar `/chat`.
 
 ### Rollback de jobs (se necessário)
 1. pausar/derrubar worker Trigger.dev temporariamente
 2. remover schedulers Nanobot específicos
-3. manter API em `legacy`
+3. reabilitar jobs apenas após validar health do runtime
 
 Observação:
 - não apagar chaves Redis do registry antes de coletar evidências (ajuda no debug)
@@ -239,7 +224,7 @@ Checklist:
 1. `GET /nanobot/health`
 2. runtime Nanobot responde?
 3. logs API mostram timeout/401?
-4. se impacto alto: rollback para `legacy`
+4. se impacto alto: desabilitar time afetado / corrigir runtime antes de reabrir
 
 ### Incidente B: `cron` cria mas não executa
 Checklist:
@@ -314,7 +299,7 @@ Antes de passar a operação para outra pessoa, confirmar:
 1. Ela sabe onde está a doc técnica: `docs/nanobot-integration.md`
 2. Ela sabe onde está este runbook: `docs/nanobot-production-runbook.md`
 3. Ela consegue rodar os smoke tests (`/health`, `/tools`, `cron`, `spawn`)
-4. Ela sabe fazer rollback para `legacy`
+4. Ela sabe executar rollback operacional (nanobot-only)
 5. Ela sabe validar Trigger worker + runtime Nanobot + Redis
 
 ## Referências de Código

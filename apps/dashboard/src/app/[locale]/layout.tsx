@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import { cn } from "@midpoker/ui/cn";
 import "@midpoker/ui/globals.css";
 import { isDesktopApp } from "@/utils/desktop";
+import { createClient } from "@midpoker/supabase/server";
 import { Toaster } from "@midpoker/ui/toaster";
 import type { Metadata } from "next";
 import { Hedvig_Letters_Sans, Hedvig_Letters_Serif } from "next/font/google";
@@ -64,6 +65,10 @@ export default async function Layout({
 }) {
   const { locale } = await params;
   const isDesktop = await isDesktopApp();
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   return (
     <html
@@ -78,7 +83,9 @@ export default async function Layout({
         )}
       >
         <NuqsAdapter>
-          <Providers locale={locale}>{children}</Providers>
+          <Providers locale={locale} initialAccessToken={session?.access_token}>
+            {children}
+          </Providers>
           <Toaster />
         </NuqsAdapter>
       </body>

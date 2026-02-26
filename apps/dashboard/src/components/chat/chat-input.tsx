@@ -3,6 +3,7 @@
 import { CommandMenu } from "@/components/chat/command-menu";
 import { RecordButton } from "@/components/chat/record-button";
 import { SuggestedPrompts } from "@/components/chat/suggested-prompts";
+import { SuggestedActions } from "@/components/suggested-actions";
 import { SuggestedActionsButton } from "@/components/suggested-actions-button";
 import { WebSearchButton } from "@/components/web-search-button";
 import { useChatInterface } from "@/hooks/use-chat-interface";
@@ -17,6 +18,7 @@ import {
   useDataPart,
 } from "@ai-sdk-tools/store";
 import { useSidebarPinned } from "@/components/sidebar-context";
+import { Skeleton } from "@midpoker/ui/skeleton";
 import { cn } from "@midpoker/ui/cn";
 import {
   PromptInput,
@@ -31,7 +33,7 @@ import {
   PromptInputTools,
 } from "@midpoker/ui/prompt-input";
 import { parseAsString, useQueryState } from "nuqs";
-import { useRef } from "react";
+import { Suspense, useRef } from "react";
 
 export interface ChatInputMessage extends PromptInputMessage {
   metadata?: {
@@ -47,7 +49,7 @@ export function ChatInput() {
   const status = useChatStatus();
   const { sendMessage, stop } = useChatActions();
   const chatId = useChatId();
-  const { setChatId, startNewSession } = useChatInterface();
+  const { setChatId, startNewSession, isHome } = useChatInterface();
 
   const [, clearSuggestions] = useDataPart<{ prompts: string[] }>(
     "suggestions",
@@ -155,6 +157,35 @@ export function ChatInput() {
 
   return (
     <>
+      {isHome && (
+        <div
+          className={cn(
+            "fixed bottom-[160px] z-30 transition-all duration-300 ease-in-out",
+            "left-0 px-4 md:px-6",
+            isPinned ? "md:left-[240px]" : "md:left-[56px]",
+            isCanvasVisible ? "right-0 md:right-[603px]" : "right-0",
+          )}
+        >
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center">
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+                  {["w-28", "w-32", "w-36", "w-28", "w-32", "w-28"].map(
+                    (width, index) => (
+                      <Skeleton
+                        key={`sa-skel-${index}`}
+                        className={`${width} h-[34px] border border-[#e6e6e6] dark:border-[#1d1d1d] flex-shrink-0`}
+                      />
+                    ),
+                  )}
+                </div>
+              </div>
+            }
+          >
+            <SuggestedActions />
+          </Suspense>
+        </div>
+      )}
       <div
         className={cn(
           "fixed bottom-6 z-20 transition-all duration-300 ease-in-out",

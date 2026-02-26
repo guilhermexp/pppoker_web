@@ -1,9 +1,18 @@
-import { memoryProvider } from "@api/ai/agents/config/shared";
+import { memoryProvider } from "@api/ai/runtime/app-context";
 import type { UIChatMessage } from "@api/ai/types";
 import type { NanobotSettings } from "@api/schemas/nanobot";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { nanoid } from "nanoid";
-import type { LegacyChatStreamOptions } from "./chat-engine";
+
+export type ChatStreamOptions = {
+  message: unknown;
+  strategy?: string;
+  maxRounds?: number;
+  maxSteps?: number;
+  context?: Record<string, unknown>;
+  agentChoice?: string;
+  toolChoice?: string;
+};
 
 type NanobotAgentStatus = {
   status: "routing" | "executing" | "completing";
@@ -78,7 +87,7 @@ function buildTeamMcpServers(teamConfig?: NanobotSettings) {
 }
 
 function getTeamNanobotConfig(
-  options: LegacyChatStreamOptions,
+  options: ChatStreamOptions,
 ): NanobotSettings | undefined {
   return (options.context as { nanobotConfig?: NanobotSettings } | undefined)
     ?.nanobotConfig;
@@ -177,7 +186,7 @@ function getNanobotTimeoutMs(
 }
 
 async function fetchNanobot(
-  options: LegacyChatStreamOptions,
+  options: ChatStreamOptions,
 ): Promise<Response> {
   const teamConfig = getTeamNanobotConfig(options);
   const mcpServers = buildTeamMcpServers(teamConfig);
@@ -187,7 +196,7 @@ async function fetchNanobot(
 
   if (!baseUrl) {
     throw new Error(
-      "NANOBOT_BASE_URL is required when CHAT_AGENT_ENGINE=nanobot",
+      "NANOBOT_BASE_URL is required for the nanobot runtime",
     );
   }
 
@@ -675,7 +684,7 @@ async function pipeNanobotSSEToUIStream(
 }
 
 export async function nanobotToUIMessageStream(
-  options: LegacyChatStreamOptions,
+  options: ChatStreamOptions,
 ): Promise<Response> {
   const nanobotResponse = await fetchNanobot(options);
   const contentType = nanobotResponse.headers.get("content-type") ?? "";
