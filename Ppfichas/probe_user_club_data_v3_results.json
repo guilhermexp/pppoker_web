@@ -1,0 +1,7757 @@
+{
+  "summary": {
+    "club": 962181,
+    "liga": 1765,
+    "uid": 7478138,
+    "tested": 150,
+    "top": [
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "uid",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "liga",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,uid",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "uid,club",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,liga",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,t0ymd",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,y0..t0 ymd",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,y0..t0 ts",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,dt=1,t0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,dt=2,t0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,dt=3,t0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,date,filter=0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,date,filter=1",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,date,filter=2",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,date,filter=3",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,date,filter=4",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,date,filter=5",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,date,room",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "uid,club,date",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,uid,date",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "uid,club,y0..t0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,uid,y0..t0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "club,liga,y0..t0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "liga,club,y0..t0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(1, 2, 3) dt=0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(1, 3, 2) dt=0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(2, 1, 3) dt=0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(2, 3, 1) dt=0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(3, 1, 2) dt=0",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(1, 2, 3) dt=1",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(1, 3, 2) dt=1",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(2, 1, 3) dt=1",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(2, 3, 1) dt=1",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(3, 1, 2) dt=1",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(1, 2, 3) dt=2",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(1, 3, 2) dt=2",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(2, 1, 3) dt=2",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(2, 3, 1) dt=2",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "label": "shift club/dt/date fields=(3, 1, 2) dt=2",
+        "score": 300,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      }
+    ]
+  },
+  "results": [
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        }
+      ],
+      "payload_hex": "0885dd3a",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "uid",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        }
+      ],
+      "payload_hex": "08fab6c803",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "liga",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 1765
+        }
+      ],
+      "payload_hex": "08e50d",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,uid",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c803",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "uid,club",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,liga",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1765
+        }
+      ],
+      "payload_hex": "0885dd3a10e50d",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,t0ymd",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,y0..t0 ymd",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260224
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,y0..t0 ts",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1771909200
+        },
+        {
+          "f": 3,
+          "v": 1771995600
+        }
+      ],
+      "payload_hex": "0885dd3a10d0e0f4cc0618d083facc06",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,dt=1,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10011881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,dt=2,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10021881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,dt=3,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,date,filter=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 0
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,date,filter=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 1
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,date,filter=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 2
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,date,filter=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 3
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091803",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,date,filter=4",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 4
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091804",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,date,filter=5",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 5
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091805",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,date,room",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 4245217
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "uid,club,date",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,uid,date",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c8031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "uid,club,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,uid,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c8031880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "club,liga,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1765
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10e50d1880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "liga,club,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 1765
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08e50d1085dd3a1880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 0
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10001881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 0
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18001081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=0",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 0
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08001881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=0",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 0
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18000881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=0",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 0
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08001081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10011881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 1
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18011081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=1",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08011881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=1",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 1
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18010881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=1",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 1
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08011081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10021881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 2
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18021081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=2",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08021881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=2",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 2
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18020881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=2",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 2
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08021081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 3
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18031081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=3",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=3",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 3
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18030881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=3",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 3
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08031081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=7",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10071881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=7",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 7
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18071081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=7",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 7
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08071881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=7",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 7
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18070881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=7",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 7
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08071081cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 300
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "uid",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        }
+      ],
+      "payload_hex": "08fab6c803",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "liga",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 1765
+        }
+      ],
+      "payload_hex": "08e50d",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "uid,club",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "uid,club,date",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "uid,club,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "liga,club,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 1765
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08e50d1085dd3a1880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=0",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 0
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08001881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=0",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 0
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18000881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=0",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 0
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08001081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=1",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08011881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=1",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 1
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18010881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=1",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 1
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08011081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=2",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08021881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=2",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 2
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18020881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=2",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 2
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08021081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=3",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=3",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 3
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18030881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=3",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 3
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08031081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=7",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 7
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08071881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=7",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 7
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18070881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=7",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 7
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08071081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 110
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        }
+      ],
+      "payload_hex": "0885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772070987,
+                "ts": "2026-02-25 22:56:27"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,uid",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c803",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772070998,
+                "ts": "2026-02-25 22:56:38"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,liga",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1765
+        }
+      ],
+      "payload_hex": "0885dd3a10e50d",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071005,
+                "ts": "2026-02-25 22:56:45"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,t0ymd",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071009,
+                "ts": "2026-02-25 22:56:49"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,y0..t0 ymd",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260224
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071013,
+                "ts": "2026-02-25 22:56:53"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,y0..t0 ts",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1771909200
+        },
+        {
+          "f": 3,
+          "v": 1771995600
+        }
+      ],
+      "payload_hex": "0885dd3a10d0e0f4cc0618d083facc06",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071017,
+                "ts": "2026-02-25 22:56:57"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,dt=1,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10011881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071021,
+                "ts": "2026-02-25 22:57:01"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,dt=2,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10021881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071024,
+                "ts": "2026-02-25 22:57:04"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,dt=3,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071028,
+                "ts": "2026-02-25 22:57:08"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,date,filter=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 0
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071032,
+                "ts": "2026-02-25 22:57:12"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,date,filter=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 1
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071036,
+                "ts": "2026-02-25 22:57:16"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,date,filter=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 2
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071040,
+                "ts": "2026-02-25 22:57:20"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,date,filter=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 3
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091803",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071043,
+                "ts": "2026-02-25 22:57:23"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,date,filter=4",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 4
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091804",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071047,
+                "ts": "2026-02-25 22:57:27"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,date,filter=5",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 5
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091805",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071051,
+                "ts": "2026-02-25 22:57:31"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,date,room",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 4245217
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071055,
+                "ts": "2026-02-25 22:57:35"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,uid,date",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c8031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071062,
+                "ts": "2026-02-25 22:57:42"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,uid,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c8031880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071070,
+                "ts": "2026-02-25 22:57:50"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "club,liga,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1765
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10e50d1880cbd4092081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071074,
+                "ts": "2026-02-25 22:57:54"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 0
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10001881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071081,
+                "ts": "2026-02-25 22:58:01"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 0
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18001081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071085,
+                "ts": "2026-02-25 22:58:05"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10011881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071100,
+                "ts": "2026-02-25 22:58:20"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 1
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18011081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071104,
+                "ts": "2026-02-25 22:58:24"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10021881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071119,
+                "ts": "2026-02-25 22:58:39"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 2
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18021081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071123,
+                "ts": "2026-02-25 22:58:43"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10031881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071138,
+                "ts": "2026-02-25 22:58:58"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 3
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18031081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071141,
+                "ts": "2026-02-25 22:59:01"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=7",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10071881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071157,
+                "ts": "2026-02-25 22:59:17"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=7",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 7
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18071081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772071161,
+                "ts": "2026-02-25 22:59:21"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        }
+      ],
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "uid",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        }
+      ],
+      "payload_hex": "08fab6c803",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "liga",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 1765
+        }
+      ],
+      "payload_hex": "08e50d",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,uid",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c803",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "uid,club",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,liga",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1765
+        }
+      ],
+      "payload_hex": "0885dd3a10e50d",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,t0ymd",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,y0..t0 ymd",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260224
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,y0..t0 ts",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1771909200
+        },
+        {
+          "f": 3,
+          "v": 1771995600
+        }
+      ],
+      "payload_hex": "0885dd3a10d0e0f4cc0618d083facc06",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,dt=1,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10011881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,dt=2,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10021881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,dt=3,t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10031881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,date,filter=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 0
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,date,filter=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 1
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,date,filter=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 2
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,date,filter=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 3
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091803",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,date,filter=4",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 4
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091804",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,date,filter=5",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 5
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091805",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,date,room",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        },
+        {
+          "f": 3,
+          "v": 4245217
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "uid,club,date",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,uid,date",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c8031881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "uid,club,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 7478138
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1880cbd4092081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,uid,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7478138
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c8031880cbd4092081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "club,liga,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1765
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10e50d1880cbd4092081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "liga,club,y0..t0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 1765
+        },
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 20260224
+        },
+        {
+          "f": 4,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "08e50d1085dd3a1880cbd4092081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 0
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10001881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=0",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 0
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18001081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=0",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 0
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08001881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=0",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 0
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18000881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=0",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 0
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08001081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10011881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=1",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 1
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18011081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=1",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 1
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08011881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=1",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 1
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18010881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=1",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 1
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08011081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10021881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=2",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 2
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18021081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=2",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 2
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08021881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=2",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 2
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18020881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=2",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 2
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08021081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10031881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=3",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 3
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18031081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=3",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 3
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08031881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=3",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 3
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18030881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=3",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 3
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08031081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 2, 3) dt=7",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 2,
+          "v": 7
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10071881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(1, 3, 2) dt=7",
+      "pairs": [
+        {
+          "f": 1,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 7
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a18071081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 1, 3) dt=7",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 7
+        },
+        {
+          "f": 3,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a08071881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(2, 3, 1) dt=7",
+      "pairs": [
+        {
+          "f": 2,
+          "v": 962181
+        },
+        {
+          "f": 3,
+          "v": 7
+        },
+        {
+          "f": 1,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1085dd3a18070881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "shift club/dt/date fields=(3, 1, 2) dt=7",
+      "pairs": [
+        {
+          "f": 3,
+          "v": 962181
+        },
+        {
+          "f": 1,
+          "v": 7
+        },
+        {
+          "f": 2,
+          "v": 20260225
+        }
+      ],
+      "payload_hex": "1885dd3a08071081cbd409",
+      "msgs": [],
+      "score": 0
+    }
+  ]
+}

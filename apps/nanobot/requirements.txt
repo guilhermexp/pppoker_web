@@ -1,4 +1,4 @@
-nanobot-ai>=0.1.4
+nanobot-ai==0.1.4.post2
 starlette>=0.45.0
 sse-starlette>=2.0.0
 uvicorn[standard]>=0.34.0

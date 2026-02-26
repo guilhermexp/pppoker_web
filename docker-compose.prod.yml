@@ -77,6 +77,10 @@ services:
       - PORT=18790
       - TZ=UTC
       - PYTHONUNBUFFERED=1
+      # Supabase (OAuth token storage by team)
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - NANOBOT_OAUTH_TOKEN_ENCRYPTION_KEY=${MIDDAY_ENCRYPTION_KEY}
       # Daytona for WhatsApp sandboxes
       - DAYTONA_API_KEY=${DAYTONA_API_KEY}
       - DAYTONA_SERVER_URL=${DAYTONA_SERVER_URL}

@@ -1,0 +1,2695 @@
+{
+  "summary": {
+    "club": 962181,
+    "liga": 1765,
+    "uid": 7478138,
+    "buildable": [
+      "pb.GameDataREQ",
+      "pb.MemberGameDataREQ",
+      "pb.UserClubDataREQ",
+      "pb.ClubDataREQ",
+      "pb.ClubDataStatisticsREQ",
+      "pb.DataStatisticsREQ",
+      "pb.GameDataStatisticsREQ",
+      "pb.ClubGameDataStatisticsREQ",
+      "pb.ShowDataStatisticsREQ",
+      "pb.HistorySummaryREQ",
+      "pb.ClubHistorySummaryREQ",
+      "pb.GameHistorySummaryREQ",
+      "pb.ClubGameHistoryREQ",
+      "pb.GameHistoryREQ",
+      "pb.CashGameDataREQ",
+      "pb.CashGameHistoryREQ",
+      "pb.MttGameDataREQ",
+      "pb.SngGameDataREQ",
+      "pb.CrashGameDataREQ",
+      "pb.FlashGameDataREQ",
+      "pb.SpinGameDataREQ",
+      "pb.SpinUpGameDataREQ",
+      "pb.ClubCashGameDataREQ",
+      "pb.ClubMttGameDataREQ",
+      "pb.ClubSngGameDataREQ",
+      "pb.ClubCrashGameDataREQ",
+      "pb.ClubFlashGameDataREQ",
+      "pb.ClubSpinGameDataREQ",
+      "pb.ClubSpinUpGameDataREQ",
+      "pb.ClubMemberGameDataREQ",
+      "pb.MemberClubDataREQ",
+      "pb.UserGameDataREQ"
+    ],
+    "skipped": [],
+    "tested": 224,
+    "top": [
+      {
+        "req": "pb.GameDataREQ",
+        "payload": "empty",
+        "score": 115,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "payload": "club",
+        "score": 100,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "payload": "club,date,filter0",
+        "score": 100,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "payload": "club,date,filter1",
+        "score": 100,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "payload": "club,y0..t0",
+        "score": 100,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "payload": "export-ish",
+        "score": 100,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "payload": "club+room+ymd",
+        "score": 100,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "payload": "empty",
+        "score": 100,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "payload": "club",
+        "score": 100,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "payload": "club,date,filter0",
+        "score": 100,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "payload": "club,date,filter1",
+        "score": 100,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "payload": "club,y0..t0",
+        "score": 100,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "payload": "export-ish",
+        "score": 100,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.MemberGameDataREQ",
+        "payload": "club+room+ymd",
+        "score": 100,
+        "rsp": [
+          "pb.MemberGameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.UserClubDataREQ",
+        "payload": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.UserClubDataREQ",
+        "payload": "club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.UserClubDataREQ",
+        "payload": "club,date,filter0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.UserClubDataREQ",
+        "payload": "club,date,filter1",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.UserClubDataREQ",
+        "payload": "club,y0..t0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.UserClubDataREQ",
+        "payload": "export-ish",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.UserClubDataREQ",
+        "payload": "club+room+ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataREQ",
+        "payload": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataREQ",
+        "payload": "club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataREQ",
+        "payload": "club,date,filter0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataREQ",
+        "payload": "club,date,filter1",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataREQ",
+        "payload": "club,y0..t0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataREQ",
+        "payload": "export-ish",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataREQ",
+        "payload": "club+room+ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataStatisticsREQ",
+        "payload": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataStatisticsREQ",
+        "payload": "club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataStatisticsREQ",
+        "payload": "club,date,filter0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataStatisticsREQ",
+        "payload": "club,date,filter1",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataStatisticsREQ",
+        "payload": "club,y0..t0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataStatisticsREQ",
+        "payload": "export-ish",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubDataStatisticsREQ",
+        "payload": "club+room+ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.DataStatisticsREQ",
+        "payload": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.DataStatisticsREQ",
+        "payload": "club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.DataStatisticsREQ",
+        "payload": "club,date,filter0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.DataStatisticsREQ",
+        "payload": "club,date,filter1",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.DataStatisticsREQ",
+        "payload": "club,y0..t0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.DataStatisticsREQ",
+        "payload": "export-ish",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.DataStatisticsREQ",
+        "payload": "club+room+ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.GameDataStatisticsREQ",
+        "payload": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.GameDataStatisticsREQ",
+        "payload": "club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.GameDataStatisticsREQ",
+        "payload": "club,date,filter0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.GameDataStatisticsREQ",
+        "payload": "club,date,filter1",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.GameDataStatisticsREQ",
+        "payload": "club,y0..t0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.GameDataStatisticsREQ",
+        "payload": "export-ish",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.GameDataStatisticsREQ",
+        "payload": "club+room+ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubGameDataStatisticsREQ",
+        "payload": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubGameDataStatisticsREQ",
+        "payload": "club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubGameDataStatisticsREQ",
+        "payload": "club,date,filter0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubGameDataStatisticsREQ",
+        "payload": "club,date,filter1",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubGameDataStatisticsREQ",
+        "payload": "club,y0..t0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubGameDataStatisticsREQ",
+        "payload": "export-ish",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ClubGameDataStatisticsREQ",
+        "payload": "club+room+ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ShowDataStatisticsREQ",
+        "payload": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ShowDataStatisticsREQ",
+        "payload": "club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ShowDataStatisticsREQ",
+        "payload": "club,date,filter0",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "req": "pb.ShowDataStatisticsREQ",
+        "payload": "club,date,filter1",
+        "score": 0,
+        "rsp": []
+      }
+    ]
+  },
+  "results": [
+    {
+      "req": "pb.GameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 115
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074222,
+                "ts": "2026-02-25 23:50:22"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074226,
+                "ts": "2026-02-25 23:50:26"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074230,
+                "ts": "2026-02-25 23:50:30"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074234,
+                "ts": "2026-02-25 23:50:34"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074238,
+                "ts": "2026-02-25 23:50:38"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074242,
+                "ts": "2026-02-25 23:50:42"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.MemberGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [
+        {
+          "m": "pb.MemberGameDataRSP",
+          "len": 14,
+          "f": {
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "9": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "10": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ]
+          }
+        }
+      ],
+      "score": 100
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataStatisticsREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataStatisticsREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataStatisticsREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataStatisticsREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataStatisticsREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataStatisticsREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubDataStatisticsREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.DataStatisticsREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.DataStatisticsREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.DataStatisticsREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.DataStatisticsREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.DataStatisticsREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.DataStatisticsREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.DataStatisticsREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameDataStatisticsREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameDataStatisticsREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameDataStatisticsREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameDataStatisticsREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameDataStatisticsREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameDataStatisticsREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameDataStatisticsREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameDataStatisticsREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameDataStatisticsREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameDataStatisticsREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameDataStatisticsREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameDataStatisticsREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameDataStatisticsREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameDataStatisticsREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ShowDataStatisticsREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ShowDataStatisticsREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ShowDataStatisticsREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ShowDataStatisticsREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ShowDataStatisticsREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ShowDataStatisticsREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ShowDataStatisticsREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.HistorySummaryREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.HistorySummaryREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.HistorySummaryREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.HistorySummaryREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.HistorySummaryREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.HistorySummaryREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.HistorySummaryREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubHistorySummaryREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubHistorySummaryREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubHistorySummaryREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubHistorySummaryREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubHistorySummaryREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubHistorySummaryREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubHistorySummaryREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistorySummaryREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistorySummaryREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistorySummaryREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistorySummaryREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistorySummaryREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistorySummaryREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistorySummaryREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameHistoryREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameHistoryREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameHistoryREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameHistoryREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameHistoryREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameHistoryREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubGameHistoryREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistoryREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistoryREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistoryREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistoryREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistoryREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistoryREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.GameHistoryREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameHistoryREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameHistoryREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameHistoryREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameHistoryREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameHistoryREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameHistoryREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CashGameHistoryREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MttGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MttGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MttGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MttGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MttGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MttGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MttGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SngGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SngGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SngGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SngGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SngGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SngGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SngGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CrashGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CrashGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CrashGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CrashGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CrashGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CrashGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.CrashGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.FlashGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.FlashGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.FlashGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.FlashGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.FlashGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.FlashGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.FlashGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinUpGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinUpGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinUpGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinUpGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinUpGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinUpGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.SpinUpGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCashGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCashGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCashGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCashGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCashGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCashGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCashGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMttGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMttGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMttGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMttGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMttGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMttGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMttGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSngGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSngGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSngGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSngGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSngGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSngGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSngGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCrashGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCrashGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCrashGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCrashGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCrashGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCrashGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubCrashGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubFlashGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubFlashGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubFlashGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubFlashGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubFlashGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubFlashGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubFlashGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinUpGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinUpGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinUpGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinUpGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinUpGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinUpGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubSpinUpGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMemberGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMemberGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMemberGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMemberGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMemberGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMemberGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.ClubMemberGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MemberClubDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MemberClubDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MemberClubDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MemberClubDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MemberClubDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MemberClubDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.MemberClubDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserGameDataREQ",
+      "payload_label": "empty",
+      "payload_hex": "",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserGameDataREQ",
+      "payload_label": "club",
+      "payload_hex": "0885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserGameDataREQ",
+      "payload_label": "club,date,filter0",
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserGameDataREQ",
+      "payload_label": "club,date,filter1",
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserGameDataREQ",
+      "payload_label": "club,y0..t0",
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserGameDataREQ",
+      "payload_label": "export-ish",
+      "payload_hex": "0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserGameDataREQ",
+      "payload_label": "club+room+ymd",
+      "payload_hex": "0885dd3a10e18d83026081cbd4096881cbd40978e104",
+      "msgs": [],
+      "score": 0
+    }
+  ]
+}

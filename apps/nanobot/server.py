@@ -5,9 +5,13 @@ Exposes POST /api/chat on port 18790 for the pppoker_web API adapter.
 """
 
 import asyncio
+import base64
+import dataclasses
+import hashlib
 import json
 import os
 import re
+import shutil
 import time
 import sys
 import uuid
@@ -45,8 +49,11 @@ from nanobot.session.manager import SessionManager
 # ---------------------------------------------------------------------------
 # Globals (initialized on startup)
 # ---------------------------------------------------------------------------
-_agent: AgentLoop | None = None
-_bus: MessageBus | None = None
+_base_config = None
+_agent_runtimes: dict[str, dict] = {}
+_agent_runtimes_lock = asyncio.Lock()
+_oauth_pending_logins: dict[str, dict] = {}
+_oauth_pending_logins_lock = asyncio.Lock()
 
 # Per-team gateway connections: { team_id: { "whatsapp": {...}, "telegram": {...} } }
 _gateway_connections: dict[str, dict] = {}
@@ -64,9 +71,6 @@ _MCP_PRECONNECT_TIMEOUT_SECONDS = int(
 )
 _AGENT_IDLE_TIMEOUT_SECONDS = int(os.environ.get("NANOBOT_AGENT_IDLE_TIMEOUT_SECONDS", "45"))
 _AGENT_TOTAL_TIMEOUT_SECONDS = int(os.environ.get("NANOBOT_AGENT_TOTAL_TIMEOUT_SECONDS", "120"))
-_mcp_connect_task: asyncio.Task | None = None
-_agent_semaphore = asyncio.Semaphore(1)
-
 # Runtime MCP policy:
 # keep only read-only club information tools loaded in AgentLoop.
 _ALLOWED_MCP_SERVERS = {"pppoker", "infinitepay"}
@@ -322,17 +326,27 @@ class BridgeManager:
 
         print(f"[bridge-listener] Message from {sender[:20]} for team {team_id[:8]}: {content[:80]}")
 
-        if _agent is None:
-            print("[bridge-listener] Agent not initialized, ignoring message")
-            return
+        runtime = await _get_or_create_team_runtime(team_id, None)
+        agent = runtime["agent"]
+        semaphore = runtime["semaphore"]
 
         # Build session key for WhatsApp conversations
         session_key = f"whatsapp:{team_id}:{sender}"
 
         try:
-            async with _agent_semaphore:
+            if agent._mcp_connected:
+                _enforce_mcp_tool_policy(agent)
+
+            mcp_connect_task = runtime.get("mcp_connect_task")
+            if mcp_connect_task is not None and not mcp_connect_task.done():
+                try:
+                    await asyncio.wait_for(asyncio.shield(mcp_connect_task), timeout=15)
+                except asyncio.TimeoutError:
+                    pass
+
+            async with semaphore:
                 response = await asyncio.wait_for(
-                    _agent.process_direct(
+                    agent.process_direct(
                         content=content,
                         session_key=session_key,
                         channel="whatsapp",
@@ -388,14 +402,330 @@ class BridgeManager:
 _bridge_manager = BridgeManager()
 
 
-def _make_provider(config):
+class TeamScopedOpenAICodexProvider:
+    """OpenAI Codex provider with team-scoped OAuth token storage."""
+
+    def __init__(self, default_model: str, token_storage):
+        self._default_model = default_model
+        self._token_storage = token_storage
+
+    async def chat(
+        self,
+        messages,
+        tools=None,
+        model: str | None = None,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+    ):
+        from oauth_cli_kit import get_token as get_codex_token
+        from nanobot.providers.base import LLMResponse
+        from nanobot.providers import openai_codex_provider as codex_mod
+
+        model = model or self._default_model
+        if isinstance(model, str) and model.startswith("openai_codex/"):
+            model = f"openai-codex/{model.split('/', 1)[1]}"
+        system_prompt, input_items = codex_mod._convert_messages(messages)
+
+        token = await asyncio.to_thread(get_codex_token, storage=self._token_storage)
+        headers = codex_mod._build_headers(token.account_id, token.access)
+
+        body = {
+            "model": codex_mod._strip_model_prefix(model),
+            "store": False,
+            "stream": True,
+            "instructions": system_prompt,
+            "input": input_items,
+            "text": {"verbosity": "medium"},
+            "include": ["reasoning.encrypted_content"],
+            "prompt_cache_key": codex_mod._prompt_cache_key(messages),
+            "tool_choice": "auto",
+            "parallel_tool_calls": True,
+        }
+        if tools:
+            body["tools"] = codex_mod._convert_tools(tools)
+
+        try:
+            try:
+                content, tool_calls, finish_reason = await codex_mod._request_codex(
+                    codex_mod.DEFAULT_CODEX_URL, headers, body, verify=True
+                )
+            except Exception as e:
+                if "CERTIFICATE_VERIFY_FAILED" not in str(e):
+                    raise
+                content, tool_calls, finish_reason = await codex_mod._request_codex(
+                    codex_mod.DEFAULT_CODEX_URL, headers, body, verify=False
+                )
+            return LLMResponse(
+                content=content,
+                tool_calls=tool_calls,
+                finish_reason=finish_reason,
+            )
+        except Exception as e:
+            return LLMResponse(
+                content=f"Error calling Codex: {str(e)}",
+                finish_reason="error",
+            )
+
+    def get_default_model(self) -> str:
+        return self._default_model
+
+
+def _team_oauth_dir(team_workspace: Path) -> Path:
+    return team_workspace / ".oauth"
+
+
+class TeamSupabaseTokenStorage:
+    """Store OAuth tokens in Supabase teams.export_settings scoped by team+provider."""
+
+    def __init__(self, team_id: str, provider_name: str, lock_dir: Path):
+        self.team_id = team_id
+        self.provider_name = provider_name
+        self._lock_dir = lock_dir
+
+    def get_token_path(self) -> Path:
+        # oauth_cli_kit uses this path only for local lock files during refresh.
+        self._lock_dir.mkdir(parents=True, exist_ok=True)
+        return self._lock_dir / f"{self.provider_name}.json"
+
+    def _supabase_base(self) -> str:
+        url = (os.environ.get("SUPABASE_URL", "") or "").rstrip("/")
+        key = (os.environ.get("SUPABASE_SERVICE_KEY", "") or "").strip()
+        if not url or not key:
+            raise RuntimeError("SUPABASE_URL/SUPABASE_SERVICE_KEY nao configurados no runtime nanobot")
+        return f"{url}/rest/v1"
+
+    def _headers(self) -> dict[str, str]:
+        key = (os.environ.get("SUPABASE_SERVICE_KEY", "") or "").strip()
+        return {
+            "apikey": key,
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+    def _read_export_settings(self) -> dict:
+        import requests
+
+        resp = requests.get(
+            f"{self._supabase_base()}/teams",
+            params={"id": f"eq.{self.team_id}", "select": "export_settings"},
+            headers=self._headers(),
+            timeout=15,
+        )
+        if resp.status_code >= 400:
+            raise RuntimeError(f"Supabase read failed ({resp.status_code}): {resp.text[:300]}")
+        rows = resp.json()
+        if not isinstance(rows, list) or not rows:
+            raise RuntimeError(f"Team not found for OAuth storage: {self.team_id}")
+        raw = rows[0].get("export_settings")
+        return raw if isinstance(raw, dict) else {}
+
+    def _oauth_cipher(self):
+        secret = (
+            (os.environ.get("NANOBOT_OAUTH_TOKEN_ENCRYPTION_KEY", "") or "").strip()
+            or (os.environ.get("MIDDAY_ENCRYPTION_KEY", "") or "").strip()
+        )
+        if not secret:
+            return None
+        try:
+            from cryptography.fernet import Fernet
+
+            key_material = hashlib.sha256(secret.encode("utf-8")).digest()
+            fernet_key = base64.urlsafe_b64encode(key_material)
+            return Fernet(fernet_key)
+        except Exception:
+            return None
+
+    def _decrypt_entry(self, entry: dict | None):
+        if not isinstance(entry, dict):
+            return None
+        ciphertext = entry.get("ciphertext")
+        if not isinstance(ciphertext, str) or not ciphertext:
+            return None
+        cipher = self._oauth_cipher()
+        if cipher is None:
+            return None
+        try:
+            plaintext = cipher.decrypt(ciphertext.encode("utf-8")).decode("utf-8")
+            data = json.loads(plaintext)
+            return data if isinstance(data, dict) else None
+        except Exception:
+            return None
+
+    def _encrypt_entry(self, payload: dict) -> dict | None:
+        cipher = self._oauth_cipher()
+        if cipher is None:
+            return None
+        plaintext = json.dumps(payload, separators=(",", ":"), ensure_ascii=True)
+        ciphertext = cipher.encrypt(plaintext.encode("utf-8")).decode("utf-8")
+        return {
+            "v": 1,
+            "alg": "fernet-sha256-derived",
+            "ciphertext": ciphertext,
+            "updated_at": int(time.time()),
+        }
+
+    def load(self):
+        from oauth_cli_kit.models import OAuthToken
+
+        try:
+            export_settings = self._read_export_settings()
+            secure_store = export_settings.get("nanobot_oauth_tokens_secure")
+            data = None
+            if isinstance(secure_store, dict):
+                data = self._decrypt_entry(secure_store.get(self.provider_name))
+
+            if not isinstance(data, dict):
+                store = export_settings.get("nanobot_oauth_tokens")
+                if isinstance(store, dict):
+                    candidate = store.get(self.provider_name)
+                    if isinstance(candidate, dict):
+                        data = candidate
+
+            if not isinstance(data, dict):
+                return None
+            access = data.get("access")
+            refresh = data.get("refresh")
+            expires = data.get("expires")
+            account_id = data.get("account_id")
+            if not access or not refresh or not isinstance(expires, int):
+                return None
+            return OAuthToken(
+                access=str(access),
+                refresh=str(refresh),
+                expires=int(expires),
+                account_id=str(account_id) if account_id else None,
+            )
+        except Exception:
+            return None
+
+    def save(self, token) -> None:
+        import requests
+
+        export_settings = self._read_export_settings()
+        token_payload = {
+            "access": token.access,
+            "refresh": token.refresh,
+            "expires": int(token.expires),
+            "account_id": token.account_id,
+            "updated_at": int(time.time()),
+        }
+        next_export_settings = {**export_settings}
+
+        encrypted_entry = self._encrypt_entry(token_payload)
+        if encrypted_entry is not None:
+            secure_store = next_export_settings.get("nanobot_oauth_tokens_secure")
+            if not isinstance(secure_store, dict):
+                secure_store = {}
+            secure_store = {**secure_store, self.provider_name: encrypted_entry}
+            next_export_settings["nanobot_oauth_tokens_secure"] = secure_store
+
+            # Remove plaintext copy when encryption is available.
+            legacy_store = next_export_settings.get("nanobot_oauth_tokens")
+            if isinstance(legacy_store, dict) and self.provider_name in legacy_store:
+                legacy_store = {**legacy_store}
+                legacy_store.pop(self.provider_name, None)
+                next_export_settings["nanobot_oauth_tokens"] = legacy_store
+        else:
+            token_store = next_export_settings.get("nanobot_oauth_tokens")
+            if not isinstance(token_store, dict):
+                token_store = {}
+            token_store = {**token_store, self.provider_name: token_payload}
+            next_export_settings["nanobot_oauth_tokens"] = token_store
+
+        resp = requests.patch(
+            f"{self._supabase_base()}/teams",
+            params={"id": f"eq.{self.team_id}"},
+            headers={**self._headers(), "Prefer": "return=minimal"},
+            json={"export_settings": next_export_settings},
+            timeout=15,
+        )
+        if resp.status_code >= 400:
+            raise RuntimeError(f"Supabase write failed ({resp.status_code}): {resp.text[:300]}")
+
+    def delete(self) -> None:
+        import requests
+
+        export_settings = self._read_export_settings()
+        changed = False
+        next_export_settings = {**export_settings}
+
+        token_store = next_export_settings.get("nanobot_oauth_tokens")
+        if isinstance(token_store, dict) and self.provider_name in token_store:
+            token_store = {**token_store}
+            token_store.pop(self.provider_name, None)
+            next_export_settings["nanobot_oauth_tokens"] = token_store
+            changed = True
+
+        secure_store = next_export_settings.get("nanobot_oauth_tokens_secure")
+        if isinstance(secure_store, dict) and self.provider_name in secure_store:
+            secure_store = {**secure_store}
+            secure_store.pop(self.provider_name, None)
+            next_export_settings["nanobot_oauth_tokens_secure"] = secure_store
+            changed = True
+
+        if not changed:
+            return
+
+        resp = requests.patch(
+            f"{self._supabase_base()}/teams",
+            params={"id": f"eq.{self.team_id}"},
+            headers={**self._headers(), "Prefer": "return=minimal"},
+            json={"export_settings": next_export_settings},
+            timeout=15,
+        )
+        if resp.status_code >= 400:
+            raise RuntimeError(f"Supabase delete failed ({resp.status_code}): {resp.text[:300]}")
+
+
+def _should_use_db_oauth_storage() -> bool:
+    return bool(os.environ.get("SUPABASE_URL")) and bool(os.environ.get("SUPABASE_SERVICE_KEY"))
+
+
+def _get_team_oauth_storage(team_id: str, team_workspace: Path, provider_name: str):
+    from oauth_cli_kit.storage import FileTokenStorage
+
+    if _should_use_db_oauth_storage():
+        return TeamSupabaseTokenStorage(
+            team_id=team_id,
+            provider_name=provider_name,
+            lock_dir=_team_oauth_dir(team_workspace),
+        )
+
+    if provider_name == "openai_codex":
+        return FileTokenStorage(
+            token_filename="codex.json",
+            app_name="midpoker-nanobot",
+            data_dir=_team_oauth_dir(team_workspace),
+            import_codex_cli=False,
+        )
+    raise ValueError(f"Unsupported OAuth provider: {provider_name}")
+
+
+def _load_team_oauth_token(team_id: str, team_workspace: Path, provider_name: str):
+    storage = _get_team_oauth_storage(team_id, team_workspace, provider_name)
+    try:
+        token = storage.load()
+    except Exception:
+        token = None
+    return storage, token
+
+
+def _make_provider(config, *, team_id: str | None = None, team_workspace: Path | None = None):
     """Create LLM provider from config (same logic as nanobot CLI)."""
     from nanobot.providers.litellm_provider import LiteLLMProvider
     from nanobot.providers.custom_provider import CustomProvider
+    from nanobot.providers.registry import find_by_name
 
     model = config.agents.defaults.model
     provider_name = config.get_provider_name(model)
     p = config.get_provider(model)
+
+    if provider_name == "openai_codex" or model.startswith("openai-codex/"):
+        if team_workspace is None or team_id is None:
+            raise RuntimeError("team_id and team workspace are required for openai_codex OAuth storage")
+        storage = _get_team_oauth_storage(team_id, team_workspace, "openai_codex")
+        return TeamScopedOpenAICodexProvider(default_model=model, token_storage=storage)
 
     if provider_name == "custom":
         return CustomProvider(
@@ -404,6 +734,10 @@ def _make_provider(config):
             default_model=model,
         )
 
+    spec = find_by_name(provider_name)
+    if not model.startswith("bedrock/") and not (p and p.api_key) and not (spec and spec.is_oauth):
+        raise RuntimeError("No API key configured for selected provider")
+
     return LiteLLMProvider(
         api_key=p.api_key if p else None,
         api_base=config.get_api_base(model),
@@ -411,6 +745,389 @@ def _make_provider(config):
         extra_headers=p.extra_headers if p else None,
         provider_name=provider_name,
     )
+
+
+def _request_context(body: dict | None) -> dict:
+    if not body:
+        return {}
+    ctx = body.get("context", {})
+    return ctx if isinstance(ctx, dict) else {}
+
+
+def _request_nanobot_config(body: dict | None) -> dict:
+    if not body:
+        return {}
+    cfg = body.get("nanobotConfig", {})
+    return cfg if isinstance(cfg, dict) else {}
+
+
+def _oauth_provider_slug(provider_name: str) -> str:
+    return provider_name.replace("_", "-")
+
+
+def _oauth_provider_key(provider_name: str) -> str:
+    return provider_name.replace("-", "_")
+
+
+def _resolve_team_id_from_body(body: dict | None) -> str:
+    ctx = _request_context(body)
+    team_id = str(ctx.get("teamId", "") or "").strip()
+    return team_id or "__unscoped__"
+
+
+def _safe_path_segment(value: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9._-]+", "_", value.strip()) or "__unknown__"
+
+
+def _resolve_team_workspace_path(base_workspace: Path, team_id: str) -> Path:
+    return base_workspace / "teams" / _safe_path_segment(team_id)
+
+
+def _copy_file_if_missing(src: Path, dst: Path):
+    if not src.exists() or dst.exists():
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
+
+
+def _write_text_if_missing(path: Path, content: str):
+    if path.exists():
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _legacy_workspace_seed_team_ids() -> set[str]:
+    raw = os.environ.get("NANOBOT_LEGACY_WORKSPACE_SEED_TEAM_IDS", "")
+    return {item.strip() for item in raw.split(",") if item.strip()}
+
+
+def _should_seed_from_legacy_workspace(team_id: str) -> bool:
+    return team_id in _legacy_workspace_seed_team_ids()
+
+
+def _extract_seed_texts_from_request(body: dict | None) -> dict[str, str]:
+    cfg = _request_nanobot_config(body)
+
+    soul_cfg = cfg.get("soulConfig", {})
+    if not isinstance(soul_cfg, dict):
+        soul_cfg = {}
+
+    agent_cmd_cfg = cfg.get("agentCmdConfig", {})
+    if not isinstance(agent_cmd_cfg, dict):
+        agent_cmd_cfg = {}
+
+    memory_cfg = cfg.get("memoryConfig", {})
+    if not isinstance(memory_cfg, dict):
+        memory_cfg = {}
+
+    soul_text = cfg.get("soul") or soul_cfg.get("content") or ""
+    agents_text = cfg.get("agentCmd") or agent_cmd_cfg.get("content") or ""
+    memory_text = cfg.get("memoryNotes") or memory_cfg.get("notes") or ""
+
+    result = {}
+    if isinstance(soul_text, str) and soul_text.strip():
+        result["SOUL.md"] = soul_text.strip() + "\n"
+    if isinstance(agents_text, str) and agents_text.strip():
+        result["AGENTS.md"] = agents_text.strip() + "\n"
+    if isinstance(memory_text, str) and memory_text.strip():
+        result["memory/MEMORY.md"] = memory_text.strip() + "\n"
+    return result
+
+
+def _bootstrap_team_workspace(base_workspace: Path, team_workspace: Path, body: dict | None):
+    """Prepare an isolated workspace for the team.
+
+    Only bootstrap identity/instructions and empty memory files. Do not copy reports or
+    historical memory from the template workspace to avoid cross-team leakage.
+    """
+    team_workspace.mkdir(parents=True, exist_ok=True)
+    (team_workspace / "memory").mkdir(parents=True, exist_ok=True)
+    (team_workspace / "skills").mkdir(parents=True, exist_ok=True)
+    (team_workspace / "agents").mkdir(parents=True, exist_ok=True)
+    (team_workspace / "playbooks").mkdir(parents=True, exist_ok=True)
+    (team_workspace / "reports").mkdir(parents=True, exist_ok=True)
+
+    team_id = _resolve_team_id_from_body(body)
+    if _should_seed_from_legacy_workspace(team_id):
+        _copy_file_if_missing(base_workspace / "SOUL.md", team_workspace / "SOUL.md")
+        _copy_file_if_missing(base_workspace / "AGENTS.md", team_workspace / "AGENTS.md")
+        _copy_file_if_missing(
+            base_workspace / "memory" / "MEMORY.md",
+            team_workspace / "memory" / "MEMORY.md",
+        )
+        _copy_file_if_missing(
+            base_workspace / "memory" / "HISTORY.md",
+            team_workspace / "memory" / "HISTORY.md",
+        )
+
+    for rel_path, content in _extract_seed_texts_from_request(body).items():
+        _write_text_if_missing(team_workspace / rel_path, content)
+
+    for memory_name in ("MEMORY.md", "HISTORY.md"):
+        memory_file = team_workspace / "memory" / memory_name
+        if not memory_file.exists():
+            memory_file.write_text("", encoding="utf-8")
+
+    if not (team_workspace / "SOUL.md").exists():
+        (team_workspace / "SOUL.md").write_text(
+            f"# SOUL\n\nWorkspace isolado do time {team_id}.\n",
+            encoding="utf-8",
+        )
+
+    if not (team_workspace / "AGENTS.md").exists():
+        (team_workspace / "AGENTS.md").write_text(
+            "# AGENTS\n\nWorkspace inicializado sem AGENTS.md base.\n",
+            encoding="utf-8",
+        )
+
+
+def _deep_copy_jsonable(value):
+    try:
+        return json.loads(json.dumps(value))
+    except Exception:
+        return value
+
+
+def _get_team_request_overrides(body: dict | None) -> dict:
+    nanobot_cfg = {}
+    if body and isinstance(body.get("nanobotConfig"), dict):
+        nanobot_cfg = body["nanobotConfig"]
+
+    model_cfg = nanobot_cfg.get("modelConfig", {}) if isinstance(nanobot_cfg, dict) else {}
+    if not isinstance(model_cfg, dict):
+        model_cfg = {}
+
+    mcp_servers = nanobot_cfg.get("mcpServers")
+    if not isinstance(mcp_servers, dict):
+        mcp_servers = None
+
+    model = None
+    if body and isinstance(body.get("model"), str) and body.get("model", "").strip():
+        model = body["model"].strip()
+    elif isinstance(nanobot_cfg.get("model"), str) and nanobot_cfg.get("model", "").strip():
+        model = nanobot_cfg["model"].strip()
+
+    temperature = model_cfg.get("temperature")
+    max_tokens = model_cfg.get("maxTokens")
+    provider = None
+    if body and isinstance(body.get("provider"), str) and body.get("provider", "").strip():
+        provider = body["provider"].strip()
+    elif isinstance(model_cfg.get("provider"), str) and model_cfg.get("provider", "").strip():
+        provider = model_cfg["provider"].strip()
+
+    return {
+        "provider": provider,
+        "model": model,
+        "temperature": temperature if isinstance(temperature, (int, float)) else None,
+        "max_tokens": max_tokens if isinstance(max_tokens, int) and max_tokens > 0 else None,
+        "mcp_servers": _deep_copy_jsonable(mcp_servers) if mcp_servers else None,
+    }
+
+
+def _cfg_value(cfg, key: str, default=None):
+    if isinstance(cfg, dict):
+        return cfg.get(key, default)
+    return getattr(cfg, key, default)
+
+
+def _resolve_filtered_mcp_servers(config, overrides: dict) -> dict:
+    source_servers = overrides.get("mcp_servers") or (config.tools.mcp_servers or {})
+    filtered = {}
+    for name, server_cfg in source_servers.items():
+        if name not in _ALLOWED_MCP_SERVERS:
+            continue
+        filtered[name] = server_cfg
+    return filtered
+
+
+def _build_runtime_signature(
+    team_id: str,
+    team_workspace: Path,
+    overrides: dict,
+    filtered_mcp_servers: dict,
+) -> str:
+    payload = {
+        "team_id": team_id,
+        "workspace": str(team_workspace),
+        "provider": overrides.get("provider"),
+        "model": overrides.get("model"),
+        "temperature": overrides.get("temperature"),
+        "max_tokens": overrides.get("max_tokens"),
+        "mcp_servers": filtered_mcp_servers,
+    }
+    raw = json.dumps(payload, sort_keys=True, default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _build_team_config(base_config, body: dict | None, team_id: str):
+    config = base_config.model_copy(deep=True)
+    overrides = _get_team_request_overrides(body)
+    base_workspace = Path(config.workspace_path)
+    team_workspace = _resolve_team_workspace_path(base_workspace, team_id)
+    _bootstrap_team_workspace(base_workspace, team_workspace, body)
+
+    config.agents.defaults.workspace = str(team_workspace)
+
+    # Hardening: per-team runtime should not read/write outside its workspace.
+    config.tools.restrict_to_workspace = True
+
+    model = overrides.get("model")
+    if model:
+        provider = overrides.get("provider")
+        if provider and "/" not in model:
+            config.agents.defaults.model = f"{provider}/{model}"
+        else:
+            config.agents.defaults.model = model
+
+    if overrides.get("temperature") is not None:
+        config.agents.defaults.temperature = float(overrides["temperature"])
+
+    if overrides.get("max_tokens") is not None:
+        config.agents.defaults.max_tokens = int(overrides["max_tokens"])
+
+    filtered_mcp_servers = _resolve_filtered_mcp_servers(config, overrides)
+    signature = _build_runtime_signature(team_id, team_workspace, overrides, filtered_mcp_servers)
+    return config, team_workspace, filtered_mcp_servers, signature
+
+
+async def _close_agent_runtime(runtime: dict):
+    agent = runtime.get("agent")
+    if not agent:
+        return
+    try:
+        await agent.close_mcp()
+    except Exception:
+        pass
+    try:
+        agent.stop()
+    except Exception:
+        pass
+
+
+def _schedule_runtime_tasks(runtime: dict):
+    agent = runtime["agent"]
+
+    async def _connect_mcp_for_runtime():
+        try:
+            await asyncio.wait_for(
+                agent._connect_mcp(), timeout=_MCP_PRECONNECT_TIMEOUT_SECONDS
+            )
+            _enforce_mcp_tool_policy(agent)
+            active_mcp_tools = sorted(
+                tool_name for tool_name in agent.tools.tool_names if tool_name.startswith("mcp_")
+            )
+            print(
+                f"[nanobot-runtime] Team {runtime['team_id'][:8]} MCP ready ({len(active_mcp_tools)}): "
+                f"{', '.join(active_mcp_tools) or 'none'}"
+            )
+        except asyncio.TimeoutError:
+            print(
+                f"[nanobot-runtime] Team {runtime['team_id'][:8]} MCP preconnect timed out (lazy connect will continue)"
+            )
+        except Exception as e:
+            print(
+                f"[nanobot-runtime] Team {runtime['team_id'][:8]} MCP preconnect failed (lazy connect will continue): {e}"
+            )
+
+    async def _prewarm_runtime():
+        try:
+            await asyncio.wait_for(
+                agent.process_direct(
+                    content="Responda apenas com: OK",
+                    session_key=f"web:{runtime['team_id']}:__startup_prewarm__",
+                    channel="web",
+                    chat_id=f"web:{runtime['team_id']}:__startup_prewarm__",
+                    on_progress=None,
+                ),
+                timeout=_PREWARM_TIMEOUT_SECONDS,
+            )
+            print(f"[nanobot-runtime] Team {runtime['team_id'][:8]} prewarm completed")
+        except asyncio.TimeoutError:
+            print(f"[nanobot-runtime] Team {runtime['team_id'][:8]} prewarm timed out")
+        except Exception as e:
+            print(f"[nanobot-runtime] Team {runtime['team_id'][:8]} prewarm failed: {e}")
+
+    if _MCP_PRECONNECT_ENABLED:
+        runtime["mcp_connect_task"] = asyncio.create_task(_connect_mcp_for_runtime())
+    else:
+        runtime["mcp_connect_task"] = None
+
+    if _PREWARM_ENABLED:
+        runtime["prewarm_task"] = asyncio.create_task(_prewarm_runtime())
+    else:
+        runtime["prewarm_task"] = None
+
+
+async def _get_or_create_team_runtime(team_id: str, body: dict | None = None) -> dict:
+    global _base_config
+    if _base_config is None:
+        raise RuntimeError("nanobot runtime base config not initialized")
+
+    config, team_workspace, filtered_mcp_servers, signature = _build_team_config(
+        _base_config, body, team_id
+    )
+
+    async with _agent_runtimes_lock:
+        existing = _agent_runtimes.get(team_id)
+        if existing and existing.get("signature") == signature:
+            existing["last_used_at"] = time.monotonic()
+            return existing
+
+        if existing:
+            print(
+                f"[nanobot-runtime] Rebuilding team runtime {team_id[:8]} due to config change"
+            )
+            await _close_agent_runtime(existing)
+
+        provider = _make_provider(
+            config,
+            team_id=team_id,
+            team_workspace=team_workspace,
+        )
+        bus = MessageBus()
+        session_manager = SessionManager(team_workspace)
+        cron_store = get_data_dir() / "cron" / "teams" / _safe_path_segment(team_id) / "jobs.json"
+        cron = CronService(cron_store)
+
+        runtime = {
+            "team_id": team_id,
+            "signature": signature,
+            "workspace": team_workspace,
+            "config": config,
+            "bus": bus,
+            "semaphore": asyncio.Semaphore(1),
+            "mcp_connect_task": None,
+            "prewarm_task": None,
+            "created_at": time.monotonic(),
+            "last_used_at": time.monotonic(),
+        }
+
+        runtime["agent"] = AgentLoop(
+            bus=bus,
+            provider=provider,
+            workspace=team_workspace,
+            model=config.agents.defaults.model,
+            temperature=config.agents.defaults.temperature,
+            max_tokens=config.agents.defaults.max_tokens,
+            max_iterations=config.agents.defaults.max_tool_iterations,
+            memory_window=config.agents.defaults.memory_window,
+            exec_config=config.tools.exec,
+            cron_service=cron,
+            restrict_to_workspace=config.tools.restrict_to_workspace,
+            session_manager=session_manager,
+            mcp_servers=filtered_mcp_servers,
+        )
+
+        _agent_runtimes[team_id] = runtime
+        _schedule_runtime_tasks(runtime)
+
+        print(
+            f"[nanobot-runtime] Team runtime ready {team_id[:8]} "
+            f"(workspace={team_workspace}, model={config.agents.defaults.model}, "
+            f"restrict_to_workspace={config.tools.restrict_to_workspace})"
+        )
+        return runtime
 
 
 def _install_filtered_connect_mcp_servers_patch():
@@ -430,16 +1147,25 @@ def _install_filtered_connect_mcp_servers_patch():
 
         for name, cfg in mcp_servers.items():
             try:
-                if cfg.command:
+                command = _cfg_value(cfg, "command", "")
+                args = _cfg_value(cfg, "args", []) or []
+                env = _cfg_value(cfg, "env", {}) or {}
+                url = _cfg_value(cfg, "url", "")
+                cwd = _cfg_value(cfg, "cwd", None)
+
+                if command:
                     params = StdioServerParameters(
-                        command=cfg.command, args=cfg.args, env=cfg.env or None
+                        command=command,
+                        args=args,
+                        env=env or None,
+                        cwd=cwd or None,
                     )
                     read, write = await stack.enter_async_context(stdio_client(params))
-                elif cfg.url:
+                elif url:
                     from mcp.client.streamable_http import streamable_http_client
 
                     read, write, _ = await stack.enter_async_context(
-                        streamable_http_client(cfg.url)
+                        streamable_http_client(url)
                     )
                 else:
                     logger.warning(
@@ -477,118 +1203,46 @@ def _install_filtered_connect_mcp_servers_patch():
 
 
 async def _startup():
-    """Initialize the nanobot agent on server start."""
-    global _agent, _bus
+    """Initialize runtime services; team agents are created lazily per request."""
+    global _base_config
 
     config = load_config()
+    _base_config = config
     _install_filtered_connect_mcp_servers_patch()
-    _bus = MessageBus()
-    provider = _make_provider(config)
-    session_manager = SessionManager(config.workspace_path)
-
-    cron_store = get_data_dir() / "cron" / "jobs.json"
-    cron = CronService(cron_store)
-
-    # Keep only MCP servers explicitly allowed for lightweight runtime.
-    filtered_mcp_servers = {
-        name: server_cfg
-        for name, server_cfg in (config.tools.mcp_servers or {}).items()
-        if name in _ALLOWED_MCP_SERVERS
-    }
-
-    _agent = AgentLoop(
-        bus=_bus,
-        provider=provider,
-        workspace=config.workspace_path,
-        model=config.agents.defaults.model,
-        temperature=config.agents.defaults.temperature,
-        max_tokens=config.agents.defaults.max_tokens,
-        max_iterations=config.agents.defaults.max_tool_iterations,
-        memory_window=config.agents.defaults.memory_window,
-        exec_config=config.tools.exec,
-        cron_service=cron,
-        restrict_to_workspace=config.tools.restrict_to_workspace,
-        session_manager=session_manager,
-        mcp_servers=filtered_mcp_servers,
+    base_filtered_servers = sorted(
+        name for name in (config.tools.mcp_servers or {}).keys() if name in _ALLOWED_MCP_SERVERS
     )
-    print("[nanobot-runtime] Agent initialized with MCP tools and memory")
+    print("[nanobot-runtime] Team-scoped agent pool enabled (lazy init per team)")
     print(
-        f"[nanobot-runtime] MCP servers enabled: {', '.join(filtered_mcp_servers.keys()) or 'none'}"
+        f"[nanobot-runtime] Base workspace template: {config.workspace_path}"
     )
-    if _MCP_PRECONNECT_ENABLED:
-        global _mcp_connect_task
-        _mcp_connect_task = asyncio.create_task(_connect_mcp_on_startup())
-    else:
-        print("[nanobot-runtime] MCP preconnect disabled")
-
-    if _PREWARM_ENABLED:
-        asyncio.create_task(_prewarm_agent())
-    else:
-        print("[nanobot-runtime] Agent prewarm disabled (set NANOBOT_PREWARM_ON_STARTUP=true to enable)")
+    print(
+        f"[nanobot-runtime] Allowed MCP servers: {', '.join(base_filtered_servers) or 'none'}"
+    )
+    if not _MCP_PRECONNECT_ENABLED:
+        print("[nanobot-runtime] MCP preconnect disabled (per-team)")
+    if not _PREWARM_ENABLED:
+        print("[nanobot-runtime] Agent prewarm disabled (per-team)")
 
 
-async def _connect_mcp_on_startup():
-    if _agent is None:
-        return
-    try:
-        await asyncio.wait_for(_agent._connect_mcp(), timeout=_MCP_PRECONNECT_TIMEOUT_SECONDS)
-        _enforce_mcp_tool_policy()
-        active_mcp_tools = sorted(
-            tool_name
-            for tool_name in _agent.tools.tool_names
-            if tool_name.startswith("mcp_")
-        )
-        print(
-            f"[nanobot-runtime] Active MCP tools after filter ({len(active_mcp_tools)}): {', '.join(active_mcp_tools) or 'none'}"
-        )
-        print("[nanobot-runtime] MCP preconnect completed")
-    except asyncio.TimeoutError:
-        print("[nanobot-runtime] MCP preconnect timed out (will continue lazily)")
-    except Exception as e:
-        print(f"[nanobot-runtime] MCP preconnect failed (will continue lazily): {e}")
-
-
-def _enforce_mcp_tool_policy():
-    if _agent is None:
+def _enforce_mcp_tool_policy(agent=None):
+    if agent is None:
         return
     # Remove any MCP tool that is not in the allowlist.
-    for tool_name in list(_agent.tools.tool_names):
+    for tool_name in list(agent.tools.tool_names):
         if not tool_name.startswith("mcp_"):
             continue
         if tool_name not in _ALLOWED_MCP_TOOL_NAMES:
-            _agent.tools.unregister(tool_name)
-
-
-async def _prewarm_agent():
-    """Warm up model/session/tool stack in background to reduce first-request latency."""
-    if _agent is None:
-        return
-
-    try:
-        await asyncio.wait_for(
-            _agent.process_direct(
-                content="Responda apenas com: OK",
-                session_key="web:__startup_prewarm__",
-                channel="web",
-                chat_id="web:__startup_prewarm__",
-                on_progress=None,
-            ),
-            timeout=_PREWARM_TIMEOUT_SECONDS,
-        )
-        print("[nanobot-runtime] Agent prewarm completed")
-    except asyncio.TimeoutError:
-        print("[nanobot-runtime] Agent prewarm timed out (continuing)")
-    except Exception as e:
-        print(f"[nanobot-runtime] Agent prewarm failed (continuing): {e}")
+            agent.tools.unregister(tool_name)
 
 
 async def _shutdown():
     """Cleanup on server stop."""
-    global _agent
     _bridge_manager.stop_all()
-    if _agent:
-        await _agent.close_mcp()
-        _agent.stop()
+    runtimes = list(_agent_runtimes.values())
+    for runtime in runtimes:
+        await _close_agent_runtime(runtime)
+    _agent_runtimes.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -623,6 +1277,240 @@ def _resolve_session_key(body: dict) -> str:
         if team_id and user_id:
             return f"web:{team_id}:{user_id}:{chat_id}"
     return f"web:{chat_id}"
+
+
+def _team_workspace_for_oauth(base_workspace: Path, team_id: str) -> Path:
+    team_workspace = _resolve_team_workspace_path(base_workspace, team_id)
+    team_workspace.mkdir(parents=True, exist_ok=True)
+    return team_workspace
+
+
+def _oauth_status_for_team(team_id: str, provider_name: str) -> dict:
+    if _base_config is None:
+        raise RuntimeError("nanobot runtime base config not initialized")
+    base_workspace = Path(_base_config.workspace_path)
+    team_workspace = _team_workspace_for_oauth(base_workspace, team_id)
+    storage, token = _load_team_oauth_token(team_id, team_workspace, provider_name)
+    now_ms = int(time.time() * 1000)
+    expires_in_ms = max(0, (token.expires - now_ms)) if token else None
+    return {
+        "provider": provider_name,
+        "connected": bool(token and token.access),
+        "account_id": token.account_id if token else None,
+        "expires_at": token.expires if token else None,
+        "expires_in_seconds": int(expires_in_ms / 1000) if expires_in_ms is not None else None,
+        "token_path": str(storage.get_token_path()),
+        "team_id": team_id,
+    }
+
+
+def _build_openai_codex_authorize_payload(team_id: str, redirect_uri: str) -> dict:
+    from oauth_cli_kit.providers import OPENAI_CODEX_PROVIDER
+    from oauth_cli_kit.pkce import _create_state, _generate_pkce
+    import urllib.parse
+
+    provider = dataclasses.replace(OPENAI_CODEX_PROVIDER, redirect_uri=redirect_uri)
+    verifier, challenge = _generate_pkce()
+    state = _create_state()
+
+    params = {
+        "response_type": "code",
+        "client_id": provider.client_id,
+        "redirect_uri": provider.redirect_uri,
+        "scope": provider.scope,
+        "code_challenge": challenge,
+        "code_challenge_method": "S256",
+        "state": state,
+        "id_token_add_organizations": "true",
+        "codex_cli_simplified_flow": "true",
+        "originator": provider.default_originator,
+    }
+    authorize_url = f"{provider.authorize_url}?{urllib.parse.urlencode(params)}"
+    return {
+        "provider": provider,
+        "state": state,
+        "verifier": verifier,
+        "authorize_url": authorize_url,
+    }
+
+
+async def oauth_status(request: Request):
+    team_id = request.query_params.get("team_id", "")
+    provider_name = _oauth_provider_key(request.query_params.get("provider", "openai-codex"))
+    if not team_id:
+        return JSONResponse({"error": "team_id query param is required"}, status_code=400)
+    try:
+        return JSONResponse({"success": True, **_oauth_status_for_team(team_id, provider_name)})
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
+
+
+async def oauth_openai_codex_start(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    team_id = str(body.get("team_id", "") or "").strip()
+    redirect_uri = str(body.get("redirect_uri", "") or "").strip()
+    if not team_id or not redirect_uri:
+        return JSONResponse({"error": "team_id and redirect_uri are required"}, status_code=400)
+
+    try:
+        from oauth_cli_kit.providers import OPENAI_CODEX_PROVIDER
+
+        # The bundled Codex OAuth client from oauth_cli_kit is CLI-oriented and expects the
+        # fixed localhost callback registered by the provider config.
+        if redirect_uri != OPENAI_CODEX_PROVIDER.redirect_uri:
+            return JSONResponse(
+                {
+                    "success": False,
+                    "error": (
+                        "OpenAI Codex OAuth (client do nanobot CLI) aceita apenas o callback "
+                        f"{OPENAI_CODEX_PROVIDER.redirect_uri}. Callback web customizado ainda nao e suportado."
+                    ),
+                    "expected_redirect_uri": OPENAI_CODEX_PROVIDER.redirect_uri,
+                },
+                status_code=400,
+            )
+
+        payload = _build_openai_codex_authorize_payload(team_id, redirect_uri)
+        pending_key = f"openai_codex:{team_id}:{payload['state']}"
+        async with _oauth_pending_logins_lock:
+            _oauth_pending_logins[pending_key] = {
+                "team_id": team_id,
+                "provider": "openai_codex",
+                "state": payload["state"],
+                "verifier": payload["verifier"],
+                "redirect_uri": redirect_uri,
+                "created_at": time.time(),
+            }
+        return JSONResponse({
+            "success": True,
+            "provider": "openai_codex",
+            "team_id": team_id,
+            "state": payload["state"],
+            "authorize_url": payload["authorize_url"],
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+async def oauth_openai_codex_complete(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    team_id = str(body.get("team_id", "") or "").strip()
+    code = str(body.get("code", "") or "").strip()
+    state = str(body.get("state", "") or "").strip()
+    if not team_id or not code or not state:
+        return JSONResponse({"error": "team_id, code and state are required"}, status_code=400)
+
+    pending_key = f"openai_codex:{team_id}:{state}"
+    async with _oauth_pending_logins_lock:
+        pending = _oauth_pending_logins.pop(pending_key, None)
+
+    if not pending:
+        return JSONResponse({"success": False, "error": "Invalid or expired OAuth state"}, status_code=400)
+
+    try:
+        from oauth_cli_kit.flow import _exchange_code_for_token_async
+        from oauth_cli_kit.providers import OPENAI_CODEX_PROVIDER
+
+        if _base_config is None:
+            raise RuntimeError("nanobot runtime base config not initialized")
+        base_workspace = Path(_base_config.workspace_path)
+        team_workspace = _team_workspace_for_oauth(base_workspace, team_id)
+        storage = _get_team_oauth_storage(team_id, team_workspace, "openai_codex")
+        provider = dataclasses.replace(
+            OPENAI_CODEX_PROVIDER,
+            redirect_uri=str(pending["redirect_uri"]),
+        )
+        token = await _exchange_code_for_token_async(
+            code=code,
+            verifier=str(pending["verifier"]),
+            provider=provider,
+        )()
+        storage.save(token)
+        return JSONResponse({
+            "success": True,
+            "provider": "openai_codex",
+            "team_id": team_id,
+            "account_id": token.account_id,
+            "expires_at": token.expires,
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
+
+
+async def oauth_openai_codex_import_local(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    team_id = str(body.get("team_id", "") or "").strip()
+    if not team_id:
+        return JSONResponse({"error": "team_id is required"}, status_code=400)
+
+    try:
+        from oauth_cli_kit import get_token as get_codex_token
+
+        if _base_config is None:
+            raise RuntimeError("nanobot runtime base config not initialized")
+
+        # Load/refresh local CLI token (oauth_cli_kit default storage may import ~/.codex/auth.json).
+        token = await asyncio.to_thread(get_codex_token)
+        if not token or not getattr(token, "access", None):
+            raise RuntimeError("Nenhum token local do Codex foi encontrado")
+
+        base_workspace = Path(_base_config.workspace_path)
+        team_workspace = _team_workspace_for_oauth(base_workspace, team_id)
+        target_storage = _get_team_oauth_storage(team_id, team_workspace, "openai_codex")
+        target_storage.save(token)
+
+        return JSONResponse({
+            "success": True,
+            "provider": "openai_codex",
+            "team_id": team_id,
+            "account_id": token.account_id,
+            "expires_at": token.expires,
+            "storage": "db" if isinstance(target_storage, TeamSupabaseTokenStorage) else "file",
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
+
+
+async def oauth_disconnect(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    team_id = str(body.get("team_id", "") or "").strip()
+    provider_name = _oauth_provider_key(str(body.get("provider", "openai-codex") or "openai-codex"))
+    if not team_id:
+        return JSONResponse({"error": "team_id is required"}, status_code=400)
+
+    try:
+        if _base_config is None:
+            raise RuntimeError("nanobot runtime base config not initialized")
+        base_workspace = Path(_base_config.workspace_path)
+        team_workspace = _team_workspace_for_oauth(base_workspace, team_id)
+        storage = _get_team_oauth_storage(team_id, team_workspace, provider_name)
+        if hasattr(storage, "delete"):
+            storage.delete()
+        token_path = storage.get_token_path()
+        if token_path.exists():
+            token_path.unlink()
+        lock_path = token_path.with_suffix(".lock")
+        if lock_path.exists():
+            lock_path.unlink()
+        return JSONResponse({"success": True, "provider": provider_name, "team_id": team_id})
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
 
 
 # ---------------------------------------------------------------------------
@@ -784,24 +1672,27 @@ def _extract_approval_feedback_reply(user_text: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 async def health(request: Request):
-    if _agent is None:
-        return JSONResponse({
-            "status": "degraded",
-            "service": "nanobot-runtime",
-            "agent": "fastchips",
-            "reason": "agent not initialized",
-            "mcp": False,
-            "mcp_tools": [],
+    active = []
+    for team_id, runtime in _agent_runtimes.items():
+        agent = runtime.get("agent")
+        if not agent:
+            continue
+        active.append({
+            "team_id": team_id,
+            "workspace": str(runtime.get("workspace")),
+            "mcp_connected": bool(getattr(agent, "_mcp_connected", False)),
+            "mcp_tools": sorted(t for t in agent.tools.tool_names if t.startswith("mcp_")),
         })
-    mcp_tools = sorted(
-        t for t in _agent.tools.tool_names if t.startswith("mcp_")
-    )
+
     return JSONResponse({
         "status": "ok",
         "service": "nanobot-runtime",
         "agent": "fastchips",
-        "mcp": bool(_agent._mcp_servers),
-        "mcp_tools": mcp_tools,
+        "mode": "team-scoped-agent-pool",
+        "active_team_runtimes": len(active),
+        "team_scoped_workspaces": True,
+        "mcp": any(item["mcp_connected"] for item in active),
+        "teams": active[:20],
     })
 
 
@@ -839,21 +1730,26 @@ async def chat(request: Request):
         return EventSourceResponse(approval_feedback_events(), sep="\n")
 
     session_key = _resolve_session_key(body)
+    team_id = _resolve_team_id_from_body(body)
+    runtime = await _get_or_create_team_runtime(team_id, body)
+    agent = runtime["agent"]
+    semaphore = runtime["semaphore"]
 
     async def event_generator():
         task = None
         try:
             # If MCP connected lazily in a request path, enforce read-only tool policy.
-            if _agent is not None and _agent._mcp_connected:
-                _enforce_mcp_tool_policy()
+            if agent._mcp_connected:
+                _enforce_mcp_tool_policy(agent)
 
-            if _mcp_connect_task is not None and not _mcp_connect_task.done():
+            mcp_connect_task = runtime.get("mcp_connect_task")
+            if mcp_connect_task is not None and not mcp_connect_task.done():
                 yield {
                     "event": "agent-progress",
                     "data": json.dumps({"text": "Conectando ferramentas operacionais..."}),
                 }
                 try:
-                    await asyncio.wait_for(asyncio.shield(_mcp_connect_task), timeout=15)
+                    await asyncio.wait_for(asyncio.shield(mcp_connect_task), timeout=15)
                 except asyncio.TimeoutError:
                     yield {
                         "event": "agent-progress",
@@ -884,8 +1780,8 @@ async def chat(request: Request):
 
             async def run_agent():
                 async def _run_once() -> str:
-                    async with _agent_semaphore:
-                        return await _agent.process_direct(
+                    async with semaphore:
+                        return await agent.process_direct(
                             content=user_text,
                             session_key=session_key,
                             channel="web",
@@ -1255,6 +2151,11 @@ app = Starlette(
         Route("/gateway/whatsapp/qr", gateway_whatsapp_qr, methods=["GET"]),
         Route("/gateway/whatsapp/disconnect", gateway_whatsapp_disconnect, methods=["POST"]),
         Route("/gateway/telegram/connect", gateway_telegram_connect, methods=["POST"]),
+        Route("/oauth/status", oauth_status, methods=["GET"]),
+        Route("/oauth/openai-codex/start", oauth_openai_codex_start, methods=["POST"]),
+        Route("/oauth/openai-codex/complete", oauth_openai_codex_complete, methods=["POST"]),
+        Route("/oauth/openai-codex/import-local", oauth_openai_codex_import_local, methods=["POST"]),
+        Route("/oauth/disconnect", oauth_disconnect, methods=["POST"]),
     ],
     on_startup=[_startup],
     on_shutdown=[_shutdown],

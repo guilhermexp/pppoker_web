@@ -1,0 +1,5004 @@
+{
+  "summary": {
+    "club": 962181,
+    "liga": 1765,
+    "uid": 7478138,
+    "tested": 200,
+    "top": [
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:club>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:club>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:club>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:club>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:club,ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:club,ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:club,ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:club,ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:club,y0..t0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:club,y0..t0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:club,y0..t0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:club,y0..t0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:club,date,filter0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:club,date,filter0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:club,date,filter0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:club,date,filter0>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:club,date,filter1>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:club,date,filter1>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:club,date,filter1>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:club,date,filter1>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:club,date,filter2>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:club,date,filter2>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:club,date,filter2>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:club,date,filter2>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:club,date,room>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:club,date,room>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:club,date,room>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:club,date,room>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:export-ish all>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:export-ish all>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:export-ish all>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:export-ish all>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:export-ish cash>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:export-ish cash>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:export-ish cash>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:export-ish cash>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:export-ish spin>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:export-ish spin>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:export-ish spin>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:export-ish spin>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner:export-ish ts+ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner:export-ish ts+ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f3=<inner:export-ish ts+ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=uid + f2=<inner:export-ish ts+ymd>",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner>,f2=<inner> (club)",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner>,f3=<inner> (club)",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner>,f2=<inner> (club,ymd)",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner>,f3=<inner> (club,ymd)",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f1=<inner>,f2=<inner> (club,y0..t0)",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      },
+      {
+        "req": "pb.GameDataREQ",
+        "label": "top f2=<inner>,f3=<inner> (club,y0..t0)",
+        "score": 220,
+        "rsp": [
+          "pb.GameDataRSP"
+        ]
+      }
+    ]
+  },
+  "results": [
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:club>",
+      "payload_hex": "0a040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:club>",
+      "payload_hex": "12040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:club>",
+      "payload_hex": "1a040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:club>",
+      "payload_hex": "08fab6c80312040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:club,ymd>",
+      "payload_hex": "0a090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:club,ymd>",
+      "payload_hex": "12090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:club,ymd>",
+      "payload_hex": "1a090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:club,ymd>",
+      "payload_hex": "08fab6c80312090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:club,y0..t0>",
+      "payload_hex": "0a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:club,y0..t0>",
+      "payload_hex": "120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:club,y0..t0>",
+      "payload_hex": "1a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:club,y0..t0>",
+      "payload_hex": "08fab6c803120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:club,date,filter0>",
+      "payload_hex": "0a0b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:club,date,filter0>",
+      "payload_hex": "120b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:club,date,filter0>",
+      "payload_hex": "1a0b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,filter0>",
+      "payload_hex": "08fab6c803120b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:club,date,filter1>",
+      "payload_hex": "0a0b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:club,date,filter1>",
+      "payload_hex": "120b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:club,date,filter1>",
+      "payload_hex": "1a0b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,filter1>",
+      "payload_hex": "08fab6c803120b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:club,date,filter2>",
+      "payload_hex": "0a0b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:club,date,filter2>",
+      "payload_hex": "120b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:club,date,filter2>",
+      "payload_hex": "1a0b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,filter2>",
+      "payload_hex": "08fab6c803120b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:club,date,room>",
+      "payload_hex": "0a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:club,date,room>",
+      "payload_hex": "120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:club,date,room>",
+      "payload_hex": "1a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,room>",
+      "payload_hex": "08fab6c803120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:export-ish all>",
+      "payload_hex": "0a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:export-ish all>",
+      "payload_hex": "121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:export-ish all>",
+      "payload_hex": "1a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish all>",
+      "payload_hex": "08fab6c803121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:export-ish cash>",
+      "payload_hex": "0a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:export-ish cash>",
+      "payload_hex": "121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:export-ish cash>",
+      "payload_hex": "1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish cash>",
+      "payload_hex": "08fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:export-ish spin>",
+      "payload_hex": "0a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:export-ish spin>",
+      "payload_hex": "121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:export-ish spin>",
+      "payload_hex": "1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish spin>",
+      "payload_hex": "08fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner:export-ish ts+ymd>",
+      "payload_hex": "0a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f3=<inner:export-ish ts+ymd>",
+      "payload_hex": "1a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "08fab6c803122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club)",
+      "payload_hex": "0a040885dd3a12040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club)",
+      "payload_hex": "12040885dd3a1a040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,ymd)",
+      "payload_hex": "0a090885dd3a1081cbd40912090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,ymd)",
+      "payload_hex": "12090885dd3a1081cbd4091a090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,y0..t0)",
+      "payload_hex": "0a0e0885dd3a1080cbd4091881cbd409120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,y0..t0)",
+      "payload_hex": "120e0885dd3a1080cbd4091881cbd4091a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,date,filter0)",
+      "payload_hex": "0a0b0885dd3a1081cbd4091800120b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,date,filter0)",
+      "payload_hex": "120b0885dd3a1081cbd40918001a0b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,date,filter1)",
+      "payload_hex": "0a0b0885dd3a1081cbd4091801120b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,date,filter1)",
+      "payload_hex": "120b0885dd3a1081cbd40918011a0b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,date,filter2)",
+      "payload_hex": "0a0b0885dd3a1081cbd4091802120b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,date,filter2)",
+      "payload_hex": "120b0885dd3a1081cbd40918021a0b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 11,
+          "f": {
+            "9": [
+              {
+                "t": "i",
+                "v": -1
+              }
+            ]
+          }
+        }
+      ],
+      "score": 220
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:club>",
+      "payload_hex": "0885dd3a12040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073741,
+                "ts": "2026-02-25 23:42:21"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:club>",
+      "payload_hex": "0885dd3a1a040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073749,
+                "ts": "2026-02-25 23:42:29"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club>",
+      "payload_hex": "0885dd3a10fab6c8031a040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073753,
+                "ts": "2026-02-25 23:42:33"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club>",
+      "payload_hex": "0885dd3a20fab6c80312040885dd3a",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073757,
+                "ts": "2026-02-25 23:42:37"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:club,ymd>",
+      "payload_hex": "0885dd3a12090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073772,
+                "ts": "2026-02-25 23:42:52"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:club,ymd>",
+      "payload_hex": "0885dd3a1a090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073780,
+                "ts": "2026-02-25 23:43:00"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,ymd>",
+      "payload_hex": "0885dd3a10fab6c8031a090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073784,
+                "ts": "2026-02-25 23:43:04"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,ymd>",
+      "payload_hex": "0885dd3a20fab6c80312090885dd3a1081cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073788,
+                "ts": "2026-02-25 23:43:08"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073804,
+                "ts": "2026-02-25 23:43:24"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a1a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073812,
+                "ts": "2026-02-25 23:43:32"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a10fab6c8031a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073816,
+                "ts": "2026-02-25 23:43:36"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a20fab6c803120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073820,
+                "ts": "2026-02-25 23:43:40"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a120b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073835,
+                "ts": "2026-02-25 23:43:55"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a1a0b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073843,
+                "ts": "2026-02-25 23:44:03"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a10fab6c8031a0b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073847,
+                "ts": "2026-02-25 23:44:07"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a20fab6c803120b0885dd3a1081cbd4091800",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073851,
+                "ts": "2026-02-25 23:44:11"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a120b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073866,
+                "ts": "2026-02-25 23:44:26"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a1a0b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073874,
+                "ts": "2026-02-25 23:44:34"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a10fab6c8031a0b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073878,
+                "ts": "2026-02-25 23:44:38"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a20fab6c803120b0885dd3a1081cbd4091801",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073882,
+                "ts": "2026-02-25 23:44:42"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a120b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073898,
+                "ts": "2026-02-25 23:44:58"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a1a0b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073906,
+                "ts": "2026-02-25 23:45:06"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a10fab6c8031a0b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073909,
+                "ts": "2026-02-25 23:45:09"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a20fab6c803120b0885dd3a1081cbd4091802",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073913,
+                "ts": "2026-02-25 23:45:13"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,room>",
+      "payload_hex": "0885dd3a120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073929,
+                "ts": "2026-02-25 23:45:29"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,room>",
+      "payload_hex": "0885dd3a1a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073937,
+                "ts": "2026-02-25 23:45:37"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,room>",
+      "payload_hex": "0885dd3a10fab6c8031a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073941,
+                "ts": "2026-02-25 23:45:41"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,room>",
+      "payload_hex": "0885dd3a20fab6c803120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073944,
+                "ts": "2026-02-25 23:45:44"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish all>",
+      "payload_hex": "0885dd3a121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073960,
+                "ts": "2026-02-25 23:46:00"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish all>",
+      "payload_hex": "0885dd3a1a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073968,
+                "ts": "2026-02-25 23:46:08"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish all>",
+      "payload_hex": "0885dd3a10fab6c8031a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073972,
+                "ts": "2026-02-25 23:46:12"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish all>",
+      "payload_hex": "0885dd3a20fab6c803121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073976,
+                "ts": "2026-02-25 23:46:16"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073992,
+                "ts": "2026-02-25 23:46:32"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772073999,
+                "ts": "2026-02-25 23:46:39"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a10fab6c8031a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074003,
+                "ts": "2026-02-25 23:46:43"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a20fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074007,
+                "ts": "2026-02-25 23:46:47"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074023,
+                "ts": "2026-02-25 23:47:03"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074031,
+                "ts": "2026-02-25 23:47:11"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a10fab6c8031a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074035,
+                "ts": "2026-02-25 23:47:15"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a20fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074039,
+                "ts": "2026-02-25 23:47:19"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074054,
+                "ts": "2026-02-25 23:47:34"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a1a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074062,
+                "ts": "2026-02-25 23:47:42"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a10fab6c8031a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074066,
+                "ts": "2026-02-25 23:47:46"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.GameDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a20fab6c803122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [
+        {
+          "m": "pb.GameDataRSP",
+          "len": 20,
+          "f": {
+            "2": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "3": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "4": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "5": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "6": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "7": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "8": [
+              {
+                "t": "i",
+                "v": 0
+              }
+            ],
+            "11": [
+              {
+                "t": "i",
+                "v": 1772074070,
+                "ts": "2026-02-25 23:47:50"
+              }
+            ]
+          }
+        }
+      ],
+      "score": 200
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:club>",
+      "payload_hex": "0a040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:club>",
+      "payload_hex": "12040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:club>",
+      "payload_hex": "1a040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:club>",
+      "payload_hex": "0885dd3a12040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:club>",
+      "payload_hex": "08fab6c80312040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:club>",
+      "payload_hex": "0885dd3a1a040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club>",
+      "payload_hex": "0885dd3a10fab6c8031a040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club>",
+      "payload_hex": "0885dd3a20fab6c80312040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:club,ymd>",
+      "payload_hex": "0a090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:club,ymd>",
+      "payload_hex": "12090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:club,ymd>",
+      "payload_hex": "1a090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:club,ymd>",
+      "payload_hex": "0885dd3a12090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:club,ymd>",
+      "payload_hex": "08fab6c80312090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:club,ymd>",
+      "payload_hex": "0885dd3a1a090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,ymd>",
+      "payload_hex": "0885dd3a10fab6c8031a090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,ymd>",
+      "payload_hex": "0885dd3a20fab6c80312090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:club,y0..t0>",
+      "payload_hex": "0a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:club,y0..t0>",
+      "payload_hex": "120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:club,y0..t0>",
+      "payload_hex": "1a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:club,y0..t0>",
+      "payload_hex": "08fab6c803120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a1a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a10fab6c8031a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,y0..t0>",
+      "payload_hex": "0885dd3a20fab6c803120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:club,date,filter0>",
+      "payload_hex": "0a0b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:club,date,filter0>",
+      "payload_hex": "120b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:club,date,filter0>",
+      "payload_hex": "1a0b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a120b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,filter0>",
+      "payload_hex": "08fab6c803120b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a1a0b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a10fab6c8031a0b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,filter0>",
+      "payload_hex": "0885dd3a20fab6c803120b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:club,date,filter1>",
+      "payload_hex": "0a0b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:club,date,filter1>",
+      "payload_hex": "120b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:club,date,filter1>",
+      "payload_hex": "1a0b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a120b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,filter1>",
+      "payload_hex": "08fab6c803120b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a1a0b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a10fab6c8031a0b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,filter1>",
+      "payload_hex": "0885dd3a20fab6c803120b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:club,date,filter2>",
+      "payload_hex": "0a0b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:club,date,filter2>",
+      "payload_hex": "120b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:club,date,filter2>",
+      "payload_hex": "1a0b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a120b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,filter2>",
+      "payload_hex": "08fab6c803120b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a1a0b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a10fab6c8031a0b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,filter2>",
+      "payload_hex": "0885dd3a20fab6c803120b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:club,date,room>",
+      "payload_hex": "0a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:club,date,room>",
+      "payload_hex": "120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:club,date,room>",
+      "payload_hex": "1a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:club,date,room>",
+      "payload_hex": "0885dd3a120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:club,date,room>",
+      "payload_hex": "08fab6c803120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:club,date,room>",
+      "payload_hex": "0885dd3a1a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:club,date,room>",
+      "payload_hex": "0885dd3a10fab6c8031a0e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:club,date,room>",
+      "payload_hex": "0885dd3a20fab6c803120e0885dd3a1081cbd40918e18d8302",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:export-ish all>",
+      "payload_hex": "0a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:export-ish all>",
+      "payload_hex": "121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:export-ish all>",
+      "payload_hex": "1a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish all>",
+      "payload_hex": "0885dd3a121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish all>",
+      "payload_hex": "08fab6c803121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish all>",
+      "payload_hex": "0885dd3a1a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish all>",
+      "payload_hex": "0885dd3a10fab6c8031a1f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish all>",
+      "payload_hex": "0885dd3a20fab6c803121f0885dd3a20fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:export-ish cash>",
+      "payload_hex": "0a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:export-ish cash>",
+      "payload_hex": "121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:export-ish cash>",
+      "payload_hex": "1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish cash>",
+      "payload_hex": "08fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a10fab6c8031a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish cash>",
+      "payload_hex": "0885dd3a20fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd4097805800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:export-ish spin>",
+      "payload_hex": "0a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:export-ish spin>",
+      "payload_hex": "121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:export-ish spin>",
+      "payload_hex": "1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish spin>",
+      "payload_hex": "08fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a1a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a10fab6c8031a1e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish spin>",
+      "payload_hex": "0885dd3a20fab6c803121e0885dd3a20fab6c80340e50d6081cbd4096881cbd409780a800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner:export-ish ts+ymd>",
+      "payload_hex": "0a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f3=<inner:export-ish ts+ymd>",
+      "payload_hex": "1a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=uid + f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "08fab6c803122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club + f3=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a1a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f2=uid + f3=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a10fab6c8031a2b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=club,f4=uid + f2=<inner:export-ish ts+ymd>",
+      "payload_hex": "0885dd3a20fab6c803122b0885dd3a10d083facc0618cfa6ffcc0620fab6c80340e50d6081cbd4096881cbd40978e104800100880100",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club)",
+      "payload_hex": "0a040885dd3a12040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club)",
+      "payload_hex": "12040885dd3a1a040885dd3a",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,ymd)",
+      "payload_hex": "0a090885dd3a1081cbd40912090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,ymd)",
+      "payload_hex": "12090885dd3a1081cbd4091a090885dd3a1081cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,y0..t0)",
+      "payload_hex": "0a0e0885dd3a1080cbd4091881cbd409120e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,y0..t0)",
+      "payload_hex": "120e0885dd3a1080cbd4091881cbd4091a0e0885dd3a1080cbd4091881cbd409",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,date,filter0)",
+      "payload_hex": "0a0b0885dd3a1081cbd4091800120b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,date,filter0)",
+      "payload_hex": "120b0885dd3a1081cbd40918001a0b0885dd3a1081cbd4091800",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,date,filter1)",
+      "payload_hex": "0a0b0885dd3a1081cbd4091801120b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,date,filter1)",
+      "payload_hex": "120b0885dd3a1081cbd40918011a0b0885dd3a1081cbd4091801",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f1=<inner>,f2=<inner> (club,date,filter2)",
+      "payload_hex": "0a0b0885dd3a1081cbd4091802120b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    },
+    {
+      "req": "pb.UserClubDataREQ",
+      "label": "top f2=<inner>,f3=<inner> (club,date,filter2)",
+      "payload_hex": "120b0885dd3a1081cbd40918021a0b0885dd3a1081cbd4091802",
+      "msgs": [],
+      "score": 0
+    }
+  ]
+}

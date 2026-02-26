@@ -336,9 +336,13 @@ export function NanobotSettingsPanel() {
 
   const settingsQuery = useQuery(trpc.nanobot.getSettings.queryOptions());
   const statusQuery = useQuery(trpc.nanobot.status.queryOptions());
+  const oauthStatusQuery = useQuery(
+    trpc.nanobot.providerAuthStatus.queryOptions({ provider: "openai_codex" }),
+  );
 
   const [form, setForm] = useState<NanobotSettingsForm | null>(null);
   const [saveMessage, setSaveMessage] = useState("");
+  const [oauthMessage, setOauthMessage] = useState("");
 
   useEffect(() => {
     if (settingsQuery.data) {
@@ -361,11 +365,74 @@ export function NanobotSettingsPanel() {
     }),
   );
 
+  const startOAuthMutation = useMutation(
+    trpc.nanobot.startProviderAuth.mutationOptions({
+      onSuccess: (data) => {
+        if (data.authorizeUrl) {
+          const popup = window.open(
+            data.authorizeUrl,
+            "_blank",
+            "noopener,noreferrer",
+          );
+          if (!popup) {
+            setOauthMessage(
+              "Popup bloqueado pelo navegador. Permita popups e tente novamente.",
+            );
+            return;
+          }
+          setOauthMessage(
+            "Janela de OAuth aberta em nova aba. Conclua o login e depois volte para atualizar o status.",
+          );
+          return;
+        }
+        setOauthMessage("Nao foi possivel iniciar o OAuth.");
+      },
+      onError: (error) => {
+        setOauthMessage(error.message);
+      },
+    }),
+  );
+
+  const disconnectOAuthMutation = useMutation(
+    trpc.nanobot.disconnectProviderAuth.mutationOptions({
+      onSuccess: async () => {
+        setOauthMessage("OAuth OpenAI Codex desconectado.");
+        await queryClient.invalidateQueries({
+          queryKey: trpc.nanobot.providerAuthStatus.queryKey({
+            provider: "openai_codex",
+          }),
+        });
+      },
+      onError: (error) => {
+        setOauthMessage(error.message);
+      },
+    }),
+  );
+
+  const importLocalOAuthMutation = useMutation(
+    trpc.nanobot.importLocalProviderAuth.mutationOptions({
+      onSuccess: async (data) => {
+        setOauthMessage(
+          `Token local importado para ${data.storage === "db" ? "banco" : "arquivo"} e vinculado ao time.`,
+        );
+        await queryClient.invalidateQueries({
+          queryKey: trpc.nanobot.providerAuthStatus.queryKey({
+            provider: "openai_codex",
+          }),
+        });
+      },
+      onError: (error) => {
+        setOauthMessage(error.message);
+      },
+    }),
+  );
+
   if (!form || settingsQuery.isLoading) {
     return <div className="text-sm text-muted-foreground">Carregando...</div>;
   }
 
   const status = statusQuery.data;
+  const oauthStatus = oauthStatusQuery.data;
 
   const setField = <K extends keyof NanobotSettingsForm>(
     key: K,
@@ -507,6 +574,26 @@ export function NanobotSettingsPanel() {
         slackEnabled: form.gatewayConfig.slack.enabled,
       },
     });
+  };
+
+  const startOpenAICodexOAuth = () => {
+    setOauthMessage("");
+    // Limitação atual do oauth_cli_kit / OpenAI Codex (fluxo CLI): redirect URI fixo.
+    const redirectUri = "http://localhost:1455/auth/callback";
+    startOAuthMutation.mutate({
+      provider: "openai_codex",
+      redirectUri,
+    });
+  };
+
+  const disconnectOpenAICodexOAuth = () => {
+    setOauthMessage("");
+    disconnectOAuthMutation.mutate({ provider: "openai_codex" });
+  };
+
+  const importLocalOpenAICodexOAuth = () => {
+    setOauthMessage("");
+    importLocalOAuthMutation.mutate({ provider: "openai_codex" });
   };
 
   return (
@@ -657,6 +744,89 @@ export function NanobotSettingsPanel() {
               placeholder="auto / sse / json"
             />
           </div>
+        </div>
+      </Section>
+
+      <Section
+        title="OAuth de Provedor (OpenAI Codex)"
+        description="Login por OAuth salvo por organização (team/clube), sem depender de API key manual para usuários leigos."
+      >
+        <div className="rounded-lg border p-4 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              variant={oauthStatus?.connected ? "default" : "secondary"}
+            >
+              {oauthStatus?.connected ? "Conectado" : "Desconectado"}
+            </Badge>
+            <Badge variant="outline">Escopo por time</Badge>
+            {oauthStatusQuery.isFetching && (
+              <Badge variant="outline">Atualizando status...</Badge>
+            )}
+          </div>
+
+          <p className="text-sm text-muted-foreground">
+            O token OAuth fica isolado no workspace do time atual. Selecione
+            `openai_codex` como provider/modelo para usar este login.
+          </p>
+
+          <p className="text-xs text-amber-600">
+            O OAuth do OpenAI Codex no Nanobot usa o client do modo CLI (callback
+            fixo em `http://localhost:1455/auth/callback`). Em ambiente web
+            remoto ainda nao ha callback web nativo.
+          </p>
+
+          {oauthStatus?.accountId && (
+            <p className="text-xs text-muted-foreground break-all">
+              Conta OpenAI:{" "}
+              <span className="font-mono text-foreground">
+                {oauthStatus.accountId}
+              </span>
+            </p>
+          )}
+
+          {oauthStatus?.expiresInSeconds != null && oauthStatus.connected && (
+            <p className="text-xs text-muted-foreground">
+              Token expira em aproximadamente{" "}
+              <span className="font-medium text-foreground">
+                {Math.max(0, Math.floor(oauthStatus.expiresInSeconds / 60))} min
+              </span>{" "}
+              (refresh automático quando suportado).
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              onClick={startOpenAICodexOAuth}
+              disabled={startOAuthMutation.isPending}
+            >
+              {oauthStatus?.connected ? "Reconectar OpenAI Codex" : "Conectar OpenAI Codex (OAuth)"}
+            </Button>
+            {oauthStatus?.connected && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={disconnectOpenAICodexOAuth}
+                disabled={disconnectOAuthMutation.isPending}
+              >
+                Desconectar
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={importLocalOpenAICodexOAuth}
+              disabled={importLocalOAuthMutation.isPending}
+            >
+              {importLocalOAuthMutation.isPending
+                ? "Importando token local..."
+                : "Importar token local (CLI/container)"}
+            </Button>
+          </div>
+
+          {oauthMessage && (
+            <p className="text-sm text-muted-foreground">{oauthMessage}</p>
+          )}
         </div>
       </Section>
 

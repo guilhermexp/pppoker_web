@@ -1,0 +1,595 @@
+{
+  "summary": {
+    "uid": 7478138,
+    "club": 962181,
+    "liga": 1765,
+    "tested": 27,
+    "responses": 1,
+    "userClubDataRsp": 0,
+    "top": [
+      {
+        "label": "f1=club,f2=dateType0,f3=today_ymd",
+        "score": 13,
+        "rsp": [
+          "pb.UserLogoutRSP"
+        ]
+      },
+      {
+        "label": "empty",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=uid",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=liga",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=room_any",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=uid",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=uid,f2=club",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=liga",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=today_ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=y0_ymd,f3=t0_ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=y0_ts,f3=t0_ts",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=dateType1,f3=today_ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=dateType2,f3=today_ymd",
+        "score": 0,
+        "rsp": []
+      },
+      {
+        "label": "f1=club,f2=dateType3,f3=today_ymd",
+        "score": 0,
+        "rsp": []
+      }
+    ]
+  },
+  "results": [
+    {
+      "label": "f1=club,f2=dateType0,f3=today_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 0
+        },
+        {
+          "field": 3,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10001881cbd409",
+      "messages": [
+        {
+          "message": "pb.UserLogoutRSP",
+          "payload_len": 2,
+          "fields": {
+            "1": [
+              {
+                "type": "int",
+                "value": 2
+              }
+            ]
+          }
+        }
+      ],
+      "score": 13
+    },
+    {
+      "label": "empty",
+      "pairs": [],
+      "payload_hex": "",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        }
+      ],
+      "payload_hex": "0885dd3a",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=uid",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 7478138
+        }
+      ],
+      "payload_hex": "08fab6c803",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=liga",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 1765
+        }
+      ],
+      "payload_hex": "08e50d",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=room_any",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 4245217
+        }
+      ],
+      "payload_hex": "08e18d8302",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=uid",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 7478138
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c803",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=uid,f2=club",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 7478138
+        },
+        {
+          "field": 2,
+          "value": 962181
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=liga",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 1765
+        }
+      ],
+      "payload_hex": "0885dd3a10e50d",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=y0_ymd,f3=t0_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260224
+        },
+        {
+          "field": 3,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a1080cbd4091881cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=y0_ts,f3=t0_ts",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 1771909200
+        },
+        {
+          "field": 3,
+          "value": 1771995600
+        }
+      ],
+      "payload_hex": "0885dd3a10d0e0f4cc0618d083facc06",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=dateType1,f3=today_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 1
+        },
+        {
+          "field": 3,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10011881cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=dateType2,f3=today_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 2
+        },
+        {
+          "field": 3,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10021881cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=dateType3,f3=today_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 3
+        },
+        {
+          "field": 3,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10031881cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd,f3=filter0",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 0
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091800",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd,f3=filter1",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 1
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091801",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd,f3=filter2",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 2
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091802",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd,f3=filter7",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 7
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd4091807",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd,f3=room_any",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 4245217
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd40918e18d8302",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd,f3=room_small",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 4245061
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd40918c58c8302",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=today_ymd,f3=room_big",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 4302505
+        }
+      ],
+      "payload_hex": "0885dd3a1081cbd40918a9cd8602",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=uid,f2=today_ymd,f3=club",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 7478138
+        },
+        {
+          "field": 2,
+          "value": 20260225
+        },
+        {
+          "field": 3,
+          "value": 962181
+        }
+      ],
+      "payload_hex": "08fab6c8031081cbd4091885dd3a",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=uid,f2=club,f3=today_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 7478138
+        },
+        {
+          "field": 2,
+          "value": 962181
+        },
+        {
+          "field": 3,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1881cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=uid,f2=club,f3=y0_ymd,f4=t0_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 7478138
+        },
+        {
+          "field": 2,
+          "value": 962181
+        },
+        {
+          "field": 3,
+          "value": 20260224
+        },
+        {
+          "field": 4,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "08fab6c8031085dd3a1880cbd4092081cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=uid,f3=y0_ymd,f4=t0_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 7478138
+        },
+        {
+          "field": 3,
+          "value": 20260224
+        },
+        {
+          "field": 4,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c8031880cbd4092081cbd409",
+      "messages": [],
+      "score": 0
+    },
+    {
+      "label": "f1=club,f2=uid,f3=dateType1,f4=today_ymd",
+      "pairs": [
+        {
+          "field": 1,
+          "value": 962181
+        },
+        {
+          "field": 2,
+          "value": 7478138
+        },
+        {
+          "field": 3,
+          "value": 1
+        },
+        {
+          "field": 4,
+          "value": 20260225
+        }
+      ],
+      "payload_hex": "0885dd3a10fab6c80318012081cbd409",
+      "messages": [],
+      "score": 0
+    }
+  ]
+}
