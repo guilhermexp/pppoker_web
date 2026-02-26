@@ -1,0 +1,13 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - heading "Membros" [level=1] [ref=e8]
+        - paragraph [ref=e9]: Gerencie membros do clube, aprovacoes e solicitacoes de credito
+      - button "Membros" [ref=e10] [cursor=pointer]
+    - button "Atualizar" [ref=e13] [cursor=pointer]:
+      - img [ref=e14]
+      - text: Atualizar
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e19]

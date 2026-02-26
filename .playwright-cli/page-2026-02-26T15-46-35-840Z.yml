@@ -1,0 +1,43 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e6]
+      - generic [ref=e24]:
+        - img [ref=e26]:
+          - generic [ref=e27]: OSpoker
+        - img [ref=e30]
+      - blockquote [ref=e48]:
+        - paragraph [ref=e49]: “Esta plataforma me ajudou a economizar tempo e atender meus clientes mais rápido do que nunca.”
+        - generic [ref=e50]: ~ Cliente Mid Poker
+      - generic [ref=e51]:
+        - generic:
+          - img "Background Paths"
+        - generic:
+          - img "Background Paths"
+    - generic [ref=e52]:
+      - link "Home" [ref=e54] [cursor=pointer]:
+        - /url: /
+        - img [ref=e55]
+        - text: Home
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - heading "Bem-vindo ao Mid Poker" [level=1] [ref=e59]
+          - paragraph [ref=e60]: Entre para continuar
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - textbox "Usuário PPPoker (email ou telefone)" [ref=e65]
+            - textbox "Senha PPPoker" [ref=e66]
+          - button "Entrar com PPPoker" [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+            - generic [ref=e71]: Entrar com PPPoker
+        - paragraph [ref=e72]:
+          - text: By signing in you agree to our
+          - link "Terms of Service" [ref=e73] [cursor=pointer]:
+            - /url: https://mid.poker/terms
+          - text: and
+          - link "Privacy Policy" [ref=e74] [cursor=pointer]:
+            - /url: https://mid.poker/policy
+          - text: .
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e75]

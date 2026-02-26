@@ -1,0 +1,368 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+      - navigation [ref=e25]:
+        - generic [ref=e26]:
+          - link "Visao Geral" [ref=e28] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e29]:
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic: Visao Geral
+          - generic [ref=e31]:
+            - link "Club_097921bd4e" [ref=e32] [cursor=pointer]:
+              - /url: /poker
+              - generic [ref=e33]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Club_097921bd4e
+                  - button [ref=e35]:
+                    - img [ref=e36]
+            - generic:
+              - link "Jogadores" [ref=e39] [cursor=pointer]:
+                - /url: /poker/players
+                - generic [ref=e42]: Jogadores
+              - link "Agentes" [ref=e43] [cursor=pointer]:
+                - /url: /poker/agents
+                - generic [ref=e46]: Agentes
+              - link "Membros" [ref=e47] [cursor=pointer]:
+                - /url: /poker/membros
+                - generic [ref=e50]: Membros
+              - link "Contador" [ref=e51] [cursor=pointer]:
+                - /url: /poker/contador
+                - generic [ref=e54]: Contador
+              - link "Lobby" [ref=e55] [cursor=pointer]:
+                - /url: /poker/lobby
+                - generic [ref=e58]: Lobby
+              - link "Sessoes" [ref=e59] [cursor=pointer]:
+                - /url: /poker/sessions
+                - generic [ref=e62]: Sessoes
+              - link "Transacoes" [ref=e63] [cursor=pointer]:
+                - /url: /poker/transactions
+                - generic [ref=e66]: Transacoes
+              - link "Acertos" [ref=e67] [cursor=pointer]:
+                - /url: /poker/settlements
+                - generic [ref=e70]: Acertos
+              - link "Importar Dados" [ref=e71] [cursor=pointer]:
+                - /url: /poker/import
+                - generic [ref=e74]: Importar Dados
+          - generic [ref=e75]:
+            - link "Fast Chips" [ref=e76] [cursor=pointer]:
+              - /url: /fastchips
+              - generic [ref=e77]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Fast Chips
+                  - button [ref=e79]:
+                    - img [ref=e80]
+            - generic:
+              - link "Transacoes" [ref=e83] [cursor=pointer]:
+                - /url: /fastchips/transacoes
+                - generic [ref=e86]: Transacoes
+              - link "Contas Vinculadas" [ref=e87] [cursor=pointer]:
+                - /url: /fastchips/contas-vinculadas
+                - generic [ref=e90]: Contas Vinculadas
+              - link "Jogadores" [ref=e91] [cursor=pointer]:
+                - /url: /fastchips/jogadores
+                - generic [ref=e94]: Jogadores
+              - link "Movimentacao" [ref=e95] [cursor=pointer]:
+                - /url: /fastchips/movimentacao
+                - generic [ref=e98]: Movimentacao
+              - link "Controle" [ref=e99] [cursor=pointer]:
+                - /url: /fastchips/controle
+                - generic [ref=e102]: Controle
+          - generic [ref=e103]:
+            - link "Transacoes" [ref=e104] [cursor=pointer]:
+              - /url: /transactions
+              - generic [ref=e105]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Transacoes
+                  - button [ref=e107]:
+                    - img [ref=e108]
+            - generic:
+              - link "Categorias" [ref=e111] [cursor=pointer]:
+                - /url: /transactions/categories
+                - generic [ref=e114]: Categorias
+              - link "Conectar banco" [ref=e115] [cursor=pointer]:
+                - /url: /transactions?step=connect
+                - generic [ref=e118]: Conectar banco
+              - link "Importar" [ref=e119] [cursor=pointer]:
+                - /url: /transactions?step=import&hide=true
+                - generic [ref=e122]: Importar
+              - link "Criar novo" [ref=e123] [cursor=pointer]:
+                - /url: /transactions?createTransaction=true
+                - generic [ref=e126]: Criar novo
+          - generic [ref=e127]:
+            - link "Faturas" [ref=e128] [cursor=pointer]:
+              - /url: /invoices
+              - generic [ref=e129]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Faturas
+                  - button [ref=e131]:
+                    - img [ref=e132]
+            - generic:
+              - link "Produtos" [ref=e135] [cursor=pointer]:
+                - /url: /invoices/products
+                - generic [ref=e138]: Produtos
+              - link "Criar novo" [ref=e139] [cursor=pointer]:
+                - /url: /invoices?type=create
+                - generic [ref=e142]: Criar novo
+          - generic [ref=e143]:
+            - link "Clientes" [ref=e144] [cursor=pointer]:
+              - /url: /customers
+              - generic [ref=e145]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Clientes
+                  - button [ref=e147]:
+                    - img [ref=e148]
+            - link "Criar novo" [ref=e151] [cursor=pointer]:
+              - /url: /customers?createCustomer=true
+              - generic [ref=e154]: Criar novo
+          - link "Cofre" [ref=e156] [cursor=pointer]:
+            - /url: /vault
+            - generic [ref=e157]:
+              - generic:
+                - generic:
+                  - img
+              - generic:
+                - generic: Cofre
+          - generic [ref=e159]:
+            - link "Ligas" [ref=e160] [cursor=pointer]:
+              - /url: /poker/leagues
+              - generic [ref=e161]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Ligas
+                  - button [ref=e163]:
+                    - img [ref=e164]
+            - link "Importar Dados" [ref=e167] [cursor=pointer]:
+              - /url: /poker/leagues/import
+              - generic [ref=e170]: Importar Dados
+          - generic [ref=e171]:
+            - link "Super Union" [ref=e172] [cursor=pointer]:
+              - /url: /su
+              - generic [ref=e173]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Super Union
+                  - button [ref=e175]:
+                    - img [ref=e176]
+            - generic:
+              - link "Ligas" [ref=e179] [cursor=pointer]:
+                - /url: /su/ligas
+                - generic [ref=e182]: Ligas
+              - link "Jogos" [ref=e183] [cursor=pointer]:
+                - /url: /su/jogos
+                - generic [ref=e186]: Jogos
+              - link "Acertos" [ref=e187] [cursor=pointer]:
+                - /url: /su/acertos
+                - generic [ref=e190]: Acertos
+              - link "Importar Dados" [ref=e191] [cursor=pointer]:
+                - /url: /su/import
+                - generic [ref=e194]: Importar Dados
+              - link "Gerenciamento de Torneios" [ref=e195] [cursor=pointer]:
+                - /url: /su/grade
+                - generic [ref=e198]: Gerenciamento de Torneios
+          - generic [ref=e199]:
+            - link "Aplicativos" [ref=e200] [cursor=pointer]:
+              - /url: /apps
+              - generic [ref=e201]:
+                - generic:
+                  - generic:
+                    - img
+                - generic:
+                  - generic: Aplicativos
+                  - button [ref=e203]:
+                    - img [ref=e204]
+            - generic:
+              - link "Todos" [ref=e207] [cursor=pointer]:
+                - /url: /apps
+                - generic [ref=e210]: Todos
+              - link "Instalados" [ref=e211] [cursor=pointer]:
+                - /url: /apps?tab=installed
+                - generic [ref=e214]: Instalados
+      - generic:
+        - generic [ref=e216]:
+          - generic [ref=e220] [cursor=pointer]: CL
+          - generic [ref=e224] [cursor=pointer]: ✖P
+          - generic [ref=e228] [cursor=pointer]: XP
+        - generic [ref=e230] [cursor=pointer]: Club_097921bd4e
+      - generic [ref=e233]:
+        - generic:
+          - link "Geral" [ref=e234] [cursor=pointer]:
+            - /url: /settings
+            - generic [ref=e237]: Geral
+          - link "Conexoes Bancarias" [ref=e238] [cursor=pointer]:
+            - /url: /settings/accounts
+            - generic [ref=e241]: Conexoes Bancarias
+          - link "Membros" [ref=e242] [cursor=pointer]:
+            - /url: /settings/members
+            - generic [ref=e245]: Membros
+          - link "Notificacoes" [ref=e246] [cursor=pointer]:
+            - /url: /settings/notifications
+            - generic [ref=e249]: Notificacoes
+          - link "Desenvolvedor" [ref=e250] [cursor=pointer]:
+            - /url: /settings/developer
+            - generic [ref=e253]: Desenvolvedor
+        - link "Configuracoes" [ref=e254] [cursor=pointer]:
+          - /url: /settings
+          - generic [ref=e255]:
+            - generic:
+              - generic:
+                - img
+            - generic:
+              - generic: Configuracoes
+              - button [ref=e257]:
+                - img [ref=e258]
+    - generic [ref=e261]:
+      - banner [ref=e262]:
+        - button "Fechar sidebar" [ref=e263] [cursor=pointer]:
+          - img [ref=e264]
+        - button "Buscar qualquer coisa... ⌘ K" [ref=e267] [cursor=pointer]:
+          - img [ref=e268]
+          - generic [ref=e271]: Buscar qualquer coisa...
+          - generic:
+            - generic: ⌘
+            - text: K
+        - generic [ref=e272]:
+          - button [ref=e273] [cursor=pointer]:
+            - img [ref=e274]
+          - generic [ref=e279] [cursor=pointer]: F
+      - generic [ref=e280]:
+        - generic [ref=e281]:
+          - generic [ref=e282]:
+            - generic [ref=e283]:
+              - heading "Boa tarde FastchipsOnline," [level=1] [ref=e284]:
+                - generic [ref=e285]: Boa tarde
+                - generic [ref=e286]: FastchipsOnline,
+              - paragraph [ref=e287]: aqui esta um resumo de como as coisas estao indo.
+            - generic [ref=e288]:
+              - button "Personalizar" [ref=e290] [cursor=pointer]:
+                - generic [ref=e291]: Personalizar
+                - img [ref=e292]
+              - button [ref=e295] [cursor=pointer]:
+                - img [ref=e296]
+          - generic [ref=e300]:
+            - generic [ref=e301] [cursor=pointer]:
+              - generic [ref=e302]:
+                - generic [ref=e304]:
+                  - img [ref=e306]
+                  - heading "Status do Agente" [level=3] [ref=e309]
+                - paragraph [ref=e310]: Nanobot AI + Gateway
+              - generic [ref=e311]:
+                - generic [ref=e312]:
+                  - generic [ref=e315]: "Agente: Inativo"
+                  - generic [ref=e318]: "Gateway: Nenhum"
+                  - generic [ref=e321]: "Modelo: Nao configurado"
+                - text: Ver configuracoes
+            - generic [ref=e322] [cursor=pointer]:
+              - generic [ref=e323]:
+                - generic [ref=e325]:
+                  - img [ref=e327]
+                  - heading "Fastchips Vendas" [level=3] [ref=e330]
+                - paragraph [ref=e331]: Fichas vendidas e links emitidos
+              - generic [ref=e332]:
+                - generic [ref=e333]:
+                  - heading "R$ 0,00" [level=2] [ref=e334]
+                  - generic [ref=e335]:
+                    - generic [ref=e336]: "Enviadas hoje: 0"
+                    - generic [ref=e337]: "Links: 0"
+                    - generic [ref=e338]: "Total: 0"
+                - text: Ver fastchips
+            - generic [ref=e339] [cursor=pointer]:
+              - generic [ref=e340]:
+                - generic [ref=e342]:
+                  - img [ref=e344]
+                  - heading "Taxa de Sucesso" [level=3] [ref=e347]
+                - paragraph [ref=e348]: "Fluxo: Link → Pago → Enviadas"
+              - generic [ref=e349]:
+                - generic [ref=e350]:
+                  - generic [ref=e351]:
+                    - generic [ref=e352]:
+                      - generic [ref=e354]: "1"
+                      - generic [ref=e355]:
+                        - paragraph [ref=e356]: Link
+                        - paragraph [ref=e357]:
+                          - text: "0"
+                          - generic [ref=e358]: (0%)
+                    - generic [ref=e360]:
+                      - generic [ref=e362]: "2"
+                      - generic [ref=e363]:
+                        - paragraph [ref=e364]: Pago
+                        - paragraph [ref=e365]:
+                          - text: "0"
+                          - generic [ref=e366]: (0%)
+                    - generic [ref=e368]:
+                      - generic [ref=e370]: "3"
+                      - generic [ref=e371]:
+                        - paragraph [ref=e372]: Enviadas
+                        - paragraph [ref=e373]:
+                          - text: "0"
+                          - generic [ref=e374]: (0%)
+                  - generic [ref=e376]:
+                    - text: "Sucesso:"
+                    - generic [ref=e377]: 0%
+                - text: Ver detalhes
+          - status [ref=e378]
+        - generic [ref=e380]:
+          - generic:
+            - generic [ref=e383]:
+              - button "Burn rate analysis" [ref=e384] [cursor=pointer]:
+                - img [ref=e385]
+                - generic [ref=e388]: Burn rate analysis
+              - button "Latest transactions" [ref=e389] [cursor=pointer]:
+                - img [ref=e390]
+                - generic [ref=e392]: Latest transactions
+              - button "Expense Breakdown" [ref=e393] [cursor=pointer]:
+                - img [ref=e394]
+                - generic [ref=e397]: Expense Breakdown
+              - button "Balance Sheet" [ref=e398] [cursor=pointer]:
+                - img [ref=e399]
+                - generic [ref=e403]: Balance Sheet
+              - button "Spending Analysis" [ref=e404] [cursor=pointer]:
+                - img [ref=e405]
+                - generic [ref=e408]: Spending Analysis
+              - button "Runway" [ref=e409] [cursor=pointer]:
+                - img [ref=e410]
+                - generic [ref=e413]: Runway
+            - generic [ref=e416]:
+              - textbox "Pergunte qualquer coisa" [active] [ref=e419]
+              - generic [ref=e420]:
+                - generic [ref=e421]:
+                  - button [ref=e422] [cursor=pointer]:
+                    - img [ref=e423]
+                  - button [ref=e426] [cursor=pointer]:
+                    - img [ref=e427]
+                  - button "Search" [ref=e429] [cursor=pointer]:
+                    - img [ref=e431]
+                    - generic: Search
+                - generic [ref=e434]:
+                  - button [ref=e435] [cursor=pointer]:
+                    - img [ref=e436]
+                  - button [ref=e442] [cursor=pointer]:
+                    - img [ref=e443]
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e446]

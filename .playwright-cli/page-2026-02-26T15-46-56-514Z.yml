@@ -1,0 +1,93 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e6]
+      - generic [ref=e24]:
+        - img [ref=e26]:
+          - generic [ref=e27]: OSpoker
+        - img [ref=e30]
+      - blockquote [ref=e48]:
+        - paragraph [ref=e49]: “Esta plataforma me ajudou a economizar tempo e atender meus clientes mais rápido do que nunca.”
+        - generic [ref=e50]: ~ Cliente Mid Poker
+      - generic [ref=e51]:
+        - generic:
+          - img "Background Paths"
+        - generic:
+          - img "Background Paths"
+    - generic [ref=e52]:
+      - link "Home" [ref=e54] [cursor=pointer]:
+        - /url: /
+        - img [ref=e55]
+        - text: Home
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - heading "Bem-vindo ao Mid Poker" [level=1] [ref=e59]
+          - paragraph [ref=e60]: Entre para continuar
+        - generic [ref=e62]:
+          - generic [ref=e76]:
+            - button [ref=e77] [cursor=pointer]:
+              - img [ref=e78]
+            - generic [ref=e81]:
+              - paragraph [ref=e82]: Selecione um clube
+              - paragraph [ref=e83]: 5 clubes encontrados
+          - generic [ref=e84]:
+            - button "C Club_097921bd4e Dono 0 membros" [ref=e85] [cursor=pointer]:
+              - generic [ref=e86]:
+                - generic [ref=e87]: C
+                - generic [ref=e88]:
+                  - generic [ref=e90]: Club_097921bd4e
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: Dono
+                    - generic [ref=e94]: 0 membros
+                - img [ref=e96]
+            - button "XperiencePoker🎲 XperiencePoker🎲 Gestor 10 membros Liga 1765" [ref=e99] [cursor=pointer]:
+              - generic [ref=e100]:
+                - img "XperiencePoker🎲" [ref=e101]
+                - generic [ref=e102]:
+                  - generic [ref=e104]: XperiencePoker🎲
+                  - generic [ref=e105]:
+                    - generic [ref=e106]: Gestor
+                    - generic [ref=e108]: 10 membros
+                    - generic [ref=e109]: Liga 1765
+                - img [ref=e111]
+            - button "✖perience ✖perience Gestor 10 membros Liga 3357" [ref=e114] [cursor=pointer]:
+              - generic [ref=e115]:
+                - img "✖perience" [ref=e116]
+                - generic [ref=e117]:
+                  - generic [ref=e119]: ✖perience
+                  - generic [ref=e120]:
+                    - generic [ref=e121]: Gestor
+                    - generic [ref=e123]: 10 membros
+                    - generic [ref=e124]: Liga 3357
+                - img [ref=e126]
+            - button ".Xperience .Xperience Super Agente 10 membros Liga 2632 Em breve" [disabled] [ref=e129]:
+              - generic [ref=e130]:
+                - img ".Xperience" [ref=e131]
+                - generic [ref=e132]:
+                  - generic [ref=e134]: .Xperience
+                  - generic [ref=e135]:
+                    - generic [ref=e136]: Super Agente
+                    - generic [ref=e138]: 10 membros
+                    - generic [ref=e139]: Liga 2632
+                - generic [ref=e140]: Em breve
+            - button "Xperience. Xperience. Membro 10 membros Liga 2136 Em breve" [disabled] [ref=e141]:
+              - generic [ref=e142]:
+                - img "Xperience." [ref=e143]
+                - generic [ref=e144]:
+                  - generic [ref=e146]: Xperience.
+                  - generic [ref=e147]:
+                    - generic [ref=e148]: Membro
+                    - generic [ref=e150]: 10 membros
+                    - generic [ref=e151]: Liga 2136
+                - generic [ref=e152]: Em breve
+        - paragraph [ref=e72]:
+          - text: By signing in you agree to our
+          - link "Terms of Service" [ref=e73] [cursor=pointer]:
+            - /url: https://mid.poker/terms
+          - text: and
+          - link "Privacy Policy" [ref=e74] [cursor=pointer]:
+            - /url: https://mid.poker/policy
+          - text: .
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e75]
