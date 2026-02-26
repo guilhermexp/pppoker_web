@@ -1,6 +1,7 @@
 "use client";
 
 import { useUserQuery } from "@/hooks/use-user";
+import { useTeamQuery } from "@/hooks/use-team";
 import { Avatar, AvatarFallback, AvatarImageNext } from "@midpoker/ui/avatar";
 import {
   Card,
@@ -23,12 +24,15 @@ function isInternalMappedEmail(email?: string | null) {
 
 export function SettingsPrimaryUserPanel() {
   const { data: user } = useUserQuery();
+  const { data: team } = useTeamQuery();
 
   const nickname =
     user?.fullName?.trim() || user?.email?.split("@")[0] || "Usuário";
   const pppokerNumericId = extractPppokerNumericId(user?.email);
   const hasExternalLinkedEmail =
     !!user?.email && !isInternalMappedEmail(user.email);
+
+  const clubName = team?.name ?? null;
 
   return (
     <div className="space-y-4">
@@ -59,24 +63,28 @@ export function SettingsPrimaryUserPanel() {
               {nickname}
             </div>
 
-            <div className="mt-2 text-sm text-muted-foreground">
-              ID de usuário:{" "}
-              <span className="font-medium text-foreground">
-                {pppokerNumericId ?? "Não vinculado"}
-              </span>
-            </div>
+            {pppokerNumericId && (
+              <div className="mt-1 text-sm text-muted-foreground">
+                ID:{" "}
+                <span className="font-medium text-foreground">
+                  {pppokerNumericId}
+                </span>
+              </div>
+            )}
 
             {hasExternalLinkedEmail && (
-              <div className="mt-2 text-sm text-muted-foreground break-all">
-                Email vinculado:{" "}
+              <div className="mt-1 text-sm text-muted-foreground break-all">
+                Email:{" "}
                 <span className="font-medium text-foreground">{user.email}</span>
               </div>
             )}
 
-            {!hasExternalLinkedEmail && (
-              <div className="mt-2 text-sm text-muted-foreground">
-                Email vinculado:{" "}
-                <span className="font-medium text-foreground">Não vinculado</span>
+            {clubName && (
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="text-sm font-medium text-emerald-400">
+                  {clubName}
+                </span>
               </div>
             )}
           </div>
@@ -96,46 +104,9 @@ export function SettingsPrimaryUserPanel() {
                 </p>
               </div>
             </div>
-
-            <div className="mt-4 rounded-2xl border border-border bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.14),_transparent_55%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))] p-4">
-              <div className="grid grid-cols-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <div className="text-foreground">
-                  Perfil
-                  <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-emerald-400" />
-                </div>
-                <div>Status</div>
-                <div>Conta</div>
-              </div>
-
-              <div className="mt-6 text-center">
-                <p className="text-4xl font-semibold leading-none text-emerald-400">
-                  {pppokerNumericId ? "OK" : "--"}
-                </p>
-                <p className="mt-3 text-lg text-muted-foreground">
-                  {pppokerNumericId ? `ID ${pppokerNumericId}` : "Sem ID PPPoker"}
-                </p>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                {["Avatar", "Nickname", "Email vinculado", "ID numérico"].map(
-                  (label, index) => (
-                    <div
-                      key={label}
-                      className="relative h-px bg-border/60 overflow-hidden"
-                    >
-                      <div
-                        className="absolute inset-y-0 left-0 bg-emerald-400/30"
-                        style={{ width: `${92 - index * 18}%` }}
-                      />
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }

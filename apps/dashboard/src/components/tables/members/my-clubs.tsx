@@ -5,7 +5,7 @@ import { useTRPC } from "@/trpc/client";
 import { Avatar, AvatarFallback, AvatarImageNext } from "@midpoker/ui/avatar";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Shield, Crown, Settings, Star, User } from "lucide-react";
+import { Shield, Crown, Settings, Star, User } from "lucide-react";
 
 function extractPppokerNumericId(email?: string | null) {
   if (!email) return null;
@@ -124,10 +124,11 @@ export function MyClubs() {
                         <RoleIcon className="h-3 w-3" />
                         {role.label}
                       </span>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Users className="h-3 w-3" />
-                        {club.member_count}
-                      </span>
+                      {club.liga_id && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          Liga {club.liga_id}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -135,11 +136,6 @@ export function MyClubs() {
                     <p className="text-[10px] text-muted-foreground font-mono">
                       {club.club_id}
                     </p>
-                    {club.liga_id && (
-                      <p className="text-[10px] text-muted-foreground">
-                        Liga {club.liga_id}
-                      </p>
-                    )}
                   </div>
                 </div>
               );

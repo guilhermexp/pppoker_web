@@ -313,9 +313,6 @@ export function PPPokerSignIn() {
                       <span className={`h-1.5 w-1.5 rounded-full ${roleStyle.dot}`} />
                       {roleLabel}
                     </span>
-                    <span className="text-xs text-white/30">
-                      {club.memberCount} membros
-                    </span>
                     {club.ligaId && (
                       <span className="text-xs text-white/30">
                         Liga {club.ligaId}
