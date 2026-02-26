@@ -3,7 +3,7 @@
 import type { ArtifactStage, ArtifactType } from "@/lib/artifact-config";
 import { getSectionFromStage } from "@/lib/artifact-config";
 import { extractBankAccountRequired } from "@/lib/chat-utils";
-import type { AgentStatus } from "@/types/agents";
+import type { AgentProgress, AgentStatus } from "@/types/agents";
 import { useArtifacts } from "@ai-sdk-tools/artifacts/client";
 import { useDataPart } from "@ai-sdk-tools/store";
 import type { ChatStatus, ToolUIPart, UIMessage } from "ai";
@@ -11,6 +11,7 @@ import { useMemo } from "react";
 
 interface ChatStatusResult {
   agentStatus: AgentStatus | null;
+  agentProgressText: string | null;
   currentToolCall: string | null;
   hasTextContent: boolean;
   artifactStage: ArtifactStage | null;
@@ -32,6 +33,7 @@ export function useChatStatus(
   status: ChatStatus,
 ): ChatStatusResult {
   const [agentStatusData] = useDataPart<AgentStatus>("agent-status");
+  const [agentProgressData] = useDataPart<AgentProgress>("agent-progress");
   const [{ current }] = useArtifacts({
     exclude: ["chat-title", "suggestions"],
   });
@@ -56,6 +58,7 @@ export function useChatStatus(
     if (messages.length === 0) {
       return {
         agentStatus: agentStatusData,
+        agentProgressText: agentProgressData?.text?.trim() || null,
         currentToolCall: null,
         hasTextContent: false,
         artifactStage,
@@ -69,6 +72,7 @@ export function useChatStatus(
     if (lastMessage?.role !== "assistant") {
       return {
         agentStatus: agentStatusData,
+        agentProgressText: agentProgressData?.text?.trim() || null,
         currentToolCall: null,
         hasTextContent: false,
         artifactStage,
@@ -158,6 +162,7 @@ export function useChatStatus(
 
     return {
       agentStatus,
+      agentProgressText: agentProgressData?.text?.trim() || null,
       currentToolCall: finalToolCall,
       hasTextContent,
       artifactStage,
@@ -165,7 +170,7 @@ export function useChatStatus(
       currentSection,
       bankAccountRequired,
     };
-  }, [messages, status, agentStatusData, current]);
+  }, [messages, status, agentStatusData, agentProgressData, current]);
 
   return result;
 }

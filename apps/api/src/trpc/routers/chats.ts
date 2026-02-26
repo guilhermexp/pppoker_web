@@ -5,6 +5,7 @@ import {
   listChatsSchema,
 } from "@api/schemas/chat";
 import { createTRPCRouter, protectedProcedure } from "@api/trpc/init";
+import { TRPCError } from "@trpc/server";
 
 interface RedisMessage {
   role?: string;
@@ -51,6 +52,17 @@ export const chatsRouter = createTRPCRouter({
     }),
 
   get: protectedProcedure.input(getChatSchema).query(async ({ ctx, input }) => {
+    const scopedUserId = `${ctx.session.user.id}:${ctx.teamId}`;
+    const chat = await memoryProvider.getChat(input.chatId);
+    const chatOwnerId =
+      chat && typeof chat === "object"
+        ? (chat as Record<string, unknown>).userId
+        : undefined;
+
+    if (!chat || chatOwnerId !== scopedUserId) {
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }
+
     const raw = await memoryProvider.getMessages({
       chatId: input.chatId,
       limit: 50,
@@ -62,7 +74,18 @@ export const chatsRouter = createTRPCRouter({
 
   delete: protectedProcedure
     .input(deleteChatSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      const scopedUserId = `${ctx.session.user.id}:${ctx.teamId}`;
+      const chat = await memoryProvider.getChat(input.chatId);
+      const chatOwnerId =
+        chat && typeof chat === "object"
+          ? (chat as Record<string, unknown>).userId
+          : undefined;
+
+      if (!chat || chatOwnerId !== scopedUserId) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
       return memoryProvider.deleteChat(input.chatId);
     }),
 });

@@ -2,6 +2,7 @@
 
 import { Canvas } from "@/components/canvas";
 import { ApprovalCard, type ApprovalData } from "@/components/chat/approval-card";
+import { ChatProgressTimeline } from "@/components/chat/chat-progress-timeline";
 import { useSidebarPinned } from "@/components/sidebar-context";
 import { useChatInterface } from "@/hooks/use-chat-interface";
 import { useChatStatus } from "@/hooks/use-chat-status";
@@ -300,6 +301,7 @@ export function ChatInterface({ geo }: Props) {
 
   const {
     agentStatus,
+    agentProgressText,
     currentToolCall,
     artifactStage,
     artifactType,
@@ -441,6 +443,7 @@ export function ChatInterface({ geo }: Props) {
                     )}
                     <ChatStatusIndicators
                       agentStatus={agentStatus}
+                      agentProgressText={agentProgressText}
                       currentToolCall={currentToolCall}
                       status={status}
                       artifactStage={artifactStage}
@@ -466,6 +469,16 @@ export function ChatInterface({ geo }: Props) {
             showCanvas ? "right-0 md:right-[600px]" : "right-0",
           )}
         >
+          <ChatProgressTimeline
+            status={status}
+            agentStatus={agentStatus}
+            agentProgressText={agentProgressText}
+            currentToolCall={currentToolCall}
+            artifactStage={artifactStage}
+            artifactType={artifactType}
+            currentSection={currentSection}
+            bankAccountRequired={bankAccountRequired}
+          />
           <ChatInput />
         </div>
       </div>

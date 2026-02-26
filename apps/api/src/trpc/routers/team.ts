@@ -232,6 +232,14 @@ export const teamRouter = createTRPCRouter({
   create: authProcedure
     .input(createTeamSchema)
     .mutation(async ({ ctx: { session }, input }) => {
+      void session;
+      void input;
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message:
+          "Criação manual de organização desabilitada. No PPPoker, apenas Dono/Gestor pode criar organização via login e seleção do clube.",
+      });
+
       const requestId = `trpc_team_create_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       logger.info(
@@ -548,6 +556,30 @@ export const teamRouter = createTRPCRouter({
     .input(updatePokerSettingsSchema)
     .mutation(async ({ ctx: { teamId }, input }) => {
       const supabase = await createAdminClient();
+      const { data: currentTeam, error: currentTeamError } = await supabase
+        .from("teams")
+        .select("poker_club_id")
+        .eq("id", teamId)
+        .single();
+
+      if (currentTeamError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to load current poker settings: ${currentTeamError.message}`,
+        });
+      }
+
+      const currentClubId = currentTeam?.poker_club_id ?? null;
+      if (input.pokerClubId !== undefined) {
+        const incomingClubId = input.pokerClubId ?? null;
+        if (currentClubId && incomingClubId !== currentClubId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "O clube vinculado da organização é imutável. Use o login PPPoker do clube correto.",
+          });
+        }
+      }
 
       const updateData: Record<string, unknown> = {};
       if (input.pokerPlatform !== undefined)

@@ -459,6 +459,26 @@ async function persistToRedis(
   if (!chatId || !userText) return;
   try {
     const now = new Date();
+    const existingChat = await memoryProvider.getChat(chatId);
+    const existingChatOwnerId =
+      existingChat && typeof existingChat === "object"
+        ? (existingChat as Record<string, unknown>).userId
+        : undefined;
+
+    // Prevent cross-user/team contamination when a client sends a reused chatId.
+    if (
+      typeof existingChatOwnerId === "string" &&
+      existingChatOwnerId &&
+      existingChatOwnerId !== userId
+    ) {
+      console.warn("[nanobot] blocked chat persistence due to owner mismatch", {
+        chatId,
+        expectedOwner: existingChatOwnerId,
+        receivedOwner: userId,
+      });
+      return;
+    }
+
     await memoryProvider.saveMessage({
       chatId,
       userId,
@@ -473,7 +493,6 @@ async function persistToRedis(
       content: assistantText,
       timestamp: now,
     });
-    const existingChat = await memoryProvider.getChat(chatId);
     await memoryProvider.saveChat({
       chatId,
       userId,

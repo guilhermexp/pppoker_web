@@ -18,6 +18,18 @@ interface BridgeClub {
   liga_id: number | null;
 }
 
+const CLUB_CREATOR_ROLE_NUMS = new Set([1, 2]); // Dono, Gestor
+
+function canCreateOrganizationForClub(club: BridgeClub | undefined): boolean {
+  return club ? CLUB_CREATOR_ROLE_NUMS.has(club.user_role_num) : false;
+}
+
+function mapTeamRoleFromClubRole(
+  club: BridgeClub | undefined,
+): "owner" | "member" {
+  return canCreateOrganizationForClub(club) ? "owner" : "member";
+}
+
 async function fetchBridgeClubs(
   username: string,
   password: string,
@@ -52,32 +64,60 @@ async function findOrCreateTeamForClub(
   userId: string,
   clubId: number,
   clubData: BridgeClub | undefined,
-  username: string,
-  password: string,
   mappedEmail: string,
 ) {
   const clubIdStr = String(clubId);
   const clubName = clubData?.club_name ?? `Clube ${clubId}`;
+  const userTeamRole = mapTeamRoleFromClubRole(clubData);
 
-  // Look for an existing DEDICATED team for this club (poker_club_id matches)
-  // that the user belongs to
-  const { data: userTeams } = await adminDb
-    .from("users_on_team")
-    .select("team_id")
-    .eq("user_id", userId);
+  // Look for an existing DEDICATED team for this club globally.
+  // We want 1 club = 1 organization.
+  const { data: dedicatedTeam } = await adminDb
+    .from("teams")
+    .select("id")
+    .eq("poker_club_id", clubIdStr)
+    .maybeSingle();
 
-  if (userTeams && userTeams.length > 0) {
-    const teamIds = userTeams.map((ut) => ut.team_id);
-    const { data: dedicatedTeam } = await adminDb
-      .from("teams")
-      .select("id")
-      .in("id", teamIds)
-      .eq("poker_club_id", clubIdStr)
+  if (dedicatedTeam) {
+    const { data: existingLink } = await adminDb
+      .from("users_on_team")
+      .select("id, role")
+      .eq("user_id", userId)
+      .eq("team_id", dedicatedTeam.id)
       .maybeSingle();
 
-    if (dedicatedTeam) {
-      return dedicatedTeam.id;
+    if (!existingLink) {
+      const { error: linkError } = await adminDb.from("users_on_team").insert({
+        user_id: userId,
+        team_id: dedicatedTeam.id,
+        role: userTeamRole,
+      });
+
+      if (linkError) {
+        logger.error({ error: linkError }, "Failed to link user to existing club team");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Falha ao vincular usuário à organização do clube.",
+        });
+      }
+    } else if (userTeamRole === "owner" && existingLink.role !== "owner") {
+      // Upgrade membership if PPPoker role is owner/manager
+      await adminDb
+        .from("users_on_team")
+        .update({ role: "owner" })
+        .eq("id", existingLink.id);
     }
+
+    return dedicatedTeam.id;
+  }
+
+  // No dedicated team exists yet: only club owner/manager may create it.
+  if (!canCreateOrganizationForClub(clubData)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "Somente Dono ou Gestor do clube pode criar a organização deste clube no sistema.",
+    });
   }
 
   // No dedicated team — create one
@@ -86,6 +126,11 @@ async function findOrCreateTeamForClub(
     .insert({
       name: clubName,
       email: mappedEmail,
+      poker_platform: "pppoker",
+      poker_club_id: clubIdStr,
+      poker_club_name: clubName,
+      poker_entity_type: clubData?.liga_id ? "clube_liga" : "clube_privado",
+      poker_liga_id: clubData?.liga_id ? String(clubData.liga_id) : null,
     })
     .select("id")
     .single();
@@ -110,7 +155,7 @@ async function findOrCreateTeamForClub(
     await adminDb.from("users_on_team").insert({
       user_id: userId,
       team_id: newTeam.id,
-      role: "owner",
+      role: userTeamRole,
     });
   }
 
@@ -293,14 +338,19 @@ export const pppokerAuthRouter = createTRPCRouter({
 
       // --- Find or create a DEDICATED team for the selected club ---
       const selectedClub = bridgeClubs.find((c) => c.club_id === clubId);
+      if (!selectedClub) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Clube selecionado não encontrado na conta PPPoker informada. Faça login novamente e selecione um clube válido.",
+        });
+      }
 
       const teamId = await findOrCreateTeamForClub(
         adminDb,
         userId,
         clubId,
         selectedClub,
-        username,
-        password,
         mappedEmail,
       );
 

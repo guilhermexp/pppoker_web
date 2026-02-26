@@ -21,6 +21,10 @@ export type AgentStatus = {
     | "research"
     | "general";
 };
+
+export type AgentProgress = {
+  text: string;
+};
 /**
  * Extended data parts interface with application-specific data
  *
@@ -30,6 +34,7 @@ export type AgentStatus = {
 export interface AppDataParts extends AgentDataParts {
   // Override the agent-status with our extended type
   "agent-status": AgentStatus;
+  "agent-progress": AgentProgress;
 }
 
 export type AgentUIMessage = BaseAgentUIMessage<never, AppDataParts>;
