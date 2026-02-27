@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/error-boundary";
 import { TeamsTable } from "@/components/tables/teams";
 import { TeamsSkeleton } from "@/components/tables/teams/skeleton";
 import { prefetch, trpc } from "@/trpc/server";
@@ -13,8 +14,10 @@ export default function Teams() {
   prefetch(trpc.user.invites.queryOptions());
 
   return (
-    <Suspense fallback={<TeamsSkeleton />}>
-      <TeamsTable />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<TeamsSkeleton />}>
+        <TeamsTable />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

@@ -4,6 +4,7 @@ import type {
   LeagueValidationResult,
   ParsedLeagueSummary,
 } from "@/lib/poker/league-types";
+import { formatCurrency, formatNumberPtBR } from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
@@ -337,9 +338,6 @@ export function LeagueGeralDaLigaTab({
       </p>
     );
   }
-
-  const formatCurrency = (value: number) =>
-    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <div className="space-y-6 pb-4">
@@ -807,11 +805,9 @@ function formatValue(
 
   switch (type) {
     case "currency":
-      return typeof value === "number"
-        ? value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-        : "-";
+      return typeof value === "number" ? formatCurrency(value) : "-";
     case "number":
-      return typeof value === "number" ? value.toLocaleString("pt-BR") : "-";
+      return typeof value === "number" ? formatNumberPtBR(value) : "-";
     case "id":
       return String(value);
     default:

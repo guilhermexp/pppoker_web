@@ -1,4 +1,5 @@
-import { createTRPCRouter } from "../../init";
+import { checkBridgeHealth } from "@api/lib/bridge";
+import { createTRPCRouter, protectedProcedure } from "../../init";
 import { pokerAnalyticsRouter } from "./analytics";
 import { pokerClubDataRouter } from "./club-data";
 import { pokerImportsRouter } from "./imports";
@@ -12,6 +13,7 @@ import { pokerTransactionsRouter } from "./transactions";
 import { pokerWeekPeriodsRouter } from "./week-periods";
 
 export const pokerRouter = createTRPCRouter({
+  bridgeHealth: protectedProcedure.query(() => checkBridgeHealth()),
   players: pokerPlayersRouter,
   sessions: pokerSessionsRouter,
   settlements: pokerSettlementsRouter,

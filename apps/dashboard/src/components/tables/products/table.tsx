@@ -42,7 +42,32 @@ export function DataTable() {
 
   const deleteProductMutation = useMutation(
     trpc.invoiceProducts.delete.mutationOptions({
-      onSuccess: () => {
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.invoiceProducts.get.queryKey(),
+        });
+        const previous = queryClient.getQueryData(
+          trpc.invoiceProducts.get.queryKey(),
+        );
+        queryClient.setQueriesData(
+          { queryKey: trpc.invoiceProducts.get.queryKey() },
+          (old: any) => {
+            if (!old) return old;
+            // Data is a flat array of products
+            return old.filter((item: any) => item.id !== id);
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueriesData(
+            { queryKey: trpc.invoiceProducts.get.queryKey() },
+            context.previous,
+          );
+        }
+      },
+      onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.invoiceProducts.get.queryKey(),
         });

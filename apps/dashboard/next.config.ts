@@ -24,6 +24,15 @@ const config = {
     "@midpoker/invoice",
     "@midpoker/api",
   ],
+  experimental: {
+    optimizePackageImports: [
+      "@midpoker/ui",
+      "recharts",
+      "lucide-react",
+      "react-icons",
+      "date-fns",
+    ],
+  },
   serverExternalPackages: ["@react-pdf/renderer", "pdfjs-dist"],
   typescript: {
     ignoreBuildErrors: true,

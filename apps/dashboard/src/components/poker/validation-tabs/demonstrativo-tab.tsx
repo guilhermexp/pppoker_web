@@ -1,6 +1,10 @@
 "use client";
 
 import type { ParsedDemonstrativo } from "@/lib/poker/types";
+import {
+  formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
@@ -22,14 +26,6 @@ const TYPE_COLORS: Record<string, string> = {
   Rake: "#EF4444",
   Outros: "#6B7280",
 };
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatNumber(value: number): string {
-  return value.toLocaleString("pt-BR");
-}
 
 function formatDateTime(dateStr: string): string {
   try {

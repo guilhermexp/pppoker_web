@@ -7,7 +7,11 @@ import { useSortParams } from "@/hooks/use-sort-params";
 import { useTableScroll } from "@/hooks/use-table-scroll";
 import { useTRPC } from "@/trpc/client";
 import { Table, TableBody } from "@midpoker/ui/table";
-import { useMutation, useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -24,6 +28,7 @@ export function DataTable() {
   const { ref, inView } = useInView();
   const { setParams } = useCustomerParams();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { filter, hasFilters } = useCustomerFilterParams();
   const { params } = useSortParams();
 
@@ -45,13 +50,45 @@ export function DataTable() {
     },
   );
 
-  const { data, fetchNextPage, hasNextPage, refetch } =
+  const { data, fetchNextPage, hasNextPage } =
     useSuspenseInfiniteQuery(infiniteQueryOptions);
 
   const deleteCustomerMutation = useMutation(
     trpc.customers.delete.mutationOptions({
-      onSuccess: () => {
-        refetch();
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.customers.get.infiniteQueryKey(),
+        });
+        const previous = queryClient.getQueryData(
+          trpc.customers.get.infiniteQueryKey(),
+        );
+        queryClient.setQueriesData(
+          { queryKey: trpc.customers.get.infiniteQueryKey() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                data: page.data.filter((item: any) => item.id !== id),
+              })),
+            };
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueriesData(
+            { queryKey: trpc.customers.get.infiniteQueryKey() },
+            context.previous,
+          );
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.customers.get.infiniteQueryKey(),
+        });
       },
     }),
   );

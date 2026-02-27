@@ -1,6 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
+import { formatPercentPrecise as formatPercent } from "@/utils/format";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,10 +37,6 @@ type RakebackEditDialogProps = {
   currentPercent: number;
   onConfirmTemporary: (agentId: string, percent: number) => void;
 };
-
-function formatPercent(value: number): string {
-  return `${value.toFixed(2)}%`;
-}
 
 export function RakebackEditDialog({
   open,

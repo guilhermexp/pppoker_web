@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency, formatPercent } from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
@@ -34,19 +35,6 @@ const VARIABLE_SUGGESTIONS = [
   { id: "bonus", name: "Bônus" },
   { id: "chippix", name: "Chippix" },
 ];
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatPercent(value: number) {
-  return `${value.toFixed(1)}%`;
-}
 
 export function DespesasTab({
   totalRake,

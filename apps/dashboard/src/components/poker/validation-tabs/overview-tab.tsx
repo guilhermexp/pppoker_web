@@ -1,6 +1,7 @@
 "use client";
 
 import type { ValidationResult } from "@/lib/poker/types";
+import { formatCurrency } from "@/utils/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -132,11 +133,4 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr;
   }
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
 }

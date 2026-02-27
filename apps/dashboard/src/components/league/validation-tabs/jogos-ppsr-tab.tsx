@@ -1,6 +1,10 @@
 "use client";
 
 import type { ParsedLeagueJogoPPSR } from "@/lib/league/types";
+import {
+  formatDecimal as formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import {
@@ -37,18 +41,6 @@ interface LeagueJogosPPSRTabProps {
 }
 
 const ITEMS_PER_PAGE = 50;
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "decimal",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
-}
 
 // Memoized game content
 const JogoContent = memo(function JogoContent({

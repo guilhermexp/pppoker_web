@@ -327,7 +327,6 @@ export function AuthPage() {
             <PPPokerSignIn />
           </div>
 
-
           <p className="text-muted-foreground mt-8 text-sm">
             By signing in you agree to our{" "}
             <a

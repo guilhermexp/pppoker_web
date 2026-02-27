@@ -39,8 +39,12 @@ export default async function PokerImportPage() {
         </div>
 
         <ErrorBoundary>
-          <Suspense fallback={<div className="h-16 animate-pulse bg-muted rounded" />}>
-            <ClientOnly fallback={<div className="h-16 animate-pulse bg-muted rounded" />}>
+          <Suspense
+            fallback={<div className="h-16 animate-pulse bg-muted rounded" />}
+          >
+            <ClientOnly
+              fallback={<div className="h-16 animate-pulse bg-muted rounded" />}
+            >
               <SyncStatusBanner />
             </ClientOnly>
           </Suspense>

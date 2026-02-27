@@ -54,9 +54,11 @@ export default async function PokerAgentsPage(props: Props) {
           </p>
         </div>
 
-        <Suspense fallback={<PokerAgentsStatsSkeleton />}>
-          <PokerAgentsStats />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PokerAgentsStatsSkeleton />}>
+            <PokerAgentsStats />
+          </Suspense>
+        </ErrorBoundary>
 
         <PokerAgentsHeader />
 

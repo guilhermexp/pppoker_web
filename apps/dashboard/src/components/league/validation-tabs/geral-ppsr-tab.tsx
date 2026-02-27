@@ -1,6 +1,7 @@
 "use client";
 
 import type { ParsedLeagueGeralPPSRBloco } from "@/lib/league/types";
+import { formatDecimal as formatCurrency } from "@/utils/format";
 import { Badge } from "@midpoker/ui/badge";
 import {
   Collapsible,
@@ -20,14 +21,6 @@ import { useState } from "react";
 
 interface LeagueGeralPPSRTabProps {
   data: ParsedLeagueGeralPPSRBloco[];
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "decimal",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 export function LeagueGeralPPSRTab({ data }: LeagueGeralPPSRTabProps) {

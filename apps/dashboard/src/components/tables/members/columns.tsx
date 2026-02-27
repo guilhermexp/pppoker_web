@@ -92,18 +92,22 @@ export const columns: ColumnDef<TeamMember>[] = [
                 {row.original.user?.fullName}
               </span>
               {!isInternal && (
-                <span className="text-sm text-[#606060]">
-                  {email}
-                </span>
+                <span className="text-sm text-[#606060]">{email}</span>
               )}
               {pppokerNumericId && (
                 <div className="flex items-center gap-2 text-xs text-[#606060]">
                   <span>
-                    ID: <span className="font-mono font-medium text-foreground">{pppokerNumericId}</span>
+                    ID:{" "}
+                    <span className="font-mono font-medium text-foreground">
+                      {pppokerNumericId}
+                    </span>
                   </span>
                   {pokerClubId && (
                     <span>
-                      Clube: <span className="font-mono font-medium text-foreground">{pokerClubId}</span>
+                      Clube:{" "}
+                      <span className="font-mono font-medium text-foreground">
+                        {pokerClubId}
+                      </span>
                     </span>
                   )}
                 </div>

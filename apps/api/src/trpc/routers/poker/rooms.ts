@@ -1,30 +1,11 @@
-import { TRPCError } from "@trpc/server";
+import {
+  PPPOKER_BRIDGE_URL,
+  bridgeFetch,
+  getBridgeCredentials,
+} from "@api/lib/bridge";
 import { z } from "@hono/zod-openapi";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-import { createAdminClient } from "@api/services/supabase";
-
-const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
-
-async function getBridgeCredentials(teamId: string) {
-  const supabase = await createAdminClient();
-  const { data } = await supabase
-    .from("pppoker_club_connections")
-    .select("club_id, pppoker_username, pppoker_password")
-    .eq("team_id", teamId)
-    .in("sync_status", ["active", "error"])
-    .limit(1)
-    .single();
-
-  if (!data) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Nenhuma conexao PPPoker encontrada. Faca login novamente.",
-    });
-  }
-
-  return data;
-}
 
 const prizeSchema = z
   .object({
@@ -85,14 +66,12 @@ export const pokerRoomsRouter = createTRPCRouter({
     .query(async ({ input, ctx: { teamId } }) => {
       const creds = await getBridgeCredentials(teamId!);
 
-      const url = new URL(
-        `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/rooms`,
-      );
+      const url = new URL(`${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/rooms`);
       if (input.onlyActive) {
         url.searchParams.set("only_active", "true");
       }
 
-      const resp = await fetch(url.toString(), {
+      const resp = await bridgeFetch(url.toString(), {
         headers: {
           "X-PPPoker-Username": creds.pppoker_username,
           "X-PPPoker-Password": creds.pppoker_password,

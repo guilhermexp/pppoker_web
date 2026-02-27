@@ -53,8 +53,12 @@ export function TableHeader({ tableScroll }: Props) {
               onClick={() => createSortQuery("nickname")}
             >
               <span>Membro</span>
-              {"nickname" === column && value === "asc" && <ArrowDown size={16} />}
-              {"nickname" === column && value === "desc" && <ArrowUp size={16} />}
+              {"nickname" === column && value === "asc" && (
+                <ArrowDown size={16} />
+              )}
+              {"nickname" === column && value === "desc" && (
+                <ArrowUp size={16} />
+              )}
             </Button>
             {tableScroll?.isScrollable && (
               <HorizontalPagination
@@ -75,8 +79,12 @@ export function TableHeader({ tableScroll }: Props) {
             onClick={() => createSortQuery("pppoker_id")}
           >
             <span>PPPoker ID</span>
-            {"pppoker_id" === column && value === "asc" && <ArrowDown size={16} />}
-            {"pppoker_id" === column && value === "desc" && <ArrowUp size={16} />}
+            {"pppoker_id" === column && value === "asc" && (
+              <ArrowDown size={16} />
+            )}
+            {"pppoker_id" === column && value === "desc" && (
+              <ArrowUp size={16} />
+            )}
           </Button>
         </TableHead>
 
@@ -95,8 +103,12 @@ export function TableHeader({ tableScroll }: Props) {
             onClick={() => createSortQuery("created_at")}
           >
             <span>Entrada</span>
-            {"created_at" === column && value === "asc" && <ArrowDown size={16} />}
-            {"created_at" === column && value === "desc" && <ArrowUp size={16} />}
+            {"created_at" === column && value === "asc" && (
+              <ArrowDown size={16} />
+            )}
+            {"created_at" === column && value === "desc" && (
+              <ArrowUp size={16} />
+            )}
           </Button>
         </TableHead>
 
@@ -107,8 +119,12 @@ export function TableHeader({ tableScroll }: Props) {
             onClick={() => createSortQuery("credit_limit")}
           >
             <span>Credito</span>
-            {"credit_limit" === column && value === "asc" && <ArrowDown size={16} />}
-            {"credit_limit" === column && value === "desc" && <ArrowUp size={16} />}
+            {"credit_limit" === column && value === "asc" && (
+              <ArrowDown size={16} />
+            )}
+            {"credit_limit" === column && value === "desc" && (
+              <ArrowUp size={16} />
+            )}
           </Button>
         </TableHead>
 
@@ -119,8 +135,12 @@ export function TableHeader({ tableScroll }: Props) {
             onClick={() => createSortQuery("current_balance")}
           >
             <span>Saldo</span>
-            {"current_balance" === column && value === "asc" && <ArrowDown size={16} />}
-            {"current_balance" === column && value === "desc" && <ArrowUp size={16} />}
+            {"current_balance" === column && value === "asc" && (
+              <ArrowDown size={16} />
+            )}
+            {"current_balance" === column && value === "desc" && (
+              <ArrowUp size={16} />
+            )}
           </Button>
         </TableHead>
 

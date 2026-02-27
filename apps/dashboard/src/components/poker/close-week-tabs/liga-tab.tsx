@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency, formatPercent } from "@/utils/format";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
@@ -17,19 +18,6 @@ type LigaTabProps = {
   };
   onLeagueFeeChange?: (percent: number) => void;
 };
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatPercent(value: number) {
-  return `${value.toFixed(1)}%`;
-}
 
 export function LigaTab({
   stats,

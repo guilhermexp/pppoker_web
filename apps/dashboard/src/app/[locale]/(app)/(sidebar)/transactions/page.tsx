@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/error-boundary";
 import { DataTable } from "@/components/tables/transactions/data-table";
 import { Loading } from "@/components/tables/transactions/loading";
 import { TransactionsActions } from "@/components/transactions-actions";
@@ -42,9 +43,11 @@ export default async function Transactions(props: Props) {
         <TransactionsActions />
       </div>
 
-      <Suspense fallback={<Loading />}>
-        <DataTable columnVisibility={columnVisibility} />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<Loading />}>
+          <DataTable columnVisibility={columnVisibility} />
+        </Suspense>
+      </ErrorBoundary>
     </HydrateClient>
   );
 }

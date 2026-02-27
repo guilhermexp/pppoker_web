@@ -1402,7 +1402,8 @@ export default {
     },
     members: {
       title: "Membros",
-      description: "Gerencie membros do clube, aprovacoes e solicitacoes de credito",
+      description:
+        "Gerencie membros do clube, aprovacoes e solicitacoes de credito",
     },
     contador: {
       title: "Contador",
@@ -2186,7 +2187,8 @@ export default {
       gateway_connected: "Conectado",
       gateway_disconnected: "Desconectado",
       gateway_connecting: "Conectando...",
-      gateway_creating_sandbox: "Preparando ambiente seguro... isso pode levar ate 1 minuto",
+      gateway_creating_sandbox:
+        "Preparando ambiente seguro... isso pode levar ate 1 minuto",
       gateway_connect_whatsapp: "Conectar WhatsApp",
       gateway_scan_qr: "Escaneie o QR code com seu WhatsApp para vincular",
       gateway_cancel: "Cancelar",

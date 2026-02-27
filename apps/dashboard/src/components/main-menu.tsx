@@ -7,7 +7,7 @@ import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type MenuChildItem = {
   path: string;
@@ -219,7 +219,9 @@ const ChildItem = ({
           showChild ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2",
         )}
         style={{
-          transitionDelay: showChild ? `${40 + index * 20}ms` : `${index * 20}ms`,
+          transitionDelay: showChild
+            ? `${40 + index * 20}ms`
+            : `${index * 20}ms`,
         }}
       >
         <span
@@ -414,12 +416,22 @@ export function MainMenu({
   const { isChatPage } = useChatInterface();
   const { data: user } = useUserQuery();
   const t = useI18n();
-  const items = getItems(t, user?.team?.name || undefined);
-  const primaryItems = items.filter((item) => item.path !== "/settings");
-  const footerItems =
-    settingsPlacement === "in-menu"
-      ? items.filter((item) => item.path === "/settings")
-      : [];
+  const pokerSectionName = user?.team?.name || undefined;
+  const items = useMemo(
+    () => getItems(t, pokerSectionName),
+    [t, pokerSectionName],
+  );
+  const primaryItems = useMemo(
+    () => items.filter((item) => item.path !== "/settings"),
+    [items],
+  );
+  const footerItems = useMemo(
+    () =>
+      settingsPlacement === "in-menu"
+        ? items.filter((item) => item.path === "/settings")
+        : [],
+    [items, settingsPlacement],
+  );
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   // Check if current pathname is a known menu path (including sub-paths)
@@ -525,8 +537,15 @@ export function SettingsMenuItem({
   const { isChatPage } = useChatInterface();
   const { data: user } = useUserQuery();
   const t = useI18n();
-  const items = getItems(t, user?.team?.name || undefined);
-  const settingsItem = items.find((item) => item.path === "/settings");
+  const pokerSectionName = user?.team?.name || undefined;
+  const items = useMemo(
+    () => getItems(t, pokerSectionName),
+    [t, pokerSectionName],
+  );
+  const settingsItem = useMemo(
+    () => items.find((item) => item.path === "/settings"),
+    [items],
+  );
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   useEffect(() => {

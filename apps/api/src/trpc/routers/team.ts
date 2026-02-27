@@ -758,9 +758,10 @@ export const teamRouter = createTRPCRouter({
         });
       }
 
-      const exportSettings = data?.export_settings as
-        | Record<string, unknown>
-        | null;
+      const exportSettings = data?.export_settings as Record<
+        string,
+        unknown
+      > | null;
       return normalizeInfinitePaySettings(exportSettings?.infinitepay);
     },
   ),
@@ -933,9 +934,10 @@ export const teamRouter = createTRPCRouter({
         });
       }
 
-      const exportSettings = data?.export_settings as
-        | Record<string, unknown>
-        | null;
+      const exportSettings = data?.export_settings as Record<
+        string,
+        unknown
+      > | null;
       return normalizeFastchipsServiceSettings(
         exportSettings?.fastchips_service,
       );

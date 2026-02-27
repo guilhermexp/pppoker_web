@@ -9,7 +9,14 @@ import { Input } from "@midpoker/ui/input";
 import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Button } from "@midpoker/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, RefreshCw, ChevronDown, ChevronRight, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  AlertCircle,
+} from "lucide-react";
 import { useEffect, useDeferredValue, useMemo, useRef, useState } from "react";
 
 type LiveMember = {
@@ -136,7 +143,9 @@ function AgenteSubCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-medium">{agent.nome}</p>
-          <p className="text-[10px] text-muted-foreground font-mono">ID: {agent.uid}</p>
+          <p className="text-[10px] text-muted-foreground font-mono">
+            ID: {agent.uid}
+          </p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <span
@@ -212,7 +221,9 @@ function SuperAgenteCard({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{sa.nome}</p>
-          <p className="text-xs text-muted-foreground font-mono">ID: {sa.uid}</p>
+          <p className="text-xs text-muted-foreground font-mono">
+            ID: {sa.uid}
+          </p>
         </div>
 
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
@@ -252,7 +263,9 @@ function SuperAgenteCard({
         <div className="flex flex-col gap-1 border-t border-white/5 p-2">
           {agentesVinculados.length === 0 ? (
             <div className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">Nenhum agente vinculado</p>
+              <p className="text-xs text-muted-foreground">
+                Nenhum agente vinculado
+              </p>
             </div>
           ) : (
             agentesVinculados.map((agent) => (
@@ -306,7 +319,8 @@ export function SuperAgentesPage() {
   const syncFailed = syncMutation.isError;
 
   const allMembers = useMemo(
-    () => (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
+    () =>
+      (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
     [data],
   );
 
@@ -364,7 +378,10 @@ export function SuperAgentesPage() {
 
   const stats = useMemo(() => {
     const online = superAgentes.filter((m) => m.online).length;
-    const saldoTotal = superAgentes.reduce((sum, m) => sum + (m.saldo_caixa ?? 0), 0);
+    const saldoTotal = superAgentes.reduce(
+      (sum, m) => sum + (m.saldo_caixa ?? 0),
+      0,
+    );
     return { total: superAgentes.length, online, saldoTotal };
   }, [superAgentes]);
 
@@ -390,7 +407,9 @@ export function SuperAgentesPage() {
           </span>
           <div className="min-w-0 leading-none">
             <p className="font-mono text-sm font-medium">{stats.total}</p>
-            <p className="text-[10px] text-muted-foreground truncate">Super Agentes</p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              Super Agentes
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-2">
@@ -398,7 +417,9 @@ export function SuperAgentesPage() {
             <Icons.Customers className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className="font-mono text-sm font-medium text-green-600">{stats.online}</p>
+            <p className="font-mono text-sm font-medium text-green-600">
+              {stats.online}
+            </p>
             <p className="text-[10px] text-muted-foreground truncate">Online</p>
           </div>
         </div>
@@ -407,15 +428,19 @@ export function SuperAgentesPage() {
             <Icons.Currency className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className={cn(
-              "font-mono text-sm font-medium",
-              stats.saldoTotal > 0 && "text-green-600",
-              stats.saldoTotal < 0 && "text-red-600",
-              stats.saldoTotal === 0 && "text-muted-foreground",
-            )}>
+            <p
+              className={cn(
+                "font-mono text-sm font-medium",
+                stats.saldoTotal > 0 && "text-green-600",
+                stats.saldoTotal < 0 && "text-red-600",
+                stats.saldoTotal === 0 && "text-muted-foreground",
+              )}
+            >
               {formatBalance(stats.saldoTotal)}
             </p>
-            <p className="text-[10px] text-muted-foreground truncate">Saldo total</p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              Saldo total
+            </p>
           </div>
         </div>
       </div>
@@ -452,9 +477,21 @@ export function SuperAgentesPage() {
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
           { key: "todos", label: "Todos", count: superAgentes.length },
-          { key: "online", label: "Online", count: superAgentes.filter((m) => m.online).length },
-          { key: "positivo", label: "Saldo +", count: superAgentes.filter((m) => (m.saldo_caixa ?? 0) > 0).length },
-          { key: "negativo", label: "Saldo -", count: superAgentes.filter((m) => (m.saldo_caixa ?? 0) < 0).length },
+          {
+            key: "online",
+            label: "Online",
+            count: superAgentes.filter((m) => m.online).length,
+          },
+          {
+            key: "positivo",
+            label: "Saldo +",
+            count: superAgentes.filter((m) => (m.saldo_caixa ?? 0) > 0).length,
+          },
+          {
+            key: "negativo",
+            label: "Saldo -",
+            count: superAgentes.filter((m) => (m.saldo_caixa ?? 0) < 0).length,
+          },
         ].map((f) => (
           <button
             key={f.key}
@@ -480,7 +517,9 @@ export function SuperAgentesPage() {
             <div className="flex flex-col items-center py-16 text-center">
               <Icons.Customers className="mb-3 h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {search ? "Nenhum super agente encontrado" : "Nenhum super agente neste filtro"}
+                {search
+                  ? "Nenhum super agente encontrado"
+                  : "Nenhum super agente neste filtro"}
               </p>
             </div>
           ) : (

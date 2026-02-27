@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency, formatPercent } from "@/utils/format";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
 import { format, parseISO } from "date-fns";
@@ -56,14 +57,6 @@ type ResumoTabProps = {
   summaries?: Summary[];
   sessions?: Session[];
 };
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatPercent(value: number) {
-  return `${value.toFixed(1)}%`;
-}
 
 function formatWeekRange(start: string, end: string) {
   const startDate = parseISO(start);

@@ -13,9 +13,7 @@ export default async function PokerLobbyPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="pt-6">
-        <h1 className="text-2xl font-medium">
-          {t("poker.lobby.title")}
-        </h1>
+        <h1 className="text-2xl font-medium">{t("poker.lobby.title")}</h1>
         <p className="text-muted-foreground mt-1">
           {t("poker.lobby.description")}
         </p>

@@ -79,7 +79,14 @@ interface MemoizedChatMessageProps {
   message: Omit<UIMessage, "parts">;
   parts: UIMessage["parts"];
   isMessageFinished: boolean;
-  user: { avatarUrl?: string | null; fullName?: string | null; email?: string | null } | null | undefined;
+  user:
+    | {
+        avatarUrl?: string | null;
+        fullName?: string | null;
+        email?: string | null;
+      }
+    | null
+    | undefined;
 }
 
 const MemoizedChatMessage = React.memo(function MemoizedChatMessage({
@@ -98,13 +105,20 @@ const MemoizedChatMessage = React.memo(function MemoizedChatMessage({
     }
     return [];
   }, [parts, message]);
-  const textParts = useMemo(() => safeParts.filter((part) => part.type === "text"), [safeParts]);
+  const textParts = useMemo(
+    () => safeParts.filter((part) => part.type === "text"),
+    [safeParts],
+  );
   const rawTextContent = useMemo(
-    () => textParts.map((part) => (part.type === "text" ? part.text : "")).join(""),
+    () =>
+      textParts.map((part) => (part.type === "text" ? part.text : "")).join(""),
     [textParts],
   );
   const textContent = useMemo(
-    () => message.role === "assistant" ? normalizeAssistantText(rawTextContent) : rawTextContent,
+    () =>
+      message.role === "assistant"
+        ? normalizeAssistantText(rawTextContent)
+        : rawTextContent,
     [message.role, rawTextContent],
   );
 
@@ -118,10 +132,16 @@ const MemoizedChatMessage = React.memo(function MemoizedChatMessage({
     return [...new Map(allSources.map((s) => [s.url, s])).values()];
   }, [safeParts]);
 
-  const bankAccountRequired = useMemo(() => extractBankAccountRequired(safeParts), [safeParts]);
+  const bankAccountRequired = useMemo(
+    () => extractBankAccountRequired(safeParts),
+    [safeParts],
+  );
 
   const artifactType = useMemo(
-    () => message.role === "assistant" ? extractArtifactTypeFromMessage(safeParts) : null,
+    () =>
+      message.role === "assistant"
+        ? extractArtifactTypeFromMessage(safeParts)
+        : null,
     [message.role, safeParts],
   );
 

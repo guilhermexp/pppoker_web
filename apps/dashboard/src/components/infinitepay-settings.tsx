@@ -39,7 +39,12 @@ const PAYMENT_TIMEOUT_SECONDS = 5 * 60; // 5 minutes
 type TestState =
   | { step: "idle" }
   | { step: "testing" }
-  | { step: "waiting_payment"; checkoutUrl: string; orderNsu: string; startedAt: number }
+  | {
+      step: "waiting_payment";
+      checkoutUrl: string;
+      orderNsu: string;
+      startedAt: number;
+    }
   | { step: "approved" }
   | { step: "timeout" }
   | { step: "error"; message: string };
@@ -116,12 +121,7 @@ function PaymentPoller({
           <Icons.Time className="h-4 w-4" />
           <span>Tempo restante: {formatCountdown(remaining)}</span>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           Cancelar
         </Button>
       </div>
@@ -260,7 +260,9 @@ function InfinitePaySettingsForm() {
             {/* Test Flow */}
             <div className="space-y-3">
               {/* Step 1: Test button */}
-              {(testState.step === "idle" || testState.step === "error" || testState.step === "timeout") && (
+              {(testState.step === "idle" ||
+                testState.step === "error" ||
+                testState.step === "timeout") && (
                 <div className="space-y-2">
                   <Button
                     type="button"
@@ -326,14 +328,13 @@ function InfinitePaySettingsForm() {
             </div>
 
             {/* Show current status if already configured */}
-            {isAlreadyConfigured &&
-              testState.step === "idle" && (
-                <div className="rounded-lg border border-green-500/30 p-4 bg-green-500/5">
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                    Ativo - Handle: {data.handle}
-                  </p>
-                </div>
-              )}
+            {isAlreadyConfigured && testState.step === "idle" && (
+              <div className="rounded-lg border border-green-500/30 p-4 bg-green-500/5">
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                  Ativo - Handle: {data.handle}
+                </p>
+              </div>
+            )}
           </CardContent>
 
           <CardFooter className="flex justify-between">

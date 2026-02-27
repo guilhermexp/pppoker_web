@@ -6,6 +6,7 @@ import {
   matchTournaments,
 } from "@/lib/league/tournament-matching";
 import type { TournamentScheduleData } from "@/lib/league/tournament-schedule";
+import { formatNumberPtBR as formatNumber } from "@/utils/format";
 import {
   Card,
   CardContent,
@@ -26,10 +27,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { StoredTournament } from "./grade-tab";
 
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
-}
 
 export function AnaliseTab({
   realizedData,

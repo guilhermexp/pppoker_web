@@ -1,8 +1,5 @@
 "use client";
 
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
-
 export interface CanvasPdfOptions {
   filename?: string;
   quality?: number;
@@ -17,6 +14,8 @@ export interface CanvasPdfOptions {
 export async function generateCanvasPdf(
   options: CanvasPdfOptions = {},
 ): Promise<void> {
+  const html2canvas = (await import("html2canvas")).default;
+
   const {
     filename = "report.pdf",
     quality = 1.0,
@@ -132,6 +131,8 @@ export async function generateCanvasPdf(
 export async function generateCanvasPdfBlob(
   options: CanvasPdfOptions = {},
 ): Promise<Blob> {
+  const html2canvas = (await import("html2canvas")).default;
+
   const {
     filename = "report.pdf",
     quality = 1.0,
@@ -254,6 +255,8 @@ async function createPdfFromCanvas(
     backgroundRgb: { r: number; g: number; b: number };
   },
 ): Promise<void> {
+  const { jsPDF } = await import("jspdf");
+
   // Use JPEG for better compression while maintaining quality
   const imgData = canvas.toDataURL("image/jpeg", options.quality);
 
@@ -319,6 +322,8 @@ async function createPdfBlobFromCanvas(
     backgroundRgb: { r: number; g: number; b: number };
   },
 ): Promise<Blob> {
+  const { jsPDF } = await import("jspdf");
+
   // Use JPEG for better compression while maintaining quality
   const imgData = canvas.toDataURL("image/jpeg", options.quality);
 

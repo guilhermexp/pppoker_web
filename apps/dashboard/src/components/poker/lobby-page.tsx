@@ -80,10 +80,21 @@ const GAME_TYPE_COLORS: Record<string, string> = {
   ShortDeck: "bg-orange-500/15 text-orange-400 border-orange-500/20",
 };
 
-const STATUS_CONFIG: Record<number, { label: string; color: string; dot: string }> = {
+const STATUS_CONFIG: Record<
+  number,
+  { label: string; color: string; dot: string }
+> = {
   0: { label: "Idle", color: "text-gray-400", dot: "bg-gray-400" },
-  1: { label: "Registrando", color: "text-yellow-400", dot: "bg-yellow-400 animate-pulse" },
-  2: { label: "Rodando", color: "text-green-400", dot: "bg-green-400 animate-pulse" },
+  1: {
+    label: "Registrando",
+    color: "text-yellow-400",
+    dot: "bg-yellow-400 animate-pulse",
+  },
+  2: {
+    label: "Rodando",
+    color: "text-green-400",
+    dot: "bg-green-400 animate-pulse",
+  },
   3: { label: "Finalizado", color: "text-red-400", dot: "bg-red-400" },
 };
 
@@ -94,7 +105,8 @@ function statusInfo(status: number) {
 function formatChips(value: number) {
   if (value === 0) return "-";
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(value % 1000 === 0 ? 0 : 1)}K`;
+  if (value >= 1_000)
+    return `${(value / 1_000).toFixed(value % 1000 === 0 ? 0 : 1)}K`;
   return value.toLocaleString("pt-BR");
 }
 
@@ -146,15 +158,30 @@ function sortRooms(rooms: Room[], key: SortKey, dir: SortDir): Room[] {
 function StatsBar({ rooms }: { rooms: Room[] }) {
   const active = rooms.filter((r) => r.is_running).length;
   const totalPlayers = rooms.reduce((s, r) => s + r.current_players, 0);
-  const totalRegistered = rooms.reduce((s, r) => s + (r.is_tournament ? r.registered : 0), 0);
-  const tournaments = rooms.filter((r) => r.is_tournament && r.status !== 3).length;
+  const totalRegistered = rooms.reduce(
+    (s, r) => s + (r.is_tournament ? r.registered : 0),
+    0,
+  );
+  const tournaments = rooms.filter(
+    (r) => r.is_tournament && r.status !== 3,
+  ).length;
   const cashGames = rooms.filter((r) => !r.is_tournament).length;
 
   const stats = [
     { icon: LayoutGrid, label: "Total", value: rooms.length, sub: null },
     { icon: Zap, label: "Ativas", value: active, sub: null },
-    { icon: Users, label: "Jogadores", value: totalPlayers, sub: totalRegistered > 0 ? `+${totalRegistered} reg` : null },
-    { icon: Trophy, label: "Torneios", value: tournaments, sub: cashGames > 0 ? `${cashGames} cash` : null },
+    {
+      icon: Users,
+      label: "Jogadores",
+      value: totalPlayers,
+      sub: totalRegistered > 0 ? `+${totalRegistered} reg` : null,
+    },
+    {
+      icon: Trophy,
+      label: "Torneios",
+      value: tournaments,
+      sub: cashGames > 0 ? `${cashGames} cash` : null,
+    },
   ];
 
   return (
@@ -186,15 +213,20 @@ function StatsBar({ rooms }: { rooms: Room[] }) {
 
 function RoomCard({ room }: { room: Room }) {
   const si = statusInfo(room.status);
-  const gameColor = GAME_TYPE_COLORS[room.game_type] ?? "bg-muted text-muted-foreground border-border";
-  const playerPercent = room.max_players > 0 ? (room.current_players / room.max_players) * 100 : 0;
+  const gameColor =
+    GAME_TYPE_COLORS[room.game_type] ??
+    "bg-muted text-muted-foreground border-border";
+  const playerPercent =
+    room.max_players > 0 ? (room.current_players / room.max_players) * 100 : 0;
 
   return (
-    <Card className={cn(
-      "overflow-hidden transition-colors",
-      room.is_running && "border-green-500/20",
-      room.status === 1 && "border-yellow-500/20",
-    )}>
+    <Card
+      className={cn(
+        "overflow-hidden transition-colors",
+        room.is_running && "border-green-500/20",
+        room.status === 1 && "border-yellow-500/20",
+      )}
+    >
       <CardContent className="p-4 space-y-3">
         {/* Header: name + badges */}
         <div className="flex items-start justify-between gap-2">
@@ -207,7 +239,12 @@ function RoomCard({ room }: { room: Room }) {
             </p>
           </div>
           <div className="flex gap-1 flex-shrink-0">
-            <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold border", gameColor)}>
+            <span
+              className={cn(
+                "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold border",
+                gameColor,
+              )}
+            >
               {room.game_type}
             </span>
           </div>
@@ -216,8 +253,12 @@ function RoomCard({ room }: { room: Room }) {
         {/* Status + players row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className={cn("h-2 w-2 rounded-full flex-shrink-0", si.dot)} />
-            <span className={cn("text-xs font-medium", si.color)}>{si.label}</span>
+            <span
+              className={cn("h-2 w-2 rounded-full flex-shrink-0", si.dot)}
+            />
+            <span className={cn("text-xs font-medium", si.color)}>
+              {si.label}
+            </span>
           </div>
           <div className="flex items-center gap-1.5 text-xs">
             <Users className="h-3.5 w-3.5 text-muted-foreground" />
@@ -237,7 +278,11 @@ function RoomCard({ room }: { room: Room }) {
           <div
             className={cn(
               "h-full rounded-full transition-all",
-              playerPercent >= 80 ? "bg-red-500" : playerPercent >= 50 ? "bg-yellow-500" : "bg-green-500",
+              playerPercent >= 80
+                ? "bg-red-500"
+                : playerPercent >= 50
+                  ? "bg-yellow-500"
+                  : "bg-green-500",
             )}
             style={{ width: `${Math.min(playerPercent, 100)}%` }}
           />
@@ -249,20 +294,30 @@ function RoomCard({ room }: { room: Room }) {
             <div className="flex items-center gap-1">
               <DollarSign className="h-3 w-3 text-muted-foreground" />
               <span className="text-muted-foreground">Buy-in:</span>
-              <span className="font-medium font-mono">{formatChips(room.buy_in)}</span>
+              <span className="font-medium font-mono">
+                {formatChips(room.buy_in)}
+              </span>
               {room.fee > 0 && (
-                <span className="text-muted-foreground">+{formatChips(room.fee)}</span>
+                <span className="text-muted-foreground">
+                  +{formatChips(room.fee)}
+                </span>
               )}
             </div>
           )}
           {(() => {
             // For tournaments, calculate rake from fee/buy_in (f95 is unreliable)
-            const rakePercent = room.is_tournament && room.buy_in > 0 && room.fee > 0
-              ? Math.round((room.fee / room.buy_in) * 100)
-              : room.rake > 0 && room.rake <= 50 ? room.rake : null;
+            const rakePercent =
+              room.is_tournament && room.buy_in > 0 && room.fee > 0
+                ? Math.round((room.fee / room.buy_in) * 100)
+                : room.rake > 0 && room.rake <= 50
+                  ? room.rake
+                  : null;
             return rakePercent != null && rakePercent > 0 ? (
               <span className="text-muted-foreground">
-                Rake: <span className="text-foreground font-medium">{rakePercent}%</span>
+                Rake:{" "}
+                <span className="text-foreground font-medium">
+                  {rakePercent}%
+                </span>
               </span>
             ) : null;
           })()}
@@ -273,34 +328,52 @@ function RoomCard({ room }: { room: Room }) {
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {room.guaranteed > 0 && (
               <span>
-                GTD: <span className="text-foreground font-medium font-mono">{formatChips(room.guaranteed)}</span>
+                GTD:{" "}
+                <span className="text-foreground font-medium font-mono">
+                  {formatChips(room.guaranteed)}
+                </span>
               </span>
             )}
             {room.starting_chips > 0 && (
               <span>
-                Stack: <span className="text-foreground font-medium font-mono">{formatChips(room.starting_chips)}</span>
+                Stack:{" "}
+                <span className="text-foreground font-medium font-mono">
+                  {formatChips(room.starting_chips)}
+                </span>
               </span>
             )}
             {room.prize && room.prize.total > 0 && (
               <span>
-                Prize: <span className="text-foreground font-medium font-mono">{formatChips(room.prize.total)}</span>
+                Prize:{" "}
+                <span className="text-foreground font-medium font-mono">
+                  {formatChips(room.prize.total)}
+                </span>
               </span>
             )}
             {room.blind_duration > 0 && (
               <span className="flex items-center gap-1">
                 <Timer className="h-3 w-3" />
-                Blinds: <span className="text-foreground font-medium">{formatBlindDuration(room.blind_duration)}</span>
+                Blinds:{" "}
+                <span className="text-foreground font-medium">
+                  {formatBlindDuration(room.blind_duration)}
+                </span>
               </span>
             )}
             {!!room.late_reg_level && room.late_reg_level > 0 && (
               <span>
-                Late reg: <span className="text-foreground font-medium">Nv. {room.late_reg_level}</span>
+                Late reg:{" "}
+                <span className="text-foreground font-medium">
+                  Nv. {room.late_reg_level}
+                </span>
               </span>
             )}
             {!!room.re_entry_min && room.re_entry_min > 0 && (
               <span className="flex items-center gap-1">
                 <RotateCcw className="h-3 w-3" />
-                Re-entry: <span className="text-foreground font-medium">{room.re_entry_min}min</span>
+                Re-entry:{" "}
+                <span className="text-foreground font-medium">
+                  {room.re_entry_min}min
+                </span>
               </span>
             )}
           </div>
@@ -366,11 +439,12 @@ function SortControls({
             )}
           >
             {opt.label}
-            {isActive && (
-              sortDir === "asc"
-                ? <ChevronUp className="h-3 w-3" />
-                : <ChevronDown className="h-3 w-3" />
-            )}
+            {isActive &&
+              (sortDir === "asc" ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              ))}
           </button>
         );
       })}
@@ -445,10 +519,7 @@ export function LobbyPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const { data, isLoading, isError, dataUpdatedAt } = useQuery(
-    trpc.poker.rooms.getLive.queryOptions(
-      {},
-      { refetchInterval: 30_000 },
-    ),
+    trpc.poker.rooms.getLive.queryOptions({}, { refetchInterval: 30_000 }),
   );
   const lastUpdate = useLastUpdate(dataUpdatedAt);
 
@@ -523,9 +594,7 @@ export function LobbyPage() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="todas">
-            Todas ({rooms.length})
-          </TabsTrigger>
+          <TabsTrigger value="todas">Todas ({rooms.length})</TabsTrigger>
           <TabsTrigger value="ativas">
             Ativas ({rooms.filter((r) => r.is_running).length})
           </TabsTrigger>

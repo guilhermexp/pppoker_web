@@ -25,9 +25,12 @@ import { Skeleton } from "@midpoker/ui/skeleton";
 import { useToast } from "@midpoker/ui/use-toast";
 import { Suspense, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import * as XLSX from "xlsx";
+import type * as XLSX from "xlsx";
 import { ImportsList } from "./imports-list";
 import { LeagueImportValidationModal } from "./league-import-validation-modal";
+
+// Lazily-loaded XLSX module (populated before any parsing function is called)
+let _XLSX: typeof XLSX;
 
 // columnLetterToIndex, getCellValue, calculateFormula, parseSheetByPosition, toNumber
 // imported from @/lib/poker/parsers
@@ -272,7 +275,7 @@ function parseClubIdentifier(identifier: string | null): ParsedClubInfo {
 // Column A contains club identifier (merged cells spanning multiple rows)
 // Column I contains "Total" for club total rows (should be skipped)
 function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  const range = _XLSX.utils.decode_range(sheet["!ref"] || "A1");
   const result: ParsedSummary[] = [];
 
   // Build a map of merged cells in column A to find club identifiers
@@ -290,7 +293,7 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
       // This is a merged cell starting in column A
       const startRow = merge.s.r;
       const endRow = merge.e.r;
-      const cell = sheet[XLSX.utils.encode_cell({ r: startRow, c: 0 })];
+      const cell = sheet[_XLSX.utils.encode_cell({ r: startRow, c: 0 })];
       if (cell?.v) {
         clubRanges.push({
           startRow,
@@ -332,7 +335,7 @@ function parseGeralSheet(sheet: XLSX.Sheet): ParsedSummary[] {
 
     // Read all columns for this row
     for (const [field, colIdx] of Object.entries(GERAL_COLUMNS)) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
+      const cellAddress = _XLSX.utils.encode_cell({ r: row, c: colIdx });
       const cell = sheet[cellAddress];
 
       let value = null;
@@ -516,7 +519,7 @@ function parseTransacoesSheet(sheet: XLSX.Sheet): ParsedTransaction[] {
 // Parse "Geral de Liga" sheet
 // Structure: Lines 1-2 (description), Line 3 (section headers), Line 4 (column headers), Line 5+ (data)
 function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  const range = _XLSX.utils.decode_range(sheet["!ref"] || "A1");
   const clubs: ParsedLeagueClubRow[] = [];
 
   // Extract period info from merged cell (usually contains "2025/12/08 UTC -4500")
@@ -525,7 +528,7 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
 
   // Try to find period in first few cells of column A
   for (let r = 0; r <= Math.min(range.e.r, 20); r++) {
-    const cell = sheet[XLSX.utils.encode_cell({ r, c: 0 })];
+    const cell = sheet[_XLSX.utils.encode_cell({ r, c: 0 })];
     if (cell?.v) {
       const match = String(cell.v).match(
         /(\d{4}\/\d{2}\/\d{2})\s*UTC\s*(-?\d+)/i,
@@ -547,7 +550,7 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
 
     // Read all columns for this row
     for (const [field, colIdx] of Object.entries(GERAL_DE_LIGA_COLUMNS)) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
+      const cellAddress = _XLSX.utils.encode_cell({ r: row, c: colIdx });
       const cell = sheet[cellAddress];
 
       let value = null;
@@ -827,7 +830,7 @@ function parseGeralDeLigaSheet(sheet: XLSX.Sheet): ParsedLeagueSummary {
 
 // DEBUG: Dump all columns from a sheet to understand structure
 function debugSheetColumns(sheet: XLSX.Sheet, sheetName: string): void {
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  const range = _XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
   console.log(`\n========== DEBUG: ${sheetName} ==========`);
   console.log(`Range: ${sheet["!ref"]}`);
@@ -848,7 +851,7 @@ function debugSheetColumns(sheet: XLSX.Sheet, sheetName: string): void {
   for (let row = 0; row <= Math.min(4, range.e.r); row++) {
     const rowData: string[] = [];
     for (let col = 0; col <= Math.min(range.e.c, 50); col++) {
-      const cell = sheet[XLSX.utils.encode_cell({ r: row, c: col })];
+      const cell = sheet[_XLSX.utils.encode_cell({ r: row, c: col })];
       const val = cell?.v ?? cell?.w ?? "";
       rowData.push(`${colLetter(col)}=${String(val).substring(0, 25)}`);
     }
@@ -861,7 +864,7 @@ function debugSheetColumns(sheet: XLSX.Sheet, sheetName: string): void {
     const rowData: string[] = [];
     let hasData = false;
     for (let col = 0; col <= Math.min(range.e.c, 50); col++) {
-      const cell = sheet[XLSX.utils.encode_cell({ r: row, c: col })];
+      const cell = sheet[_XLSX.utils.encode_cell({ r: row, c: col })];
       const val = cell?.v ?? cell?.w ?? "";
       if (val !== "" && val !== null) hasData = true;
       rowData.push(`${colLetter(col)}=${String(val).substring(0, 20)}`);
@@ -875,8 +878,8 @@ function debugSheetColumns(sheet: XLSX.Sheet, sheetName: string): void {
   // Print all column headers from row 3 (merged section headers) and row 4 (column names)
   console.log("\n--- COLUMN MAPPING (from rows 3-4) ---");
   for (let col = 0; col <= range.e.c; col++) {
-    const cell3 = sheet[XLSX.utils.encode_cell({ r: 2, c: col })];
-    const cell4 = sheet[XLSX.utils.encode_cell({ r: 3, c: col })];
+    const cell3 = sheet[_XLSX.utils.encode_cell({ r: 2, c: col })];
+    const cell4 = sheet[_XLSX.utils.encode_cell({ r: 3, c: col })];
     const header3 = cell3?.v ?? cell3?.w ?? "";
     const header4 = cell4?.v ?? cell4?.w ?? "";
     console.log(
@@ -891,7 +894,7 @@ function debugSheetColumns(sheet: XLSX.Sheet, sheetName: string): void {
 // Based on ParsedDetailed type - 137 columns from A to EG
 // Uses merged cells in column A to identify clubs (same as Geral de Clube)
 function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  const range = _XLSX.utils.decode_range(sheet["!ref"] || "A1");
   const result: ParsedDetailed[] = [];
 
   // DEBUG: Show structure first
@@ -915,7 +918,7 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
   for (const merge of columnAMerges) {
     const startRow = merge.s.r;
     const endRow = merge.e.r;
-    const cellAddress = XLSX.utils.encode_cell({ r: startRow, c: 0 });
+    const cellAddress = _XLSX.utils.encode_cell({ r: startRow, c: 0 });
     const cell = sheet[cellAddress];
     const rawValue = String(cell?.v ?? cell?.w ?? "").trim();
 
@@ -1157,7 +1160,7 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
     let hasValidId = false;
 
     for (const [field, colIdx] of Object.entries(DETALHES_COLUMNS)) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
+      const cellAddress = _XLSX.utils.encode_cell({ r: row, c: colIdx });
       const cell = sheet[cellAddress];
 
       let value = null;
@@ -1477,7 +1480,7 @@ function parseDetalhesDeClubeSheet(sheet: XLSX.Sheet): ParsedDetailed[] {
 // Parse "Partidas" sheet - sessions/games for league
 // Structure is similar to "Jogos PPST" with game headers and player rows
 function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
-  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  const range = _XLSX.utils.decode_range(sheet["!ref"] || "A1");
   const result: ParsedSession[] = [];
 
   // DEBUG: Show structure first
@@ -1522,7 +1525,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   );
 
   for (let row = 0; row <= range.e.r; row++) {
-    const cellB = sheet[XLSX.utils.encode_cell({ r: row, c: 1 })];
+    const cellB = sheet[_XLSX.utils.encode_cell({ r: row, c: 1 })];
     const valB = String(cellB?.v ?? cellB?.w ?? "").trim();
 
     // Check if this is a game ID row
@@ -1532,7 +1535,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     const gameId = gameIdMatch[1];
 
     // Get game info from next row
-    const nextRowB = sheet[XLSX.utils.encode_cell({ r: row + 1, c: 1 })];
+    const nextRowB = sheet[_XLSX.utils.encode_cell({ r: row + 1, c: 1 })];
     const gameInfoStr = String(nextRowB?.v ?? nextRowB?.w ?? "").trim();
 
     // Extract game type (PPST/NLH, PPSR/PLO5, etc.)
@@ -1549,7 +1552,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     const headerRowIdx = row + 2;
     const headerColumns: { col: string; value: string }[] = [];
     for (let col = 0; col <= Math.min(range.e.c, 20); col++) {
-      const cell = sheet[XLSX.utils.encode_cell({ r: headerRowIdx, c: col })];
+      const cell = sheet[_XLSX.utils.encode_cell({ r: headerRowIdx, c: col })];
       const val = String(cell?.v ?? cell?.w ?? "").trim();
       if (val) {
         headerColumns.push({ col: colLetter(col), value: val });
@@ -1561,7 +1564,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     const firstDataColumns: { col: string; value: string }[] = [];
     for (let col = 0; col <= Math.min(range.e.c, 20); col++) {
       const cell =
-        sheet[XLSX.utils.encode_cell({ r: firstDataRowIdx, c: col })];
+        sheet[_XLSX.utils.encode_cell({ r: firstDataRowIdx, c: col })];
       const val = cell?.v ?? cell?.w ?? "";
       if (val !== "" && val !== null) {
         firstDataColumns.push({
@@ -1855,9 +1858,9 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
   // Scan rows looking for session headers and player data
   for (let row = 0; row <= range.e.r; row++) {
     // Get key cells for this row
-    const cellB = sheet[XLSX.utils.encode_cell({ r: row, c: 1 })];
-    const cellG = sheet[XLSX.utils.encode_cell({ r: row, c: 6 })];
-    const cellD = sheet[XLSX.utils.encode_cell({ r: row, c: 3 })];
+    const cellB = sheet[_XLSX.utils.encode_cell({ r: row, c: 1 })];
+    const cellG = sheet[_XLSX.utils.encode_cell({ r: row, c: 6 })];
+    const cellD = sheet[_XLSX.utils.encode_cell({ r: row, c: 3 })];
 
     const valB = String(cellB?.v ?? cellB?.w ?? "").trim();
     const valG = String(cellG?.v ?? cellG?.w ?? "").trim();
@@ -1900,7 +1903,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
       const gameId = gameIdMatch![1];
 
       // Look at next row for game type info
-      const nextRowB = sheet[XLSX.utils.encode_cell({ r: row + 1, c: 1 })];
+      const nextRowB = sheet[_XLSX.utils.encode_cell({ r: row + 1, c: 1 })];
       const gameInfoStr = String(nextRowB?.v ?? nextRowB?.w ?? "").trim();
 
       // Parse game info: "PPST/NLH   Buy-in: 9+1   Premiação Garantida: 1000"
@@ -1983,7 +1986,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
     ) {
       const getNumericValue = (colIdx: number | undefined): number => {
         if (colIdx === undefined) return 0;
-        const cell = sheet[XLSX.utils.encode_cell({ r: row, c: colIdx })];
+        const cell = sheet[_XLSX.utils.encode_cell({ r: row, c: colIdx })];
         if (!cell) return 0;
         let val = cell.v ?? 0;
         if (cell.f && (val === 0 || val === null || val === undefined)) {
@@ -1995,7 +1998,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): ParsedSession[] {
       };
 
       const getStringValue = (colIdx: number): string => {
-        const cell = sheet[XLSX.utils.encode_cell({ r: row, c: colIdx })];
+        const cell = sheet[_XLSX.utils.encode_cell({ r: row, c: colIdx })];
         return String(cell?.v ?? cell?.w ?? "").trim();
       };
 
@@ -2626,11 +2629,14 @@ export function LeagueImportUploader() {
       });
 
       try {
+        // Dynamic import for heavy library
+        _XLSX = await import("xlsx");
+
         update(id, { title: "Lendo arquivo Excel...", progress: 10 });
         const arrayBuffer = await file.arrayBuffer();
 
         update(id, { title: "Parseando planilha...", progress: 25 });
-        const workbook = XLSX.read(arrayBuffer, {
+        const workbook = _XLSX.read(arrayBuffer, {
           type: "array",
           cellFormula: true,
           cellStyles: true,

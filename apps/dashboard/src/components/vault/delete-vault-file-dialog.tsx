@@ -45,10 +45,42 @@ export function DeleteVaultFileDialog({
 
   const deleteDocumentMutation = useMutation(
     trpc.documents.delete.mutationOptions({
-      onMutate: () => {
+      onMutate: async () => {
         setIsDeleting(true);
+        await queryClient.cancelQueries({
+          queryKey: trpc.documents.get.infiniteQueryKey(),
+        });
+        const previous = queryClient.getQueriesData({
+          queryKey: trpc.documents.get.infiniteQueryKey(),
+        });
+        queryClient.setQueriesData(
+          { queryKey: trpc.documents.get.infiniteQueryKey() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                data: page.data.filter((item: any) => item.id !== id),
+              })),
+            };
+          },
+        );
+        return { previous };
       },
       onSuccess: () => {
+        onOpenChange(false);
+      },
+      onError: (_err, _vars, context) => {
+        setIsDeleting(false);
+        if (context?.previous) {
+          for (const [queryKey, data] of context.previous) {
+            queryClient.setQueryData(queryKey, data);
+          }
+        }
+      },
+      onSettled: () => {
+        setIsDeleting(false);
         queryClient.invalidateQueries({
           queryKey: trpc.documents.get.infiniteQueryKey(),
         });
@@ -56,14 +88,6 @@ export function DeleteVaultFileDialog({
         queryClient.invalidateQueries({
           queryKey: trpc.search.global.queryKey(),
         });
-
-        onOpenChange(false);
-      },
-      onError: () => {
-        setIsDeleting(false);
-      },
-      onSettled: () => {
-        setIsDeleting(false);
       },
     }),
   );

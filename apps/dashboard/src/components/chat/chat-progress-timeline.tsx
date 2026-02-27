@@ -125,7 +125,11 @@ export function ChatProgressTimeline({
     if (!isStreaming) return;
     const message = getStatusMessage(agentStatus);
     if (!message) return;
-    appendEntry(message, "status", `status:${agentStatus?.agent}:${agentStatus?.status}`);
+    appendEntry(
+      message,
+      "status",
+      `status:${agentStatus?.agent}:${agentStatus?.status}`,
+    );
   }, [agentStatus, appendEntry, isStreaming]);
 
   useEffect(() => {
@@ -151,7 +155,11 @@ export function ChatProgressTimeline({
       currentSection ?? null,
     );
     if (sectionMessage) {
-      appendEntry(sectionMessage, "artifact", `artifact-section:${artifactType}:${currentSection}`);
+      appendEntry(
+        sectionMessage,
+        "artifact",
+        `artifact-section:${artifactType}:${currentSection}`,
+      );
       return;
     }
     const stageMessage = getArtifactStageMessageForStatus(
@@ -159,7 +167,11 @@ export function ChatProgressTimeline({
       artifactStage ?? null,
     );
     if (stageMessage) {
-      appendEntry(stageMessage, "artifact", `artifact-stage:${artifactType}:${artifactStage}`);
+      appendEntry(
+        stageMessage,
+        "artifact",
+        `artifact-stage:${artifactType}:${artifactStage}`,
+      );
     }
   }, [appendEntry, artifactStage, artifactType, currentSection, isStreaming]);
 
@@ -171,7 +183,9 @@ export function ChatProgressTimeline({
   }, [isStreaming]);
 
   const elapsedSeconds =
-    startedAt && isStreaming ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
+    startedAt && isStreaming
+      ? Math.max(0, Math.floor((now - startedAt) / 1000))
+      : 0;
   const staleSeconds =
     lastActivityAt && isStreaming
       ? Math.max(0, Math.floor((now - lastActivityAt) / 1000))
@@ -241,4 +255,3 @@ export function ChatProgressTimeline({
     </div>
   );
 }
-

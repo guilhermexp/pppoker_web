@@ -44,8 +44,10 @@ export function FastchipsAgentStatusWidget() {
 
   const isAgentEnabled = nanobotSettings?.enabled ?? false;
   const engine = nanobotStatus?.engine ?? "nanobot";
-  const modelProvider = nanobotSettings?.modelConfig?.provider || nanobotSettings?.provider || "";
-  const modelName = nanobotSettings?.modelConfig?.model || nanobotSettings?.model || "";
+  const modelProvider =
+    nanobotSettings?.modelConfig?.provider || nanobotSettings?.provider || "";
+  const modelName =
+    nanobotSettings?.modelConfig?.model || nanobotSettings?.model || "";
   const modelDisplay = modelName || modelProvider || "Nao configurado";
 
   const whatsappStatus = gatewayData?.whatsapp?.status ?? "desconhecido";
@@ -54,22 +56,21 @@ export function FastchipsAgentStatusWidget() {
   const telegramConnected = telegramStatus === "connected";
   const hasGateway = whatsappConnected || telegramConnected;
 
-  const gatewayLabel = whatsappConnected && telegramConnected
-    ? "WhatsApp + Telegram"
-    : whatsappConnected
-      ? "WhatsApp"
-      : telegramConnected
-        ? "Telegram"
-        : "Nenhum";
+  const gatewayLabel =
+    whatsappConnected && telegramConnected
+      ? "WhatsApp + Telegram"
+      : whatsappConnected
+        ? "WhatsApp"
+        : telegramConnected
+          ? "Telegram"
+          : "Nenhum";
 
   return (
     <BaseWidget
       title="Status do Agente"
       icon={<Icons.TrendingUp className="size-4" />}
       description={
-        <p className="text-sm text-[#666666]">
-          Nanobot AI + Gateway
-        </p>
+        <p className="text-sm text-[#666666]">Nanobot AI + Gateway</p>
       }
       actions="Ver configuracoes"
       onClick={() => {
@@ -82,7 +83,10 @@ export function FastchipsAgentStatusWidget() {
             className={`h-2 w-2 rounded-full flex-shrink-0 ${isAgentEnabled ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
           />
           <span className="text-xs">
-            Agente: <span className="font-medium">{isAgentEnabled ? "Ativo" : "Inativo"}</span>
+            Agente:{" "}
+            <span className="font-medium">
+              {isAgentEnabled ? "Ativo" : "Inativo"}
+            </span>
           </span>
         </div>
 

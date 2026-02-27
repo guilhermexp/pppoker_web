@@ -42,9 +42,7 @@ export function PendingMembersList() {
     return (
       <div className="flex flex-col items-center py-16 text-center">
         <Icons.Customers className="mb-3 h-8 w-8 text-muted-foreground" />
-        <p className="text-sm font-medium">
-          Nenhuma solicitação pendente
-        </p>
+        <p className="text-sm font-medium">Nenhuma solicitação pendente</p>
         <p className="text-sm text-muted-foreground mt-1">
           Novos membros do clube aparecerão aqui para aprovação.
         </p>
@@ -56,7 +54,9 @@ export function PendingMembersList() {
     <div className="space-y-3">
       {requests.map((request) => {
         const initials = request.nickname.slice(0, 2).toUpperCase();
-        const isReviewing = reviewMutation.isPending && reviewMutation.variables?.id === request.id;
+        const isReviewing =
+          reviewMutation.isPending &&
+          reviewMutation.variables?.id === request.id;
 
         return (
           <div
@@ -93,7 +93,8 @@ export function PendingMembersList() {
                   })
                 }
               >
-                {isReviewing && reviewMutation.variables?.action === "rejected" ? (
+                {isReviewing &&
+                reviewMutation.variables?.action === "rejected" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Rejeitar"
@@ -109,7 +110,8 @@ export function PendingMembersList() {
                   })
                 }
               >
-                {isReviewing && reviewMutation.variables?.action === "approved" ? (
+                {isReviewing &&
+                reviewMutation.variables?.action === "approved" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Aprovar"

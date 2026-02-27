@@ -1,6 +1,7 @@
 "use client";
 
 import type { ParsedSummary } from "@/lib/poker/types";
+import { formatCurrency, formatNumberPtBR } from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
@@ -440,20 +441,14 @@ function formatValue(
 
   switch (type) {
     case "currency":
-      return typeof value === "number"
-        ? value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-        : "-";
+      return typeof value === "number" ? formatCurrency(value) : "-";
     case "number":
-      return typeof value === "number" ? value.toLocaleString("pt-BR") : "-";
+      return typeof value === "number" ? formatNumberPtBR(value) : "-";
     case "id":
       return String(value);
     default:
       return String(value) || "-";
   }
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 export function GeneralTab({ summaries }: GeneralTabProps) {

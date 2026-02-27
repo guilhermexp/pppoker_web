@@ -112,16 +112,24 @@ function ensureFormDefaults(
   data: Record<string, unknown>,
 ): NanobotSettingsForm {
   const d = data as Partial<NanobotSettingsForm>;
-  const mc = d.modelConfig ?? ({} as Partial<NanobotSettingsForm["modelConfig"]>);
+  const mc =
+    d.modelConfig ?? ({} as Partial<NanobotSettingsForm["modelConfig"]>);
   const sc = d.soulConfig ?? ({} as Partial<NanobotSettingsForm["soulConfig"]>);
-  const ac = d.agentCmdConfig ?? ({} as Partial<NanobotSettingsForm["agentCmdConfig"]>);
-  const mem = d.memoryConfig ?? ({} as Partial<NanobotSettingsForm["memoryConfig"]>);
-  const sk = d.skillsConfig ?? ({} as Partial<NanobotSettingsForm["skillsConfig"]>);
-  const au = d.automationConfig ?? ({} as Partial<NanobotSettingsForm["automationConfig"]>);
-  const gw = d.gatewayConfig ?? ({} as Partial<NanobotSettingsForm["gatewayConfig"]>);
+  const ac =
+    d.agentCmdConfig ?? ({} as Partial<NanobotSettingsForm["agentCmdConfig"]>);
+  const mem =
+    d.memoryConfig ?? ({} as Partial<NanobotSettingsForm["memoryConfig"]>);
+  const sk =
+    d.skillsConfig ?? ({} as Partial<NanobotSettingsForm["skillsConfig"]>);
+  const au =
+    d.automationConfig ??
+    ({} as Partial<NanobotSettingsForm["automationConfig"]>);
+  const gw =
+    d.gatewayConfig ?? ({} as Partial<NanobotSettingsForm["gatewayConfig"]>);
   const ch = d.channels ?? ({} as Partial<NanobotSettingsForm["channels"]>);
   const mcp = d.mcpConfig ?? ({} as Partial<NanobotSettingsForm["mcpConfig"]>);
-  const pp = mcp.pppoker ?? ({} as Partial<NanobotSettingsForm["mcpConfig"]["pppoker"]>);
+  const pp =
+    mcp.pppoker ?? ({} as Partial<NanobotSettingsForm["mcpConfig"]["pppoker"]>);
 
   return {
     enabled: d.enabled ?? false,
@@ -346,7 +354,9 @@ export function NanobotSettingsPanel() {
 
   useEffect(() => {
     if (settingsQuery.data) {
-      setForm(ensureFormDefaults(settingsQuery.data as Record<string, unknown>));
+      setForm(
+        ensureFormDefaults(settingsQuery.data as Record<string, unknown>),
+      );
     }
   }, [settingsQuery.data]);
 
@@ -753,9 +763,7 @@ export function NanobotSettingsPanel() {
       >
         <div className="rounded-lg border p-4 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge
-              variant={oauthStatus?.connected ? "default" : "secondary"}
-            >
+            <Badge variant={oauthStatus?.connected ? "default" : "secondary"}>
               {oauthStatus?.connected ? "Conectado" : "Desconectado"}
             </Badge>
             <Badge variant="outline">Escopo por time</Badge>
@@ -770,9 +778,9 @@ export function NanobotSettingsPanel() {
           </p>
 
           <p className="text-xs text-amber-600">
-            O OAuth do OpenAI Codex no Nanobot usa o client do modo CLI (callback
-            fixo em `http://localhost:1455/auth/callback`). Em ambiente web
-            remoto ainda nao ha callback web nativo.
+            O OAuth do OpenAI Codex no Nanobot usa o client do modo CLI
+            (callback fixo em `http://localhost:1455/auth/callback`). Em
+            ambiente web remoto ainda nao ha callback web nativo.
           </p>
 
           {oauthStatus?.accountId && (
@@ -800,7 +808,9 @@ export function NanobotSettingsPanel() {
               onClick={startOpenAICodexOAuth}
               disabled={startOAuthMutation.isPending}
             >
-              {oauthStatus?.connected ? "Reconectar OpenAI Codex" : "Conectar OpenAI Codex (OAuth)"}
+              {oauthStatus?.connected
+                ? "Reconectar OpenAI Codex"
+                : "Conectar OpenAI Codex (OAuth)"}
             </Button>
             {oauthStatus?.connected && (
               <Button

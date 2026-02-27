@@ -1,35 +1,14 @@
-import { createAdminClient } from "@api/services/supabase";
+import {
+  PPPOKER_BRIDGE_URL,
+  bridgeFetch,
+  getBridgeCredentials,
+} from "@api/lib/bridge";
 import { triggerSyncForTeam } from "@api/services/pppoker-sync";
+import { createAdminClient } from "@api/services/supabase";
+import { z } from "@hono/zod-openapi";
 import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
-import { z } from "@hono/zod-openapi";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
-
-/**
- * Helper to get bridge credentials for the current team
- */
-async function getBridgeCredentials(teamId: string) {
-  const supabase = await createAdminClient();
-  const { data } = await supabase
-    .from("pppoker_club_connections")
-    .select("club_id, pppoker_username, pppoker_password")
-    .eq("team_id", teamId)
-    .in("sync_status", ["active", "error"])
-    .limit(1)
-    .single();
-
-  if (!data) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Nenhuma conexão PPPoker encontrada. Faça login novamente.",
-    });
-  }
-
-  return data;
-}
 
 async function ensureFastchipsMember(teamId: string, targetPlayerId: number) {
   const supabase = await createAdminClient();
@@ -110,7 +89,7 @@ export const pppokerRouter = createTRPCRouter({
   listMyClubs: protectedProcedure.query(async ({ ctx: { teamId } }) => {
     const creds = await getBridgeCredentials(teamId!);
 
-    const resp = await fetch(`${PPPOKER_BRIDGE_URL}/clubs`, {
+    const resp = await bridgeFetch(`${PPPOKER_BRIDGE_URL}/clubs`, {
       headers: {
         "X-PPPoker-Username": creds.pppoker_username,
         "X-PPPoker-Password": creds.pppoker_password,
@@ -192,7 +171,7 @@ export const pppokerRouter = createTRPCRouter({
     .mutation(async ({ input, ctx: { teamId } }) => {
       const creds = await getBridgeCredentials(teamId!);
 
-      const resp = await fetch(
+      const resp = await bridgeFetch(
         `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/chips/send`,
         {
           method: "POST",
@@ -242,7 +221,7 @@ export const pppokerRouter = createTRPCRouter({
     .mutation(async ({ input, ctx: { teamId } }) => {
       const creds = await getBridgeCredentials(teamId!);
 
-      const resp = await fetch(
+      const resp = await bridgeFetch(
         `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/chips/withdraw`,
         {
           method: "POST",
@@ -290,7 +269,7 @@ export const pppokerRouter = createTRPCRouter({
     .query(async ({ input, ctx: { teamId } }) => {
       const creds = await getBridgeCredentials(teamId!);
 
-      const resp = await fetch(
+      const resp = await bridgeFetch(
         `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/members/${input.memberUid}`,
         {
           headers: {

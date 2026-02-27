@@ -122,20 +122,17 @@ export function useAudioRecording(): UseAudioRecordingReturn {
           data: { session },
         } = await supabase.auth.getSession();
 
-        const response = await fetch(
-          `${apiBaseUrl}/transcription`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session?.access_token}`,
-            },
-            body: JSON.stringify({
-              audio: base64Audio,
-              mimeType: audioBlob.type,
-            }),
+        const response = await fetch(`${apiBaseUrl}/transcription`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
           },
-        );
+          body: JSON.stringify({
+            audio: base64Audio,
+            mimeType: audioBlob.type,
+          }),
+        });
 
         if (!response.ok) {
           const errorText = await response.text();

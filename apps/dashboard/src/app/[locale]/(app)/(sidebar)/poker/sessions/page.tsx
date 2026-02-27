@@ -33,22 +33,23 @@ export default async function PokerSessionsPage(props: Props) {
 
   // Prefetch sessions data - wrapped in try-catch to handle SSR auth errors gracefully
   try {
-    await queryClient.fetchInfiniteQuery(
-      trpc.poker.sessions.get.infiniteQueryOptions({
-        ...filter,
-        sort: sort as [string, string] | null,
-      }),
-    );
-
-    // Prefetch stats for widgets
-    await queryClient.fetchQuery(
-      trpc.poker.sessions.getStats.queryOptions({
-        dateFrom: filter.dateFrom ?? undefined,
-        dateTo: filter.dateTo ?? undefined,
-        sessionType: filter.sessionType ?? undefined,
-        gameVariant: filter.gameVariant ?? undefined,
-      }),
-    );
+    await Promise.all([
+      queryClient.fetchInfiniteQuery(
+        trpc.poker.sessions.get.infiniteQueryOptions({
+          ...filter,
+          sort: sort as [string, string] | null,
+        }),
+      ),
+      // Prefetch stats for widgets
+      queryClient.fetchQuery(
+        trpc.poker.sessions.getStats.queryOptions({
+          dateFrom: filter.dateFrom ?? undefined,
+          dateTo: filter.dateTo ?? undefined,
+          sessionType: filter.sessionType ?? undefined,
+          gameVariant: filter.gameVariant ?? undefined,
+        }),
+      ),
+    ]);
   } catch {
     // SSR prefetch failed, client will fetch via Suspense
   }
@@ -63,9 +64,11 @@ export default async function PokerSessionsPage(props: Props) {
           </p>
         </div>
 
-        <Suspense fallback={<PokerSessionsStatsSkeleton />}>
-          <PokerSessionsStats />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PokerSessionsStatsSkeleton />}>
+            <PokerSessionsStats />
+          </Suspense>
+        </ErrorBoundary>
 
         <PokerSessionsHeader />
 

@@ -1,6 +1,11 @@
 "use client";
 
 import type { ParsedSession } from "@/lib/poker/types";
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import {
   Collapsible,
@@ -56,25 +61,6 @@ type SessionsTabProps = {
 };
 
 const ITEMS_PER_PAGE = 50;
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatCurrencyCompact(value: number): string {
-  // Se for inteiro, não mostra casas decimais
-  if (Number.isInteger(value)) {
-    return value.toLocaleString("pt-BR");
-  }
-  return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatNumber(value: number): string {
-  return value.toLocaleString("pt-BR");
-}
 
 function formatSessionTypeTag(
   type: string,

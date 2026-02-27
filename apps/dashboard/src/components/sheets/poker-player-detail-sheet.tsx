@@ -3,6 +3,7 @@
 import { usePokerPlayerParams } from "@/hooks/use-poker-player-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import { formatDecimal as formatCurrency } from "@/utils/format";
 import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
@@ -64,13 +65,6 @@ function InfoItem({
       <p className="text-sm font-medium">{value ?? "-"}</p>
     </div>
   );
-}
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 function GeneralTab({ player }: { player: any }) {

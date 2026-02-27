@@ -44,113 +44,85 @@
         "req": "pb.GameDataREQ",
         "payload": "empty",
         "score": 115,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "payload": "club",
         "score": 100,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "payload": "club,date,filter0",
         "score": 100,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "payload": "club,date,filter1",
         "score": 100,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "payload": "club,y0..t0",
         "score": 100,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "payload": "export-ish",
         "score": 100,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "payload": "club+room+ymd",
         "score": 100,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "payload": "empty",
         "score": 100,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "payload": "club",
         "score": 100,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "payload": "club,date,filter0",
         "score": 100,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "payload": "club,date,filter1",
         "score": 100,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "payload": "club,y0..t0",
         "score": 100,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "payload": "export-ish",
         "score": 100,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "payload": "club+room+ymd",
         "score": 100,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.UserClubDataREQ",

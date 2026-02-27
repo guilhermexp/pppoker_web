@@ -41,7 +41,39 @@ export function DataTable() {
 
   const deleteCategoryMutation = useMutation(
     trpc.transactionCategories.delete.mutationOptions({
-      onSuccess: () => {
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.transactionCategories.get.queryKey(),
+        });
+        const previous = queryClient.getQueryData(
+          trpc.transactionCategories.get.queryKey(),
+        );
+        queryClient.setQueryData(
+          trpc.transactionCategories.get.queryKey(),
+          (old: any) => {
+            if (!old) return old;
+            // Data is a tree: [{ id, children: [...] }, ...]. Filter parent or child.
+            return old
+              .filter((item: any) => item.id !== id)
+              .map((item: any) => ({
+                ...item,
+                children: item.children
+                  ? item.children.filter((child: any) => child.id !== id)
+                  : item.children,
+              }));
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueryData(
+            trpc.transactionCategories.get.queryKey(),
+            context.previous,
+          );
+        }
+      },
+      onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.transactionCategories.get.queryKey(),
         });

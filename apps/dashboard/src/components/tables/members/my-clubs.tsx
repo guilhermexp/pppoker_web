@@ -89,8 +89,7 @@ export function MyClubs() {
               user_role_num: number;
               liga_id: number | null;
             }) => {
-              const role =
-                ROLE_CONFIG[club.user_role] ?? ROLE_CONFIG.membro!;
+              const role = ROLE_CONFIG[club.user_role] ?? ROLE_CONFIG.membro!;
               const RoleIcon = role.icon;
 
               return (

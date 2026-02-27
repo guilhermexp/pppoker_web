@@ -1,6 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
+import { formatDecimal as formatCurrency } from "@/utils/format";
 import { Badge } from "@midpoker/ui/badge";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
@@ -33,13 +34,6 @@ const transactionTypeColors: Record<string, string> = {
   agent_commission: "bg-pink-500/10 text-pink-600 border-pink-500/20",
   rakeback: "bg-teal-500/10 text-teal-600 border-teal-500/20",
 };
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 export function RecentTransactionsWidget() {
   const trpc = useTRPC();

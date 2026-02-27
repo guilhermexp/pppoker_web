@@ -1,6 +1,7 @@
 "use client";
 
 import type { ParsedDemonstrativo } from "@/lib/poker/types";
+import { formatCurrency } from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
@@ -222,11 +223,4 @@ function formatDateTime(dateStr: string): string {
   } catch {
     return dateStr;
   }
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
 }

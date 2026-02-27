@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/error-boundary";
 import { CategoriesSkeleton } from "@/components/tables/categories/skeleton";
 import { DataTable } from "@/components/tables/categories/table";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
@@ -14,9 +15,11 @@ export default async function Categories() {
   return (
     <div className="max-w-screen-lg">
       <HydrateClient>
-        <Suspense fallback={<CategoriesSkeleton />}>
-          <DataTable />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<CategoriesSkeleton />}>
+            <DataTable />
+          </Suspense>
+        </ErrorBoundary>
       </HydrateClient>
     </div>
   );

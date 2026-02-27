@@ -1,7 +1,15 @@
 "use client";
 
 import type * as React from "react";
-import * as RechartsPrimitive from "recharts";
+import {
+  Area,
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { commonChartConfig } from "./chart-utils";
 
 // Base Chart Wrapper with common styling
@@ -18,20 +26,17 @@ export function BaseChart({
   config?: any;
 }) {
   return (
-    <RechartsPrimitive.ComposedChart data={data} margin={margin}>
-      <RechartsPrimitive.CartesianGrid
-        strokeDasharray="3 3"
-        stroke="var(--chart-grid-stroke)"
-      />
+    <ComposedChart data={data} margin={margin}>
+      <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" />
       {children}
-    </RechartsPrimitive.ComposedChart>
+    </ComposedChart>
   );
 }
 
 // Styled XAxis
 export function StyledXAxis(props: any) {
   return (
-    <RechartsPrimitive.XAxis
+    <XAxis
       axisLine={false}
       tickLine={false}
       tick={{ fill: "var(--chart-axis-text)", fontSize: 10 }}
@@ -43,7 +48,7 @@ export function StyledXAxis(props: any) {
 // Styled YAxis
 export function StyledYAxis(props: any) {
   return (
-    <RechartsPrimitive.YAxis
+    <YAxis
       axisLine={false}
       tickLine={false}
       tick={{ fill: "var(--chart-axis-text)", fontSize: 10 }}
@@ -55,7 +60,7 @@ export function StyledYAxis(props: any) {
 // Styled Area
 export function StyledArea(props: any) {
   return (
-    <RechartsPrimitive.Area
+    <Area
       type="monotone"
       strokeWidth={2}
       isAnimationActive={false}
@@ -67,7 +72,7 @@ export function StyledArea(props: any) {
 // Styled Line
 export function StyledLine(props: any) {
   return (
-    <RechartsPrimitive.Line
+    <Line
       type="monotone"
       strokeWidth={2}
       dot={false}
@@ -79,7 +84,7 @@ export function StyledLine(props: any) {
 
 // Styled Bar
 export function StyledBar(props: any) {
-  return <RechartsPrimitive.Bar {...props} />;
+  return <Bar {...props} />;
 }
 
 // Styled Tooltip

@@ -1,18 +1,10 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
+import { formatCurrency } from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { BaseWidget } from "./base";
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 export function FastchipsSoldWidget() {
   const trpc = useTRPC();
@@ -47,13 +39,18 @@ export function FastchipsSoldWidget() {
         </h2>
         <div className="flex items-center gap-3 text-xs text-[#666666]">
           <span>
-            Enviadas hoje: <span className="font-medium text-foreground">{fichasEnviadasHoje}</span>
+            Enviadas hoje:{" "}
+            <span className="font-medium text-foreground">
+              {fichasEnviadasHoje}
+            </span>
           </span>
           <span>
-            Links: <span className="font-medium text-foreground">{linksGerados}</span>
+            Links:{" "}
+            <span className="font-medium text-foreground">{linksGerados}</span>
           </span>
           <span>
-            Total: <span className="font-medium text-foreground">{totalOrdens}</span>
+            Total:{" "}
+            <span className="font-medium text-foreground">{totalOrdens}</span>
           </span>
         </div>
       </div>

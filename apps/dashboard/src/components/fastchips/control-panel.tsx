@@ -290,7 +290,11 @@ function StatusIndicator({
 function ServiceStatusSection() {
   const t = useI18n();
   const { data: service } = useFastchipsServiceQuery();
-  const { data: gw, loading: gwLoading, refetch: refetchGw } = useGatewayStatus();
+  const {
+    data: gw,
+    loading: gwLoading,
+    refetch: refetchGw,
+  } = useGatewayStatus();
   const [showReconnect, setShowReconnect] = useState(false);
 
   // Runtime status takes priority over persisted DB value.
@@ -332,9 +336,7 @@ function ServiceStatusSection() {
               <div
                 className={cn(
                   "h-2.5 w-2.5 rounded-full",
-                  whatsappActive
-                    ? "bg-green-500"
-                    : "bg-muted-foreground/40",
+                  whatsappActive ? "bg-green-500" : "bg-muted-foreground/40",
                 )}
               />
               <span className="text-sm font-medium">
@@ -491,9 +493,7 @@ export function FastChipsControlPanel() {
                   type="number"
                   min={1}
                   value={minPurchase}
-                  onChange={(e) =>
-                    setMinPurchase(Number(e.target.value) || 0)
-                  }
+                  onChange={(e) => setMinPurchase(Number(e.target.value) || 0)}
                 />
               </div>
             </div>
@@ -511,9 +511,7 @@ export function FastChipsControlPanel() {
                   type="number"
                   min={1}
                   value={minWithdraw}
-                  onChange={(e) =>
-                    setMinWithdraw(Number(e.target.value) || 0)
-                  }
+                  onChange={(e) => setMinWithdraw(Number(e.target.value) || 0)}
                 />
               </div>
             </div>
@@ -527,9 +525,7 @@ export function FastChipsControlPanel() {
                 type="number"
                 min={1}
                 value={dailyLimit}
-                onChange={(e) =>
-                  setDailyLimit(Number(e.target.value) || 0)
-                }
+                onChange={(e) => setDailyLimit(Number(e.target.value) || 0)}
               />
             </div>
 
@@ -571,9 +567,7 @@ export function FastChipsControlPanel() {
                 {mounted ? (
                   <Select
                     value={withdrawType}
-                    onValueChange={(v: "auto" | "manual") =>
-                      setWithdrawType(v)
-                    }
+                    onValueChange={(v: "auto" | "manual") => setWithdrawType(v)}
                   >
                     <SelectTrigger className="max-w-[240px]">
                       <SelectValue />

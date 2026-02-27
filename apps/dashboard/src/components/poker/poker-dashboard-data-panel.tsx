@@ -10,12 +10,7 @@ import { Skeleton } from "@midpoker/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Users,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -121,9 +116,12 @@ function SessionCard({ session }: { session: SessionRow }) {
   const buyIn = session.totalBuyIn ?? 0;
   const players = session.playerCount ?? 0;
   const hands = session.handsPlayed ?? 0;
-  const typeLabel = TYPE_LABELS[session.sessionType ?? ""] ?? session.sessionType ?? "";
-  const typeColor = TYPE_COLORS[session.sessionType ?? ""] ?? "bg-muted text-muted-foreground";
-  const variantLabel = VARIANT_LABELS[session.gameVariant ?? ""] ?? session.gameVariant ?? "";
+  const typeLabel =
+    TYPE_LABELS[session.sessionType ?? ""] ?? session.sessionType ?? "";
+  const typeColor =
+    TYPE_COLORS[session.sessionType ?? ""] ?? "bg-muted text-muted-foreground";
+  const variantLabel =
+    VARIANT_LABELS[session.gameVariant ?? ""] ?? session.gameVariant ?? "";
 
   const time = session.startedAt
     ? new Date(session.startedAt).toLocaleTimeString("pt-BR", {
@@ -251,9 +249,8 @@ export function PokerDashboardDataPanel() {
 
     const spinStats = stats.byType?.["spin"] ?? { count: 0, rake: 0, buyIn: 0 };
     const totalCashOut = (stats as any).totalCashOut ?? 0;
-    const playerWinnings = totalCashOut > 0
-      ? totalCashOut - stats.totalBuyIn
-      : 0;
+    const playerWinnings =
+      totalCashOut > 0 ? totalCashOut - stats.totalBuyIn : 0;
 
     return [
       { label: "Partidas", value: formatNum(stats.totalSessions) },
@@ -326,7 +323,10 @@ export function PokerDashboardDataPanel() {
       )}
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="w-full sm:max-w-lg p-0 bg-background" title="Dados no clube">
+        <SheetContent
+          className="w-full sm:max-w-lg p-0 bg-background"
+          title="Dados no clube"
+        >
           <SheetHeader className="border-b border-border px-6 py-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Dados no clube</h2>
@@ -382,11 +382,7 @@ export function PokerDashboardDataPanel() {
                   >
                     7 d anter.
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="h-9"
-                    onClick={setToday}
-                  >
+                  <Button variant="outline" className="h-9" onClick={setToday}>
                     Hoje
                   </Button>
                 </div>

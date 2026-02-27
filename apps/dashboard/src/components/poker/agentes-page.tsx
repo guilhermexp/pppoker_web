@@ -9,7 +9,14 @@ import { Input } from "@midpoker/ui/input";
 import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Button } from "@midpoker/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, RefreshCw, ChevronDown, ChevronRight, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  AlertCircle,
+} from "lucide-react";
 import { useEffect, useDeferredValue, useMemo, useRef, useState } from "react";
 
 type LiveMember = {
@@ -100,7 +107,9 @@ function DownlineRow({ member }: { member: LiveMember }) {
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-medium">{member.nome}</p>
-        <p className="text-[10px] text-muted-foreground font-mono">ID: {member.uid}</p>
+        <p className="text-[10px] text-muted-foreground font-mono">
+          ID: {member.uid}
+        </p>
       </div>
       <span
         className={cn(
@@ -148,7 +157,9 @@ function AgenteCard({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{agent.nome}</p>
-          <p className="text-xs text-muted-foreground font-mono">ID: {agent.uid}</p>
+          <p className="text-xs text-muted-foreground font-mono">
+            ID: {agent.uid}
+          </p>
           {agent.super_agente_nome && (
             <p className="truncate text-xs text-muted-foreground">
               SA: {agent.super_agente_nome}
@@ -192,7 +203,9 @@ function AgenteCard({
       )}
       {expanded && downlines.length === 0 && (
         <div className="border-t border-white/5 p-3 text-center">
-          <p className="text-xs text-muted-foreground">Nenhum jogador vinculado</p>
+          <p className="text-xs text-muted-foreground">
+            Nenhum jogador vinculado
+          </p>
         </div>
       )}
     </div>
@@ -236,7 +249,8 @@ export function AgentesPage() {
   const syncFailed = syncMutation.isError;
 
   const allMembers = useMemo(
-    () => (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
+    () =>
+      (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
     [data],
   );
 
@@ -250,7 +264,9 @@ export function AgentesPage() {
     for (const agent of agents) {
       map.set(
         agent.uid,
-        allMembers.filter((m) => m.agente_uid === agent.uid && m.papel_num === 10),
+        allMembers.filter(
+          (m) => m.agente_uid === agent.uid && m.papel_num === 10,
+        ),
       );
     }
     return map;
@@ -306,7 +322,9 @@ export function AgentesPage() {
           </span>
           <div className="min-w-0 leading-none">
             <p className="font-mono text-sm font-medium">{stats.total}</p>
-            <p className="text-[10px] text-muted-foreground truncate">Agentes</p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              Agentes
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-2">
@@ -314,7 +332,9 @@ export function AgentesPage() {
             <Icons.Customers className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className="font-mono text-sm font-medium text-green-600">{stats.online}</p>
+            <p className="font-mono text-sm font-medium text-green-600">
+              {stats.online}
+            </p>
             <p className="text-[10px] text-muted-foreground truncate">Online</p>
           </div>
         </div>
@@ -323,15 +343,19 @@ export function AgentesPage() {
             <Icons.Currency className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className={cn(
-              "font-mono text-sm font-medium",
-              stats.saldoTotal > 0 && "text-green-600",
-              stats.saldoTotal < 0 && "text-red-600",
-              stats.saldoTotal === 0 && "text-muted-foreground",
-            )}>
+            <p
+              className={cn(
+                "font-mono text-sm font-medium",
+                stats.saldoTotal > 0 && "text-green-600",
+                stats.saldoTotal < 0 && "text-red-600",
+                stats.saldoTotal === 0 && "text-muted-foreground",
+              )}
+            >
               {formatBalance(stats.saldoTotal)}
             </p>
-            <p className="text-[10px] text-muted-foreground truncate">Saldo total</p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              Saldo total
+            </p>
           </div>
         </div>
       </div>
@@ -368,9 +392,21 @@ export function AgentesPage() {
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
           { key: "todos", label: "Todos", count: agents.length },
-          { key: "online", label: "Online", count: agents.filter((m) => m.online).length },
-          { key: "positivo", label: "Saldo +", count: agents.filter((m) => (m.saldo_caixa ?? 0) > 0).length },
-          { key: "negativo", label: "Saldo -", count: agents.filter((m) => (m.saldo_caixa ?? 0) < 0).length },
+          {
+            key: "online",
+            label: "Online",
+            count: agents.filter((m) => m.online).length,
+          },
+          {
+            key: "positivo",
+            label: "Saldo +",
+            count: agents.filter((m) => (m.saldo_caixa ?? 0) > 0).length,
+          },
+          {
+            key: "negativo",
+            label: "Saldo -",
+            count: agents.filter((m) => (m.saldo_caixa ?? 0) < 0).length,
+          },
         ].map((f) => (
           <button
             key={f.key}
@@ -396,7 +432,9 @@ export function AgentesPage() {
             <div className="flex flex-col items-center py-16 text-center">
               <Icons.Customers className="mb-3 h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {search ? "Nenhum agente encontrado" : "Nenhum agente neste filtro"}
+                {search
+                  ? "Nenhum agente encontrado"
+                  : "Nenhum agente neste filtro"}
               </p>
             </div>
           ) : (

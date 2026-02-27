@@ -1,4 +1,3 @@
-import { createAdminClient } from "@api/services/supabase";
 import {
   addNanobotCronJob,
   dispatchNanobotCronJob,
@@ -9,13 +8,14 @@ import {
   parseNanobotCronScheduleRequest,
   removeNanobotCronJob,
 } from "@api/ai/runtime/nanobot-orchestration";
+import { PPPOKER_BRIDGE_URL, bridgeFetch } from "@api/lib/bridge";
 import type { Context } from "@api/rest/types";
+import { createAdminClient } from "@api/services/supabase";
 import { OpenAPIHono, z } from "@hono/zod-openapi";
+import { decrypt } from "@midpoker/encryption";
 import { withRequiredScope } from "../middleware";
 
 const app = new OpenAPIHono<Context>();
-const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
 const INFINITEPAY_API_URL = "https://api.infinitepay.io";
 
 async function getInfinitePayHandle(teamId: string): Promise<string> {
@@ -26,12 +26,23 @@ async function getInfinitePayHandle(teamId: string): Promise<string> {
     .eq("id", teamId)
     .single();
 
-  const exportSettings = data?.export_settings as Record<string, unknown> | null;
-  const ipSettings = exportSettings?.infinitepay as Record<string, unknown> | undefined;
-  if (ipSettings?.enabled && typeof ipSettings.handle === "string" && ipSettings.handle) {
+  const exportSettings = data?.export_settings as Record<
+    string,
+    unknown
+  > | null;
+  const ipSettings = exportSettings?.infinitepay as
+    | Record<string, unknown>
+    | undefined;
+  if (
+    ipSettings?.enabled &&
+    typeof ipSettings.handle === "string" &&
+    ipSettings.handle
+  ) {
     return ipSettings.handle;
   }
-  throw new Error("InfinitePay não configurado para este time. Configure o handle em Settings > Pagamentos.");
+  throw new Error(
+    "InfinitePay não configurado para este time. Configure o handle em Settings > Pagamentos.",
+  );
 }
 
 const nanobotOrchestrationTools = [
@@ -136,6 +147,21 @@ const infinitepayVerificarSchema = z.object({
   slug: z.string().optional(),
 });
 
+/**
+ * Safely get the plaintext password.
+ * Supports both legacy plaintext and new encrypted (base64) format.
+ */
+function decryptPasswordIfNeeded(stored: string): string {
+  if (stored.length >= 44 && /^[A-Za-z0-9+/]+=*$/.test(stored)) {
+    try {
+      return decrypt(stored);
+    } catch {
+      return stored;
+    }
+  }
+  return stored;
+}
+
 async function getPppokerBridgeCredentials(teamId: string) {
   const supabase = await createAdminClient();
   const { data } = await supabase
@@ -152,7 +178,10 @@ async function getPppokerBridgeCredentials(teamId: string) {
     );
   }
 
-  return data;
+  return {
+    ...data,
+    pppoker_password: decryptPasswordIfNeeded(data.pppoker_password),
+  };
 }
 
 async function ensureFastchipsMember(
@@ -286,7 +315,9 @@ app.get("/payment-status", withRequiredScope("chat.write"), async (c) => {
 
   const { data } = await supabase
     .from("fastchips_payment_orders")
-    .select("status, fichas, capture_method, paid_amount, paid_at, order_nsu, metadata")
+    .select(
+      "status, fichas, capture_method, paid_amount, paid_at, order_nsu, metadata",
+    )
     .eq("team_id", teamId)
     .eq("order_nsu", orderNsu)
     .maybeSingle();
@@ -299,7 +330,10 @@ app.get("/payment-status", withRequiredScope("chat.write"), async (c) => {
     fichas: data?.fichas ?? null,
     capture_method: data?.capture_method ?? null,
     paid_amount: data?.paid_amount ?? null,
-    target_player_id: typeof metadata.target_player_id === "number" ? metadata.target_player_id : null,
+    target_player_id:
+      typeof metadata.target_player_id === "number"
+        ? metadata.target_player_id
+        : null,
   });
 });
 
@@ -496,13 +530,17 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
 
       const ligaId = chipParsed.data.liga_id ?? chipParsed.data.ligaId ?? 3357;
       const orderNsu = chipParsed.data.order_nsu ?? chipParsed.data.orderNsu;
-      const playerName = chipParsed.data.player_nome ?? chipParsed.data.playerNome;
+      const playerName =
+        chipParsed.data.player_nome ?? chipParsed.data.playerNome;
 
       // ── Security: verify payment before sending chips ──────────
       if (parsed.data.toolName === "enviar_fichas") {
         if (!orderNsu) {
           return c.json(
-            { success: false, error: "order_nsu e obrigatorio para enviar fichas." },
+            {
+              success: false,
+              error: "order_nsu e obrigatorio para enviar fichas.",
+            },
             400,
           );
         }
@@ -544,7 +582,7 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
           ? "chips/send"
           : "chips/withdraw";
 
-      const bridgeResp = await fetch(
+      const bridgeResp = await bridgeFetch(
         `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/${bridgePath}`,
         {
           method: "POST",
@@ -616,8 +654,7 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
 
       const infinitePayHandle = await getInfinitePayHandle(teamId);
 
-      const orderNsu =
-        ipParsed.data.order_nsu || `xp_${Date.now()}`;
+      const orderNsu = ipParsed.data.order_nsu || `xp_${Date.now()}`;
       const valorCentavos = Math.round(ipParsed.data.valor_reais * 100);
 
       const checkoutPayload: Record<string, unknown> = {
@@ -633,12 +670,16 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       };
 
       const customer: Record<string, string> = {};
-      if (ipParsed.data.customer_name) customer.name = ipParsed.data.customer_name;
-      if (ipParsed.data.customer_email) customer.email = ipParsed.data.customer_email;
-      if (ipParsed.data.customer_phone) customer.phone_number = ipParsed.data.customer_phone;
+      if (ipParsed.data.customer_name)
+        customer.name = ipParsed.data.customer_name;
+      if (ipParsed.data.customer_email)
+        customer.email = ipParsed.data.customer_email;
+      if (ipParsed.data.customer_phone)
+        customer.phone_number = ipParsed.data.customer_phone;
       if (Object.keys(customer).length > 0) checkoutPayload.customer = customer;
 
-      if (ipParsed.data.redirect_url) checkoutPayload.redirect_url = ipParsed.data.redirect_url;
+      if (ipParsed.data.redirect_url)
+        checkoutPayload.redirect_url = ipParsed.data.redirect_url;
 
       const webhookUrl = process.env.INFINITEPAY_WEBHOOK_URL;
       if (webhookUrl) checkoutPayload.webhook_url = webhookUrl;
@@ -664,7 +705,9 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       }
 
       const ipData = (await ipResp.json()) as Record<string, unknown>;
-      const checkoutUrl = (ipData.checkout_url ?? ipData.url) as string | undefined;
+      const checkoutUrl = (ipData.checkout_url ?? ipData.url) as
+        | string
+        | undefined;
       if (!checkoutUrl) {
         return c.json(
           { success: false, error: "InfinitePay nao retornou URL de checkout" },
@@ -689,7 +732,8 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
           valor_reais: ipParsed.data.valor_reais,
           checkout_url: checkoutUrl,
           slug: slug ?? null,
-          metadata: Object.keys(orderMetadata).length > 0 ? orderMetadata : null,
+          metadata:
+            Object.keys(orderMetadata).length > 0 ? orderMetadata : null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "team_id,order_nsu" },
@@ -725,7 +769,9 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       const supabase = await createAdminClient();
       const { data: dbOrder } = await supabase
         .from("fastchips_payment_orders")
-        .select("status, fichas, transaction_nsu, slug, capture_method, paid_amount, paid_at")
+        .select(
+          "status, fichas, transaction_nsu, slug, capture_method, paid_amount, paid_at",
+        )
         .eq("team_id", teamId)
         .eq("order_nsu", vpParsed.data.order_nsu)
         .maybeSingle();
@@ -795,7 +841,9 @@ app.post("/tools/invoke", withRequiredScope("chat.write"), async (c) => {
       const supabase = await createAdminClient();
       const { data: orders } = await supabase
         .from("fastchips_payment_orders")
-        .select("order_nsu, status, fichas, valor_reais, checkout_url, created_at")
+        .select(
+          "order_nsu, status, fichas, valor_reais, checkout_url, created_at",
+        )
         .eq("team_id", teamId)
         .in("status", ["link_gerado", "pago"])
         .order("created_at", { ascending: false })
@@ -1007,10 +1055,7 @@ app.get("/gateway/status", withRequiredScope("chat.write"), async (c) => {
     const data = await resp.json();
     return c.json(data, resp.status as 200);
   } catch {
-    return c.json(
-      { error: "Failed to connect to nanobot gateway" },
-      502,
-    );
+    return c.json({ error: "Failed to connect to nanobot gateway" }, 502);
   }
 });
 
@@ -1023,10 +1068,7 @@ app.get("/gateway/whatsapp/qr", withRequiredScope("chat.write"), async (c) => {
     );
 
     if (!resp.ok || !resp.body) {
-      return c.json(
-        { error: `Nanobot returned ${resp.status}` },
-        502,
-      );
+      return c.json({ error: `Nanobot returned ${resp.status}` }, 502);
     }
 
     // Proxy SSE stream directly
@@ -1039,10 +1081,7 @@ app.get("/gateway/whatsapp/qr", withRequiredScope("chat.write"), async (c) => {
       },
     });
   } catch {
-    return c.json(
-      { error: "Failed to connect to nanobot gateway" },
-      502,
-    );
+    return c.json({ error: "Failed to connect to nanobot gateway" }, 502);
   }
 });
 
@@ -1063,10 +1102,7 @@ app.post(
       const data = await resp.json();
       return c.json(data, resp.status as 200);
     } catch {
-      return c.json(
-        { error: "Failed to connect to nanobot gateway" },
-        502,
-      );
+      return c.json({ error: "Failed to connect to nanobot gateway" }, 502);
     }
   },
 );
@@ -1084,21 +1120,15 @@ app.post(
     }
 
     try {
-      const resp = await fetch(
-        `${NANOBOT_BASE_URL}/gateway/telegram/connect`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ team_id: teamId, bot_token: botToken }),
-        },
-      );
+      const resp = await fetch(`${NANOBOT_BASE_URL}/gateway/telegram/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ team_id: teamId, bot_token: botToken }),
+      });
       const data = await resp.json();
       return c.json(data, resp.status as 200);
     } catch {
-      return c.json(
-        { error: "Failed to connect to nanobot gateway" },
-        502,
-      );
+      return c.json({ error: "Failed to connect to nanobot gateway" }, 502);
     }
   },
 );

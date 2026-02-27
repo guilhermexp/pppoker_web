@@ -147,9 +147,7 @@ export function CreditRequestsList() {
     return (
       <div className="flex flex-col items-center py-16 text-center">
         <Icons.Invoice className="mb-3 h-8 w-8 text-muted-foreground" />
-        <p className="text-sm font-medium">
-          Nenhuma solicitação de crédito
-        </p>
+        <p className="text-sm font-medium">Nenhuma solicitação de crédito</p>
         <p className="text-sm text-muted-foreground mt-1">
           Solicitações de crédito dos jogadores aparecerão aqui.
         </p>

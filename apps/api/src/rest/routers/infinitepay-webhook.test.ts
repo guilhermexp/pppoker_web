@@ -297,7 +297,8 @@ describe("infinitepay payment_check contract", () => {
 
   it("uses POST endpoint (not GET)", () => {
     // Contract: POST /invoices/public/checkout/payment_check
-    const endpoint = "https://api.infinitepay.io/invoices/public/checkout/payment_check";
+    const endpoint =
+      "https://api.infinitepay.io/invoices/public/checkout/payment_check";
     const method = "POST";
 
     expect(endpoint).toContain("payment_check");

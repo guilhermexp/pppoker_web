@@ -5,6 +5,10 @@ import { usePokerDashboardParams } from "@/hooks/use-poker-dashboard-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import {
+  formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
+import {
   DndContext,
   type DragEndEvent,
   DragOverlay,
@@ -39,19 +43,6 @@ import {
 } from "./poker-widget-provider";
 
 const NUMBER_OF_WIDGETS = 12;
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatNumber(value: number) {
-  return value.toLocaleString("pt-BR");
-}
 
 // Sortable Card Component
 function SortableCard({
@@ -177,7 +168,9 @@ function PendingMembersWidget({ data }: { data: any }) {
         { label: "Novos esta semana", value: newThisWeek },
       ]}
     >
-      <h2 className={`text-2xl font-normal mb-2 ${pendingMembers > 0 ? "text-orange-500" : ""}`}>
+      <h2
+        className={`text-2xl font-normal mb-2 ${pendingMembers > 0 ? "text-orange-500" : ""}`}
+      >
         {formatNumber(pendingMembers)}
       </h2>
     </PokerStatCard>
@@ -203,7 +196,9 @@ function CreditRequestsWidget({ data }: { data: any }) {
         },
       ]}
     >
-      <h2 className={`text-2xl font-normal mb-2 ${pendingCredits > 0 ? "text-orange-500" : ""}`}>
+      <h2
+        className={`text-2xl font-normal mb-2 ${pendingCredits > 0 ? "text-orange-500" : ""}`}
+      >
         {formatNumber(pendingCredits)}
       </h2>
     </PokerStatCard>
@@ -215,7 +210,9 @@ function LiveTablesWidget({ data }: { data: any }) {
   const rooms = lobbyData?.rooms ?? [];
   const totalRooms = rooms.length;
   const activeRooms = rooms.filter((r: any) => r.is_running).length;
-  const tournaments = rooms.filter((r: any) => r.is_tournament && r.status !== 3).length;
+  const tournaments = rooms.filter(
+    (r: any) => r.is_tournament && r.status !== 3,
+  ).length;
   const cashGames = rooms.filter((r: any) => !r.is_tournament).length;
 
   return (
@@ -231,9 +228,7 @@ function LiveTablesWidget({ data }: { data: any }) {
         { label: "Cash", value: cashGames },
       ]}
     >
-      <h2 className="text-2xl font-normal mb-2">
-        {formatNumber(totalRooms)}
-      </h2>
+      <h2 className="text-2xl font-normal mb-2">{formatNumber(totalRooms)}</h2>
     </PokerStatCard>
   );
 }
@@ -242,7 +237,10 @@ function OnlinePlayersWidget({ data }: { data: any }) {
   const lobbyData = data?._lobbyData;
   const memberStats = data?._memberStats;
   const rooms = lobbyData?.rooms ?? [];
-  const playersInRooms = rooms.reduce((s: number, r: any) => s + r.current_players, 0);
+  const playersInRooms = rooms.reduce(
+    (s: number, r: any) => s + r.current_players,
+    0,
+  );
   const registeredInTournaments = rooms.reduce(
     (s: number, r: any) => s + (r.is_tournament ? r.registered : 0),
     0,
@@ -257,7 +255,11 @@ function OnlinePlayersWidget({ data }: { data: any }) {
       action="Ver lobby"
       actionHref="/poker/lobby"
       breakdown={[
-        { label: "Online no clube", value: onlineClub, color: "green" as const },
+        {
+          label: "Online no clube",
+          value: onlineClub,
+          color: "green" as const,
+        },
         { label: "Nas mesas", value: playersInRooms, color: "blue" as const },
         ...(registeredInTournaments > 0
           ? [{ label: "Registrados torneios", value: registeredInTournaments }]
@@ -293,7 +295,15 @@ function FastchipsSoldWidget({ data }: { data: any }) {
         },
         { label: "Enviadas hoje", value: fichasEnviadasHoje },
         { label: "Total enviadas", value: fichasEnviadasTotal },
-        ...(pagos > 0 ? [{ label: "Aguardando envio", value: pagos, color: "orange" as const }] : []),
+        ...(pagos > 0
+          ? [
+              {
+                label: "Aguardando envio",
+                value: pagos,
+                color: "orange" as const,
+              },
+            ]
+          : []),
       ]}
     >
       <h2 className="text-2xl font-normal mb-2 text-green-500">
@@ -657,9 +667,7 @@ const LOBBY_WIDGETS = new Set<PokerWidgetType>([
   "poker-online-players",
 ]);
 
-const FASTCHIPS_WIDGETS = new Set<PokerWidgetType>([
-  "poker-fastchips-sold",
-]);
+const FASTCHIPS_WIDGETS = new Set<PokerWidgetType>(["poker-fastchips-sold"]);
 
 export function PokerWidgetsGrid() {
   const trpc = useTRPC();
@@ -698,12 +706,20 @@ export function PokerWidgetsGrid() {
   );
 
   // Check which data sources are needed based on visible widgets
-  const allVisibleWidgets = [...primaryWidgets, ...(isCustomizing ? availableWidgets : [])];
+  const allVisibleWidgets = [
+    ...primaryWidgets,
+    ...(isCustomizing ? availableWidgets : []),
+  ];
   const needsLiveData = allVisibleWidgets.some((w) => LIVE_WIDGETS.has(w));
   const needsLobbyData = allVisibleWidgets.some((w) => LOBBY_WIDGETS.has(w));
-  const needsFastchipsData = allVisibleWidgets.some((w) => FASTCHIPS_WIDGETS.has(w));
+  const needsFastchipsData = allVisibleWidgets.some((w) =>
+    FASTCHIPS_WIDGETS.has(w),
+  );
   const needsAnalyticsData = allVisibleWidgets.some(
-    (w) => !LIVE_WIDGETS.has(w) && !LOBBY_WIDGETS.has(w) && !FASTCHIPS_WIDGETS.has(w),
+    (w) =>
+      !LIVE_WIDGETS.has(w) &&
+      !LOBBY_WIDGETS.has(w) &&
+      !FASTCHIPS_WIDGETS.has(w),
   );
 
   // Fetch open periods for analytics
@@ -825,7 +841,10 @@ export function PokerWidgetsGrid() {
           updatePreferencesMutation.mutate({ primaryWidgets: newPrimary });
         }, 100);
       }
-    } else if (activeInPrimary && (overInAvailable || over.id === "__empty__")) {
+    } else if (
+      activeInPrimary &&
+      (overInAvailable || over.id === "__empty__")
+    ) {
       moveToAvailable(activeWidgetId);
       const newPrimary = primaryWidgets.filter((w) => w !== activeWidgetId);
       setTimeout(() => {

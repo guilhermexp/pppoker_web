@@ -174,7 +174,12 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "8px",
     marginBottom: "8px",
   },
-  cardNum: { color: "#7c83ff", fontWeight: 700, fontSize: "13px", flexShrink: 0 },
+  cardNum: {
+    color: "#7c83ff",
+    fontWeight: 700,
+    fontSize: "13px",
+    flexShrink: 0,
+  },
   cardElement: {
     background: "#0f3460",
     padding: "2px 8px",

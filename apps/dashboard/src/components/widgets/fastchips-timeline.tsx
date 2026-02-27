@@ -43,9 +43,7 @@ function TimelineStep({
           {count} <span className="text-[10px] text-[#666666]">({pct}%)</span>
         </p>
       </div>
-      {!isLast && (
-        <div className="w-4 h-px bg-[#333] flex-shrink-0" />
-      )}
+      {!isLast && <div className="w-4 h-px bg-[#333] flex-shrink-0" />}
     </div>
   );
 }
@@ -65,7 +63,8 @@ export function FastchipsTimelineWidget() {
   const cancelado = stats?.cancelado ?? 0;
   const total = stats?.total ?? 0;
 
-  const successRate = total > 0 ? Math.round((fichasEnviadas / total) * 100) : 0;
+  const successRate =
+    total > 0 ? Math.round((fichasEnviadas / total) * 100) : 0;
 
   return (
     <BaseWidget
@@ -108,13 +107,27 @@ export function FastchipsTimelineWidget() {
         </div>
         <div className="flex items-center justify-between text-xs">
           <span className="text-[#666666]">
-            Sucesso: <span className={cn("font-medium", successRate >= 70 ? "text-green-500" : successRate >= 40 ? "text-amber-400" : "text-red-400")}>{successRate}%</span>
+            Sucesso:{" "}
+            <span
+              className={cn(
+                "font-medium",
+                successRate >= 70
+                  ? "text-green-500"
+                  : successRate >= 40
+                    ? "text-amber-400"
+                    : "text-red-400",
+              )}
+            >
+              {successRate}%
+            </span>
           </span>
           {(erro > 0 || cancelado > 0) && (
             <span className="text-[#666666]">
               {erro > 0 && <span className="text-red-400">{erro} erro</span>}
               {erro > 0 && cancelado > 0 && " · "}
-              {cancelado > 0 && <span className="text-[#666666]">{cancelado} canc.</span>}
+              {cancelado > 0 && (
+                <span className="text-[#666666]">{cancelado} canc.</span>
+              )}
             </span>
           )}
         </div>

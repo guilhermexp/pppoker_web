@@ -1,22 +1,13 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
+import {
+  formatCurrencyRounded as formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 // Widget component matching BaseWidget style
 function SUWidget({

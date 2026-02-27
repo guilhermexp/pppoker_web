@@ -5,6 +5,10 @@ import type {
   ParsedLeagueImportData,
 } from "@/lib/league/types";
 import { getWeekFromDateString } from "@/lib/poker/date-utils";
+import {
+  formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { getWeek } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
@@ -52,14 +56,6 @@ const dayLabels: Record<string, string> = {
 interface LeagueOverviewTabProps {
   parsedData: ParsedLeagueImportData;
   validationResult: LeagueValidationResult;
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 // getWeekFromDateString imported from @/lib/poker/date-utils

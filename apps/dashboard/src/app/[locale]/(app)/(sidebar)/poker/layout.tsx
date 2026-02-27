@@ -1,5 +1,6 @@
 "use client";
 
+import { BridgeStatusBanner } from "@/components/poker/bridge-status-banner";
 import { usePokerPlayersRealtime } from "@/hooks/use-poker-realtime";
 import { useTRPC } from "@/trpc/client";
 import { Button } from "@midpoker/ui/button";
@@ -27,6 +28,7 @@ export default function PokerLayout({
 
   return (
     <div className="relative">
+      <BridgeStatusBanner />
       {children}
       <div className="fixed bottom-6 right-6 z-50">
         <Button

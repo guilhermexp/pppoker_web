@@ -4,11 +4,10 @@
  * Frontend receives updates via Supabase real-time (postgres_changes).
  */
 
+import { PPPOKER_BRIDGE_URL, bridgeFetch } from "@api/lib/bridge";
 import { createAdminClient } from "@api/services/supabase";
+import { decrypt } from "@midpoker/encryption";
 import { logger } from "@midpoker/logger";
-
-const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
 
 const SYNC_INTERVAL_MS = 60_000; // 60 seconds
 
@@ -52,6 +51,21 @@ interface ClubConnection {
   sync_status: string;
 }
 
+/**
+ * Safely get the plaintext password.
+ * Supports both legacy plaintext and new encrypted (base64) format.
+ */
+function decryptPasswordIfNeeded(stored: string): string {
+  if (stored.length >= 44 && /^[A-Za-z0-9+/]+=*$/.test(stored)) {
+    try {
+      return decrypt(stored);
+    } catch {
+      return stored;
+    }
+  }
+  return stored;
+}
+
 async function fetchClubMembers(
   connection: ClubConnection,
   ligaId?: number | null,
@@ -72,10 +86,12 @@ async function fetchClubMembers(
     url.searchParams.set("date_end", fmt(now));
   }
 
-  const resp = await fetch(url.toString(), {
+  const resp = await bridgeFetch(url.toString(), {
     headers: {
       "X-PPPoker-Username": connection.pppoker_username,
-      "X-PPPoker-Password": connection.pppoker_password,
+      "X-PPPoker-Password": decryptPasswordIfNeeded(
+        connection.pppoker_password,
+      ),
     },
   });
 
@@ -286,7 +302,10 @@ async function runSyncCycle() {
       );
     } catch (err) {
       logger.error(
-        { error: err instanceof Error ? err.message : String(err), clubId: conn.club_id },
+        {
+          error: err instanceof Error ? err.message : String(err),
+          clubId: conn.club_id,
+        },
         "Club sync failed",
       );
 
@@ -331,7 +350,10 @@ export async function triggerSyncForTeam(teamId: string): Promise<number> {
       }
     } catch (err) {
       logger.error(
-        { error: err instanceof Error ? err.message : String(err), clubId: conn.club_id },
+        {
+          error: err instanceof Error ? err.message : String(err),
+          clubId: conn.club_id,
+        },
         "Manual sync failed",
       );
       throw err;

@@ -1,5 +1,6 @@
 "use client";
 
+import { ErrorBoundary } from "@/components/error-boundary";
 import { ActivationLanding } from "@/components/fastchips/activation-landing";
 import { PaymentOrdersTable } from "@/components/fastchips/payment-orders-table";
 import { SetupWizard } from "@/components/fastchips/setup-wizard";
@@ -74,14 +75,16 @@ function FastChipsPageContent() {
 
 export default function FastChipsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center mt-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      }
-    >
-      <FastChipsPageContent />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center mt-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        }
+      >
+        <FastChipsPageContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

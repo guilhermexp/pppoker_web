@@ -6,7 +6,10 @@ import {
 import { createAdminClient } from "@api/services/supabase";
 
 const CACHE_TTL_MS = 60_000;
-const _cache = new Map<string, { settings: NanobotSettings | null; expiresAt: number }>();
+const _cache = new Map<
+  string,
+  { settings: NanobotSettings | null; expiresAt: number }
+>();
 
 export async function getNanobotSettingsForTeam(
   teamId: string,
@@ -37,7 +40,9 @@ export async function getNanobotSettingsForTeam(
         ? (data.export_settings as Record<string, unknown>).nanobot
         : undefined;
 
-    const settings = normalizeNanobotSettings(nanobotSettingsSchema.parse(raw ?? {}));
+    const settings = normalizeNanobotSettings(
+      nanobotSettingsSchema.parse(raw ?? {}),
+    );
     _cache.set(teamId, { settings, expiresAt: now + CACHE_TTL_MS });
     return settings;
   } catch {

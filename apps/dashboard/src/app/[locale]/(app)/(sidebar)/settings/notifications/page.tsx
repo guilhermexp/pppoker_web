@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/error-boundary";
 import { NotificationsSettingsList } from "@/components/notifications-settings-list";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -8,8 +9,10 @@ export const metadata: Metadata = {
 
 export default async function Notifications() {
   return (
-    <Suspense>
-      <NotificationsSettingsList />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense>
+        <NotificationsSettingsList />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

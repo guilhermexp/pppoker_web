@@ -13,19 +13,35 @@ import { useCallback, useEffect, useRef } from "react";
 export function usePokerPlayersRealtime() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+  const channelRef = useRef<ReturnType<
+    ReturnType<typeof createClient>["channel"]
+  > | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const invalidateAll = useCallback(() => {
     // Invalidate only queries that reflect poker_players table state
-    queryClient.invalidateQueries({ queryKey: trpc.poker.players.get.queryKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.poker.players.getStats.queryKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.poker.pppoker.getSyncStatus.queryKey() });
+    queryClient.invalidateQueries({
+      queryKey: trpc.poker.players.get.queryKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.poker.players.getStats.queryKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.poker.pppoker.getSyncStatus.queryKey(),
+    });
     // Membros queries (synced from poker_players)
-    queryClient.invalidateQueries({ queryKey: trpc.poker.members.list.queryKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.poker.members.getStats.queryKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.poker.members.getLive.queryKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.poker.members.listPendingMembers.queryKey() });
+    queryClient.invalidateQueries({
+      queryKey: trpc.poker.members.list.queryKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.poker.members.getStats.queryKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.poker.members.getLive.queryKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.poker.members.listPendingMembers.queryKey(),
+    });
   }, [queryClient, trpc]);
 
   useEffect(() => {

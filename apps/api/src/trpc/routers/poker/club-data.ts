@@ -1,39 +1,11 @@
-import { createAdminClient } from "@api/services/supabase";
-import { TRPCError } from "@trpc/server";
+import {
+  PPPOKER_BRIDGE_URL,
+  bridgeFetch,
+  getBridgeCredentialsWithLiga as getBridgeCredentials,
+} from "@api/lib/bridge";
 import { z } from "@hono/zod-openapi";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
-
-async function getBridgeCredentials(teamId: string) {
-  const supabase = await createAdminClient();
-  const { data } = await supabase
-    .from("pppoker_club_connections")
-    .select("club_id, pppoker_username, pppoker_password")
-    .eq("team_id", teamId)
-    .in("sync_status", ["active", "error"])
-    .limit(1)
-    .single();
-
-  if (!data) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Nenhuma conexao PPPoker encontrada. Faca login novamente.",
-    });
-  }
-
-  const { data: team } = await supabase
-    .from("teams")
-    .select("poker_liga_id")
-    .eq("id", teamId)
-    .single();
-
-  return {
-    ...data,
-    liga_id: team?.poker_liga_id ? Number(team.poker_liga_id) : null,
-  };
-}
 
 const liveMemberSchema = z
   .object({
@@ -159,10 +131,13 @@ async function fetchMembersLive(
       "date_start",
       String(range?.dateStart ?? fallback.dateStart),
     );
-    url.searchParams.set("date_end", String(range?.dateEnd ?? fallback.dateEnd));
+    url.searchParams.set(
+      "date_end",
+      String(range?.dateEnd ?? fallback.dateEnd),
+    );
   }
 
-  const resp = await fetch(url.toString(), {
+  const resp = await bridgeFetch(url.toString(), {
     headers: {
       "X-PPPoker-Username": creds.pppoker_username,
       "X-PPPoker-Password": creds.pppoker_password,
@@ -186,7 +161,7 @@ async function fetchRoomsLive(
     url.searchParams.set("only_active", "true");
   }
 
-  const resp = await fetch(url.toString(), {
+  const resp = await bridgeFetch(url.toString(), {
     headers: {
       "X-PPPoker-Username": creds.pppoker_username,
       "X-PPPoker-Password": creds.pppoker_password,
@@ -305,7 +280,8 @@ export const pokerClubDataRouter = createTRPCRouter({
 
       const roomListPreview = activeRooms
         .sort((a, b) => {
-          const playersDiff = (b.current_players ?? 0) - (a.current_players ?? 0);
+          const playersDiff =
+            (b.current_players ?? 0) - (a.current_players ?? 0);
           if (playersDiff !== 0) return playersDiff;
           return (b.start_ts ?? 0) - (a.start_ts ?? 0);
         })
@@ -342,8 +318,7 @@ export const pokerClubDataRouter = createTRPCRouter({
           periodSessionsCount: false,
           periodSpinStats: false,
           periodSessionList: false,
-          note:
-            "Ganhos/Taxa/Maos por periodo vem de members(liga_id+date range). Partidas/Spin por periodo ainda nao foram mapeados no protocolo.",
+          note: "Ganhos/Taxa/Maos por periodo vem de members(liga_id+date range). Partidas/Spin por periodo ainda nao foram mapeados no protocolo.",
         },
         unsupported: {
           panelMetrics: [
@@ -365,7 +340,8 @@ export const pokerClubDataRouter = createTRPCRouter({
               ownerName: membersRes.club_info.owner_name ?? "",
               userRole: membersRes.club_info.user_role ?? 0,
               fichasDisponiveis: membersRes.club_info.fichas_disponiveis ?? 0,
-              totalMembers: membersRes.club_info.total_members ?? members.length,
+              totalMembers:
+                membersRes.club_info.total_members ?? members.length,
               loggedInUid: membersRes.logged_in_uid ?? null,
             }
           : null,
@@ -406,7 +382,10 @@ export const pokerClubDataRouter = createTRPCRouter({
               spinLiveSnapshot: {
                 totalRooms: spinRooms.length,
                 activeRooms: runningSpinRooms.length,
-                currentPlayersNow: sumBy(runningSpinRooms, (r) => r.current_players),
+                currentPlayersNow: sumBy(
+                  runningSpinRooms,
+                  (r) => r.current_players,
+                ),
                 visibleTotals: {
                   buyIn: sumBy(spinRooms, (r) => r.buy_in),
                   rake: sumBy(spinRooms, (r) => r.rake),

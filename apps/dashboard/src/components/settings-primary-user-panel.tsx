@@ -75,7 +75,9 @@ export function SettingsPrimaryUserPanel() {
             {hasExternalLinkedEmail && (
               <div className="mt-1 text-sm text-muted-foreground break-all">
                 Email:{" "}
-                <span className="font-medium text-foreground">{user.email}</span>
+                <span className="font-medium text-foreground">
+                  {user.email}
+                </span>
               </div>
             )}
 

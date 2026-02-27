@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/error-boundary";
 import { FastChipsControlPanel } from "@/components/fastchips/control-panel";
 import { getI18n } from "@/locales/server";
 import { Button } from "@midpoker/ui/button";
@@ -29,15 +30,17 @@ export default async function FastChipsControlePage() {
         </div>
       </div>
 
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          </div>
-        }
-      >
-        <FastChipsControlPanel />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          }
+        >
+          <FastChipsControlPanel />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

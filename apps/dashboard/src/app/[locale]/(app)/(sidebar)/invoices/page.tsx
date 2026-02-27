@@ -54,18 +54,26 @@ export default async function Page(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-6">
-        <Suspense fallback={<InvoiceSummarySkeleton />}>
-          <InvoicesOpen />
-        </Suspense>
-        <Suspense fallback={<InvoiceSummarySkeleton />}>
-          <InvoicesOverdue />
-        </Suspense>
-        <Suspense fallback={<InvoiceSummarySkeleton />}>
-          <InvoicesPaid />
-        </Suspense>
-        <Suspense fallback={<InvoicePaymentScoreSkeleton />}>
-          <InvoicePaymentScore />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<InvoiceSummarySkeleton />}>
+            <InvoicesOpen />
+          </Suspense>
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Suspense fallback={<InvoiceSummarySkeleton />}>
+            <InvoicesOverdue />
+          </Suspense>
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Suspense fallback={<InvoiceSummarySkeleton />}>
+            <InvoicesPaid />
+          </Suspense>
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Suspense fallback={<InvoicePaymentScoreSkeleton />}>
+            <InvoicePaymentScore />
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
       <InvoiceHeader />

@@ -3,6 +3,7 @@
 import { usePokerSessionParams } from "@/hooks/use-poker-session-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import { formatCurrency } from "@/utils/format";
 import { Badge } from "@midpoker/ui/badge";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
@@ -44,15 +45,6 @@ const GAME_VARIANT_CONFIG: Record<string, { label: string; color: string }> = {
   mixed: { label: "Mixed", color: "bg-gray-500" },
   other: { label: "Other", color: "bg-gray-400" },
 };
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 export function SessionsBreakdownWidget() {
   const trpc = useTRPC();

@@ -94,7 +94,36 @@ export function DataTable() {
 
   const deleteDocumentMutation = useMutation(
     trpc.documents.delete.mutationOptions({
-      onSuccess: () => {
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.documents.get.infiniteQueryKey(),
+        });
+        const previous = queryClient.getQueriesData({
+          queryKey: trpc.documents.get.infiniteQueryKey(),
+        });
+        queryClient.setQueriesData(
+          { queryKey: trpc.documents.get.infiniteQueryKey() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                data: page.data.filter((item: any) => item.id !== id),
+              })),
+            };
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          for (const [queryKey, data] of context.previous) {
+            queryClient.setQueryData(queryKey, data);
+          }
+        }
+      },
+      onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.documents.get.infiniteQueryKey(),
         });

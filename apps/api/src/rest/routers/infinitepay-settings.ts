@@ -37,9 +37,7 @@ app.get("/", async (c) => {
     return c.json({ success: false, error: "Team not found" }, 404);
   }
 
-  const exportSettings = data.export_settings as
-    | Record<string, unknown>
-    | null;
+  const exportSettings = data.export_settings as Record<string, unknown> | null;
   const settings = normalizeInfinitePaySettings(exportSettings?.infinitepay);
 
   return c.json({

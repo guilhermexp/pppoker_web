@@ -1,6 +1,10 @@
 "use client";
 
 import type { ParsedLeagueGeralPPSTBloco } from "@/lib/league/types";
+import {
+  formatDecimal as formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Badge } from "@midpoker/ui/badge";
 import {
   Collapsible,
@@ -24,18 +28,6 @@ const LIGAS_BR = [1675, 1765, 2101, 2448];
 
 interface LeagueGeralPPSTTabProps {
   data: ParsedLeagueGeralPPSTBloco[];
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "decimal",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
 }
 
 export function LeagueGeralPPSTTab({ data }: LeagueGeralPPSTTabProps) {

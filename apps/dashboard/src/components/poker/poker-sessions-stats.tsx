@@ -3,22 +3,13 @@
 import { usePokerSessionParams } from "@/hooks/use-poker-session-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import {
+  formatCurrencyRounded as formatCurrency,
+  formatNumberRounded as formatNumber,
+} from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useSuspenseQuery } from "@tanstack/react-query";
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(Math.round(value));
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function StatBadge({
   icon: Icon,

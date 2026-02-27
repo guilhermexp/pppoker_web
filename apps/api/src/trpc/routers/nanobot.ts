@@ -137,10 +137,8 @@ export const nanobotRouter = createTRPCRouter({
       return {
         provider,
         connected: Boolean(data.connected),
-        accountId:
-          typeof data.account_id === "string" ? data.account_id : null,
-        expiresAt:
-          typeof data.expires_at === "number" ? data.expires_at : null,
+        accountId: typeof data.account_id === "string" ? data.account_id : null,
+        expiresAt: typeof data.expires_at === "number" ? data.expires_at : null,
         expiresInSeconds:
           typeof data.expires_in_seconds === "number"
             ? data.expires_in_seconds
@@ -205,10 +203,8 @@ export const nanobotRouter = createTRPCRouter({
       });
       return {
         provider: "openai_codex" as const,
-        accountId:
-          typeof data.account_id === "string" ? data.account_id : null,
-        expiresAt:
-          typeof data.expires_at === "number" ? data.expires_at : null,
+        accountId: typeof data.account_id === "string" ? data.account_id : null,
+        expiresAt: typeof data.expires_at === "number" ? data.expires_at : null,
       };
     }),
 
@@ -230,12 +226,9 @@ export const nanobotRouter = createTRPCRouter({
       });
       return {
         provider: "openai_codex" as const,
-        accountId:
-          typeof data.account_id === "string" ? data.account_id : null,
-        expiresAt:
-          typeof data.expires_at === "number" ? data.expires_at : null,
-        storage:
-          typeof data.storage === "string" ? data.storage : null,
+        accountId: typeof data.account_id === "string" ? data.account_id : null,
+        expiresAt: typeof data.expires_at === "number" ? data.expires_at : null,
+        storage: typeof data.storage === "string" ? data.storage : null,
       };
     }),
 

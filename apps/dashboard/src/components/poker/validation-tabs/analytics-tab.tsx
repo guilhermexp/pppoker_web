@@ -1,6 +1,7 @@
 "use client";
 
 import type { DetectedInsight } from "@/lib/poker/types";
+import { formatCurrency } from "@/utils/format";
 
 type AnalyticsTabProps = {
   insights: DetectedInsight[];
@@ -60,11 +61,4 @@ export function AnalyticsTab({ insights }: AnalyticsTabProps) {
       </div>
     </div>
   );
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
 }

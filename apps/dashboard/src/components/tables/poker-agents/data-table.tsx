@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableRow } from "@midpoker/ui/table";
 import {
   useMutation,
   useQuery,
+  useQueryClient,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
 import {
@@ -30,6 +31,7 @@ export function AgentsDataTable() {
   const { setParams, q, status, hasFilters, dateFrom, dateTo, superAgentId } =
     usePokerPlayerParams();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { params: sortParams } = useSortParams();
   const [expandedSuperAgents, setExpandedSuperAgents] = useState<Set<string>>(
     new Set(),
@@ -61,7 +63,6 @@ export function AgentsDataTable() {
     data: agentsData,
     fetchNextPage,
     hasNextPage,
-    refetch,
   } = useSuspenseInfiniteQuery(agentsQueryOptions);
 
   // Fetch super_agents
@@ -85,8 +86,40 @@ export function AgentsDataTable() {
 
   const deleteAgentMutation = useMutation(
     trpc.poker.players.delete.mutationOptions({
-      onSuccess: () => {
-        refetch();
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.poker.players.get.infiniteQueryKey(),
+        });
+        const previous = queryClient.getQueryData(
+          trpc.poker.players.get.infiniteQueryKey(),
+        );
+        queryClient.setQueriesData(
+          { queryKey: trpc.poker.players.get.infiniteQueryKey() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                data: page.data.filter((item: any) => item.id !== id),
+              })),
+            };
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueriesData(
+            { queryKey: trpc.poker.players.get.infiniteQueryKey() },
+            context.previous,
+          );
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.poker.players.get.infiniteQueryKey(),
+        });
       },
     }),
   );

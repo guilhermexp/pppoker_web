@@ -6,6 +6,7 @@ import type {
   ValidationCheck,
 } from "@/lib/poker/types";
 import { useTRPC } from "@/trpc/client";
+import { formatCurrency } from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { Spinner } from "@midpoker/ui/spinner";
 import { useQuery } from "@tanstack/react-query";
@@ -243,9 +244,6 @@ export function ResumoTab({
       totalChecks: checks.length,
     };
   }, [summaries, sessions, checks]);
-
-  const formatCurrency = (value: number) =>
-    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <div className="space-y-6">

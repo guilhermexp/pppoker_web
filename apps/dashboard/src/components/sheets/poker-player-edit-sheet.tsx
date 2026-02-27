@@ -56,10 +56,41 @@ export function PokerPlayerEditSheet() {
 
   const deletePlayerMutation = useMutation(
     trpc.poker.players.delete.mutationOptions({
-      onSuccess: () => {
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.poker.players.get.infiniteQueryKey(),
+        });
+        const previous = queryClient.getQueriesData({
+          queryKey: trpc.poker.players.get.infiniteQueryKey(),
+        });
+        queryClient.setQueriesData(
+          { queryKey: trpc.poker.players.get.infiniteQueryKey() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                data: page.data.filter((item: any) => item.id !== id),
+              })),
+            };
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          for (const [queryKey, data] of context.previous) {
+            queryClient.setQueryData(queryKey, data);
+          }
+        }
+      },
+      onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.poker.players.get.infiniteQueryKey(),
         });
+      },
+      onSuccess: () => {
         setParams(null);
       },
     }),

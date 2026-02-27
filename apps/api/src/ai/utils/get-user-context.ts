@@ -1,8 +1,5 @@
 import type { Database } from "@db/client";
-import {
-  type ChatUserContext,
-  chatCache,
-} from "@midpoker/cache/chat-cache";
+import { type ChatUserContext, chatCache } from "@midpoker/cache/chat-cache";
 import { logger } from "@midpoker/logger";
 
 interface GetUserContextParams {

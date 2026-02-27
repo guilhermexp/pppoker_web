@@ -17,6 +17,7 @@ import {
   parseTournamentSchedule,
 } from "@/lib/league/tournament-schedule";
 import { getWeekFromShortDateString } from "@/lib/poker/date-utils";
+import { formatNumberPtBR as formatNumber } from "@/utils/format";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import {
@@ -69,10 +70,6 @@ export interface StoredScheduleData {
 }
 
 // getWeekFromShortDateString imported from @/lib/poker/date-utils
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
-}
 
 // Badge de tipo de jogo com cores
 function GameTypeBadge({ game }: { game: string }) {

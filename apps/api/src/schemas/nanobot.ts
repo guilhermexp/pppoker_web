@@ -119,16 +119,25 @@ export function normalizeNanobotSettings(
 ): NanobotSettings {
   const modelConfig = raw.modelConfig ?? ({} as NanobotSettings["modelConfig"]);
   const soulConfig = raw.soulConfig ?? ({} as NanobotSettings["soulConfig"]);
-  const agentCmdConfig = raw.agentCmdConfig ?? ({} as NanobotSettings["agentCmdConfig"]);
-  const memoryConfig = raw.memoryConfig ?? ({} as NanobotSettings["memoryConfig"]);
-  const gatewayConfig = raw.gatewayConfig ?? ({} as NanobotSettings["gatewayConfig"]);
+  const agentCmdConfig =
+    raw.agentCmdConfig ?? ({} as NanobotSettings["agentCmdConfig"]);
+  const memoryConfig =
+    raw.memoryConfig ?? ({} as NanobotSettings["memoryConfig"]);
+  const gatewayConfig =
+    raw.gatewayConfig ?? ({} as NanobotSettings["gatewayConfig"]);
   const channels = raw.channels ?? ({} as NanobotSettings["channels"]);
   const mcpConfig = raw.mcpConfig ?? ({} as NanobotSettings["mcpConfig"]);
 
-  const whatsapp = gatewayConfig.whatsapp ?? ({} as NanobotSettings["gatewayConfig"]["whatsapp"]);
-  const telegram = gatewayConfig.telegram ?? ({} as NanobotSettings["gatewayConfig"]["telegram"]);
-  const slack = gatewayConfig.slack ?? ({} as NanobotSettings["gatewayConfig"]["slack"]);
-  const pppoker = mcpConfig.pppoker ?? ({} as NanobotSettings["mcpConfig"]["pppoker"]);
+  const whatsapp =
+    gatewayConfig.whatsapp ??
+    ({} as NanobotSettings["gatewayConfig"]["whatsapp"]);
+  const telegram =
+    gatewayConfig.telegram ??
+    ({} as NanobotSettings["gatewayConfig"]["telegram"]);
+  const slack =
+    gatewayConfig.slack ?? ({} as NanobotSettings["gatewayConfig"]["slack"]);
+  const pppoker =
+    mcpConfig.pppoker ?? ({} as NanobotSettings["mcpConfig"]["pppoker"]);
 
   const modelProvider = modelConfig.provider || raw.provider;
   const modelName = modelConfig.model || raw.model;

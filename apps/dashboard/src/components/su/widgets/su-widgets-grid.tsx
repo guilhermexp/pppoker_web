@@ -4,6 +4,10 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { useSUDashboardParams } from "@/hooks/use-su-dashboard-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import {
+  formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { SUStatCard } from "./su-stat-card";
@@ -14,19 +18,6 @@ import {
   useSUPrimaryWidgets,
   useSUWidgetActions,
 } from "./su-widget-provider";
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatNumber(value: number) {
-  return value.toLocaleString("pt-BR");
-}
 
 // Widget Error Fallback
 function WidgetErrorFallback() {

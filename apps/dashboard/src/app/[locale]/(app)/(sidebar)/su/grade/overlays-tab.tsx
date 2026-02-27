@@ -9,6 +9,7 @@ import type { StoredRealizedData } from "@/lib/league/tournament-matching";
 import { matchTournaments } from "@/lib/league/tournament-matching";
 import { dayLabels, dayOrder } from "@/lib/league/tournament-schedule";
 import type { TournamentScheduleData } from "@/lib/league/tournament-schedule";
+import { formatNumberPtBR as formatNumber } from "@/utils/format";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
 import {
@@ -35,10 +36,6 @@ import { useDropzone } from "react-dropzone";
 import type { StoredTournament } from "./grade-tab";
 
 const SCHEDULE_STORAGE_KEY = "ppst-tournament-schedule";
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
-}
 
 function StatCard({
   label,

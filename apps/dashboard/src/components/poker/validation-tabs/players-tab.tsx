@@ -1,6 +1,7 @@
 "use client";
 
 import type { ParsedPlayer, ParsedSummary } from "@/lib/poker/types";
+import { formatCurrency } from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
@@ -162,11 +163,4 @@ export function PlayersTab({ players, summaries }: PlayersTabProps) {
       )}
     </div>
   );
-}
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
 }

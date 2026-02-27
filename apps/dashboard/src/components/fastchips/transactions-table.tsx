@@ -50,7 +50,7 @@ const PURPOSE_LABELS: Record<string, string> = {
   Recebimento: "Recebimento",
   Pagamento: "Pagamento",
   Saque: "Saque",
-  "Serviço": "Serviço",
+  Serviço: "Serviço",
 };
 
 export function FastChipsTransactionsTable() {
@@ -90,7 +90,7 @@ export function FastChipsTransactionsTable() {
                   {isLoadingStats ? (
                     <Skeleton className="h-8 w-12" />
                   ) : (
-                    stats?.totalEntries ?? 0
+                    (stats?.totalEntries ?? 0)
                   )}
                 </div>
               </div>
@@ -130,7 +130,7 @@ export function FastChipsTransactionsTable() {
                   {isLoadingStats ? (
                     <Skeleton className="h-8 w-12" />
                   ) : (
-                    stats?.totalExits ?? 0
+                    (stats?.totalExits ?? 0)
                   )}
                 </div>
               </div>
@@ -272,9 +272,7 @@ export function FastChipsTransactionsTable() {
                   <TableRow
                     key={op.id}
                     className="cursor-pointer hover:bg-accent/50 even:bg-muted/20"
-                    onClick={() =>
-                      setParams({ fastchipsTransactionId: op.id })
-                    }
+                    onClick={() => setParams({ fastchipsTransactionId: op.id })}
                   >
                     <TableCell>
                       <Badge
@@ -294,19 +292,13 @@ export function FastChipsTransactionsTable() {
                     <TableCell className="text-muted-foreground">
                       {op.ppPokerId || "-"}
                     </TableCell>
-                    <TableCell>
-                      {op.purpose || "-"}
-                    </TableCell>
+                    <TableCell>{op.purpose || "-"}</TableCell>
                     <TableCell className="font-medium">
                       {Math.round(op.grossAmount / 100).toLocaleString("pt-BR")}
                     </TableCell>
-                    <TableCell>
-                      {formatCurrency(op.grossAmount)}
-                    </TableCell>
+                    <TableCell>{formatCurrency(op.grossAmount)}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {op.feeAmount
-                        ? formatCurrency(op.feeAmount)
-                        : "-"}
+                      {op.feeAmount ? formatCurrency(op.feeAmount) : "-"}
                     </TableCell>
                     <TableCell>
                       {op.netAmount

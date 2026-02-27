@@ -3,22 +3,13 @@
 import { usePokerDashboardParams } from "@/hooks/use-poker-dashboard-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import {
+  formatCurrency,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatNumber(value: number) {
-  return value.toLocaleString("pt-BR");
-}
 
 export function PokerOverviewWidget() {
   const trpc = useTRPC();

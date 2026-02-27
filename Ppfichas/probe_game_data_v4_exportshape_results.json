@@ -9,321 +9,241 @@
         "req": "pb.GameDataREQ",
         "label": "base club",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club + liga(f2)",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club + uid(f2)",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club + ymds(f2,f3)",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=None",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish y0..t0 (12/13) gt=None",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ts(2/3)+ymd(12/13) gt=None",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+ymd(f2,f3)+gt15=None",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+room(f2)+ymd12/13+gt15=None",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=609",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish y0..t0 (12/13) gt=609",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ts(2/3)+ymd(12/13) gt=609",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+ymd(f2,f3)+gt15=609",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+room(f2)+ymd12/13+gt15=609",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=0",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish y0..t0 (12/13) gt=0",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ts(2/3)+ymd(12/13) gt=0",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+ymd(f2,f3)+gt15=0",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+room(f2)+ymd12/13+gt15=0",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=1",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish y0..t0 (12/13) gt=1",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ts(2/3)+ymd(12/13) gt=1",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+ymd(f2,f3)+gt15=1",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+room(f2)+ymd12/13+gt15=1",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=2",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish y0..t0 (12/13) gt=2",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ts(2/3)+ymd(12/13) gt=2",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+ymd(f2,f3)+gt15=2",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+room(f2)+ymd12/13+gt15=2",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=3",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish y0..t0 (12/13) gt=3",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ts(2/3)+ymd(12/13) gt=3",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+ymd(f2,f3)+gt15=3",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+room(f2)+ymd12/13+gt15=3",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=5",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish y0..t0 (12/13) gt=5",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ts(2/3)+ymd(12/13) gt=5",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+ymd(f2,f3)+gt15=5",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "club+room(f2)+ymd12/13+gt15=5",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       },
       {
         "req": "pb.GameDataREQ",
         "label": "export-ish ymd12/13 gt=6",
         "score": 200,
-        "rsp": [
-          "pb.GameDataRSP"
-        ]
+        "rsp": ["pb.GameDataRSP"]
       }
     ]
   },

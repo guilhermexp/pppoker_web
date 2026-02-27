@@ -19,9 +19,35 @@ export function DeleteApiKeyModal() {
 
   const deleteApiKeyMutation = useMutation(
     trpc.apiKeys.delete.mutationOptions({
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.apiKeys.get.queryKey(),
+        });
+        const previous = queryClient.getQueryData(trpc.apiKeys.get.queryKey());
+        queryClient.setQueriesData(
+          { queryKey: trpc.apiKeys.get.queryKey() },
+          (old: any) => {
+            if (!old || !Array.isArray(old)) return old;
+            return old.filter((item: any) => item.id !== id);
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueriesData(
+            { queryKey: trpc.apiKeys.get.queryKey() },
+            context.previous,
+          );
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.apiKeys.get.queryKey(),
+        });
+      },
       onSuccess: () => {
         setData(undefined);
-        queryClient.invalidateQueries(trpc.apiKeys.get.queryOptions());
       },
     }),
   );

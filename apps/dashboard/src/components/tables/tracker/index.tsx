@@ -7,7 +7,11 @@ import { useTableScroll } from "@/hooks/use-table-scroll";
 import { useTrackerFilterParams } from "@/hooks/use-tracker-filter-params";
 import { useTRPC } from "@/trpc/client";
 import { Table, TableBody } from "@midpoker/ui/table";
-import { useMutation, useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import { useDeferredValue, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { DataTableHeader } from "./data-table-header";
@@ -16,6 +20,7 @@ import { EmptyState, NoResults } from "./empty-states";
 
 export function DataTable() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { ref, inView } = useInView();
   const { latestProjectId, setLatestProjectId } = useLatestProjectId();
   const { params } = useSortParams();
@@ -38,17 +43,50 @@ export function DataTable() {
     },
   );
 
-  const { data, fetchNextPage, hasNextPage, refetch, isFetching } =
+  const { data, fetchNextPage, hasNextPage, isFetching } =
     useSuspenseInfiniteQuery(infiniteQueryOptions);
 
   const deleteTrackerProjectMutation = useMutation(
     trpc.trackerProjects.delete.mutationOptions({
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.trackerProjects.get.infiniteQueryKey(),
+        });
+        const previous = queryClient.getQueryData(
+          trpc.trackerProjects.get.infiniteQueryKey(),
+        );
+        queryClient.setQueriesData(
+          { queryKey: trpc.trackerProjects.get.infiniteQueryKey() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                data: page.data.filter((item: any) => item.id !== id),
+              })),
+            };
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueriesData(
+            { queryKey: trpc.trackerProjects.get.infiniteQueryKey() },
+            context.previous,
+          );
+        }
+      },
       onSuccess: (result) => {
         if (result && result.id === latestProjectId) {
           setLatestProjectId(null);
         }
-
-        refetch();
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.trackerProjects.get.infiniteQueryKey(),
+        });
       },
     }),
   );

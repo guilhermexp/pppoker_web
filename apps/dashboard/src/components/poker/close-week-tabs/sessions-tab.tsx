@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+  formatNumberPtBR as formatNumber,
+} from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import {
   Collapsible,
@@ -90,24 +95,6 @@ const FILTER_OPTIONS: { value: SessionFilter; label: string }[] = [
 ];
 
 const ITEMS_PER_PAGE = 50;
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatCurrencyCompact(value: number): string {
-  if (Number.isInteger(value)) {
-    return value.toLocaleString("pt-BR");
-  }
-  return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function formatNumber(value: number): string {
-  return value.toLocaleString("pt-BR");
-}
 
 function formatSessionTypeTag(type: string): "CASH" | "MTT" | "SITNG" | "SPIN" {
   const normalized = type.toLowerCase();

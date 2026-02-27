@@ -13,9 +13,7 @@ export default async function PokerSuperAgentesPage() {
   const t = await getI18n();
 
   try {
-    await queryClient.fetchQuery(
-      trpc.poker.members.getLive.queryOptions({}),
-    );
+    await queryClient.fetchQuery(trpc.poker.members.getLive.queryOptions({}));
   } catch {
     // SSR prefetch failed, client will fetch via Suspense
   }

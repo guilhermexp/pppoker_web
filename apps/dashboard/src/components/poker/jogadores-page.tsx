@@ -3,20 +3,27 @@
 import { useTRPC } from "@/trpc/client";
 import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
 import { Badge } from "@midpoker/ui/badge";
-import { cn } from "@midpoker/ui/cn";
-import { Icons } from "@midpoker/ui/icons";
-import { Input } from "@midpoker/ui/input";
-import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Button } from "@midpoker/ui/button";
+import { cn } from "@midpoker/ui/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@midpoker/ui/dropdown-menu";
+import { Icons } from "@midpoker/ui/icons";
+import { Input } from "@midpoker/ui/input";
+import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
-import { useDeferredValue, useMemo, useState } from "react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import { memo, useDeferredValue, useMemo, useState } from "react";
 
 type LiveMember = {
   uid: number;
@@ -38,7 +45,15 @@ type LiveMember = {
   maos?: number | null;
 };
 
-type SortKey = "ganhos" | "taxa" | "maos" | "ultima_conexao" | "ultimo_jogo" | "buyin_spinup" | "chip_storm" | "indice_shark";
+type SortKey =
+  | "ganhos"
+  | "taxa"
+  | "maos"
+  | "ultima_conexao"
+  | "ultimo_jogo"
+  | "buyin_spinup"
+  | "chip_storm"
+  | "indice_shark";
 
 const SORT_OPTIONS: { key: SortKey; label: string; available: boolean }[] = [
   { key: "ganhos", label: "Ganhos", available: true },
@@ -119,7 +134,7 @@ function sortValueColor(member: LiveMember, sortKey: SortKey): string {
   return "text-muted-foreground";
 }
 
-function JogadorRow({
+const JogadorRow = memo(function JogadorRow({
   member,
   sortKey,
 }: {
@@ -167,17 +182,19 @@ function JogadorRow({
           </span>
         )}
         {/* Secondary info: show other stats below the main sort value */}
-        {sortKey !== "ganhos" && member.ganhos != null && member.ganhos !== 0 && (
-          <span
-            className={cn(
-              "font-mono text-[10px]",
-              member.ganhos > 0 ? "text-green-600/70" : "text-red-600/70",
-            )}
-          >
-            {member.ganhos >= 0 ? "+" : ""}
-            {formatMoney(member.ganhos)}
-          </span>
-        )}
+        {sortKey !== "ganhos" &&
+          member.ganhos != null &&
+          member.ganhos !== 0 && (
+            <span
+              className={cn(
+                "font-mono text-[10px]",
+                member.ganhos > 0 ? "text-green-600/70" : "text-red-600/70",
+              )}
+            >
+              {member.ganhos >= 0 ? "+" : ""}
+              {formatMoney(member.ganhos)}
+            </span>
+          )}
         {sortKey !== "ultima_conexao" && (
           <span className="text-[10px] text-muted-foreground">
             {member.online ? "Online" : formatTimeAgo(member.last_active_ts)}
@@ -194,7 +211,7 @@ function JogadorRow({
       </div>
     </div>
   );
-}
+});
 
 export function JogadoresPage() {
   const trpc = useTRPC();
@@ -221,9 +238,7 @@ export function JogadoresPage() {
     if (deferredSearch) {
       const q = deferredSearch.toLowerCase();
       result = result.filter(
-        (m) =>
-          m.nome.toLowerCase().includes(q) ||
-          String(m.uid).includes(q),
+        (m) => m.nome.toLowerCase().includes(q) || String(m.uid).includes(q),
       );
     }
 
@@ -259,7 +274,8 @@ export function JogadoresPage() {
     });
   };
 
-  const currentSortLabel = SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? "Ganhos";
+  const currentSortLabel =
+    SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? "Ganhos";
 
   if (isLoading) {
     return (
@@ -287,7 +303,9 @@ export function JogadoresPage() {
             <Icons.Customers className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className="font-mono text-sm font-medium text-green-600">{pageStats.online}</p>
+            <p className="font-mono text-sm font-medium text-green-600">
+              {pageStats.online}
+            </p>
             <p className="text-[10px] text-muted-foreground truncate">Online</p>
           </div>
         </div>
@@ -296,8 +314,12 @@ export function JogadoresPage() {
             <Icons.Customers className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0 leading-none">
-            <p className="font-mono text-sm font-medium text-blue-600">{pageStats.comAgente}</p>
-            <p className="text-[10px] text-muted-foreground truncate">Com agente</p>
+            <p className="font-mono text-sm font-medium text-blue-600">
+              {pageStats.comAgente}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              Com agente
+            </p>
           </div>
         </div>
       </div>
@@ -329,8 +351,16 @@ export function JogadoresPage() {
         <div className="flex items-center gap-2 overflow-x-auto">
           {[
             { key: "todos", label: "Todos", count: allMembers.length },
-            { key: "online", label: "Online", count: allMembers.filter((m) => m.online).length },
-            { key: "sem_agente", label: "Sem agente", count: allMembers.filter((m) => !m.agente_uid).length },
+            {
+              key: "online",
+              label: "Online",
+              count: allMembers.filter((m) => m.online).length,
+            },
+            {
+              key: "sem_agente",
+              label: "Sem agente",
+              count: allMembers.filter((m) => !m.agente_uid).length,
+            },
           ].map((f) => (
             <button
               key={f.key}
@@ -353,7 +383,11 @@ export function JogadoresPage() {
         <div className="flex items-center gap-1 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs px-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs px-2"
+              >
                 {currentSortLabel}
                 <ArrowUpDown className="h-3 w-3" />
               </Button>
@@ -377,11 +411,12 @@ export function JogadoresPage() {
                   )}
                 >
                   <span>{opt.label}</span>
-                  {opt.key === sortKey && (
-                    sortAsc
-                      ? <ChevronUp className="h-3.5 w-3.5 text-primary" />
-                      : <ChevronDown className="h-3.5 w-3.5 text-primary" />
-                  )}
+                  {opt.key === sortKey &&
+                    (sortAsc ? (
+                      <ChevronUp className="h-3.5 w-3.5 text-primary" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                    ))}
                   {!opt.available && (
                     <Badge variant="secondary" className="h-4 px-1 text-[9px]">
                       Em breve
@@ -407,7 +442,9 @@ export function JogadoresPage() {
             <div className="flex flex-col items-center py-16 text-center">
               <Icons.Customers className="mb-3 h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {search ? "Nenhum jogador encontrado" : "Nenhum jogador neste filtro"}
+                {search
+                  ? "Nenhum jogador encontrado"
+                  : "Nenhum jogador neste filtro"}
               </p>
             </div>
           ) : (

@@ -23,7 +23,10 @@ export default function NanobotOAuthCallbackPage() {
           }),
         });
         setTimeout(() => {
-          const currentPath = window.location.pathname.replace(/\/oauth-callback\/?$/, "");
+          const currentPath = window.location.pathname.replace(
+            /\/oauth-callback\/?$/,
+            "",
+          );
           router.replace(`${currentPath}?oauth=connected`);
         }, 700);
       },
@@ -37,9 +40,7 @@ export default function NanobotOAuthCallbackPage() {
     const error = searchParams.get("error");
     const errorDescription = searchParams.get("error_description");
     if (error) {
-      setMessage(
-        `OAuth cancelado/falhou: ${errorDescription || error}`,
-      );
+      setMessage(`OAuth cancelado/falhou: ${errorDescription || error}`);
       return;
     }
 

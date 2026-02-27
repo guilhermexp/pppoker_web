@@ -65,9 +65,7 @@ export function ClientFeedback({
   const handleAnnotationUpdate = useCallback(
     (annotation: Annotation) => {
       setAnnotations((prev) => {
-        const next = prev.map((a) =>
-          a.id === annotation.id ? annotation : a,
-        );
+        const next = prev.map((a) => (a.id === annotation.id ? annotation : a));
         persist(next);
         return next;
       });
@@ -141,10 +139,7 @@ export function ClientFeedback({
         setAnnotations([]);
         persist([]);
         if (sendTimeoutRef.current) clearTimeout(sendTimeoutRef.current);
-        sendTimeoutRef.current = setTimeout(
-          () => setSendStatus("idle"),
-          3000,
-        );
+        sendTimeoutRef.current = setTimeout(() => setSendStatus("idle"), 3000);
       } else {
         setSendStatus("error");
       }

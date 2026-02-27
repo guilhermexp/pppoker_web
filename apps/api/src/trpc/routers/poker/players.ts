@@ -226,17 +226,18 @@ export const pokerPlayersRouter = createTRPCRouter({
         note: player.note,
         // Real-time fields from PPPoker sync
         isOnline: (player as Record<string, unknown>).is_online ?? false,
-        cashboxBalance: Number((player as Record<string, unknown>).cashbox_balance ?? 0),
+        cashboxBalance: Number(
+          (player as Record<string, unknown>).cashbox_balance ?? 0,
+        ),
         pppokerRole: (player as Record<string, unknown>).pppoker_role ?? null,
-        lastSyncedAt: (player as Record<string, unknown>).last_synced_at ?? null,
+        lastSyncedAt:
+          (player as Record<string, unknown>).last_synced_at ?? null,
         agent: player.agent_id ? (agentsMap[player.agent_id] ?? null) : null,
         superAgent: player.super_agent_id
           ? (superAgentsMap[player.super_agent_id] ?? null)
           : null,
         totalRake: Number((player as Record<string, unknown>).taxa ?? 0),
-        totalWinnings: Number(
-          (player as Record<string, unknown>).ganhos ?? 0,
-        ),
+        totalWinnings: Number((player as Record<string, unknown>).ganhos ?? 0),
         totalHands: Number((player as Record<string, unknown>).maos ?? 0),
         activityStatus:
           activityMetricsMap.get(player.id)?.activityStatus ?? "new",
@@ -683,12 +684,56 @@ export const pokerPlayersRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx: { teamId } }) => {
     const supabase = await createAdminClient();
 
-    // Get counts by type and status
-    const { data: players, error } = await supabase
-      .from("poker_players")
-      .select("type, status, is_vip, is_shark, current_balance")
-      .eq("team_id", teamId)
-      .limit(50000); // Avoid 1000 row limit
+    // Use COUNT queries instead of fetching up to 50K rows
+    const [
+      { count: totalPlayers, error },
+      { count: totalAgents },
+      { count: activePlayers },
+      { count: activeAgents },
+      { count: vipPlayers },
+      { count: sharkPlayers },
+      { data: balanceData },
+    ] = await Promise.all([
+      supabase
+        .from("poker_players")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .eq("type", "player"),
+      supabase
+        .from("poker_players")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .neq("type", "player"),
+      supabase
+        .from("poker_players")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .eq("type", "player")
+        .eq("status", "active"),
+      supabase
+        .from("poker_players")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .neq("type", "player")
+        .eq("status", "active"),
+      supabase
+        .from("poker_players")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .eq("is_vip", true),
+      supabase
+        .from("poker_players")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .eq("is_shark", true),
+      // Balance aggregation still needs data fetch, but only the balance column
+      supabase
+        .from("poker_players")
+        .select("current_balance")
+        .eq("team_id", teamId)
+        .neq("current_balance", 0)
+        .limit(50000),
+    ]);
 
     if (error) {
       throw new TRPCError({
@@ -697,37 +742,28 @@ export const pokerPlayersRouter = createTRPCRouter({
       });
     }
 
-    const stats = {
-      totalPlayers: 0,
-      totalAgents: 0,
-      activePlayers: 0,
-      activeAgents: 0,
-      vipPlayers: 0,
-      sharkPlayers: 0,
-      totalBalance: 0,
-      positiveBalance: 0,
-      negativeBalance: 0,
-    };
+    let totalBalance = 0;
+    let positiveBalance = 0;
+    let negativeBalance = 0;
 
-    for (const player of players ?? []) {
-      if (player.type === "player") {
-        stats.totalPlayers++;
-        if (player.status === "active") stats.activePlayers++;
-      } else {
-        stats.totalAgents++;
-        if (player.status === "active") stats.activeAgents++;
-      }
-
-      if (player.is_vip) stats.vipPlayers++;
-      if (player.is_shark) stats.sharkPlayers++;
-
+    for (const player of balanceData ?? []) {
       const balance = player.current_balance ?? 0;
-      stats.totalBalance += balance;
-      if (balance > 0) stats.positiveBalance += balance;
-      if (balance < 0) stats.negativeBalance += balance;
+      totalBalance += balance;
+      if (balance > 0) positiveBalance += balance;
+      if (balance < 0) negativeBalance += balance;
     }
 
-    return stats;
+    return {
+      totalPlayers: totalPlayers ?? 0,
+      totalAgents: totalAgents ?? 0,
+      activePlayers: activePlayers ?? 0,
+      activeAgents: activeAgents ?? 0,
+      vipPlayers: vipPlayers ?? 0,
+      sharkPlayers: sharkPlayers ?? 0,
+      totalBalance,
+      positiveBalance,
+      negativeBalance,
+    };
   }),
 
   /**

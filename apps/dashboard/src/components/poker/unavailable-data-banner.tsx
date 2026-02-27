@@ -15,8 +15,8 @@ export function UnavailableDataBanner() {
           </p>
           <p className="text-xs text-blue-600/80 dark:text-blue-400/80 mt-1">
             Rake detalhado, saldo de fichas em tempo real e histórico de
-            transações estão sendo integrados diretamente da API PPPoker.
-            Esses dados estarão disponíveis em breve.
+            transações estão sendo integrados diretamente da API PPPoker. Esses
+            dados estarão disponíveis em breve.
           </p>
         </div>
       </div>

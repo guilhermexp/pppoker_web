@@ -2,13 +2,10 @@
 
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import { formatNumberRounded as formatNumber } from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useSuspenseQuery } from "@tanstack/react-query";
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(Math.round(value));
-}
 
 function StatBadge({
   icon: Icon,

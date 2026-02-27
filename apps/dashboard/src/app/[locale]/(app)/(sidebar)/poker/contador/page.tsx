@@ -19,9 +19,7 @@ export default async function PokerContadorPage() {
     <HydrateClient>
       <div className="flex flex-col gap-6">
         <div className="pt-6">
-          <h1 className="text-2xl font-medium">
-            {t("poker.contador.title")}
-          </h1>
+          <h1 className="text-2xl font-medium">{t("poker.contador.title")}</h1>
           <p className="text-muted-foreground mt-1">
             {t("poker.contador.description")}
           </p>

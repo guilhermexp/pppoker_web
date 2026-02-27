@@ -192,7 +192,10 @@ export function MemberDetailView({
           value="0"
           className="border-r border-border"
         />
-        <StatCell label="Taxa" value={formatMoney(player.rakeStats.totalRake)} />
+        <StatCell
+          label="Taxa"
+          value={formatMoney(player.rakeStats.totalRake)}
+        />
       </div>
 
       {/* Role Badge + Info */}

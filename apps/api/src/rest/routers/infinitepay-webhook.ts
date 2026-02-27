@@ -65,7 +65,9 @@ app.post("/", async (c) => {
   // teams happen to share the same order_nsu (UNIQUE is per team_id+order_nsu)
   const { data: rows, error: findError } = await supabase
     .from("fastchips_payment_orders")
-    .select("id, team_id, status, transaction_nsu, slug, capture_method, paid_amount, metadata")
+    .select(
+      "id, team_id, status, transaction_nsu, slug, capture_method, paid_amount, metadata",
+    )
     .eq("order_nsu", orderNsu)
     .order("created_at", { ascending: false })
     .limit(1);
@@ -103,8 +105,7 @@ app.post("/", async (c) => {
 
   const transactionNsu =
     typeof body.transaction_nsu === "string" ? body.transaction_nsu : null;
-  const slug =
-    typeof body.invoice_slug === "string" ? body.invoice_slug : null;
+  const slug = typeof body.invoice_slug === "string" ? body.invoice_slug : null;
   const captureMethod =
     typeof body.capture_method === "string" ? body.capture_method : null;
   const installments =

@@ -10,9 +10,7 @@
       {
         "label": "f1=club,f2=dateType0,f3=today_ymd",
         "score": 13,
-        "rsp": [
-          "pb.UserLogoutRSP"
-        ]
+        "rsp": ["pb.UserLogoutRSP"]
       },
       {
         "label": "empty",

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import {
   Table,
@@ -34,15 +35,6 @@ type SettlementsTabProps = {
     playersWithNegativeBalance: number;
   };
 };
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 export function SettlementsTab({ settlements, summary }: SettlementsTabProps) {
   if (settlements.length === 0) {

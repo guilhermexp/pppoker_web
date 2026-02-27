@@ -38,8 +38,7 @@ function DetailRow({
 
 export function FastChipsTransactionDetailSheet() {
   const trpc = useTRPC();
-  const { fastchipsTransactionId, setParams } =
-    useFastchipsTransactionParams();
+  const { fastchipsTransactionId, setParams } = useFastchipsTransactionParams();
   const isOpen = Boolean(fastchipsTransactionId);
 
   const { data: op, isLoading } = useQuery({
@@ -124,19 +123,16 @@ export function FastChipsTransactionDetailSheet() {
               <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
                 <DetailRow
                   label="Fichas"
-                  value={Math.round(
-                    op.grossAmount / 100,
-                  ).toLocaleString("pt-BR")}
+                  value={Math.round(op.grossAmount / 100).toLocaleString(
+                    "pt-BR",
+                  )}
                 />
                 <DetailRow
                   label="Valor Bruto"
                   value={formatCurrency(op.grossAmount)}
                 />
                 {op.feeRate != null && op.feeRate > 0 && (
-                  <DetailRow
-                    label="Taxa"
-                    value={`${op.feeRate}%`}
-                  />
+                  <DetailRow label="Taxa" value={`${op.feeRate}%`} />
                 )}
                 {op.feeAmount != null && op.feeAmount > 0 && (
                   <DetailRow

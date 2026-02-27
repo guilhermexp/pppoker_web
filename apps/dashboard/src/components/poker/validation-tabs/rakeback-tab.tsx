@@ -1,6 +1,11 @@
 "use client";
 
 import type { ParsedRakeback } from "@/lib/poker/types";
+import {
+  formatCurrency,
+  formatNumberPtBR as formatNumber,
+  formatPercentPrecise as formatPercent,
+} from "@/utils/format";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
 import { Input } from "@midpoker/ui/input";
@@ -9,18 +14,6 @@ import { useState } from "react";
 type RakebackTabProps = {
   rakebacks: ParsedRakeback[];
 };
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatNumber(value: number): string {
-  return value.toLocaleString("pt-BR");
-}
-
-function formatPercent(value: number): string {
-  return `${value.toFixed(2)}%`;
-}
 
 export function RakebackTab({ rakebacks }: RakebackTabProps) {
   const [searchQuery, setSearchQuery] = useState("");

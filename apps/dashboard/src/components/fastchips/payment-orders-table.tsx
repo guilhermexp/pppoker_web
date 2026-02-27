@@ -32,7 +32,13 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-type StatusFilter = "all" | "link_gerado" | "pago" | "fichas_enviadas" | "cancelado" | "erro";
+type StatusFilter =
+  | "all"
+  | "link_gerado"
+  | "pago"
+  | "fichas_enviadas"
+  | "cancelado"
+  | "erro";
 
 const STATUS_LABELS: Record<string, string> = {
   link_gerado: "Link Gerado",
@@ -222,7 +228,7 @@ export function PaymentOrdersTable() {
                   {isLoadingStats ? (
                     <Skeleton className="h-8 w-12" />
                   ) : (
-                    stats?.linkGerado ?? 0
+                    (stats?.linkGerado ?? 0)
                   )}
                 </div>
               </div>
@@ -244,7 +250,7 @@ export function PaymentOrdersTable() {
                   {isLoadingStats ? (
                     <Skeleton className="h-8 w-12" />
                   ) : (
-                    stats?.pago ?? 0
+                    (stats?.pago ?? 0)
                   )}
                 </div>
               </div>
@@ -266,7 +272,7 @@ export function PaymentOrdersTable() {
                   {isLoadingStats ? (
                     <Skeleton className="h-8 w-12" />
                   ) : (
-                    stats?.fichasEnviadasHoje ?? 0
+                    (stats?.fichasEnviadasHoje ?? 0)
                   )}
                 </div>
               </div>
@@ -341,12 +347,24 @@ export function PaymentOrdersTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[160px]">{t("fastchips.payment_orders.table.status")}</TableHead>
-                <TableHead>{t("fastchips.payment_orders.table.jogador")}</TableHead>
-                <TableHead>{t("fastchips.payment_orders.table.fichas")}</TableHead>
-                <TableHead>{t("fastchips.payment_orders.table.valor")}</TableHead>
-                <TableHead>{t("fastchips.payment_orders.table.metodo")}</TableHead>
-                <TableHead>{t("fastchips.payment_orders.table.data")}</TableHead>
+                <TableHead className="min-w-[160px]">
+                  {t("fastchips.payment_orders.table.status")}
+                </TableHead>
+                <TableHead>
+                  {t("fastchips.payment_orders.table.jogador")}
+                </TableHead>
+                <TableHead>
+                  {t("fastchips.payment_orders.table.fichas")}
+                </TableHead>
+                <TableHead>
+                  {t("fastchips.payment_orders.table.valor")}
+                </TableHead>
+                <TableHead>
+                  {t("fastchips.payment_orders.table.metodo")}
+                </TableHead>
+                <TableHead>
+                  {t("fastchips.payment_orders.table.data")}
+                </TableHead>
                 <TableHead className="text-right">
                   {t("fastchips.payment_orders.table.acoes")}
                 </TableHead>
@@ -356,18 +374,35 @@ export function PaymentOrdersTable() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={`skeleton-${i}`}>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-20" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-muted-foreground"
+                  >
                     {t("fastchips.payment_orders.empty")}
                   </TableCell>
                 </TableRow>
@@ -392,15 +427,13 @@ export function PaymentOrdersTable() {
                     <TableCell className="font-medium">
                       {order.fichas?.toLocaleString("pt-BR")}
                     </TableCell>
-                    <TableCell>
-                      {formatCurrency(order.valorReais)}
-                    </TableCell>
-                    <TableCell>
-                      {order.captureMethod || "-"}
-                    </TableCell>
+                    <TableCell>{formatCurrency(order.valorReais)}</TableCell>
+                    <TableCell>{order.captureMethod || "-"}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="text-sm">{formatDate(order.createdAt)}</span>
+                        <span className="text-sm">
+                          {formatDate(order.createdAt)}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {formatTime(order.createdAt)}
                         </span>
@@ -416,13 +449,17 @@ export function PaymentOrdersTable() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() => handleCopyLink(order.checkoutUrl)}
+                                  onClick={() =>
+                                    handleCopyLink(order.checkoutUrl)
+                                  }
                                 >
                                   <Icons.Copy className="h-4 w-4" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t("fastchips.payment_orders.actions.copiar_link")}
+                                {t(
+                                  "fastchips.payment_orders.actions.copiar_link",
+                                )}
                               </TooltipContent>
                             </Tooltip>
                           )}
@@ -434,14 +471,18 @@ export function PaymentOrdersTable() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() => handleMarkFichasEnviadas(order.id)}
+                                  onClick={() =>
+                                    handleMarkFichasEnviadas(order.id)
+                                  }
                                   disabled={updateStatusMutation.isPending}
                                 >
                                   <Icons.Check className="h-4 w-4" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t("fastchips.payment_orders.actions.marcar_enviadas")}
+                                {t(
+                                  "fastchips.payment_orders.actions.marcar_enviadas",
+                                )}
                               </TooltipContent>
                             </Tooltip>
                           )}

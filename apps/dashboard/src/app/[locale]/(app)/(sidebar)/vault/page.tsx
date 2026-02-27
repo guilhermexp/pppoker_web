@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/error-boundary";
 import { VaultHeader } from "@/components/vault/vault-header";
 import { VaultSkeleton } from "@/components/vault/vault-skeleton";
 import { VaultView } from "@/components/vault/vault-view";
@@ -35,9 +36,11 @@ export default async function Page(props: Props) {
       <div>
         <VaultHeader />
 
-        <Suspense fallback={<VaultSkeleton />}>
-          <VaultView />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<VaultSkeleton />}>
+            <VaultView />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </HydrateClient>
   );

@@ -3,6 +3,7 @@
 import { usePokerSessionParams } from "@/hooks/use-poker-session-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import { formatDecimal as formatCurrency } from "@/utils/format";
 import { Avatar, AvatarFallback } from "@midpoker/ui/avatar";
 import { Badge } from "@midpoker/ui/badge";
 import { Button } from "@midpoker/ui/button";
@@ -34,13 +35,6 @@ import { ptBR } from "date-fns/locale";
 // ============================================
 // Helper Functions
 // ============================================
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 function getSessionTypeLabel(type: string) {
   const types: Record<string, string> = {

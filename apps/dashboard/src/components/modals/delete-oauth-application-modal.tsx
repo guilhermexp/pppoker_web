@@ -38,10 +38,43 @@ export function DeleteOAuthApplicationModal({
 
   const deleteApplicationMutation = useMutation(
     trpc.oauthApplications.delete.mutationOptions({
-      onSuccess: () => {
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.oauthApplications.list.queryKey(),
+        });
+        const previous = queryClient.getQueryData(
+          trpc.oauthApplications.list.queryKey(),
+        );
+        queryClient.setQueriesData(
+          { queryKey: trpc.oauthApplications.list.queryKey() },
+          (old: any) => {
+            if (!old) return old;
+            // Data shape: { data: [...] }
+            if (old.data && Array.isArray(old.data)) {
+              return {
+                ...old,
+                data: old.data.filter((item: any) => item.id !== id),
+              };
+            }
+            return old;
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueriesData(
+            { queryKey: trpc.oauthApplications.list.queryKey() },
+            context.previous,
+          );
+        }
+      },
+      onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.oauthApplications.list.queryKey(),
         });
+      },
+      onSuccess: () => {
         onOpenChange(false);
         setParams(null);
         setValue("");

@@ -80,8 +80,7 @@ export function normalizeFastchipsServiceSettings(
       obj.status === "active"
         ? obj.status
         : "inactive",
-    activatedAt:
-      typeof obj.activatedAt === "string" ? obj.activatedAt : null,
+    activatedAt: typeof obj.activatedAt === "string" ? obj.activatedAt : null,
 
     setupSteps: {
       infinitepayConfigured:
@@ -125,9 +124,7 @@ export function normalizeFastchipsServiceSettings(
           ? controlPanel.maxWithdrawReais
           : 3000,
       leagueId:
-        typeof controlPanel.leagueId === "string"
-          ? controlPanel.leagueId
-          : "",
+        typeof controlPanel.leagueId === "string" ? controlPanel.leagueId : "",
     },
 
     gateway: {

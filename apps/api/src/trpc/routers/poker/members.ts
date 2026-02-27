@@ -1,7 +1,12 @@
+import {
+  PPPOKER_BRIDGE_URL,
+  bridgeFetch,
+  getBridgeCredentialsWithLiga,
+} from "@api/lib/bridge";
 import { createAdminClient } from "@api/services/supabase";
+import { z } from "@hono/zod-openapi";
 import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
-import { z } from "@hono/zod-openapi";
 import {
   createCreditRequestSchema,
   createMemberRequestSchema,
@@ -12,39 +17,6 @@ import {
   reviewMemberSchema,
 } from "../../../schemas/poker/members";
 import { createTRPCRouter, protectedProcedure } from "../../init";
-
-const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
-
-async function getBridgeCredentials(teamId: string) {
-  const supabase = await createAdminClient();
-  const { data } = await supabase
-    .from("pppoker_club_connections")
-    .select("club_id, pppoker_username, pppoker_password")
-    .eq("team_id", teamId)
-    .in("sync_status", ["active", "error"])
-    .limit(1)
-    .single();
-
-  if (!data) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Nenhuma conexao PPPoker encontrada. Faca login novamente.",
-    });
-  }
-
-  // Fetch liga_id from team settings
-  const { data: team } = await supabase
-    .from("teams")
-    .select("poker_liga_id")
-    .eq("id", teamId)
-    .single();
-
-  return {
-    ...data,
-    liga_id: team?.poker_liga_id ? Number(team.poker_liga_id) : null,
-  };
-}
 
 const liveMemberSchema = z
   .object({
@@ -70,16 +42,18 @@ const liveMemberSchema = z
   })
   .passthrough();
 
-const clubInfoSchema = z.object({
-  club_id: z.number().nullable().optional(),
-  club_name: z.string().optional().default(""),
-  fichas_disponiveis: z.number().optional().default(0),
-  owner_uid: z.number().nullable().optional(),
-  owner_name: z.string().optional().default(""),
-  user_role: z.number().optional().default(0),
-  total_members: z.number().optional().default(0),
-  avatar_url: z.string().optional().default(""),
-}).optional();
+const clubInfoSchema = z
+  .object({
+    club_id: z.number().nullable().optional(),
+    club_name: z.string().optional().default(""),
+    fichas_disponiveis: z.number().optional().default(0),
+    owner_uid: z.number().nullable().optional(),
+    owner_name: z.string().optional().default(""),
+    user_role: z.number().optional().default(0),
+    total_members: z.number().optional().default(0),
+    avatar_url: z.string().optional().default(""),
+  })
+  .optional();
 
 const getLiveMembersResponse = z.object({
   success: z.boolean(),
@@ -105,33 +79,38 @@ export const pokerMembersRouter = createTRPCRouter({
         .default({}),
     )
     .query(async ({ input, ctx: { teamId } }) => {
-      const creds = await getBridgeCredentials(teamId!);
+      const creds = await getBridgeCredentialsWithLiga(teamId!);
 
       // Build URL with query params for stats
-      const url = new URL(`${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/members`);
+      const url = new URL(
+        `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/members`,
+      );
       if (creds.liga_id) {
         url.searchParams.set("liga_id", String(creds.liga_id));
         // Default date range: last 30 days if not specified
         const now = new Date();
         const start = new Date(now);
         start.setDate(start.getDate() - 30);
-        const dateStart = input.dateStart ??
-          Number(`${start.getFullYear()}${String(start.getMonth() + 1).padStart(2, "0")}${String(start.getDate()).padStart(2, "0")}`);
-        const dateEnd = input.dateEnd ??
-          Number(`${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`);
+        const dateStart =
+          input.dateStart ??
+          Number(
+            `${start.getFullYear()}${String(start.getMonth() + 1).padStart(2, "0")}${String(start.getDate()).padStart(2, "0")}`,
+          );
+        const dateEnd =
+          input.dateEnd ??
+          Number(
+            `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`,
+          );
         url.searchParams.set("date_start", String(dateStart));
         url.searchParams.set("date_end", String(dateEnd));
       }
 
-      const resp = await fetch(
-        url.toString(),
-        {
-          headers: {
-            "X-PPPoker-Username": creds.pppoker_username,
-            "X-PPPoker-Password": creds.pppoker_password,
-          },
+      const resp = await bridgeFetch(url.toString(), {
+        headers: {
+          "X-PPPoker-Username": creds.pppoker_username,
+          "X-PPPoker-Password": creds.pppoker_password,
         },
-      );
+      });
 
       if (!resp.ok) {
         const errText = await resp.text();
@@ -269,9 +248,8 @@ export const pokerMembersRouter = createTRPCRouter({
         ),
         pppokerRole: (p as Record<string, unknown>).pppoker_role ?? null,
         roleLabel:
-          ROLE_LABELS[
-            (p as Record<string, unknown>).pppoker_role as number
-          ] ?? "Membro",
+          ROLE_LABELS[(p as Record<string, unknown>).pppoker_role as number] ??
+          "Membro",
         creditLimit: p.credit_limit ?? 0,
         currentBalance: p.current_balance ?? 0,
         agentId: p.agent_id,
@@ -285,10 +263,14 @@ export const pokerMembersRouter = createTRPCRouter({
         agenteUid: (p as Record<string, unknown>).agente_uid as number | null,
         agenteNome:
           ((p as Record<string, unknown>).agente_nome as string) ?? "",
-        superAgenteUid: (p as Record<string, unknown>).super_agente_uid as number | null,
+        superAgenteUid: (p as Record<string, unknown>).super_agente_uid as
+          | number
+          | null,
         superAgenteNome:
           ((p as Record<string, unknown>).super_agente_nome as string) ?? "",
-        superAgentId: (p as Record<string, unknown>).super_agent_id as string | null,
+        superAgentId: (p as Record<string, unknown>).super_agent_id as
+          | string
+          | null,
         statsPeriodStart:
           ((p as Record<string, unknown>).stats_period_start as string) ?? null,
         statsPeriodEnd:
@@ -312,41 +294,47 @@ export const pokerMembersRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx: { teamId } }) => {
     const supabase = await createAdminClient();
 
-    // Count all members
-    const { count: totalMembers } = await supabase
-      .from("poker_players")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", teamId);
-
-    // Count online members
-    const { count: onlineMembers } = await supabase
-      .from("poker_players")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", teamId)
-      .eq("is_online", true);
-
-    // Count new members this week (created in last 7 days)
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const { count: newThisWeek } = await supabase
-      .from("poker_players")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", teamId)
-      .gte("created_at", weekAgo.toISOString());
 
-    // Count pending member requests
-    const { count: pendingMembers } = await supabase
-      .from("club_member_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", teamId)
-      .eq("status", "pending");
-
-    // Count pending credit requests
-    const { count: pendingCredits } = await supabase
-      .from("club_credit_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", teamId)
-      .eq("status", "pending");
+    // Execute all 5 independent count queries in parallel
+    const [
+      { count: totalMembers },
+      { count: onlineMembers },
+      { count: newThisWeek },
+      { count: pendingMembers },
+      { count: pendingCredits },
+    ] = await Promise.all([
+      // Count all members
+      supabase
+        .from("poker_players")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", teamId),
+      // Count online members
+      supabase
+        .from("poker_players")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .eq("is_online", true),
+      // Count new members this week (created in last 7 days)
+      supabase
+        .from("poker_players")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .gte("created_at", weekAgo.toISOString()),
+      // Count pending member requests
+      supabase
+        .from("club_member_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .eq("status", "pending"),
+      // Count pending credit requests
+      supabase
+        .from("club_credit_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", teamId)
+        .eq("status", "pending"),
+    ]);
 
     return {
       totalMembers: totalMembers ?? 0,
@@ -363,9 +351,9 @@ export const pokerMembersRouter = createTRPCRouter({
   listPendingMembers: protectedProcedure
     .input(listPendingMembersSchema.optional())
     .query(async ({ ctx: { teamId } }) => {
-      const creds = await getBridgeCredentials(teamId!);
+      const creds = await getBridgeCredentialsWithLiga(teamId!);
 
-      const resp = await fetch(
+      const resp = await bridgeFetch(
         `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/join-requests`,
         {
           headers: {
@@ -377,7 +365,10 @@ export const pokerMembersRouter = createTRPCRouter({
 
       if (!resp.ok) {
         const errText = await resp.text();
-        logger.error({ error: errText }, "members.listPendingMembers bridge error");
+        logger.error(
+          { error: errText },
+          "members.listPendingMembers bridge error",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Falha ao buscar solicitações: ${errText}`,
@@ -393,25 +384,27 @@ export const pokerMembersRouter = createTRPCRouter({
           hasNextPage: false,
           totalCount: requests.length,
         },
-        data: requests.map((r: {
-          request_id: number;
-          uid: number;
-          nome: string;
-          avatar_url?: string;
-          timestamp?: number;
-          mensagem?: string;
-        }) => ({
-          id: String(r.request_id),
-          playerId: null,
-          ppPokerId: String(r.uid),
-          nickname: r.nome,
-          avatarUrl: r.avatar_url ?? "",
-          status: "pending",
-          requestedAt: r.timestamp
-            ? new Date(r.timestamp * 1000).toISOString()
-            : new Date().toISOString(),
-          note: r.mensagem ?? null,
-        })),
+        data: requests.map(
+          (r: {
+            request_id: number;
+            uid: number;
+            nome: string;
+            avatar_url?: string;
+            timestamp?: number;
+            mensagem?: string;
+          }) => ({
+            id: String(r.request_id),
+            playerId: null,
+            ppPokerId: String(r.uid),
+            nickname: r.nome,
+            avatarUrl: r.avatar_url ?? "",
+            status: "pending",
+            requestedAt: r.timestamp
+              ? new Date(r.timestamp * 1000).toISOString()
+              : new Date().toISOString(),
+            note: r.mensagem ?? null,
+          }),
+        ),
       };
     }),
 
@@ -421,9 +414,9 @@ export const pokerMembersRouter = createTRPCRouter({
   reviewMember: protectedProcedure
     .input(reviewMemberSchema)
     .mutation(async ({ input, ctx: { teamId } }) => {
-      const creds = await getBridgeCredentials(teamId!);
+      const creds = await getBridgeCredentialsWithLiga(teamId!);
 
-      const resp = await fetch(
+      const resp = await bridgeFetch(
         `${PPPOKER_BRIDGE_URL}/clubs/${creds.club_id}/join-requests/${input.id}/review`,
         {
           method: "POST",
@@ -481,7 +474,10 @@ export const pokerMembersRouter = createTRPCRouter({
       const { data, error, count } = await query;
 
       if (error) {
-        logger.error({ error: error.message }, "members.listCreditRequests error");
+        logger.error(
+          { error: error.message },
+          "members.listCreditRequests error",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error.message,
@@ -674,7 +670,7 @@ export const pokerMembersRouter = createTRPCRouter({
         .default({}),
     )
     .mutation(async ({ input, ctx: { teamId } }) => {
-      const creds = await getBridgeCredentials(teamId!);
+      const creds = await getBridgeCredentialsWithLiga(teamId!);
 
       // Build URL with query params for stats (same logic as getLive)
       const url = new URL(
@@ -699,7 +695,7 @@ export const pokerMembersRouter = createTRPCRouter({
         url.searchParams.set("date_end", String(dateEnd));
       }
 
-      const resp = await fetch(url.toString(), {
+      const resp = await bridgeFetch(url.toString(), {
         headers: {
           "X-PPPoker-Username": creds.pppoker_username,
           "X-PPPoker-Password": creds.pppoker_password,

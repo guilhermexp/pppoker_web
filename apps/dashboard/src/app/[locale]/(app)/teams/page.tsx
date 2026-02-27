@@ -14,12 +14,11 @@ export const metadata: Metadata = {
 
 export default async function Teams() {
   const queryClient = getQueryClient();
-  const teams = await queryClient.fetchQuery(trpc.team.list.queryOptions());
-  const invites = await queryClient.fetchQuery(
-    trpc.team.invitesByEmail.queryOptions(),
-  );
-
-  const user = await queryClient.fetchQuery(trpc.user.me.queryOptions());
+  const [teams, invites, user] = await Promise.all([
+    queryClient.fetchQuery(trpc.team.list.queryOptions()),
+    queryClient.fetchQuery(trpc.team.invitesByEmail.queryOptions()),
+    queryClient.fetchQuery(trpc.user.me.queryOptions()),
+  ]);
 
   // If no teams and no invites, redirect to create team
   if (!teams?.length && !invites?.length) {

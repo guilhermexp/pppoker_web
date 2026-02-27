@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  formatCurrency,
+  formatPercentPrecise as formatPercent,
+} from "@/utils/format";
 import { Button } from "@midpoker/ui/button";
 import { cn } from "@midpoker/ui/cn";
 import { Icons } from "@midpoker/ui/icons";
@@ -51,14 +55,6 @@ type RakebackTabProps = {
   rakebackOverrides?: RakebackOverride[];
   onOverridesChange?: (overrides: RakebackOverride[]) => void;
 };
-
-function formatCurrency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatPercent(value: number): string {
-  return `${value.toFixed(2)}%`;
-}
 
 export function RakebackTab({
   rakebacks,

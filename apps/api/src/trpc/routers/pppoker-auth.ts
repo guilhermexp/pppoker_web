@@ -1,11 +1,10 @@
+import { PPPOKER_BRIDGE_URL, bridgeFetch } from "@api/lib/bridge";
 import { createAdminClient } from "@api/services/supabase";
+import { z } from "@hono/zod-openapi";
+import { encrypt } from "@midpoker/encryption";
 import { logger } from "@midpoker/logger";
 import { TRPCError } from "@trpc/server";
-import { z } from "@hono/zod-openapi";
 import { createTRPCRouter, publicProcedure } from "../init";
-
-const PPPOKER_BRIDGE_URL =
-  process.env.PPPOKER_BRIDGE_URL || "http://localhost:3102";
 
 /** Shape returned by GET /clubs on the bridge */
 interface BridgeClub {
@@ -34,11 +33,12 @@ async function fetchBridgeClubs(
   username: string,
   password: string,
 ): Promise<BridgeClub[]> {
-  const resp = await fetch(`${PPPOKER_BRIDGE_URL}/clubs`, {
+  const resp = await bridgeFetch(`${PPPOKER_BRIDGE_URL}/clubs`, {
     headers: {
       "X-PPPoker-Username": username,
       "X-PPPoker-Password": password,
     },
+    throwOnCircuitOpen: false,
   });
 
   if (!resp.ok) {
@@ -94,7 +94,10 @@ async function findOrCreateTeamForClub(
       });
 
       if (linkError) {
-        logger.error({ error: linkError }, "Failed to link user to existing club team");
+        logger.error(
+          { error: linkError },
+          "Failed to link user to existing club team",
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Falha ao vincular usuário à organização do clube.",
@@ -197,7 +200,7 @@ export const pppokerAuthRouter = createTRPCRouter({
       };
 
       try {
-        const resp = await fetch(`${PPPOKER_BRIDGE_URL}/auth/login`, {
+        const resp = await bridgeFetch(`${PPPOKER_BRIDGE_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -205,6 +208,7 @@ export const pppokerAuthRouter = createTRPCRouter({
             password,
             verify_code: verifyCode || null,
           }),
+          throwOnCircuitOpen: false,
         });
         loginResult = await resp.json();
       } catch (err) {
@@ -274,11 +278,10 @@ export const pppokerAuthRouter = createTRPCRouter({
       let accessToken: string;
       let refreshToken: string;
 
-      const { data: signInData } =
-        await supabase.auth.signInWithPassword({
-          email: mappedEmail,
-          password: mappedPassword,
-        });
+      const { data: signInData } = await supabase.auth.signInWithPassword({
+        email: mappedEmail,
+        password: mappedPassword,
+      });
 
       if (signInData?.session) {
         userId = signInData.user.id;
@@ -299,7 +302,10 @@ export const pppokerAuthRouter = createTRPCRouter({
           });
 
         if (signUpError || !signUpData.user) {
-          logger.error({ error: signUpError }, "Failed to create Supabase user");
+          logger.error(
+            { error: signUpError },
+            "Failed to create Supabase user",
+          );
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Falha ao criar conta. Tente novamente.",
@@ -312,10 +318,12 @@ export const pppokerAuthRouter = createTRPCRouter({
           email_confirm: true,
         });
 
-        await adminDb.from("users").upsert(
-          { id: userId, full_name: username, email: mappedEmail },
-          { onConflict: "id" },
-        );
+        await adminDb
+          .from("users")
+          .upsert(
+            { id: userId, full_name: username, email: mappedEmail },
+            { onConflict: "id" },
+          );
 
         const { data: newSignIn, error: newSignInError } =
           await supabase.auth.signInWithPassword({
@@ -335,10 +343,12 @@ export const pppokerAuthRouter = createTRPCRouter({
       }
 
       // Ensure public.users row exists
-      await adminDb.from("users").upsert(
-        { id: userId, full_name: username, email: mappedEmail },
-        { onConflict: "id", ignoreDuplicates: true },
-      );
+      await adminDb
+        .from("users")
+        .upsert(
+          { id: userId, full_name: username, email: mappedEmail },
+          { onConflict: "id", ignoreDuplicates: true },
+        );
 
       // --- Find or create a DEDICATED team for the selected club ---
       const selectedClub = bridgeClubs.find((c) => c.club_id === clubId);
@@ -359,10 +369,7 @@ export const pppokerAuthRouter = createTRPCRouter({
       );
 
       // Switch user's active team to the selected club's team
-      await adminDb
-        .from("users")
-        .update({ team_id: teamId })
-        .eq("id", userId);
+      await adminDb.from("users").update({ team_id: teamId }).eq("id", userId);
 
       // Ensure club connection exists and is active
       const clubName = selectedClub?.club_name ?? `Clube ${clubId}`;
@@ -372,7 +379,7 @@ export const pppokerAuthRouter = createTRPCRouter({
           club_id: clubId,
           club_name: clubName,
           pppoker_username: username,
-          pppoker_password: password,
+          pppoker_password: encrypt(password),
           sync_status: "active",
         },
         { onConflict: "team_id,club_id" },
@@ -392,10 +399,7 @@ export const pppokerAuthRouter = createTRPCRouter({
         pokerSettings.poker_entity_type = "clube_privado";
       }
 
-      await adminDb
-        .from("teams")
-        .update(pokerSettings)
-        .eq("id", teamId);
+      await adminDb.from("teams").update(pokerSettings).eq("id", teamId);
 
       return {
         step: "done" as const,
@@ -418,12 +422,13 @@ export const pppokerAuthRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
-        const resp = await fetch(
+        const resp = await bridgeFetch(
           `${PPPOKER_BRIDGE_URL}/auth/send-verification-code`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: input.email }),
+            throwOnCircuitOpen: false,
           },
         );
 

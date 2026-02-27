@@ -173,7 +173,9 @@ export function ChatStatusIndicators({
       : null);
 
   const elapsedSeconds =
-    startedAt && isStreaming ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
+    startedAt && isStreaming
+      ? Math.max(0, Math.floor((now - startedAt) / 1000))
+      : 0;
   const staleSeconds =
     lastActivityAt && isStreaming
       ? Math.max(0, Math.floor((now - lastActivityAt) / 1000))
@@ -214,7 +216,9 @@ export function ChatStatusIndicators({
                 Sem atualizacao ha {staleSeconds}s
               </span>
             ) : (
-              staleSeconds >= 3 && <span>Ultima atualizacao ha {staleSeconds}s</span>
+              staleSeconds >= 3 && (
+                <span>Ultima atualizacao ha {staleSeconds}s</span>
+              )
             )}
           </div>
         )}

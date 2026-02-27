@@ -197,23 +197,21 @@ export const pokerAnalyticsRouter = createTRPCRouter({
       }
 
       // ============================================
-      // Get player counts from poker_player_summary (players with actual activity)
-      // NOT from poker_players (which includes ALL club members from "Detalhes do usuário")
+      // BATCH 1: All queries that only depend on committedImportIds (not on each other)
       // ============================================
+
+      // Build player summary query
       let playerSummaryQuery = supabase
         .from("poker_player_summary")
         .select("player_id")
         .eq("team_id", teamId)
         .limit(50000);
-
-      // Filter by committed imports if needed
       if (committedImportIds !== null) {
         playerSummaryQuery = playerSummaryQuery.in(
           "import_id",
           committedImportIds,
         );
       }
-
       if (dateFrom) {
         playerSummaryQuery = playerSummaryQuery.gte("period_start", dateFrom);
       }
@@ -221,60 +219,14 @@ export const pokerAnalyticsRouter = createTRPCRouter({
         playerSummaryQuery = playerSummaryQuery.lte("period_end", dateTo);
       }
 
-      const { data: playerSummaryData } = await playerSummaryQuery;
-
-      // Unique players with activity in the period
-      const activePlayerIds = new Set(
-        playerSummaryData?.map((p) => p.player_id) ?? [],
-      );
-      const totalPlayers = activePlayerIds.size;
-
-      // Get players with/without agent (only for active players)
-      let playersWithAgent = 0;
-      if (activePlayerIds.size > 0) {
-        const { data: playersAgentData } = await supabase
-          .from("poker_players")
-          .select("id, agent_id")
-          .eq("team_id", teamId)
-          .eq("type", "player")
-          .in("id", Array.from(activePlayerIds))
-          .limit(50000);
-
-        playersWithAgent =
-          playersAgentData?.filter((p) => p.agent_id !== null).length ?? 0;
-      }
-
-      const playersWithoutAgent = totalPlayers - playersWithAgent;
-
-      // Get agents counts using count queries
-      const { count: activeAgents } = await supabase
-        .from("poker_players")
-        .select("*", { count: "exact", head: true })
-        .eq("team_id", teamId)
-        .eq("type", "agent")
-        .eq("status", "active");
-
-      const { count: superAgents } = await supabase
-        .from("poker_players")
-        .select("*", { count: "exact", head: true })
-        .eq("team_id", teamId)
-        .eq("type", "agent")
-        .eq("status", "active")
-        .is("super_agent_id", null);
-
-      const regularAgents = (activeAgents ?? 0) - (superAgents ?? 0);
-
-      // Get total sessions count with date filter
+      // Build sessions count query
       let sessionsQuery = supabase
         .from("poker_sessions")
         .select("*", { count: "exact", head: true })
         .eq("team_id", teamId);
-
-      // Filter by committed imports if needed
       if (committedImportIds !== null) {
         sessionsQuery = sessionsQuery.in("import_id", committedImportIds);
       }
-
       if (dateFrom) {
         sessionsQuery = sessionsQuery.gte("started_at", dateFrom);
       }
@@ -282,20 +234,15 @@ export const pokerAnalyticsRouter = createTRPCRouter({
         sessionsQuery = sessionsQuery.lte("started_at", dateTo);
       }
 
-      const { count: totalSessions } = await sessionsQuery;
-
-      // Get rake breakdown and player results from poker_player_summary
+      // Build rake query
       let rakeQuery = supabase
         .from("poker_player_summary")
         .select("rake_total, rake_ppst, rake_ppsr, winnings_total")
         .eq("team_id", teamId)
-        .limit(50000); // Avoid 1000 row limit
-
-      // Filter by committed imports if needed
+        .limit(50000);
       if (committedImportIds !== null) {
         rakeQuery = rakeQuery.in("import_id", committedImportIds);
       }
-
       if (dateFrom) {
         rakeQuery = rakeQuery.gte("period_start", dateFrom);
       }
@@ -303,8 +250,113 @@ export const pokerAnalyticsRouter = createTRPCRouter({
         rakeQuery = rakeQuery.lte("period_end", dateTo);
       }
 
-      const { data: rakeData } = await rakeQuery;
+      // Build bank query
+      let bankQuery = supabase
+        .from("poker_chip_transactions")
+        .select("chips_sent, chips_redeemed, credit_sent, credit_redeemed")
+        .eq("team_id", teamId)
+        .limit(50000);
+      if (dateFrom) {
+        bankQuery = bankQuery.gte("occurred_at", dateFrom);
+      }
+      if (dateTo) {
+        bankQuery = bankQuery.lte("occurred_at", dateTo);
+      }
 
+      // Build sessions type query
+      let sessionsTypeQuery = supabase
+        .from("poker_sessions")
+        .select("session_type, game_variant")
+        .eq("team_id", teamId)
+        .limit(50000);
+      if (committedImportIds !== null) {
+        sessionsTypeQuery = sessionsTypeQuery.in(
+          "import_id",
+          committedImportIds,
+        );
+      }
+      if (dateFrom) {
+        sessionsTypeQuery = sessionsTypeQuery.gte("started_at", dateFrom);
+      }
+      if (dateTo) {
+        sessionsTypeQuery = sessionsTypeQuery.lte("started_at", dateTo);
+      }
+
+      // Build player rake query (for rakeback calculation)
+      let playerRakeQuery = supabase
+        .from("poker_player_summary")
+        .select("player_id, rake_total, rake_ppst, rake_ppsr")
+        .eq("team_id", teamId)
+        .limit(50000);
+      if (committedImportIds !== null) {
+        playerRakeQuery = playerRakeQuery.in("import_id", committedImportIds);
+      }
+      if (dateFrom) {
+        playerRakeQuery = playerRakeQuery.gte("period_start", dateFrom);
+      }
+      if (dateTo) {
+        playerRakeQuery = playerRakeQuery.lte("period_end", dateTo);
+      }
+
+      // Execute all independent queries in parallel
+      const [
+        { data: playerSummaryData },
+        { count: activeAgents },
+        { count: superAgents },
+        { count: totalSessions },
+        { data: rakeData },
+        { data: bankData },
+        { data: sessionsData },
+        { data: agentsData },
+        { data: playersAgentMapping },
+        { data: playerRakeData },
+      ] = await Promise.all([
+        playerSummaryQuery,
+        supabase
+          .from("poker_players")
+          .select("*", { count: "exact", head: true })
+          .eq("team_id", teamId)
+          .eq("type", "agent")
+          .eq("status", "active"),
+        supabase
+          .from("poker_players")
+          .select("*", { count: "exact", head: true })
+          .eq("team_id", teamId)
+          .eq("type", "agent")
+          .eq("status", "active")
+          .is("super_agent_id", null),
+        sessionsQuery,
+        rakeQuery,
+        bankQuery,
+        sessionsTypeQuery,
+        supabase
+          .from("poker_players")
+          .select("id, rakeback_percent")
+          .eq("team_id", teamId)
+          .eq("type", "agent")
+          .limit(10000),
+        supabase
+          .from("poker_players")
+          .select("id, agent_id")
+          .eq("team_id", teamId)
+          .not("agent_id", "is", null)
+          .limit(50000),
+        playerRakeQuery,
+      ]);
+
+      // ============================================
+      // Process results from batch 1
+      // ============================================
+
+      // Unique players with activity in the period
+      const activePlayerIds = new Set(
+        playerSummaryData?.map((p) => p.player_id) ?? [],
+      );
+      const totalPlayers = activePlayerIds.size;
+
+      const regularAgents = (activeAgents ?? 0) - (superAgents ?? 0);
+
+      // Rake breakdown
       const rakeTotal =
         rakeData?.reduce((sum, r) => sum + Number(r.rake_total || 0), 0) ?? 0;
       const rakePpst =
@@ -322,22 +374,7 @@ export const pokerAnalyticsRouter = createTRPCRouter({
       const losers =
         rakeData?.filter((r) => Number(r.winnings_total || 0) < 0).length ?? 0;
 
-      // Get bank result breakdown
-      let bankQuery = supabase
-        .from("poker_chip_transactions")
-        .select("chips_sent, chips_redeemed, credit_sent, credit_redeemed")
-        .eq("team_id", teamId)
-        .limit(50000); // Avoid 1000 row limit
-
-      if (dateFrom) {
-        bankQuery = bankQuery.gte("occurred_at", dateFrom);
-      }
-      if (dateTo) {
-        bankQuery = bankQuery.lte("occurred_at", dateTo);
-      }
-
-      const { data: bankData } = await bankQuery;
-
+      // Bank result
       const chipsSent =
         bankData?.reduce((sum, t) => sum + Number(t.chips_sent || 0), 0) ?? 0;
       const chipsRedeemed =
@@ -352,30 +389,7 @@ export const pokerAnalyticsRouter = createTRPCRouter({
       const bankResult =
         chipsSent - chipsRedeemed + creditsSent - creditsRedeemed;
 
-      // Get sessions by type distribution
-      let sessionsTypeQuery = supabase
-        .from("poker_sessions")
-        .select("session_type, game_variant")
-        .eq("team_id", teamId)
-        .limit(50000); // Avoid 1000 row limit
-
-      // Filter by committed imports if needed
-      if (committedImportIds !== null) {
-        sessionsTypeQuery = sessionsTypeQuery.in(
-          "import_id",
-          committedImportIds,
-        );
-      }
-
-      if (dateFrom) {
-        sessionsTypeQuery = sessionsTypeQuery.gte("started_at", dateFrom);
-      }
-      if (dateTo) {
-        sessionsTypeQuery = sessionsTypeQuery.lte("started_at", dateTo);
-      }
-
-      const { data: sessionsData } = await sessionsTypeQuery;
-
+      // Sessions by type distribution
       const sessionCounts: Record<string, number> = {};
       const gameVariantCounts: Record<string, number> = {};
       for (const session of sessionsData ?? []) {
@@ -411,19 +425,39 @@ export const pokerAnalyticsRouter = createTRPCRouter({
         }))
         .sort((a, b) => b.count - a.count);
 
-      // Get players by region (only for active players - those in summary)
-      // Note: includes both players and agents since agents also play
+      // ============================================
+      // BATCH 2: Queries that depend on activePlayerIds
+      // ============================================
+      let playersWithAgent = 0;
       let playersRegionData: { country: string | null }[] = [];
+
       if (activePlayerIds.size > 0) {
-        const { data } = await supabase
-          .from("poker_players")
-          .select("country")
-          .eq("team_id", teamId)
-          .in("id", Array.from(activePlayerIds))
-          .limit(50000);
-        playersRegionData = data ?? [];
+        const activePlayerIdArray = Array.from(activePlayerIds);
+        const [{ data: playersAgentData }, { data: regionData }] =
+          await Promise.all([
+            supabase
+              .from("poker_players")
+              .select("id, agent_id")
+              .eq("team_id", teamId)
+              .eq("type", "player")
+              .in("id", activePlayerIdArray)
+              .limit(50000),
+            supabase
+              .from("poker_players")
+              .select("country")
+              .eq("team_id", teamId)
+              .in("id", activePlayerIdArray)
+              .limit(50000),
+          ]);
+
+        playersWithAgent =
+          playersAgentData?.filter((p) => p.agent_id !== null).length ?? 0;
+        playersRegionData = regionData ?? [];
       }
 
+      const playersWithoutAgent = totalPlayers - playersWithAgent;
+
+      // Players by region
       const regionCounts: Record<string, number> = {};
       for (const player of playersRegionData) {
         const region = player.country || "Desconhecido";
@@ -442,22 +476,9 @@ export const pokerAnalyticsRouter = createTRPCRouter({
         }))
         .sort((a, b) => b.count - a.count);
 
-      // Calculate total rakeback based on each agent's rake * their rakeback percentage
-      // Step 1: Get all agents with their rakeback percent
-      const { data: agentsData } = await supabase
-        .from("poker_players")
-        .select("id, rakeback_percent")
-        .eq("team_id", teamId)
-        .eq("type", "agent")
-        .limit(10000);
-
-      // Step 2: Get all players and their agent assignments
-      const { data: playersAgentMapping } = await supabase
-        .from("poker_players")
-        .select("id, agent_id")
-        .eq("team_id", teamId)
-        .not("agent_id", "is", null)
-        .limit(50000);
+      // ============================================
+      // Rakeback calculation (uses agentsData, playersAgentMapping, playerRakeData from batch 1)
+      // ============================================
 
       // Build map of player -> agent
       const playerToAgentMap = new Map<string, string>();
@@ -467,28 +488,7 @@ export const pokerAnalyticsRouter = createTRPCRouter({
         }
       }
 
-      // Step 3: Get rake data per player from summary with date filter (including PPST/PPSR breakdown)
-      let playerRakeQuery = supabase
-        .from("poker_player_summary")
-        .select("player_id, rake_total, rake_ppst, rake_ppsr")
-        .eq("team_id", teamId)
-        .limit(50000);
-
-      // Filter by committed imports if needed
-      if (committedImportIds !== null) {
-        playerRakeQuery = playerRakeQuery.in("import_id", committedImportIds);
-      }
-
-      if (dateFrom) {
-        playerRakeQuery = playerRakeQuery.gte("period_start", dateFrom);
-      }
-      if (dateTo) {
-        playerRakeQuery = playerRakeQuery.lte("period_end", dateTo);
-      }
-
-      const { data: playerRakeData } = await playerRakeQuery;
-
-      // Step 4: Aggregate rake per agent (total, ppst, ppsr)
+      // Aggregate rake per agent (total, ppst, ppsr)
       const agentRakeMap = new Map<
         string,
         { total: number; ppst: number; ppsr: number }
@@ -508,7 +508,7 @@ export const pokerAnalyticsRouter = createTRPCRouter({
         }
       }
 
-      // Step 5: Calculate rakeback by type = sum of (agent_rake_type * agent_rakeback_percent / 100)
+      // Calculate rakeback by type = sum of (agent_rake_type * agent_rakeback_percent / 100)
       let totalRakeback = 0;
       let rakebackPpst = 0;
       let rakebackPpsr = 0;

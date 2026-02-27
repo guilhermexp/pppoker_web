@@ -78,7 +78,10 @@ const DEFAULT_CONFIG = {
   bgColor: "bg-card",
 };
 
-function formatToolOutput(action: string, output: Record<string, unknown>): string {
+function formatToolOutput(
+  action: string,
+  output: Record<string, unknown>,
+): string {
   if (action === "gerar_link_pagamento" && output.checkout_url) {
     return `Link gerado: ${output.checkout_url}`;
   }
@@ -189,13 +192,18 @@ export function ApprovalCard({
       };
 
       if (!response.ok || !payload.success) {
-        throw new Error(payload.error || `Falha ao executar ${approval.action}`);
+        throw new Error(
+          payload.error || `Falha ao executar ${approval.action}`,
+        );
       }
 
       setStatus("approved");
       const formattedText =
         typeof payload.output === "object" && payload.output !== null
-          ? formatToolOutput(approval.action, payload.output as Record<string, unknown>)
+          ? formatToolOutput(
+              approval.action,
+              payload.output as Record<string, unknown>,
+            )
           : typeof payload.output === "string"
             ? payload.output
             : "Operacao executada com sucesso.";
@@ -212,7 +220,10 @@ export function ApprovalCard({
         payload.output !== null
       ) {
         const output = payload.output as Record<string, unknown>;
-        if (typeof output.checkout_url === "string" && output.checkout_url.startsWith("https://")) {
+        if (
+          typeof output.checkout_url === "string" &&
+          output.checkout_url.startsWith("https://")
+        ) {
           setCheckoutUrl(output.checkout_url);
         }
         if (typeof output.order_nsu === "string") {
@@ -225,7 +236,8 @@ export function ApprovalCard({
         onResolved?.("approved");
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro inesperado";
+      const message =
+        error instanceof Error ? error.message : "Erro inesperado";
       setStatus("pending");
       setResultText(message);
       toast({
@@ -276,9 +288,7 @@ export function ApprovalCard({
           <Icon className="size-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">
-            {actionLabel}
-          </p>
+          <p className="text-sm font-semibold text-foreground">{actionLabel}</p>
           <p className="text-sm text-muted-foreground truncate">
             {approval.summary}
           </p>
@@ -309,7 +319,10 @@ export function ApprovalCard({
       {Object.keys(approval.params).length > 0 && (
         <div className="px-4 py-2 space-y-1">
           {Object.entries(approval.params).map(([key, value]) => (
-            <div key={key} className="flex items-center justify-between text-sm">
+            <div
+              key={key}
+              className="flex items-center justify-between text-sm"
+            >
               <span className="text-muted-foreground">
                 {formatParamLabel(key)}
               </span>

@@ -19,8 +19,23 @@ import { ScrollArea } from "@midpoker/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader } from "@midpoker/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, RefreshCw, Search, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
-import { Suspense, useEffect, useDeferredValue, useMemo, useRef, useState } from "react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import {
+  Suspense,
+  memo,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { CreditRequestsList } from "./credit-requests-list";
 import { MemberDetailView } from "./member-detail-view";
 import { PendingMembersList } from "./pending-members-list";
@@ -43,7 +58,15 @@ type LiveMember = {
   maos?: number | null;
 };
 
-type SortKey = "ganhos" | "taxa" | "maos" | "ultima_conexao" | "ultimo_jogo" | "buyin_spinup" | "chip_storm" | "indice_shark";
+type SortKey =
+  | "ganhos"
+  | "taxa"
+  | "maos"
+  | "ultima_conexao"
+  | "ultimo_jogo"
+  | "buyin_spinup"
+  | "chip_storm"
+  | "indice_shark";
 
 const SORT_OPTIONS: { key: SortKey; label: string; available: boolean }[] = [
   { key: "ganhos", label: "Ganhos", available: true },
@@ -83,11 +106,16 @@ function formatTimeAgo(ts?: number): string {
 
 function getSortValue(member: LiveMember, sortKey: SortKey): number {
   switch (sortKey) {
-    case "ganhos": return member.ganhos ?? 0;
-    case "taxa": return member.taxa ?? 0;
-    case "maos": return member.maos ?? 0;
-    case "ultima_conexao": return member.last_active_ts ?? 0;
-    default: return 0;
+    case "ganhos":
+      return member.ganhos ?? 0;
+    case "taxa":
+      return member.taxa ?? 0;
+    case "maos":
+      return member.maos ?? 0;
+    case "ultima_conexao":
+      return member.last_active_ts ?? 0;
+    default:
+      return 0;
   }
 }
 
@@ -125,7 +153,7 @@ function sortValueColor(member: LiveMember, sortKey: SortKey): string {
   return "text-muted-foreground";
 }
 
-function CompactMemberRow({
+const CompactMemberRow = memo(function CompactMemberRow({
   member,
   sortKey,
   onClick,
@@ -199,7 +227,7 @@ function CompactMemberRow({
       </div>
     </div>
   );
-}
+});
 
 type DbMember = {
   id: string;
@@ -272,7 +300,8 @@ function MembrosCompactTab() {
   }, []);
 
   const allMembers = useMemo(
-    () => (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
+    () =>
+      (data?.data ?? []).map((p) => dbToLiveMember(p as unknown as DbMember)),
     [data],
   );
 
@@ -295,7 +324,8 @@ function MembrosCompactTab() {
     });
   }, [allMembers, deferredSearch, sortKey, sortAsc]);
 
-  const currentSortLabel = SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? "Ganhos";
+  const currentSortLabel =
+    SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? "Ganhos";
   const isSyncing = syncMutation.isPending;
 
   if (memberId) {
@@ -349,12 +379,18 @@ function MembrosCompactTab() {
             onClick={() => syncMutation.mutate({})}
             aria-label="Atualizar membros"
           >
-            <RefreshCw className={cn("h-3.5 w-3.5", isSyncing && "animate-spin")} />
+            <RefreshCw
+              className={cn("h-3.5 w-3.5", isSyncing && "animate-spin")}
+            />
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs px-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs px-2"
+              >
                 {currentSortLabel}
                 <ArrowUpDown className="h-3 w-3" />
               </Button>
@@ -378,11 +414,12 @@ function MembrosCompactTab() {
                   )}
                 >
                   <span>{opt.label}</span>
-                  {opt.key === sortKey && (
-                    sortAsc
-                      ? <ChevronUp className="h-3.5 w-3.5 text-primary" />
-                      : <ChevronDown className="h-3.5 w-3.5 text-primary" />
-                  )}
+                  {opt.key === sortKey &&
+                    (sortAsc ? (
+                      <ChevronUp className="h-3.5 w-3.5 text-primary" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                    ))}
                   {!opt.available && (
                     <Badge variant="secondary" className="h-4 px-1 text-[9px]">
                       Em breve
@@ -409,7 +446,11 @@ function MembrosCompactTab() {
               key={member.uid}
               member={member}
               sortKey={sortKey}
-              onClick={() => setParams({ memberId: (member as LiveMember & { dbId: string }).dbId })}
+              onClick={() =>
+                setParams({
+                  memberId: (member as LiveMember & { dbId: string }).dbId,
+                })
+              }
             />
           ))
         )}
@@ -444,7 +485,9 @@ export function MembrosPageTabs() {
       <div className="min-h-[680px]">
         <section className="hidden xl:flex min-h-[680px] items-center justify-center rounded-xl border border-dashed bg-muted/20">
           <div className="max-w-sm px-6 text-center">
-            <p className="text-sm font-medium">Área central vazia (temporário)</p>
+            <p className="text-sm font-medium">
+              Área central vazia (temporário)
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">
               A gestão de membros foi movida para o painel lateral.
             </p>
@@ -453,7 +496,10 @@ export function MembrosPageTabs() {
       </div>
 
       <Sheet open={isPanelOpen} onOpenChange={setIsPanelOpen}>
-        <SheetContent className="w-full sm:max-w-lg p-0 bg-background" title="Lista de membros">
+        <SheetContent
+          className="w-full sm:max-w-lg p-0 bg-background"
+          title="Lista de membros"
+        >
           <SheetHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Lista de membros</h2>
@@ -480,7 +526,10 @@ export function MembrosPageTabs() {
               >
                 Membro
                 {stats && stats.totalMembers > 0 && (
-                  <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1 text-[10px]">
+                  <Badge
+                    variant="secondary"
+                    className="ml-1.5 h-5 min-w-5 px-1 text-[10px]"
+                  >
                     {stats.totalMembers}
                   </Badge>
                 )}
@@ -491,7 +540,10 @@ export function MembrosPageTabs() {
               >
                 Novo membro
                 {stats && stats.pendingMembers > 0 && (
-                  <Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1 text-[10px]">
+                  <Badge
+                    variant="destructive"
+                    className="ml-1.5 h-5 min-w-5 px-1 text-[10px]"
+                  >
                     {stats.pendingMembers}
                   </Badge>
                 )}
@@ -502,7 +554,10 @@ export function MembrosPageTabs() {
               >
                 Solicitação de crédito
                 {stats && stats.pendingCredits > 0 && (
-                  <Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1 text-[10px]">
+                  <Badge
+                    variant="destructive"
+                    className="ml-1.5 h-5 min-w-5 px-1 text-[10px]"
+                  >
                     {stats.pendingCredits}
                   </Badge>
                 )}

@@ -29,7 +29,8 @@ export function usePokerMembrosParams() {
       const updates: Record<string, string | null> = {};
       if ("q" in newParams) updates.q = newParams.q ?? null;
       if ("tab" in newParams) updates.tab = newParams.tab ?? null;
-      if ("memberId" in newParams) updates.memberId = newParams.memberId ?? null;
+      if ("memberId" in newParams)
+        updates.memberId = newParams.memberId ?? null;
       setParamsInternal(updates);
     }
   };

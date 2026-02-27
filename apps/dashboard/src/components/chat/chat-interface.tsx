@@ -1,7 +1,10 @@
 "use client";
 
 import { Canvas } from "@/components/canvas";
-import { ApprovalCard, type ApprovalData } from "@/components/chat/approval-card";
+import {
+  ApprovalCard,
+  type ApprovalData,
+} from "@/components/chat/approval-card";
 import { ChatProgressTimeline } from "@/components/chat/chat-progress-timeline";
 import { useSidebarPinned } from "@/components/sidebar-context";
 import { useChatInterface } from "@/hooks/use-chat-interface";
@@ -195,21 +198,20 @@ export function ChatInterface({ geo }: Props) {
     return null;
   }, [messages]);
   const approvalParts = useMemo(
-    () => (lastAssistantMessage ? extractApprovalParts([lastAssistantMessage]) : []),
+    () =>
+      lastAssistantMessage ? extractApprovalParts([lastAssistantMessage]) : [],
     [lastAssistantMessage],
   );
 
   // Payment polling state
-  const [pendingPaymentOrderNsu, setPendingPaymentOrderNsu] =
-    useState<string | null>(null);
+  const [pendingPaymentOrderNsu, setPendingPaymentOrderNsu] = useState<
+    string | null
+  >(null);
 
   // When a gerar_link_pagamento is approved, start polling
-  const handlePaymentLinkGenerated = useCallback(
-    (orderNsu: string) => {
-      setPendingPaymentOrderNsu(orderNsu);
-    },
-    [],
-  );
+  const handlePaymentLinkGenerated = useCallback((orderNsu: string) => {
+    setPendingPaymentOrderNsu(orderNsu);
+  }, []);
 
   // Payment polling
   const paymentWaiter = usePaymentWaiter({
@@ -231,7 +233,9 @@ export function ChatInterface({ geo }: Props) {
       if (result.target_player_id && result.fichas && pendingPaymentOrderNsu) {
         try {
           const supabase = createClient();
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
 
           const sendResp = await fetch(`${apiBaseUrl}/nanobot/tools/invoke`, {
             method: "POST",
@@ -258,34 +262,34 @@ export function ChatInterface({ geo }: Props) {
           if (sendResp.ok && sendPayload.success) {
             addLocalMessage(
               `Pagamento confirmado e fichas enviadas!\n\n` +
-              `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
-              `- **Valor**: R$ ${result.paid_amount} (${result.capture_method})\n` +
-              `- **Fichas**: ${result.fichas} enviadas para UID ${result.target_player_id}`,
+                `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+                `- **Valor**: R$ ${result.paid_amount} (${result.capture_method})\n` +
+                `- **Fichas**: ${result.fichas} enviadas para UID ${result.target_player_id}`,
             );
           } else {
             addLocalMessage(
               `Pagamento confirmado, mas houve erro ao enviar fichas: ${sendPayload.error ?? "erro desconhecido"}.\n\n` +
-              `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
-              `- **Fichas**: ${result.fichas}, UID: ${result.target_player_id}\n\n` +
-              `Envie as fichas manualmente.`,
+                `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+                `- **Fichas**: ${result.fichas}, UID: ${result.target_player_id}\n\n` +
+                `Envie as fichas manualmente.`,
             );
           }
         } catch (err) {
           console.error("[payment-waiter] Auto-send chips failed:", err);
           addLocalMessage(
             `Pagamento confirmado, mas erro ao enviar fichas automaticamente.\n\n` +
-            `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
-            `- **Fichas**: ${result.fichas}, UID: ${result.target_player_id}\n\n` +
-            `Envie as fichas manualmente.`,
+              `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+              `- **Fichas**: ${result.fichas}, UID: ${result.target_player_id}\n\n` +
+              `Envie as fichas manualmente.`,
           );
         }
       } else {
         addLocalMessage(
           `Pagamento confirmado!\n\n` +
-          `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
-          `- **Valor**: R$ ${result.paid_amount} (${result.capture_method})\n` +
-          `- **Fichas a entregar**: ${result.fichas}\n\n` +
-          `Envie as fichas manualmente.`,
+            `- **Pedido**: ${pendingPaymentOrderNsu}\n` +
+            `- **Valor**: R$ ${result.paid_amount} (${result.capture_method})\n` +
+            `- **Fichas a entregar**: ${result.fichas}\n\n` +
+            `Envie as fichas manualmente.`,
         );
       }
 
@@ -400,7 +404,8 @@ export function ChatInterface({ geo }: Props) {
                             {requestErrorMessage}
                           </p>
                           <div className="mt-3 flex flex-wrap gap-2">
-                            {(status === "streaming" || status === "submitted") && (
+                            {(status === "streaming" ||
+                              status === "submitted") && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -435,7 +440,9 @@ export function ChatInterface({ geo }: Props) {
                           <ApprovalCard
                             key={approval.id}
                             approval={approval}
-                            isStreaming={status === "streaming" || status === "submitted"}
+                            isStreaming={
+                              status === "streaming" || status === "submitted"
+                            }
                             onPaymentLinkGenerated={handlePaymentLinkGenerated}
                           />
                         ))}
@@ -534,7 +541,6 @@ export function ChatInterface({ geo }: Props) {
           </div>
         </div>
       )}
-
     </div>
   );
 }

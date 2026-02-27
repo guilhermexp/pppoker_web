@@ -20,4 +20,3 @@ export function getApiBaseUrl(): string {
   // Production fallback keeps relative behavior when infra proxies API.
   return "";
 }
-

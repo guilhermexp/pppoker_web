@@ -185,9 +185,7 @@ function getNanobotTimeoutMs(
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
 }
 
-async function fetchNanobot(
-  options: ChatStreamOptions,
-): Promise<Response> {
+async function fetchNanobot(options: ChatStreamOptions): Promise<Response> {
   const teamConfig = getTeamNanobotConfig(options);
   const mcpServers = buildTeamMcpServers(teamConfig);
   const baseUrl = (teamConfig?.baseUrl || getNanobotBaseUrl())
@@ -195,9 +193,7 @@ async function fetchNanobot(
     .replace(/\/$/, "");
 
   if (!baseUrl) {
-    throw new Error(
-      "NANOBOT_BASE_URL is required for the nanobot runtime",
-    );
+    throw new Error("NANOBOT_BASE_URL is required for the nanobot runtime");
   }
 
   const controller = new AbortController();
@@ -333,9 +329,7 @@ function writeText(
   writer.write({ type: "text-end", id: textId });
 }
 
-function findSSEBoundary(
-  buf: string,
-): { index: number; length: number } | -1 {
+function findSSEBoundary(buf: string): { index: number; length: number } | -1 {
   const rnrn = buf.indexOf("\r\n\r\n");
   const nn = buf.indexOf("\n\n");
   if (rnrn === -1 && nn === -1) return -1;
@@ -557,7 +551,10 @@ async function pipeNanobotSSEToUIStream(
     }
   };
 
-  for await (const event of parseSSEWithTimeout(response.body, SSE_IDLE_TIMEOUT_MS)) {
+  for await (const event of parseSSEWithTimeout(
+    response.body,
+    SSE_IDLE_TIMEOUT_MS,
+  )) {
     if (
       event.data &&
       typeof event.data === "object" &&
@@ -712,9 +709,7 @@ export async function nanobotToUIMessageStream(
   const ctx = options.context as Record<string, unknown> | undefined;
   const chatId = (ctx?.chatId as string) ?? "";
   const userId = (ctx?.userId as string) ?? "";
-  const userText = extractUserTextFromMessage(
-    options.message as UIChatMessage,
-  );
+  const userText = extractUserTextFromMessage(options.message as UIChatMessage);
 
   const stream = createUIMessageStream<UIChatMessage>({
     execute: async ({ writer }) => {
@@ -734,7 +729,9 @@ export async function nanobotToUIMessageStream(
         }
 
         // Persist to Redis for frontend history (fire-and-forget)
-        void persistToRedis(chatId, userId, userText, accumulatedText).catch(() => {});
+        void persistToRedis(chatId, userId, userText, accumulatedText).catch(
+          () => {},
+        );
         return;
       }
 
@@ -752,7 +749,9 @@ export async function nanobotToUIMessageStream(
         writer.write({ type: "finish", finishReason: "stop" });
 
         // Persist to Redis for frontend history (fire-and-forget)
-        void persistToRedis(chatId, userId, userText, payload.text).catch(() => {});
+        void persistToRedis(chatId, userId, userText, payload.text).catch(
+          () => {},
+        );
         return;
       }
 

@@ -35,7 +35,8 @@ export function SyncStatusBanner() {
     return (
       <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4">
         <p className="text-sm text-yellow-600 dark:text-yellow-400">
-          Nenhuma conexão PPPoker encontrada. Faça login novamente para ativar a sincronização.
+          Nenhuma conexão PPPoker encontrada. Faça login novamente para ativar a
+          sincronização.
         </p>
       </div>
     );

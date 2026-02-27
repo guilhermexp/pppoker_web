@@ -9,321 +9,241 @@
         "req": "pb.MemberGameDataREQ",
         "label": "club",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "uid",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "liga",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,uid",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "uid,club",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,liga",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,t0ymd",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,y0..t0 ymd",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,y0..t0 ts",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,dt=1,t0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,dt=2,t0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,dt=3,t0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,date,filter=0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,date,filter=1",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,date,filter=2",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,date,filter=3",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,date,filter=4",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,date,filter=5",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,date,room",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "uid,club,date",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,uid,date",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "uid,club,y0..t0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,uid,y0..t0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "club,liga,y0..t0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "liga,club,y0..t0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(1, 2, 3) dt=0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(1, 3, 2) dt=0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(2, 1, 3) dt=0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(2, 3, 1) dt=0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(3, 1, 2) dt=0",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(1, 2, 3) dt=1",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(1, 3, 2) dt=1",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(2, 1, 3) dt=1",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(2, 3, 1) dt=1",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(3, 1, 2) dt=1",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(1, 2, 3) dt=2",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(1, 3, 2) dt=2",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(2, 1, 3) dt=2",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(2, 3, 1) dt=2",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       },
       {
         "req": "pb.MemberGameDataREQ",
         "label": "shift club/dt/date fields=(3, 1, 2) dt=2",
         "score": 300,
-        "rsp": [
-          "pb.MemberGameDataRSP"
-        ]
+        "rsp": ["pb.MemberGameDataRSP"]
       }
     ]
   },

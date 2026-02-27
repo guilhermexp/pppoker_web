@@ -9,12 +9,14 @@ import { useTRPC } from "@/trpc/client";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as Papa from "papaparse";
 import { Suspense, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import * as XLSX from "xlsx";
+import type * as XLSX from "xlsx";
 import { ImportValidationModal } from "./import-validation-modal";
 import { ImportsList } from "./imports-list";
+
+// Lazily-loaded XLSX module (populated before any parsing function is called)
+let _XLSX: typeof XLSX;
 
 // Parser for PPPoker Club Member export
 function parseClubMemberSheet(data: any[]): any[] {
@@ -317,7 +319,7 @@ function parsePartidasSheet(sheet: XLSX.Sheet): {
   sessions: ParsedImportData["sessions"];
   utcCount: number;
 } {
-  const rows = XLSX.utils.sheet_to_json(sheet, {
+  const rows = _XLSX.utils.sheet_to_json(sheet, {
     header: 1,
     defval: null,
   }) as Array<Array<string | number | null>>;
@@ -1543,7 +1545,7 @@ function parseExcelWorkbook(workbook: XLSX.WorkBook): ParsedImportData {
       normalizedName === "transações" ||
       normalizedName === "transactions"
     ) {
-      const data = XLSX.utils.sheet_to_json(sheet, { defval: null });
+      const data = _XLSX.utils.sheet_to_json(sheet, { defval: null });
       if (data && data.length > 0) {
         result.transactions = parseTransacoesSheet(data as any[], sheet);
       }
@@ -1552,7 +1554,7 @@ function parseExcelWorkbook(workbook: XLSX.WorkBook): ParsedImportData {
       normalizedName === "fee return" ||
       normalizedName.includes("rakeback")
     ) {
-      const data = XLSX.utils.sheet_to_json(sheet, { defval: null });
+      const data = _XLSX.utils.sheet_to_json(sheet, { defval: null });
       if (data && data.length > 0) {
         result.rakebacks = parseRakebackSheet(data as any[], sheet);
       }
@@ -1854,6 +1856,10 @@ export function ImportUploader() {
         const fileType = file.name.endsWith(".csv") ? "csv" : "xlsx";
         let parsedData: ParsedImportData = {};
 
+        // Dynamic imports for heavy libraries
+        _XLSX = await import("xlsx");
+        const Papa = await import("papaparse");
+
         if (fileType === "csv") {
           update(id, { title: "Lendo CSV...", progress: 10 });
           const text = await file.text();
@@ -1880,7 +1886,7 @@ export function ImportUploader() {
           await new Promise((resolve) => setTimeout(resolve, 0));
 
           update(id, { title: "Parseando planilha...", progress: 25 });
-          const workbook = XLSX.read(arrayBuffer, {
+          const workbook = _XLSX.read(arrayBuffer, {
             type: "array",
             cellFormula: true,
             cellStyles: true,
@@ -1923,7 +1929,9 @@ export function ImportUploader() {
           ) {
             update(id, { title: "Detectando formato...", progress: 70 });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const data = XLSX.utils.sheet_to_json(firstSheet, { defval: null });
+            const data = _XLSX.utils.sheet_to_json(firstSheet, {
+              defval: null,
+            });
             parsedData = {
               ...parsedData,
               ...detectAndParseData(data as any[]),

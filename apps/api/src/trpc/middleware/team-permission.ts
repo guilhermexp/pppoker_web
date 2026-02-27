@@ -51,6 +51,13 @@ async function getUserTeamDataViaSupabase(userId: string) {
   };
 }
 
+// In-memory cache for user->teamId mapping (avoids users table query)
+const userTeamIdCache = new Map<
+  string,
+  { teamId: string | null; expiresAt: number }
+>();
+const USER_TEAM_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export const withTeamPermission = async <TReturn>(opts: {
   ctx: {
     session?: Session | null;
@@ -75,6 +82,30 @@ export const withTeamPermission = async <TReturn>(opts: {
     });
   }
 
+  // Try in-memory cache for user's teamId first
+  const memCached = userTeamIdCache.get(userId);
+  if (memCached && memCached.expiresAt > Date.now()) {
+    const teamId = memCached.teamId;
+
+    // For non-null teamId, check Redis teamCache for access permission
+    if (teamId !== null) {
+      const accessCacheKey = `${userId}:${teamId}`;
+      const cachedAccess = await teamCache.get(accessCacheKey);
+      if (cachedAccess === true) {
+        return next({
+          ctx: { session: ctx.session, teamId, db: ctx.db },
+        });
+      }
+      // Access not cached or false - fall through to full DB check
+    } else {
+      // teamId is null - no access check needed
+      return next({
+        ctx: { session: ctx.session, teamId, db: ctx.db },
+      });
+    }
+  }
+
+  // Cache miss: fetch from DB
   // Use Supabase REST directly to avoid Drizzle connection pool issues
   const result = await getUserTeamDataViaSupabase(userId);
 
@@ -103,7 +134,16 @@ export const withTeamPermission = async <TReturn>(opts: {
         message: "No permission to access this team",
       });
     }
+
+    // Cache the verified access in Redis (30-minute TTL from teamCache)
+    await teamCache.set(`${userId}:${teamId}`, true);
   }
+
+  // Cache the user's teamId in memory
+  userTeamIdCache.set(userId, {
+    teamId,
+    expiresAt: Date.now() + USER_TEAM_CACHE_TTL_MS,
+  });
 
   return next({
     ctx: {

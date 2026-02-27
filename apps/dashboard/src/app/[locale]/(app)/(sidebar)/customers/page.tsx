@@ -54,18 +54,26 @@ export default async function Page(props: Props) {
     <HydrateClient>
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-6">
-          <Suspense fallback={<InvoiceSummarySkeleton />}>
-            <MostActiveClient />
-          </Suspense>
-          <Suspense fallback={<InvoiceSummarySkeleton />}>
-            <InactiveClients />
-          </Suspense>
-          <Suspense fallback={<InvoiceSummarySkeleton />}>
-            <TopRevenueClient />
-          </Suspense>
-          <Suspense fallback={<InvoiceSummarySkeleton />}>
-            <NewCustomersThisMonth />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<InvoiceSummarySkeleton />}>
+              <MostActiveClient />
+            </Suspense>
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Suspense fallback={<InvoiceSummarySkeleton />}>
+              <InactiveClients />
+            </Suspense>
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Suspense fallback={<InvoiceSummarySkeleton />}>
+              <TopRevenueClient />
+            </Suspense>
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Suspense fallback={<InvoiceSummarySkeleton />}>
+              <NewCustomersThisMonth />
+            </Suspense>
+          </ErrorBoundary>
         </div>
 
         <CustomersHeader />

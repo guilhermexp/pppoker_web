@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/error-boundary";
 import { OAuthConsentScreen } from "@/components/oauth/oauth-consent-screen";
 import { OAuthErrorMessage } from "@/components/oauth/oauth-error-message";
 import { loadOAuthParams } from "@/hooks/use-oauth-params";
@@ -69,9 +70,11 @@ export default async function Page(props: Props) {
     // Render the consent screen
     return (
       <HydrateClient>
-        <Suspense>
-          <OAuthConsentScreen />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense>
+            <OAuthConsentScreen />
+          </Suspense>
+        </ErrorBoundary>
       </HydrateClient>
     );
   } catch (error) {

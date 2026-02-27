@@ -30,16 +30,18 @@ export type ClubMember = {
   } | null;
 };
 
-const RoleBadge = memo(({ roleLabel, type }: { roleLabel: string; type: string }) => {
-  const variant =
-    type === "super_agent"
-      ? "default"
-      : type === "agent"
-        ? "outline"
-        : "secondary";
+const RoleBadge = memo(
+  ({ roleLabel, type }: { roleLabel: string; type: string }) => {
+    const variant =
+      type === "super_agent"
+        ? "default"
+        : type === "agent"
+          ? "outline"
+          : "secondary";
 
-  return <Badge variant={variant}>{roleLabel}</Badge>;
-});
+    return <Badge variant={variant}>{roleLabel}</Badge>;
+  },
+);
 RoleBadge.displayName = "RoleBadge";
 
 export const columns: ColumnDef<ClubMember>[] = [
@@ -185,7 +187,10 @@ export const columns: ColumnDef<ClubMember>[] = [
     },
     cell: ({ row }) => {
       const status = row.original.status;
-      const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      const variants: Record<
+        string,
+        "default" | "secondary" | "destructive" | "outline"
+      > = {
         active: "default",
         inactive: "secondary",
         suspended: "outline",
@@ -197,7 +202,11 @@ export const columns: ColumnDef<ClubMember>[] = [
         suspended: "Suspenso",
         blacklisted: "Bloqueado",
       };
-      return <Badge variant={variants[status] ?? "secondary"}>{labels[status] ?? status}</Badge>;
+      return (
+        <Badge variant={variants[status] ?? "secondary"}>
+          {labels[status] ?? status}
+        </Badge>
+      );
     },
   },
 ];

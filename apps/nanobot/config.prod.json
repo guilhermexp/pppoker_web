@@ -15,7 +15,11 @@
   },
   "providers": {
     "openrouter": { "apiKey": "", "apiBase": null, "extraHeaders": null },
-    "anthropic": { "apiKey": "", "apiBase": "https://api.minimax.io/anthropic", "extraHeaders": null }
+    "anthropic": {
+      "apiKey": "",
+      "apiBase": "https://api.minimax.io/anthropic",
+      "extraHeaders": null
+    }
   },
   "gateway": {
     "host": "0.0.0.0",

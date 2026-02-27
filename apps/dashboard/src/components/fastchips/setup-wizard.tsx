@@ -29,7 +29,13 @@ function StepIndicator({
 }: {
   steps: readonly Step[];
   currentIndex: number;
-  service: { setupSteps: { infinitepayConfigured: boolean; nanobotConfigured: boolean; gatewayConfigured: boolean } };
+  service: {
+    setupSteps: {
+      infinitepayConfigured: boolean;
+      nanobotConfigured: boolean;
+      gatewayConfigured: boolean;
+    };
+  };
   ipConfigured: boolean;
 }) {
   const t = useI18n();
@@ -74,11 +80,7 @@ function StepIndicator({
                       : "bg-muted text-muted-foreground",
                 )}
               >
-                {done ? (
-                  <Icons.Check className="h-4 w-4" />
-                ) : (
-                  i + 1
-                )}
+                {done ? <Icons.Check className="h-4 w-4" /> : i + 1}
               </div>
               <span
                 className={cn(
@@ -147,9 +149,7 @@ function StepNanobot() {
           <span className="text-sm font-medium">
             {t("fastchips.service.nanobot_enabled")}
           </span>
-          {isEnabled && (
-            <Icons.Check className="h-4 w-4 text-green-600" />
-          )}
+          {isEnabled && <Icons.Check className="h-4 w-4 text-green-600" />}
         </div>
       </CardContent>
     </Card>
@@ -186,9 +186,14 @@ function WhatsAppConnector() {
     setStatus({ step: "connecting" });
 
     const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session?.access_token) {
-      setStatus({ step: "error", message: "Sessao expirada. Recarregue a pagina." });
+      setStatus({
+        step: "error",
+        message: "Sessao expirada. Recarregue a pagina.",
+      });
       return;
     }
 
@@ -237,14 +242,20 @@ function WhatsAppConnector() {
             try {
               const data = JSON.parse(raw);
 
-              if (currentEvent === "status" && data.status === "creating_sandbox") {
+              if (
+                currentEvent === "status" &&
+                data.status === "creating_sandbox"
+              ) {
                 setStatus({ step: "creating_sandbox" });
               } else if (currentEvent === "qr" && data.qr_data) {
                 setStatus({ step: "waiting_qr", qrData: data.qr_data });
               } else if (currentEvent === "connected") {
                 setStatus({ step: "connected" });
                 serviceMutation.mutate({
-                  gateway: { whatsappLinked: true, whatsappLinkedAt: new Date().toISOString() },
+                  gateway: {
+                    whatsappLinked: true,
+                    whatsappLinkedAt: new Date().toISOString(),
+                  },
                 });
                 return;
               } else if (currentEvent === "timeout") {
@@ -314,7 +325,15 @@ function WhatsAppConnector() {
             {t("fastchips.service.gateway_scan_qr")}
           </p>
           <div className="flex justify-center">
-            <Button type="button" variant="outline" size="sm" onClick={() => { cleanup(); setStatus({ step: "idle" }); }}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                cleanup();
+                setStatus({ step: "idle" });
+              }}
+            >
               {t("fastchips.service.gateway_cancel")}
             </Button>
           </div>
@@ -386,7 +405,9 @@ function StepGateway() {
             <div
               className={cn(
                 "h-2 w-2 rounded-full",
-                service.gateway.telegramLinked ? "bg-green-500" : "bg-muted-foreground/40",
+                service.gateway.telegramLinked
+                  ? "bg-green-500"
+                  : "bg-muted-foreground/40",
               )}
             />
             <span className="text-sm">
@@ -517,7 +538,9 @@ export function SetupWizard() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center mt-12">
-          <p className="text-muted-foreground">{t("fastchips.service.loading")}</p>
+          <p className="text-muted-foreground">
+            {t("fastchips.service.loading")}
+          </p>
         </div>
       }
     >

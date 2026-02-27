@@ -26,7 +26,11 @@ app.post("/", async (c) => {
   const parsed = upsertPaymentOrderSchema.safeParse(body);
   if (!parsed.success) {
     return c.json(
-      { success: false, error: "Validation error", details: parsed.error.flatten() },
+      {
+        success: false,
+        error: "Validation error",
+        details: parsed.error.flatten(),
+      },
       400,
     );
   }
@@ -49,9 +53,12 @@ app.post("/", async (c) => {
   if (input.playerUid !== undefined) row.player_uid = input.playerUid;
   if (input.playerNome !== undefined) row.player_nome = input.playerNome;
   if (input.playerEmail !== undefined) row.player_email = input.playerEmail;
-  if (input.playerTelefone !== undefined) row.player_telefone = input.playerTelefone;
-  if (input.transactionNsu !== undefined) row.transaction_nsu = input.transactionNsu;
-  if (input.captureMethod !== undefined) row.capture_method = input.captureMethod;
+  if (input.playerTelefone !== undefined)
+    row.player_telefone = input.playerTelefone;
+  if (input.transactionNsu !== undefined)
+    row.transaction_nsu = input.transactionNsu;
+  if (input.captureMethod !== undefined)
+    row.capture_method = input.captureMethod;
   if (input.paidAmount !== undefined) row.paid_amount = input.paidAmount;
   if (input.installments !== undefined) row.installments = input.installments;
   if (input.paidAt !== undefined) row.paid_at = input.paidAt;

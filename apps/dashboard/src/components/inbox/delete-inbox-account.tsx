@@ -38,11 +38,39 @@ export function DeleteInboxAccount({ accountId }: Props) {
 
   const deleteInboxAccountMutation = useMutation(
     trpc.inboxAccounts.delete.mutationOptions({
-      onSuccess: () => {
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({
+          queryKey: trpc.inboxAccounts.get.queryKey(),
+        });
+        const previous = queryClient.getQueryData(
+          trpc.inboxAccounts.get.queryKey(),
+        );
+        queryClient.setQueriesData(
+          { queryKey: trpc.inboxAccounts.get.queryKey() },
+          (old: any) => {
+            if (!old) return old;
+            if (Array.isArray(old)) {
+              return old.filter((item: any) => item.id !== id);
+            }
+            return old;
+          },
+        );
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueriesData(
+            { queryKey: trpc.inboxAccounts.get.queryKey() },
+            context.previous,
+          );
+        }
+      },
+      onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.inboxAccounts.get.queryKey(),
         });
-
+      },
+      onSuccess: () => {
         setOpen(false);
         setValue("");
       },

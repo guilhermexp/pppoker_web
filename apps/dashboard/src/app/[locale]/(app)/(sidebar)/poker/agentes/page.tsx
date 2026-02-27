@@ -13,9 +13,7 @@ export default async function PokerAgentesPage() {
   const t = await getI18n();
 
   try {
-    await queryClient.fetchQuery(
-      trpc.poker.members.getLive.queryOptions({}),
-    );
+    await queryClient.fetchQuery(trpc.poker.members.getLive.queryOptions({}));
   } catch {
     // SSR prefetch failed, client will fetch via Suspense
   }
@@ -24,9 +22,7 @@ export default async function PokerAgentesPage() {
     <HydrateClient>
       <div className="flex flex-col gap-6">
         <div className="pt-6">
-          <h1 className="text-2xl font-medium">
-            {t("poker.agentes.title")}
-          </h1>
+          <h1 className="text-2xl font-medium">{t("poker.agentes.title")}</h1>
           <p className="text-muted-foreground mt-1">
             {t("poker.agentes.description")}
           </p>

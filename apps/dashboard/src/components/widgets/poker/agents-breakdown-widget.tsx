@@ -3,18 +3,10 @@
 import { usePokerPlayerParams } from "@/hooks/use-poker-player-params";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import { formatCurrency } from "@/utils/format";
 import { Icons } from "@midpoker/ui/icons";
 import { Skeleton } from "@midpoker/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 const statusColors: Record<string, { bg: string; text: string; dot: string }> =
   {

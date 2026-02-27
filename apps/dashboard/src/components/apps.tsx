@@ -54,7 +54,11 @@ export function Apps() {
           </p>
 
           <div className="mt-5 flex gap-2">
-            <Button variant="outline" className="w-full" onClick={() => setOpen(true)}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setOpen(true)}
+            >
               Details
             </Button>
           </div>

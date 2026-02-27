@@ -132,9 +132,7 @@ export const fastchipsPaymentOrdersRouter = createTRPCRouter({
       return brDate === today;
     }
 
-    const linkGerado = orders.filter(
-      (o) => o.status === "link_gerado",
-    ).length;
+    const linkGerado = orders.filter((o) => o.status === "link_gerado").length;
     const pago = orders.filter((o) => o.status === "pago").length;
     const fichasEnviadas = orders.filter(
       (o) => o.status === "fichas_enviadas",
@@ -142,8 +140,7 @@ export const fastchipsPaymentOrdersRouter = createTRPCRouter({
 
     // "Concluídos Hoje" = fichas enviadas onde fichas_enviadas_at é hoje
     const fichasEnviadasHoje = orders.filter(
-      (o) =>
-        o.status === "fichas_enviadas" && isToday(o.fichas_enviadas_at),
+      (o) => o.status === "fichas_enviadas" && isToday(o.fichas_enviadas_at),
     ).length;
 
     const erro = orders.filter((o) => o.status === "erro").length;
@@ -153,8 +150,7 @@ export const fastchipsPaymentOrdersRouter = createTRPCRouter({
     const totalVendidoHoje = orders
       .filter(
         (o) =>
-          ["pago", "fichas_enviadas"].includes(o.status) &&
-          isToday(o.paid_at),
+          ["pago", "fichas_enviadas"].includes(o.status) && isToday(o.paid_at),
       )
       .reduce((sum, o) => sum + Number(o.valor_reais ?? 0), 0);
 
