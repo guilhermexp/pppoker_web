@@ -600,8 +600,11 @@ export function NanobotSettingsPanel() {
       );
       return;
     }
-    // Limitação atual do oauth_cli_kit / OpenAI Codex (fluxo CLI): redirect URI fixo.
-    const redirectUri = "http://localhost:1455/auth/callback";
+    // Em produção, usa a página de callback web; em dev, usa o callback CLI local.
+    const redirectUri =
+      window.location.hostname === "localhost"
+        ? "http://localhost:1455/auth/callback"
+        : `${window.location.origin}/pt/settings/nanobot/oauth-callback`;
     startOAuthMutation.mutate({
       provider: "openai_codex",
       redirectUri,
@@ -789,10 +792,9 @@ export function NanobotSettingsPanel() {
             `openai_codex` como provider/modelo para usar este login.
           </p>
 
-          <p className="text-xs text-amber-600">
-            O OAuth do OpenAI Codex no Nanobot usa o client do modo CLI
-            (callback fixo em `http://localhost:1455/auth/callback`). Em
-            ambiente web remoto ainda nao ha callback web nativo.
+          <p className="text-xs text-muted-foreground">
+            Em desenvolvimento, usa callback local (localhost:1455). Em
+            producao, redireciona via pagina web do dashboard.
           </p>
 
           {oauthStatus?.accountId && (

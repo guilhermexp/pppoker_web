@@ -1368,21 +1368,7 @@ async def oauth_openai_codex_start(request: Request):
     try:
         from oauth_cli_kit.providers import OPENAI_CODEX_PROVIDER
 
-        # The bundled Codex OAuth client from oauth_cli_kit is CLI-oriented and expects the
-        # fixed localhost callback registered by the provider config.
-        if redirect_uri != OPENAI_CODEX_PROVIDER.redirect_uri:
-            return JSONResponse(
-                {
-                    "success": False,
-                    "error": (
-                        "OpenAI Codex OAuth (client do nanobot CLI) aceita apenas o callback "
-                        f"{OPENAI_CODEX_PROVIDER.redirect_uri}. Callback web customizado ainda nao e suportado."
-                    ),
-                    "expected_redirect_uri": OPENAI_CODEX_PROVIDER.redirect_uri,
-                },
-                status_code=400,
-            )
-
+        # Accept both the CLI localhost callback and web production callbacks.
         payload = _build_openai_codex_authorize_payload(team_id, redirect_uri)
         pending_key = f"openai_codex:{team_id}:{payload['state']}"
         async with _oauth_pending_logins_lock:
