@@ -138,16 +138,20 @@ Dados do clube 4366162 ficam isolados no team 95899e74.
 Dados do clube 4210947 ficam isolados no team 647fd34b.
 ```
 
-## Verificacao por Email (2FA)
+## Verificacao por Email (code -15)
 
-Quando o PPPoker exige verificacao:
+Quando a conta PPPoker tem email vinculado, o login retorna `code: -15`. O codigo de verificacao **nao e enviado automaticamente** — o usuario precisa solicitar o envio separadamente.
 
-1. Bridge retorna `{ success: false, needs_verify: true, secret_mail: "f***@gmail.com" }`
-2. tRPC lanca `PRECONDITION_FAILED` com mensagem contendo o email parcial
-3. Frontend detecta "Verificacao por email" na mensagem de erro
-4. Mostra campo de codigo de verificacao
-5. Usuario reenvia login com `verifyCode` preenchido
-6. Bridge passa `verify_code` ao PPPoker no HTTP login
+Documentacao completa do fluxo: **[13-verificacao-email-login.md](./13-verificacao-email-login.md)**
+
+Resumo:
+
+1. Login retorna `code -15` com `secret_mail` (email mascarado, ex: `v***r@g***.com`)
+2. Frontend mostra tela de verificacao por email
+3. Usuario digita o email completo vinculado a conta
+4. Sistema envia codigo via `GET send_valid_code.php?mail={email}&valid_type=2`
+5. Usuario digita o codigo recebido
+6. Sistema reenvia login com `verifyCode` → segue para selecao de clube
 
 ## Troca de Clube (Re-login)
 

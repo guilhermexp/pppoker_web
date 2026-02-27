@@ -14,8 +14,9 @@ Documentacao operacional do bridge PPPoker com foco em uso rapido por qualquer p
 - `08-gestao-de-membros.md`
 - `09-bridge-rest-api.md`
 - `10-referencia-operacional.md`
-- `11-fluxo-de-login.md` — Fluxo completo de autenticacao (2 etapas, isolamento por clube, 2FA)
+- `11-fluxo-de-login.md` — Fluxo completo de autenticacao (2 etapas, isolamento por clube)
 - `12-cobertura-mcp-rest-trpc.md` — Mapeamento de cobertura entre MCP tools, REST API e tRPC
+- `13-verificacao-email-login.md` — Verificacao por email no login (code -15): endpoints, fluxo, engenharia reversa
 
 ## Contexto operacional atual
 
