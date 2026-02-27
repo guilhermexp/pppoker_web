@@ -600,11 +600,9 @@ export function NanobotSettingsPanel() {
       );
       return;
     }
-    // Em produção, usa a página de callback web; em dev, usa o callback CLI local.
-    const redirectUri =
-      window.location.hostname === "localhost"
-        ? "http://localhost:1455/auth/callback"
-        : `${window.location.origin}/pt/settings/nanobot/oauth-callback`;
+    // O client OAuth do OpenAI Codex só aceita localhost:1455 como redirect_uri.
+    // Em produção, use "Importar token local" para importar um token já autenticado.
+    const redirectUri = "http://localhost:1455/auth/callback";
     startOAuthMutation.mutate({
       provider: "openai_codex",
       redirectUri,
@@ -792,9 +790,10 @@ export function NanobotSettingsPanel() {
             `openai_codex` como provider/modelo para usar este login.
           </p>
 
-          <p className="text-xs text-muted-foreground">
-            Em desenvolvimento, usa callback local (localhost:1455). Em
-            producao, redireciona via pagina web do dashboard.
+          <p className="text-xs text-amber-600">
+            O OAuth do OpenAI Codex usa callback fixo em localhost:1455
+            (registrado no client da OpenAI). Em producao, use
+            &quot;Importar token local&quot; para importar um token CLI.
           </p>
 
           {oauthStatus?.accountId && (
