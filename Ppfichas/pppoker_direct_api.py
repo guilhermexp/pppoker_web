@@ -344,7 +344,7 @@ def build_heartbeat_req() -> bytes:
     return build_message('pb.HeartBeatREQ', b'')
 
 
-def http_login(username: str, password: str, verify_code: str = None) -> dict:
+def http_login(username: str, password: str, verify_code: str = None, valid_key: str = None) -> dict:
     """
     Login via HTTP API to get fresh rdkey.
     Implements the full PPPoker login protocol:
@@ -357,6 +357,8 @@ def http_login(username: str, password: str, verify_code: str = None) -> dict:
         password: Account password
         verify_code: Optional email verification code (for accounts requiring 2FA)
                      When code -15 is returned, check email and pass code here.
+        valid_key: Optional valid_key from valid_code.php (preferred over verify_code).
+                   Obtained by calling validate_verification_code() first.
 
     Returns:
         dict with uid, rdkey, gserver_ip, gserver_port on success
@@ -404,8 +406,13 @@ def http_login(username: str, password: str, verify_code: str = None) -> dict:
         'app_build_code': '221',    # from app logs: buildVer:221
     }
 
-    # If a verification code was provided (after code=-15), add it to the request
-    if verify_code:
+    # If a valid_key was provided (from valid_code.php validation), use it
+    # Send both valid_key and verifycode to cover all server-side param names
+    if valid_key:
+        data['valid_key'] = str(valid_key)
+        data['verifycode'] = str(valid_key)
+    # Fallback: if only verify_code provided (legacy), add it directly
+    elif verify_code:
         data['verifycode'] = str(verify_code)
 
     headers = {
@@ -469,34 +476,35 @@ def http_login(username: str, password: str, verify_code: str = None) -> dict:
         return {'success': False, 'error': str(e)}
 
 
-def send_verification_code(email: str, lang: str = 'pt') -> dict:
+def send_verification_code(email: str, username: str, password: str, lang: str = 'pt') -> dict:
     """
     Send email verification code for login verification (code -15 flow).
 
-    Uses the PPPoker mail API to send a verification code to the user's
-    registered email address. This is needed when login returns code -15
-    (email verification required).
+    Calls send_valid_code.php with valid_type=2 to send a code to the
+    registered email.
 
     Args:
         email: The FULL email address linked to the PPPoker account
+        username: PPPoker username (unused, kept for API compat)
+        password: PPPoker password (unused, kept for API compat)
         lang: Language code (default: 'pt')
 
     Returns:
         dict with 'success' and details
     """
-    url = "http://www.pppoker.club/poker/api/mail/send_valid_code.php"
-    params = {
-        'mail': email,
-        'valid_type': '2',
-        'lang': lang,
-    }
-    headers = {
-        'User-Agent': 'UnityPlayer/2021.3.33f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)',
-        'Accept': '*/*',
-    }
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     try:
-        resp = requests.get(url, params=params, headers=headers, timeout=30)
+        url = "https://api.pppoker.club/poker/api/mail/send_valid_code.php"
+        params = {
+            'mail': email,
+            'valid_type': '2',
+            'lang': lang,
+        }
+
+        resp = requests.get(url, params=params, timeout=30, verify=False,
+                            headers={'User-Agent': 'UnityPlayer/2021.3.33f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)'})
         result = resp.json()
         print(f"[send_verification_code] Response: {result}")
 
@@ -504,6 +512,52 @@ def send_verification_code(email: str, lang: str = 'pt') -> dict:
             return {'success': True, 'message': 'Verification code sent'}
         elif result.get('msg') == 'mail not found':
             return {'success': False, 'error': 'Email not found. Please check the email linked to your PPPoker account.'}
+        else:
+            return {'success': False, 'error': result.get('msg', 'Unknown error'), 'response': result}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
+def validate_verification_code(email: str, code: str) -> dict:
+    """
+    Validate an email verification code via valid_code.php.
+
+    This is step 2 of the code -15 flow:
+      1. send_valid_code.php → sends code to email
+      2. valid_code.php → validates code, returns valid_key
+      3. login.php with valid_key → completes login
+
+    Args:
+        email: The FULL email address linked to the PPPoker account
+        code: The verification code received by email
+
+    Returns:
+        dict with 'success', 'valid_key', and 'uid' on success
+    """
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    try:
+        url = "https://api.pppoker.club/poker/api/mail/valid_code.php"
+        params = {
+            'mail': email,
+            'valid_code': str(code),
+            'valid_type': '2',
+        }
+
+        resp = requests.get(url, params=params, timeout=30, verify=False,
+                            headers={'User-Agent': 'UnityPlayer/2021.3.33f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)'})
+        result = resp.json()
+        print(f"[validate_verification_code] Response: {result}")
+
+        if result.get('code') == 0:
+            return {
+                'success': True,
+                'valid_key': result.get('valid_key', ''),
+                'uid': result.get('uid', 0),
+            }
+        elif result.get('msg') == 'code invalid':
+            return {'success': False, 'error': 'Código inválido ou expirado. Tente novamente.'}
         else:
             return {'success': False, 'error': result.get('msg', 'Unknown error'), 'response': result}
     except Exception as e:

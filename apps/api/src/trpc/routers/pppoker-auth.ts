@@ -183,10 +183,11 @@ export const pppokerAuthRouter = createTRPCRouter({
         password: z.string().min(1),
         clubId: z.number().int().positive().optional(),
         verifyCode: z.string().optional(),
+        validKey: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { username, password, clubId, verifyCode } = input;
+      const { username, password, clubId, verifyCode, validKey } = input;
 
       // Step 1: Validate credentials via FastAPI bridge
       let loginResult: {
@@ -207,6 +208,7 @@ export const pppokerAuthRouter = createTRPCRouter({
             username,
             password,
             verify_code: verifyCode || null,
+            valid_key: validKey || null,
           }),
           throwOnCircuitOpen: false,
         });
@@ -418,6 +420,8 @@ export const pppokerAuthRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
+        username: z.string().min(1),
+        password: z.string().min(1),
       }),
     )
     .mutation(async ({ input }) => {
@@ -427,7 +431,11 @@ export const pppokerAuthRouter = createTRPCRouter({
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: input.email }),
+            body: JSON.stringify({
+              email: input.email,
+              username: input.username,
+              password: input.password,
+            }),
             throwOnCircuitOpen: false,
           },
         );
@@ -449,6 +457,59 @@ export const pppokerAuthRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Falha ao enviar código de verificação.",
+        });
+      }
+    }),
+
+  /**
+   * Validate email verification code and get valid_key for login (code -15 flow step 2).
+   * After receiving the code by email, call this to validate it and get a valid_key,
+   * then pass the valid_key to login().
+   */
+  validateVerificationCode: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        code: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const resp = await bridgeFetch(
+          `${PPPOKER_BRIDGE_URL}/auth/validate-verification-code`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: input.email,
+              code: input.code,
+            }),
+            throwOnCircuitOpen: false,
+          },
+        );
+
+        if (!resp.ok) {
+          const errorData = await resp.json().catch(() => ({}));
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              (errorData as { detail?: string }).detail ??
+              "Código inválido ou expirado.",
+          });
+        }
+
+        const data = (await resp.json()) as {
+          success: boolean;
+          valid_key: string;
+          uid: number;
+        };
+        return { success: true, validKey: data.valid_key, uid: data.uid };
+      } catch (err) {
+        if (err instanceof TRPCError) throw err;
+        logger.error({ err }, "Failed to validate verification code");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Falha ao validar código de verificação.",
         });
       }
     }),

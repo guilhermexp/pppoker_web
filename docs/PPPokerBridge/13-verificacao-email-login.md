@@ -40,7 +40,7 @@ GET http://www.pppoker.club/poker/api/mail/send_valid_code.php
 | Parametro | Tipo | Obrigatorio | Descricao |
 |-----------|------|-------------|-----------|
 | `mail` | string | Sim | Email **completo** vinculado a conta (nao o mascarado) |
-| `valid_type` | int | Sim | `2` = verificacao para login. `1` = vincular email novo |
+| `valid_type` | int | Sim | `1` = verificacao de email (usado para login). `2` = troca de senha (NAO usar para login) |
 | `lang` | string | Nao | Idioma (`pt`, `en`, `ru`, etc.) |
 
 **Respostas:**
@@ -129,7 +129,7 @@ Browser (Next.js)          API (tRPC)            Bridge (FastAPI)        PPPoker
 def send_verification_code(email: str, lang: str = 'pt') -> dict:
     """Envia codigo de verificacao para login (code -15)."""
     url = "http://www.pppoker.club/poker/api/mail/send_valid_code.php"
-    params = {'mail': email, 'valid_type': '2', 'lang': lang}
+    params = {'mail': email, 'valid_type': '1', 'lang': lang}
     resp = requests.get(url, params=params, timeout=30)
     result = resp.json()
     if result.get('code') == 0:
@@ -193,7 +193,7 @@ A tela de verificacao:
        ).json()
    ```
 
-4. **Testes de parametro**: `valid_type=2` retornou `"mail not found"` (resposta valida) enquanto todos os outros retornaram `"params incorrect"`. Confirmamos que `valid_type=2` e o tipo para verificacao de login.
+4. **Testes de parametro**: `valid_type=1` envia email de "Solicitar vinculo de e-mail" (verificacao correta para login). `valid_type=2` envia email de "Redefinir senha" (errado para login).
 
 ### Detalhes tecnicos do PPPoker
 

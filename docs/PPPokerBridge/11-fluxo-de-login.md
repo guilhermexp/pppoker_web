@@ -149,7 +149,7 @@ Resumo:
 1. Login retorna `code -15` com `secret_mail` (email mascarado, ex: `v***r@g***.com`)
 2. Frontend mostra tela de verificacao por email
 3. Usuario digita o email completo vinculado a conta
-4. Sistema envia codigo via `GET send_valid_code.php?mail={email}&valid_type=2`
+4. Sistema envia codigo via `GET send_valid_code.php?mail={email}&valid_type=1`
 5. Usuario digita o codigo recebido
 6. Sistema reenvia login com `verifyCode` → segue para selecao de clube
 

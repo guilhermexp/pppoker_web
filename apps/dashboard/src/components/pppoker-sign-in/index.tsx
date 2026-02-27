@@ -28,6 +28,7 @@ export function PPPokerSignIn() {
   const [error, setError] = useState("");
   const [clubs, setClubs] = useState<ClubInfo[]>([]);
   const [pppokerUid, setPppokerUid] = useState<number | null>(null);
+  const [validKey, setValidKey] = useState<string | null>(null);
   const supabase = createClient();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("return_to");
@@ -115,18 +116,36 @@ export function PPPokerSignIn() {
     if (!verifyEmail || sendingCode || cooldown > 0) return;
     setSendingCode(true);
     setError("");
-    sendCodeMutation.mutate({ email: verifyEmail });
+    sendCodeMutation.mutate({ email: verifyEmail, username, password });
   };
+
+  const validateCodeMutation = useMutation(
+    trpc.pppokerAuth.validateVerificationCode.mutationOptions({
+      onSuccess: (data) => {
+        // Got valid_key — now login with it
+        setValidKey(data.validKey);
+        loginMutation.mutate({
+          username,
+          password,
+          validKey: data.validKey,
+        });
+      },
+      onError: (err) => {
+        setLoading(false);
+        setError(err.message || "Código inválido ou expirado");
+      },
+    }),
+  );
 
   const handleVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    loginMutation.mutate({
-      username,
-      password,
-      verifyCode,
+    // Step 1: Validate code via valid_code.php → get valid_key
+    validateCodeMutation.mutate({
+      email: verifyEmail,
+      code: verifyCode,
     });
   };
 
@@ -139,7 +158,7 @@ export function PPPokerSignIn() {
       username,
       password,
       clubId,
-      verifyCode: verifyCode || undefined,
+      validKey: validKey || undefined,
     });
   };
 
@@ -149,12 +168,14 @@ export function PPPokerSignIn() {
       setCodeSent(false);
       setVerifyCode("");
       setVerifyEmail("");
+      setValidKey(null);
       setCooldown(0);
     } else {
       setStep("credentials");
       setClubs([]);
       setPppokerUid(null);
       setSelectedClubId(null);
+      setValidKey(null);
     }
     setError("");
   };

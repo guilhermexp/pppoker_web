@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from pppoker_direct_api import (
     http_login,
     send_verification_code,
+    validate_verification_code,
     PPPokerClient,
 )
 
@@ -256,6 +257,7 @@ class LoginRequest(BaseModel):
     username: str
     password: str
     verify_code: Optional[str] = None
+    valid_key: Optional[str] = None
 
 
 class LoginResponse(BaseModel):
@@ -271,7 +273,14 @@ class LoginResponse(BaseModel):
 
 class SendVerificationCodeRequest(BaseModel):
     email: str
+    username: str
+    password: str
     lang: str = 'pt'
+
+
+class ValidateVerificationCodeRequest(BaseModel):
+    email: str
+    code: str
 
 
 class ChipTransferRequest(BaseModel):
@@ -336,7 +345,7 @@ async def auth_login(req: LoginRequest):
     """Validate PPPoker credentials, return uid + metadata."""
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(
-        None, lambda: http_login(req.username, req.password, req.verify_code)
+        None, lambda: http_login(req.username, req.password, req.verify_code, req.valid_key)
     )
 
     if result.get("success"):
@@ -368,11 +377,27 @@ async def auth_send_verification_code(req: SendVerificationCodeRequest):
     """Send email verification code for login verification (code -15 flow)."""
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(
-        None, lambda: send_verification_code(req.email, req.lang)
+        None, lambda: send_verification_code(req.email, req.username, req.password, req.lang)
     )
     if not result.get("success"):
         raise HTTPException(400, detail=result.get("error", "Failed to send code"))
     return {"success": True, "message": result.get("message", "Code sent")}
+
+
+@app.post("/auth/validate-verification-code")
+async def auth_validate_verification_code(req: ValidateVerificationCodeRequest):
+    """Validate email verification code and get valid_key for login (code -15 flow step 2)."""
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        None, lambda: validate_verification_code(req.email, req.code)
+    )
+    if not result.get("success"):
+        raise HTTPException(400, detail=result.get("error", "Invalid code"))
+    return {
+        "success": True,
+        "valid_key": result.get("valid_key", ""),
+        "uid": result.get("uid", 0),
+    }
 
 
 async def _run_with_retry(session: PPPokerSession, operation):
