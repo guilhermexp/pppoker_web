@@ -1207,6 +1207,15 @@ async def _startup():
     global _base_config
 
     config = load_config()
+
+    # Inject API keys from environment variables into config (for Docker/prod)
+    _or_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if _or_key and hasattr(config, "providers"):
+        for pname in ("openrouter",):
+            p = config.providers.get(pname)
+            if p and not p.api_key:
+                p.api_key = _or_key
+
     _base_config = config
     _install_filtered_connect_mcp_servers_patch()
     base_filtered_servers = sorted(
