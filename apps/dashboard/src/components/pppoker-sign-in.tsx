@@ -79,15 +79,19 @@ function ClubAvatar({ club }: { club: ClubInfo }) {
 }
 
 export function PPPokerSignIn() {
-  const [step, setStep] = useState<"credentials" | "select-club">(
-    "credentials",
-  );
+  const [step, setStep] = useState<
+    "credentials" | "email-verify" | "select-club"
+  >("credentials");
   const [isLoading, setLoading] = useState(false);
   const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
-  const [needsVerify, setNeedsVerify] = useState(false);
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [secretMail, setSecretMail] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState("");
   const [clubs, setClubs] = useState<ClubInfo[]>([]);
   const [pppokerUid, setPppokerUid] = useState<number | null>(null);
@@ -108,6 +112,30 @@ export function PPPokerSignIn() {
       return aOk - bOk;
     });
   }, [clubs, lastClubId]);
+
+  const sendCodeMutation = useMutation(
+    trpc.pppokerAuth.sendVerificationCode.mutationOptions({
+      onSuccess: () => {
+        setCodeSent(true);
+        setSendingCode(false);
+        setError("");
+        setCooldown(60);
+        const interval = setInterval(() => {
+          setCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      },
+      onError: (err) => {
+        setSendingCode(false);
+        setError(err.message || "Falha ao enviar codigo");
+      },
+    }),
+  );
 
   const loginMutation = useMutation(
     trpc.pppokerAuth.login.mutationOptions({
@@ -133,13 +161,19 @@ export function PPPokerSignIn() {
         }
       },
       onError: (err) => {
-        if (err.message.includes("Verificação por email")) {
-          setNeedsVerify(true);
-          setError(err.message);
-        } else {
-          setError(err.message || "Falha no login");
-        }
         setLoading(false);
+        try {
+          const parsed = JSON.parse(err.message);
+          if (parsed.type === "email_verification") {
+            setSecretMail(parsed.secret_mail || "");
+            setStep("email-verify");
+            setError("");
+            return;
+          }
+        } catch {
+          // not JSON, regular error
+        }
+        setError(err.message || "Falha no login");
       },
     }),
   );
@@ -152,7 +186,25 @@ export function PPPokerSignIn() {
     loginMutation.mutate({
       username,
       password,
-      verifyCode: needsVerify ? verifyCode : undefined,
+    });
+  };
+
+  const handleSendCode = () => {
+    if (!verifyEmail || sendingCode || cooldown > 0) return;
+    setSendingCode(true);
+    setError("");
+    sendCodeMutation.mutate({ email: verifyEmail });
+  };
+
+  const handleVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    loginMutation.mutate({
+      username,
+      password,
+      verifyCode,
     });
   };
 
@@ -165,15 +217,23 @@ export function PPPokerSignIn() {
       username,
       password,
       clubId,
-      verifyCode: needsVerify ? verifyCode : undefined,
+      verifyCode: verifyCode || undefined,
     });
   };
 
   const handleBack = () => {
-    setStep("credentials");
-    setClubs([]);
-    setPppokerUid(null);
-    setSelectedClubId(null);
+    if (step === "email-verify") {
+      setStep("credentials");
+      setCodeSent(false);
+      setVerifyCode("");
+      setVerifyEmail("");
+      setCooldown(0);
+    } else {
+      setStep("credentials");
+      setClubs([]);
+      setPppokerUid(null);
+      setSelectedClubId(null);
+    }
     setError("");
   };
 
@@ -202,16 +262,6 @@ export function PPPokerSignIn() {
               required
               className={inputClassName}
             />
-            {needsVerify && (
-              <input
-                type="text"
-                placeholder="Código de verificação (enviado por email)"
-                value={verifyCode}
-                onChange={(e) => setVerifyCode(e.target.value)}
-                required
-                className={inputClassName}
-              />
-            )}
           </div>
 
           <button
@@ -220,24 +270,100 @@ export function PPPokerSignIn() {
             className="w-full bg-white text-black font-sans font-medium text-sm h-[40px] hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Icons.Play size={14} />
-            <span>
-              {isLoading
-                ? "Conectando..."
-                : needsVerify
-                  ? "Verificar e Entrar"
-                  : "Entrar com PPPoker"}
-            </span>
+            <span>{isLoading ? "Conectando..." : "Entrar com PPPoker"}</span>
           </button>
 
           {error && (
-            <p
-              className={`text-xs font-sans ${
-                error.includes("Verificação")
-                  ? "text-yellow-400/90"
-                  : "text-red-400/90"
-              }`}
+            <p className="text-xs font-sans text-red-400/90">{error}</p>
+          )}
+        </form>
+      </div>
+    );
+  }
+
+  // ── Step 1.5: Email verification (code -15 flow) ──
+  if (step === "email-verify") {
+    return (
+      <div className="w-full space-y-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="text-white/40 hover:text-white transition-colors p-0.5"
+          >
+            <Icons.ChevronLeft size={18} />
+          </button>
+          <div>
+            <p className="text-sm font-medium text-white">
+              Verificação por email
+            </p>
+            <p className="text-xs text-white/40">
+              Sua conta requer verificação por email
+              {secretMail ? ` (${secretMail})` : ""}
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleVerifySubmit} className="space-y-3">
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Email vinculado ao PPPoker"
+                value={verifyEmail}
+                onChange={(e) => setVerifyEmail(e.target.value)}
+                required
+                className={inputClassName}
+              />
+              <button
+                type="button"
+                onClick={handleSendCode}
+                disabled={!verifyEmail || sendingCode || cooldown > 0}
+                className="flex-shrink-0 bg-white/10 text-white text-xs font-medium px-3 h-[40px] hover:bg-white/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {sendingCode
+                  ? "Enviando..."
+                  : cooldown > 0
+                    ? `${cooldown}s`
+                    : codeSent
+                      ? "Reenviar"
+                      : "Enviar código"}
+              </button>
+            </div>
+
+            {codeSent && (
+              <input
+                type="text"
+                placeholder="Código de verificação recebido por email"
+                value={verifyCode}
+                onChange={(e) => setVerifyCode(e.target.value)}
+                required
+                className={inputClassName}
+                autoFocus
+              />
+            )}
+          </div>
+
+          {codeSent && (
+            <button
+              type="submit"
+              disabled={isLoading || !verifyCode}
+              className="w-full bg-white text-black font-sans font-medium text-sm h-[40px] hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {error}
+              <Icons.Play size={14} />
+              <span>
+                {isLoading ? "Verificando..." : "Verificar e Entrar"}
+              </span>
+            </button>
+          )}
+
+          {error && (
+            <p className="text-xs font-sans text-red-400/90">{error}</p>
+          )}
+
+          {codeSent && !error && (
+            <p className="text-xs font-sans text-emerald-400/80">
+              Código enviado para {verifyEmail}
             </p>
           )}
         </form>

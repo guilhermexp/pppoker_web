@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from pppoker_direct_api import (
     http_login,
+    send_verification_code,
     PPPokerClient,
 )
 
@@ -268,6 +269,11 @@ class LoginResponse(BaseModel):
     error: Optional[str] = None
 
 
+class SendVerificationCodeRequest(BaseModel):
+    email: str
+    lang: str = 'pt'
+
+
 class ChipTransferRequest(BaseModel):
     target_player_id: int
     amount: int
@@ -355,6 +361,18 @@ async def auth_login(req: LoginRequest):
         success=False,
         error=result.get("error", "Login failed"),
     )
+
+
+@app.post("/auth/send-verification-code")
+async def auth_send_verification_code(req: SendVerificationCodeRequest):
+    """Send email verification code for login verification (code -15 flow)."""
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        None, lambda: send_verification_code(req.email, req.lang)
+    )
+    if not result.get("success"):
+        raise HTTPException(400, detail=result.get("error", "Failed to send code"))
+    return {"success": True, "message": result.get("message", "Code sent")}
 
 
 async def _run_with_retry(session: PPPokerSession, operation):

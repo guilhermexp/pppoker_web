@@ -443,14 +443,15 @@ def http_login(username: str, password: str, verify_code: str = None) -> dict:
                         'gserver_port': result.get('gserver_port', 4000),
                     }
                 elif result.get('code') == -15:
-                    # Email verification required - server sent code to email
+                    # Email verification required - user must call send_verification_code() first,
+                    # then re-call http_login() with the code received by email
                     return {
                         'success': False,
                         'needs_verify': True,
                         'uid': result.get('uid'),
                         'secret_mail': result.get('secret_mail', ''),
                         'remaining_times': result.get('remaining_times', 0),
-                        'error': f"Email verification required. Code sent to {result.get('secret_mail')}. Call http_login() again with verify_code='XXXXXX'",
+                        'error': f"Email verification required. Hint: {result.get('secret_mail')}. Call send_verification_code(email) then http_login() with verify_code.",
                     }
                 else:
                     last_error = result
@@ -464,6 +465,47 @@ def http_login(username: str, password: str, verify_code: str = None) -> dict:
             'error': f"Login failed: {last_error}",
             'response': last_error if isinstance(last_error, dict) else {}
         }
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
+def send_verification_code(email: str, lang: str = 'pt') -> dict:
+    """
+    Send email verification code for login verification (code -15 flow).
+
+    Uses the PPPoker mail API to send a verification code to the user's
+    registered email address. This is needed when login returns code -15
+    (email verification required).
+
+    Args:
+        email: The FULL email address linked to the PPPoker account
+        lang: Language code (default: 'pt')
+
+    Returns:
+        dict with 'success' and details
+    """
+    url = "http://www.pppoker.club/poker/api/mail/send_valid_code.php"
+    params = {
+        'mail': email,
+        'valid_type': '2',
+        'lang': lang,
+    }
+    headers = {
+        'User-Agent': 'UnityPlayer/2021.3.33f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)',
+        'Accept': '*/*',
+    }
+
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=30)
+        result = resp.json()
+        print(f"[send_verification_code] Response: {result}")
+
+        if result.get('code') == 0:
+            return {'success': True, 'message': 'Verification code sent'}
+        elif result.get('msg') == 'mail not found':
+            return {'success': False, 'error': 'Email not found. Please check the email linked to your PPPoker account.'}
+        else:
+            return {'success': False, 'error': result.get('msg', 'Unknown error'), 'response': result}
     except Exception as e:
         return {'success': False, 'error': str(e)}
 

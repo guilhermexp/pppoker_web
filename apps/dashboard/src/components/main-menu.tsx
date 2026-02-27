@@ -9,6 +9,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+type MenuChildItem = {
+  path: string;
+  name: string;
+  disabled?: boolean;
+};
+
+type MenuItem = {
+  path: string;
+  name: string;
+  disabled?: boolean;
+  children?: MenuChildItem[];
+};
+
 const icons = {
   "/": () => <Icons.Overview size={20} />,
   "/transactions": () => <Icons.Transactions size={20} />,
@@ -24,7 +37,10 @@ const icons = {
   "/fastchips": () => <Icons.Accounts size={20} />,
 } as const;
 
-const getItems = (t: ReturnType<typeof useI18n>, pokerSectionName?: string) => [
+const getItems = (
+  t: ReturnType<typeof useI18n>,
+  pokerSectionName?: string,
+): MenuItem[] => [
   {
     path: "/",
     name: t("sidebar.overview"),
@@ -108,19 +124,25 @@ const getItems = (t: ReturnType<typeof useI18n>, pokerSectionName?: string) => [
   {
     path: "/poker/leagues",
     name: t("sidebar.ligas"),
+    disabled: true,
     children: [
-      { path: "/poker/leagues/import", name: t("sidebar.ligas_import") },
+      {
+        path: "/poker/leagues/import",
+        name: t("sidebar.ligas_import"),
+        disabled: true,
+      },
     ],
   },
   {
     path: "/su",
     name: t("sidebar.su"),
+    disabled: true,
     children: [
-      { path: "/su/ligas", name: t("sidebar.su_ligas") },
-      { path: "/su/jogos", name: t("sidebar.su_jogos") },
-      { path: "/su/acertos", name: t("sidebar.su_acertos") },
-      { path: "/su/import", name: t("sidebar.su_import") },
-      { path: "/su/grade", name: t("sidebar.su_grade") },
+      { path: "/su/ligas", name: t("sidebar.su_ligas"), disabled: true },
+      { path: "/su/jogos", name: t("sidebar.su_jogos"), disabled: true },
+      { path: "/su/acertos", name: t("sidebar.su_acertos"), disabled: true },
+      { path: "/su/import", name: t("sidebar.su_import"), disabled: true },
+      { path: "/su/grade", name: t("sidebar.su_grade"), disabled: true },
     ],
   },
   {
@@ -160,11 +182,7 @@ const KNOWN_MENU_PATHS = [
 ];
 
 interface ItemProps {
-  item: {
-    path: string;
-    name: string;
-    children?: { path: string; name: string }[];
-  };
+  item: MenuItem;
   isActive: boolean;
   isExpanded: boolean;
   isItemExpanded: boolean;
@@ -181,7 +199,7 @@ const ChildItem = ({
   onSelect,
   index,
 }: {
-  child: { path: string; name: string };
+  child: MenuChildItem;
   isActive: boolean;
   isExpanded: boolean;
   shouldShow: boolean;
@@ -189,6 +207,48 @@ const ChildItem = ({
   index: number;
 }) => {
   const showChild = isExpanded && shouldShow;
+  const isDisabled = Boolean(child.disabled);
+  const childContent = (
+    <div className="relative">
+      {/* Child item text */}
+      <div
+        className={cn(
+          "ml-[35px] mr-[15px] h-[32px] flex items-center",
+          "border-l border-[#DCDAD2] dark:border-[#2C2C2C] pl-3",
+          "transition-all duration-200 ease-out",
+          showChild ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2",
+        )}
+        style={{
+          transitionDelay: showChild ? `${40 + index * 20}ms` : `${index * 20}ms`,
+        }}
+      >
+        <span
+          className={cn(
+            "text-xs font-medium transition-colors duration-200",
+            isDisabled
+              ? "text-[#999] dark:text-[#666]"
+              : "text-[#888] group-hover/child:text-primary",
+            "whitespace-nowrap overflow-hidden",
+            isActive && !isDisabled && "text-primary",
+          )}
+        >
+          {child.name}
+        </span>
+      </div>
+    </div>
+  );
+
+  if (isDisabled) {
+    return (
+      <div
+        className="block group/child cursor-not-allowed opacity-60"
+        aria-disabled="true"
+        title="Em desenvolvimento"
+      >
+        {childContent}
+      </div>
+    );
+  }
 
   return (
     <Link
@@ -197,35 +257,7 @@ const ChildItem = ({
       onClick={() => onSelect?.()}
       className="block group/child"
     >
-      <div className="relative">
-        {/* Child item text */}
-        <div
-          className={cn(
-            "ml-[35px] mr-[15px] h-[32px] flex items-center",
-            "border-l border-[#DCDAD2] dark:border-[#2C2C2C] pl-3",
-            "transition-all duration-200 ease-out",
-            showChild
-              ? "opacity-100 translate-x-0"
-              : "opacity-0 -translate-x-2",
-          )}
-          style={{
-            transitionDelay: showChild
-              ? `${40 + index * 20}ms`
-              : `${index * 20}ms`,
-          }}
-        >
-          <span
-            className={cn(
-              "text-xs font-medium transition-colors duration-200",
-              "text-[#888] group-hover/child:text-primary",
-              "whitespace-nowrap overflow-hidden",
-              isActive && "text-primary",
-            )}
-          >
-            {child.name}
-          </span>
-        </div>
-      </div>
+      {childContent}
     </Link>
   );
 };
@@ -241,10 +273,11 @@ const Item = ({
 }: ItemProps) => {
   const Icon = icons[item.path as keyof typeof icons];
   const pathname = usePathname();
+  const isDisabled = Boolean(item.disabled);
   const hasChildren = item.children && item.children.length > 0;
 
   // Children should be visible when: expanded sidebar AND this item is expanded
-  const shouldShowChildren = isExpanded && isItemExpanded;
+  const shouldShowChildren = isExpanded && isItemExpanded && !isDisabled;
 
   const handleChevronClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -280,72 +313,87 @@ const Item = ({
     </div>
   ) : null;
 
+  const itemInner = (
+    <div className="relative">
+      {/* Background that expands */}
+      <div
+        className={cn(
+          "border border-transparent h-[40px] transition-all duration-200 ease-&lsqb;cubic-bezier(0.4,0,0.2,1)&rsqb; mr-[15px]",
+          isActive &&
+            !isDisabled &&
+            "bg-[#F2F1EF] dark:bg-secondary border-[#DCDAD2] dark:border-[#2C2C2C]",
+          isExpanded ? "ml-[15px] w-[calc(100%-30px)]" : "ml-[8px] w-[40px]",
+        )}
+      />
+
+      {/* Icon - always in same position from sidebar edge */}
+      <div
+        className={cn(
+          "absolute top-0 w-[40px] h-[40px] flex items-center justify-center dark:text-[#666666] text-black pointer-events-none",
+          !isDisabled && "group-hover:!text-primary",
+          isExpanded ? "left-[15px]" : "left-[8px]",
+        )}
+      >
+        <div className={cn(isActive && !isDisabled && "dark:!text-white")}>
+          <Icon />
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="absolute top-0 left-[55px] right-[4px] h-[40px] flex items-center pointer-events-none">
+          <span
+            className={cn(
+              "text-sm font-medium transition-opacity duration-200 ease-in-out text-[#666]",
+              !isDisabled && "group-hover:text-primary",
+              "whitespace-nowrap overflow-hidden",
+              hasChildren ? "pr-2" : "",
+              isActive && !isDisabled && "text-primary",
+            )}
+          >
+            {item.name}
+          </span>
+          {hasChildren && !isDisabled && (
+            <button
+              type="button"
+              onClick={handleChevronClick}
+              className={cn(
+                "w-8 h-8 flex items-center justify-center transition-all duration-200 ml-auto mr-3",
+                "text-[#888] hover:text-primary pointer-events-auto",
+                isActive && "text-primary/60",
+                shouldShowChildren && "rotate-180",
+              )}
+            >
+              <Icons.ChevronDown size={16} />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  const itemLinkOrBlock = isDisabled ? (
+    <div
+      className="group cursor-not-allowed opacity-60"
+      aria-disabled="true"
+      title="Em desenvolvimento"
+    >
+      {itemInner}
+    </div>
+  ) : (
+    <Link
+      prefetch
+      href={item.path}
+      onClick={() => onSelect?.()}
+      className="group"
+    >
+      {itemInner}
+    </Link>
+  );
+
   return (
     <div className="group">
       {childrenDirection === "up" && childrenContent}
-
-      <Link
-        prefetch
-        href={item.path}
-        onClick={() => onSelect?.()}
-        className="group"
-      >
-        <div className="relative">
-          {/* Background that expands */}
-          <div
-            className={cn(
-              "border border-transparent h-[40px] transition-all duration-200 ease-&lsqb;cubic-bezier(0.4,0,0.2,1)&rsqb; mr-[15px]",
-              isActive &&
-                "bg-[#F2F1EF] dark:bg-secondary border-[#DCDAD2] dark:border-[#2C2C2C]",
-              isExpanded
-                ? "ml-[15px] w-[calc(100%-30px)]"
-                : "ml-[8px] w-[40px]",
-            )}
-          />
-
-          {/* Icon - always in same position from sidebar edge */}
-          <div
-            className={cn(
-              "absolute top-0 w-[40px] h-[40px] flex items-center justify-center dark:text-[#666666] text-black group-hover:!text-primary pointer-events-none",
-              isExpanded ? "left-[15px]" : "left-[8px]",
-            )}
-          >
-            <div className={cn(isActive && "dark:!text-white")}>
-              <Icon />
-            </div>
-          </div>
-
-          {isExpanded && (
-            <div className="absolute top-0 left-[55px] right-[4px] h-[40px] flex items-center pointer-events-none">
-              <span
-                className={cn(
-                  "text-sm font-medium transition-opacity duration-200 ease-in-out text-[#666] group-hover:text-primary",
-                  "whitespace-nowrap overflow-hidden",
-                  hasChildren ? "pr-2" : "",
-                  isActive && "text-primary",
-                )}
-              >
-                {item.name}
-              </span>
-              {hasChildren && (
-                <button
-                  type="button"
-                  onClick={handleChevronClick}
-                  className={cn(
-                    "w-8 h-8 flex items-center justify-center transition-all duration-200 ml-auto mr-3",
-                    "text-[#888] hover:text-primary pointer-events-auto",
-                    isActive && "text-primary/60",
-                    shouldShowChildren && "rotate-180",
-                  )}
-                >
-                  <Icons.ChevronDown size={16} />
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </Link>
-
+      {itemLinkOrBlock}
       {childrenDirection === "down" && childrenContent}
     </div>
   );

@@ -219,7 +219,11 @@ export const pppokerAuthRouter = createTRPCRouter({
       if (loginResult.needs_verify) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: `Verificação por email necessária. Código enviado para ${loginResult.secret_mail}. Faça login novamente com o código.`,
+          message: JSON.stringify({
+            type: "email_verification",
+            secret_mail: loginResult.secret_mail ?? "",
+            uid: loginResult.uid ?? 0,
+          }),
         });
       }
 
@@ -400,6 +404,48 @@ export const pppokerAuthRouter = createTRPCRouter({
         pppokerUid,
         clubId,
       };
+    }),
+
+  /**
+   * Send email verification code for login (code -15 flow).
+   * The user must provide the full email linked to their PPPoker account.
+   */
+  sendVerificationCode: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const resp = await fetch(
+          `${PPPOKER_BRIDGE_URL}/auth/send-verification-code`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: input.email }),
+          },
+        );
+
+        if (!resp.ok) {
+          const errorData = await resp.json().catch(() => ({}));
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              (errorData as { detail?: string }).detail ??
+              "Falha ao enviar código de verificação.",
+          });
+        }
+
+        return { success: true };
+      } catch (err) {
+        if (err instanceof TRPCError) throw err;
+        logger.error({ err }, "Failed to send verification code");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Falha ao enviar código de verificação.",
+        });
+      }
     }),
 
   /**
