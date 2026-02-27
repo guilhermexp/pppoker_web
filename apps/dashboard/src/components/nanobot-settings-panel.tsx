@@ -9,7 +9,7 @@ import { Label } from "@midpoker/ui/label";
 import { Switch } from "@midpoker/ui/switch";
 import { Textarea } from "@midpoker/ui/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type NanobotSettingsForm = {
   enabled: boolean;
@@ -375,29 +375,31 @@ export function NanobotSettingsPanel() {
     }),
   );
 
+  const oauthPopupRef = useRef<Window | null>(null);
+
   const startOAuthMutation = useMutation(
     trpc.nanobot.startProviderAuth.mutationOptions({
       onSuccess: (data) => {
-        if (data.authorizeUrl) {
-          const popup = window.open(
-            data.authorizeUrl,
-            "_blank",
-            "noopener,noreferrer",
-          );
-          if (!popup) {
-            setOauthMessage(
-              "Popup bloqueado pelo navegador. Permita popups e tente novamente.",
-            );
-            return;
-          }
+        if (data.authorizeUrl && oauthPopupRef.current) {
+          oauthPopupRef.current.location.href = data.authorizeUrl;
           setOauthMessage(
             "Janela de OAuth aberta em nova aba. Conclua o login e depois volte para atualizar o status.",
+          );
+          return;
+        }
+        if (data.authorizeUrl && !oauthPopupRef.current) {
+          setOauthMessage(
+            "Popup bloqueado pelo navegador. Permita popups e tente novamente.",
           );
           return;
         }
         setOauthMessage("Nao foi possivel iniciar o OAuth.");
       },
       onError: (error) => {
+        if (oauthPopupRef.current) {
+          oauthPopupRef.current.close();
+          oauthPopupRef.current = null;
+        }
         setOauthMessage(error.message);
       },
     }),
@@ -588,6 +590,16 @@ export function NanobotSettingsPanel() {
 
   const startOpenAICodexOAuth = () => {
     setOauthMessage("");
+    // Abre popup IMEDIATAMENTE no click (sincrono) para evitar bloqueio do navegador.
+    // O URL real sera atualizado no onSuccess da mutation.
+    const popup = window.open("about:blank", "_blank");
+    oauthPopupRef.current = popup;
+    if (!popup) {
+      setOauthMessage(
+        "Popup bloqueado pelo navegador. Permita popups e tente novamente.",
+      );
+      return;
+    }
     // Limitação atual do oauth_cli_kit / OpenAI Codex (fluxo CLI): redirect URI fixo.
     const redirectUri = "http://localhost:1455/auth/callback";
     startOAuthMutation.mutate({
