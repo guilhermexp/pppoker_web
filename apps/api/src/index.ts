@@ -6,6 +6,7 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
+import { env } from "./env";
 import { routers } from "./rest/routers";
 import type { Context } from "./rest/types";
 import { startSyncWorker } from "./services/pppoker-sync";
@@ -14,7 +15,7 @@ import { appRouter } from "./trpc/routers/_app";
 import { checkHealth } from "./utils/health";
 
 // Start PPPoker sync worker (runs every 60s)
-if (process.env.PPPOKER_SYNC_ENABLED !== "false") {
+if (env.PPPOKER_SYNC_ENABLED !== "false") {
   startSyncWorker();
 }
 
@@ -25,7 +26,7 @@ app.use(secureHeaders());
 app.use(
   "*",
   cors({
-    origin: process.env.ALLOWED_API_ORIGINS?.split(",") ?? [],
+    origin: env.ALLOWED_API_ORIGINS.split(","),
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowHeaders: [
       "Authorization",
@@ -142,7 +143,7 @@ app.get("/health/db", async (c) => {
         total: `${totalTime}ms`,
       },
       poolSummary: poolStats.summary,
-      region: process.env.FLY_REGION,
+      region: env.FLY_REGION,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -211,7 +212,7 @@ app.get(
 app.route("/", routers);
 
 export default {
-  port: process.env.PORT ? Number.parseInt(process.env.PORT) : 3000,
+  port: env.PORT,
   fetch: app.fetch,
   host: "::", // Listen on all interfaces
   idleTimeout: 60,

@@ -26,9 +26,18 @@ import { useToast } from "@midpoker/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import * as XLSX from "xlsx";
+import type * as XLSX from "xlsx";
 import { SUImportsList } from "../su/su-imports-list";
 import { LeagueImportValidationModal } from "./league-import-validation-modal";
+
+let xlsxModule: typeof XLSX | null = null;
+
+function getXlsx() {
+  if (!xlsxModule) {
+    throw new Error("XLSX module not loaded");
+  }
+  return xlsxModule;
+}
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -51,7 +60,7 @@ function parseGeralPPSTSheet(sheet: XLSX.WorkSheet): {
 } {
   // Convert sheet to array of arrays (raw data)
   // Use raw: true to get numeric values from formula cells with cached results
-  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+  const rows: any[][] = getXlsx().utils.sheet_to_json(sheet, {
     header: 1,
     defval: null,
     raw: true, // Get raw numeric values (important for formula cells)
@@ -273,7 +282,7 @@ function parseGeralPPSRSheet(sheet: XLSX.WorkSheet): {
   periodEnd: string | null;
 } {
   // Convert sheet to array of arrays (raw data)
-  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+  const rows: any[][] = getXlsx().utils.sheet_to_json(sheet, {
     header: 1,
     defval: null,
     raw: true, // Get raw numeric values (important for formula cells)
@@ -518,7 +527,7 @@ function parseJogosPPSTSheet(sheet: XLSX.WorkSheet): {
   jogos: ParsedLeagueJogoPPST[];
   inicioCount: number;
 } {
-  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+  const rows: any[][] = getXlsx().utils.sheet_to_json(sheet, {
     header: 1,
     defval: null,
     raw: true, // Get raw numeric values (important for formula cells)
@@ -962,7 +971,7 @@ function parseJogosPPSRSheet(sheet: XLSX.WorkSheet): {
     rowIndex: number;
   }>;
 } {
-  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+  const rows: any[][] = getXlsx().utils.sheet_to_json(sheet, {
     header: 1,
     defval: null,
     raw: true, // Get raw numeric values (important for formula cells)
@@ -1457,6 +1466,10 @@ export function LeagueImportUploader() {
       toastIdRef.current = id;
 
       try {
+        if (!xlsxModule) {
+          xlsxModule = await import("xlsx");
+        }
+
         const arrayBuffer = await file.arrayBuffer();
 
         // Create Web Worker for heavy parsing (keeps UI responsive)

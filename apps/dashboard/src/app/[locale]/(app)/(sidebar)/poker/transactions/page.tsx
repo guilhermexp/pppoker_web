@@ -20,8 +20,7 @@ type Props = {
 
 export default async function PokerTransactionsPage(props: Props) {
   const queryClient = getQueryClient();
-  const searchParams = await props.searchParams;
-  const t = await getI18n();
+  const [searchParams, t] = await Promise.all([props.searchParams, getI18n()]);
 
   const filter = loadPokerTransactionFilterParams(searchParams);
   const { sort } = loadSortParams(searchParams);

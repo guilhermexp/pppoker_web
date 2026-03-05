@@ -13,7 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import * as XLSX from "xlsx";
+import type * as XLSX from "xlsx";
 import { FastchipsImportValidationModal } from "./import-validation-modal";
 
 // ============================================================================
@@ -134,6 +134,7 @@ function parseFastchipsOperationsSheet(
  */
 function parseFastchipsWorkbook(
   workbook: XLSX.WorkBook,
+  xlsx: typeof XLSX,
 ): ParsedFastchipsImportData {
   // Try to find the "Operações" sheet
   const sheetNames = workbook.SheetNames;
@@ -152,7 +153,7 @@ function parseFastchipsWorkbook(
   }
 
   const sheet = workbook.Sheets[operationsSheetName];
-  const data = XLSX.utils.sheet_to_json(sheet, { defval: null });
+  const data = xlsx.utils.sheet_to_json(sheet, { defval: null });
 
   const operations = parseFastchipsOperationsSheet(data);
 
@@ -209,11 +210,12 @@ export function FastchipsImportUploader() {
       setFileSize(file.size);
 
       try {
+        const xlsx = await import("xlsx");
         const buffer = await file.arrayBuffer();
-        const workbook = XLSX.read(buffer, { type: "array" });
+        const workbook = xlsx.read(buffer, { type: "array" });
 
         // Parse the workbook
-        const data = parseFastchipsWorkbook(workbook);
+        const data = parseFastchipsWorkbook(workbook, xlsx);
 
         if (data.operations.length === 0) {
           toast({

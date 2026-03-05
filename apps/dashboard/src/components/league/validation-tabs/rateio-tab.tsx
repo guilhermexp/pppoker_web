@@ -15,8 +15,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@midpoker/ui/tabs";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { getWeek, getYear } from "date-fns";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { Code, Download, FileText, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -46,6 +44,14 @@ export function LeagueRateioTab({
   const contentRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const trpc = useTRPC();
+
+  const loadPdfModules = useCallback(async () => {
+    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+      import("html2canvas"),
+      import("jspdf"),
+    ]);
+    return { html2canvas, jsPDF };
+  }, []);
 
   // Fetch meta groups list from backend
   const { data: dbGroups } = useQuery(
@@ -234,6 +240,7 @@ export function LeagueRateioTab({
     setIsExporting(true);
 
     try {
+      const { html2canvas, jsPDF } = await loadPdfModules();
       const backgroundColor = theme === "dark" ? "#0c0c0c" : "#ffffff";
       const backgroundRgb =
         theme === "dark" ? { r: 12, g: 12, b: 12 } : { r: 255, g: 255, b: 255 };
@@ -299,7 +306,7 @@ export function LeagueRateioTab({
     } finally {
       setIsExporting(false);
     }
-  }, [theme, isExporting, todayStr]);
+  }, [theme, isExporting, todayStr, loadPdfModules]);
 
   const handleExportHtml = useCallback(async () => {
     const container = contentRef.current;

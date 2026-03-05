@@ -1,5 +1,5 @@
 import { logger } from "@midpoker/logger";
-import { getAppUrl } from "@midpoker/utils/envs";
+import { getAppUrl } from "@midpoker/utils";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { createSlackWebClient } from "../client";

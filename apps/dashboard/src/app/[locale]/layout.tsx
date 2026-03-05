@@ -63,8 +63,7 @@ export default async function Layout({
   children: ReactElement;
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  const isDesktop = await isDesktopApp();
+  const [{ locale }, isDesktop] = await Promise.all([params, isDesktopApp()]);
   const supabase = await createClient();
   const {
     data: { session },

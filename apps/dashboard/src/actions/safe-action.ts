@@ -54,9 +54,10 @@ export const authActionClient = actionClientWithMeta
   })
   .use(async ({ next, metadata }) => {
     const queryClient = getQueryClient();
-    const user = await queryClient.fetchQuery(trpc.user.me.queryOptions());
-
-    const supabase = await createClient();
+    const [user, supabase] = await Promise.all([
+      queryClient.fetchQuery(trpc.user.me.queryOptions()),
+      createClient(),
+    ]);
 
     if (!user) {
       throw new Error("Unauthorized");

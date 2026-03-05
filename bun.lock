@@ -221,6 +221,7 @@
       "dependencies": {
         "@midpoker/logger": "workspace:*",
         "@midpoker/supabase": "workspace:*",
+        "@midpoker/utils": "workspace:*",
         "@slack/bolt": "^4.6.0",
         "@slack/oauth": "^3.0.4",
         "@slack/web-api": "^7.12.0",
