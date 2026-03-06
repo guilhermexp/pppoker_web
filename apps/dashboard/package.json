@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "NODE_ENV=production next build --turbopack",
+    "build": "NODE_ENV=production next build --webpack",
+    "build:turbopack": "NODE_ENV=production next build --turbopack",
     "clean": "git clean -xdf .next .turbo node_modules",
     "dev": "TZ=UTC next dev -p 3100 --turbopack",
     "lint": "biome check .",
